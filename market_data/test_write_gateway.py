@@ -125,6 +125,33 @@ os._exit(0)
                 clock=lambda: NOW,
             )
 
+    def test_gateway_rejects_valid_candles_schema_when_lease_table_is_missing(self):
+        with sqlite3.connect(self.path) as connection:
+            connection.execute("DROP TABLE feeder_leases")
+
+        fake_lease = type("LeaseRef", (), {
+            "db_path": self.path,
+            "lease_name": "binance-btcusdt-canonical",
+        })()
+
+        with self.assertRaisesRegex(
+            ValueError, "feeder_leases table is missing or invalid"
+        ):
+            SQLiteWriteGateway(
+                store=self.store, lease_store=fake_lease,
+                owner_id="worker-A", generation_provider=lambda: 1,
+                clock=lambda: NOW,
+            )
+
+        with sqlite3.connect(self.path) as connection:
+            tables = {
+                row[0] for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                )
+            }
+        self.assertIn("candles", tables)
+        self.assertNotIn("feeder_leases", tables)
+
     def test_gateway_rejects_existing_database_without_canonical_schema(self):
         empty = Path(self.temp.name) / "empty.sqlite3"
         sqlite3.connect(empty).close()
