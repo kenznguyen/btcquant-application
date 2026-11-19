@@ -97,3 +97,30 @@ This report supersedes the earlier self-review's C1 and D1 statuses: C1 and D1 a
 ## 6. Scope preserved
 
 No source, test, workflow, dependency, runtime, canonical SQLite, feeder/writer/lease/recovery, T1/T2, PostgreSQL, retention/deletion or trading changes were made. No tests or workflows were run or dispatched. Next bounded action: obtain approval to fix C2 in the existing `main` branch, add the missing trigger path, then verify an exact-SHA workflow run. Independent second-person review remains a separate requirement.
+
+
+## 7. C2 remediation and exact-SHA CI follow-up — 2026-11-19
+
+C2 was remediated after explicit user approval.
+
+- Changed file: `.github/workflows/t0-fastapi-migration.yml` only.
+- Added exactly one path entry: `market_data/api.py` under `on.push.paths`.
+- Workflow commit / exact head SHA: `a92cca39a3c23c3325191922c80e73b81384d9ce`.
+- Workflow file blob SHA: `7dabf111a2b89e22a80c3e02a5cf7f65a667095b`.
+- Commit diff from prior HEAD `53ffd0576ad045f1f5b4477f4af765958d06a2db`: one file, one insertion, zero deletions. No application source, test, dependency, runtime or data file changed.
+- Static verification at the exact commit: the workflow contains exactly one `- market_data/api.py` path entry.
+- Push event on exact SHA automatically started both workflows:
+  - FastAPI workflow [44538454822](https://github.com/kenznguyen/btcquant-application/actions/runs/44538454822), head SHA `a92cca39a3c23c3325191922c80e73b81384d9ce`, conclusion **success**.
+    - FastAPI contract job `135610069787`: success.
+    - Runtime-lock-only job `135610069433`: success.
+    - Contract artifact `14535834201`, SHA-256 `350db8e7ec0dd7a876d814b8116306a37b3ca8c89ae7f826d9acf656db952983`.
+    - Runtime artifact `14536258780`, SHA-256 `b705d5c57283eff983d6d16e9301e2b9f882eaf8c038a2d058499864ebfefba7`.
+  - SQLite aggregate workflow [44538454988](https://github.com/kenznguyen/btcquant-application/actions/runs/44538454988), head SHA `a92cca39a3c23c3325191922c80e73b81384d9ce`, conclusion **success**.
+    - Aggregate job `135610069795`: success.
+    - Artifact `14536023784`, SHA-256 `a3ed69d72ceec7bf06e4a5c790d5b00f16f9ca46104e6a8a77e2e8a2d95d07a1`.
+
+**C2 status: CLOSED / VERIFIED for path-filter configuration and successful push-triggered workflow execution on the exact SHA.** Qualification: this push changed the workflow file itself (also included in the path filter); no isolated commit changing only `market_data/api.py` was created because the approved scope prohibited changing the WSGI implementation. Therefore an api.py-only trigger was not separately simulated.
+
+The successful jobs verify the current contract, runtime-lock smoke and SQLite aggregate against the exact commit. They do not establish Uvicorn socket, Nginx, VPS, endpoint runtime or production readiness.
+
+No source/test/dependency/runtime/canonical SQLite/feeder/writer/lease/recovery/T1/T2/PostgreSQL/retention/trading changes were made. Independent second-person review remains PENDING. WSGI/Gunicorn retirement remains NOT APPROVED; runtime/deployment remains NOT AUTHORIZED.
