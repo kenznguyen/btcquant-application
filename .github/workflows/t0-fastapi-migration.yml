@@ -97,7 +97,7 @@ for source, target in (
         entries.append(f"{canonicalize_name(name)}=={version} --hash=sha256:{digest}")
     if not entries:
         raise SystemExit(f"No target wheels downloaded for {source}")
-    target.write_text("\\n".join(entries) + "\\n", encoding="utf-8")
+    target.write_text("\n".join(entries) + "\n", encoding="utf-8")
 PY
               python -m pip install --disable-pip-version-check --no-index \
                 --find-links=/wheelhouse/test --require-hashes \
