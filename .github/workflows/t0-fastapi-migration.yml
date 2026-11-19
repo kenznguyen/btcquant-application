@@ -82,23 +82,23 @@ jobs:
               python -m pip download --only-binary=:all: --require-hashes \
                 -r /artifacts/test-full.lock -d /wheelhouse/test
               python - <<'PY'
-from hashlib import sha256
-from pathlib import Path
-from packaging.utils import canonicalize_name, parse_wheel_filename
-
-for source, target in (
-    (Path("/wheelhouse/runtime"), Path("/artifacts/requirements-market-data-fastapi.lock")),
-    (Path("/wheelhouse/test"), Path("/artifacts/requirements-market-data-fastapi-test.lock")),
-):
-    entries = []
-    for wheel in sorted(source.glob("*.whl")):
-        name, version, _, _ = parse_wheel_filename(wheel.name)
-        digest = sha256(wheel.read_bytes()).hexdigest()
-        entries.append(f"{canonicalize_name(name)}=={version} --hash=sha256:{digest}")
-    if not entries:
-        raise SystemExit(f"No target wheels downloaded for {source}")
-    target.write_text("\n".join(entries) + "\n", encoding="utf-8")
-PY
+          from hashlib import sha256
+          from pathlib import Path
+          from packaging.utils import canonicalize_name, parse_wheel_filename
+          
+          for source, target in (
+              (Path("/wheelhouse/runtime"), Path("/artifacts/requirements-market-data-fastapi.lock")),
+              (Path("/wheelhouse/test"), Path("/artifacts/requirements-market-data-fastapi-test.lock")),
+          ):
+              entries = []
+              for wheel in sorted(source.glob("*.whl")):
+                  name, version, _, _ = parse_wheel_filename(wheel.name)
+                  digest = sha256(wheel.read_bytes()).hexdigest()
+                  entries.append(f"{canonicalize_name(name)}=={version} --hash=sha256:{digest}")
+              if not entries:
+                  raise SystemExit(f"No target wheels downloaded for {source}")
+              target.write_text("\n".join(entries) + "\n", encoding="utf-8")
+          PY
               python -m pip install --disable-pip-version-check --no-index \
                 --find-links=/wheelhouse/test --require-hashes \
                 -r /artifacts/requirements-market-data-fastapi-test.lock
