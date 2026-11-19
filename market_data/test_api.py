@@ -58,7 +58,9 @@ class CandleApiTest(unittest.TestCase):
 
     def test_as_of_does_not_backdate_imported_history(self):
         query = f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}&endMs={self.start+self.interval}&asOfMs={self.start+self.interval}"
-        code, body = self.request(query)
+        generated_at = self.start + self.interval + 100
+        with patch("market_data.api.time.time_ns", return_value=generated_at * 1_000_000):
+            code, body = self.request(query)
         self.assertEqual(code, 200)
         self.assertEqual(body["candles"], [])
         self.assertFalse(body["coverage"]["complete"])
