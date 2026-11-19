@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from paper_execution.ledger import PaperLedger
 from paper_execution.risk_contract import provision_account_risk_contract, read_account_risk_contract, update_account_risk_contract
@@ -244,7 +245,10 @@ class PaperLedgerTest(unittest.TestCase):
         self.assertEqual(rejected["reason"], "KILL_SWITCH")
         with self.assertRaises(ValueError):
             reopened.set_killed(False, self.now+1)
-        reopened.reset_kill(acknowledge=True, ready=True, now_ms=self.now+2)
+        with patch("paper_execution.ledger._dual_ledger_migrations_ready", return_value=True), \
+             patch("paper_execution.ledger._read_account_risk_snapshot_connection",
+                   return_value={"riskReady": True}):
+            reopened.reset_kill(acknowledge=True, ready=True, now_ms=self.now+2)
         accepted = reopened.submit(self.intent("after-reset"), self.book(time=self.now+2), self.now+2)
         self.assertEqual(accepted["status"], "FILLED")
 
