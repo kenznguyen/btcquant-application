@@ -67,17 +67,38 @@ class AccountRiskContractTest(unittest.TestCase):
             )
 
     def test_required_account_contract_missing_fails_closed(self):
-        bootstrap = PaperLedger(self.path, max_position_base="1")
-        bootstrap.record_equity(
+        ledger = PaperLedger(
+            self.path, max_position_base="1", require_risk_limits=True
+        )
+        ledger.record_equity(
             "100", self.now - 60_000, self.now, "sha256:r1-account-seed", "100"
         )
-        with self.assertRaisesRegex(
-            sqlite3.DatabaseError, "ACCOUNT_RISK_CONTRACT_UNAVAILABLE"
-        ):
-            PaperLedger(
-                self.path, strategy_id="STRATEGY_CORE",
-                source_sha="a" * 40, require_risk_limits=True,
-            )
+        intent = {
+            "intentId": "missing-account-risk-contract",
+            "symbol": "BTCUSDT",
+            "exchange": "binance",
+            "marketType": "USDT_PERPETUAL",
+            "strategyVersion": "test",
+            "modelVersion": "test",
+            "datasetVersion": "sha256:" + "a" * 64,
+            "targetPositionBase": "0.01",
+            "limitPrice": "100",
+            "decisionAtMs": self.now,
+            "validUntilMs": self.now + 20_000,
+            "inputSnapshotId": "sha256:" + "b" * 64,
+            "mode": "PAPER",
+        }
+        book = {
+            "source": "hummingbot",
+            "connector": "binance_perpetual",
+            "symbol": "BTCUSDT",
+            "observedAtMs": self.now,
+            "bids": [{"price": "99.9", "quantity": "10"}],
+            "asks": [{"price": "100", "quantity": "10"}],
+        }
+        result = ledger.submit(intent, book, self.now)
+        self.assertEqual(result["reason"], "RISK_LIMITS_UNCONFIGURED")
+        self.assertEqual(result["status"], "REJECTED")
 
     def test_existing_account_contract_cannot_be_silently_replaced(self):
         bootstrap = PaperLedger(self.path, max_position_base="1")
