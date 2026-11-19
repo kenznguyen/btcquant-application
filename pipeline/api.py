@@ -356,21 +356,20 @@ def control_readiness(timestamp):
         read_snapshot,
     )
     db_path = os.environ.get("MARKET_DATA_DB", "")
-    if dual_ledger_ready(db_path):
-        read_snapshot(db_path, strategy_id="STRATEGY_CORE")
-        read_snapshot(db_path, strategy_id="AI_FREQAI")
-        no_pending = not has_pending_orders(db_path)
-        try:
+    try:
+        if dual_ledger_ready(db_path):
+            read_snapshot(db_path, strategy_id="STRATEGY_CORE")
+            read_snapshot(db_path, strategy_id="AI_FREQAI")
+            no_pending = not has_pending_orders(db_path)
             account = read_account_risk_snapshot(db_path, now_ms=timestamp)
-            account_risk_ready = bool(account.get("riskReady"))
-        except (ValueError, sqlite3.Error):
+            account_risk_ready = account.get("riskReady") is True
+        else:
+            # A legacy ledger has no validated account-wide cutover contract.
+            no_pending = not has_pending_orders(db_path)
             account_risk_ready = False
-    else:
-        orders = ledger().snapshot().get("orders", [])
-        no_pending = not any(
-            order.get("status") in ("OPEN", "PARTIALLY_FILLED") for order in orders
-        )
-        account_risk_ready = True
+    except (ValueError, sqlite3.Error, OSError):
+        no_pending = False
+        account_risk_ready = False
     checks = {
         "closedCandles": candle_ready, "orderBook": book_ready,
         "noPendingPaperOrders": no_pending,
@@ -474,7 +473,20 @@ def application(environ, start_response):
                 readiness = control_readiness(timestamp)
                 if not readiness["ready"]:
                     return response("409 Conflict", {"error": "SYSTEM_NOT_READY", "checks": readiness["checks"]})
-                result = ledger().reset_kill(True, True, timestamp)
+                try:
+                    result = ledger().reset_kill(True, True, timestamp)
+                except (ValueError, sqlite3.Error) as error:
+                    reason = str(error)
+                    if reason not in {"ACCOUNT_RISK_NOT_READY", "PENDING_PAPER_ORDERS"}:
+                        raise
+                    checks = dict(readiness["checks"])
+                    if reason == "ACCOUNT_RISK_NOT_READY":
+                        checks["accountRiskReady"] = False
+                    else:
+                        checks["noPendingPaperOrders"] = False
+                    return response("409 Conflict", {
+                        "error": "SYSTEM_NOT_READY", "checks": checks,
+                    })
             elif path == "/v1/paper/evaluate" and (not payload or payload in ({"source": "AI"}, {"source": "CORE"})):
                 # Core-First: paper evaluation is exclusively Strategy Core.
                 # AI candidates remain available through offline /v1/decision.
