@@ -1,3 +1,13 @@
+### FastAPI adversarial self-review C2 finding — 2026-11-19
+
+- Review report: [T0 FastAPI Adversarial Self-Review Follow-up](evidence/T0_FASTAPI_ADVERSARIAL_SELF_REVIEW_FOLLOWUP_2026-11-19.md), commit `2815e6f4917f74679c19e88026c433e6258538fc`.
+- Review HEAD: `7878e2d3b5cd9522ea6ed85b1c6083f8726a2816`; tested implementation/workflow SHA: `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
+- **C2 MEDIUM / OPEN:** `.github/workflows/t0-fastapi-migration.yml` omits `market_data/api.py` from `on.push.paths`, although the parity suite imports the WSGI adapter. WSGI-only edits will not trigger the FastAPI differential workflow.
+- Required bounded correction: add `market_data/api.py` to the path filter and prove trigger behavior on an exact SHA. No source/workflow change or CI dispatch was made in this review.
+- C1: **CLOSED / VERIFIED** for ten cases. D1: **CLOSED / PASS** for clean runtime-lock installation, dependency check, ASGI import and in-process health only.
+- FastAPI/parity 26/26 and SQLite aggregate 196/196 PASS on exact SHA `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`; artifacts/digests are in the evidence report.
+- Same-assistant review only; independent second-person review remains **PENDING**. WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+
 ### FastAPI independent review package refreshed after D1 closure — 2026-11-19
 
 - Updated `docs/reviews/T0_FASTAPI_INDEPENDENT_REVIEW_PACKAGE_2026-11-19.md`, commit `8a50de8b23566a57cc56f62755dda0f3b504b682`.
