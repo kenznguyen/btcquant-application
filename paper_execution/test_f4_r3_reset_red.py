@@ -85,6 +85,29 @@ class F4KillResetAtomicReadinessRedTest(unittest.TestCase):
 
         self.assertTrue(self.ledger.snapshot()["riskControl"]["killed"])
 
+    def test_missing_kill_latch_state_blocks_reset_without_audit(self):
+        with sqlite3.connect(self.path) as connection:
+            connection.execute("DELETE FROM paper_risk_control")
+            before = connection.execute(
+                "SELECT COUNT(*) FROM paper_audit WHERE kind='KILL_SWITCH_RESET'"
+            ).fetchone()[0]
+
+        with patch("paper_execution.ledger._dual_ledger_migrations_ready", return_value=True), \
+             patch("paper_execution.ledger._read_account_risk_snapshot_connection",
+                   return_value={"riskReady": True}):
+            with self.assertRaisesRegex(sqlite3.DatabaseError, "RISK_CONTROL_STATE_UNAVAILABLE"):
+                self.ledger.reset_kill(True, True, self.now + 1)
+
+        with sqlite3.connect(self.path) as connection:
+            after = connection.execute(
+                "SELECT COUNT(*) FROM paper_audit WHERE kind='KILL_SWITCH_RESET'"
+            ).fetchone()[0]
+            self.assertEqual(after, before)
+            self.assertEqual(
+                connection.execute("SELECT COUNT(*) FROM paper_risk_control").fetchone()[0],
+                0,
+            )
+
     def test_api_rechecks_readiness_after_stale_preflight_before_clearing_kill(self):
         from pipeline import api
 
