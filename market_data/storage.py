@@ -1,5 +1,7 @@
 """Runtime storage selection shared by the read API and ingestion.
 
+# CI trigger sentinel: dependency-only edits must run the FastAPI contract suite.
+
 SQLite remains the default. PostgreSQL is opt-in and requires an explicit DSN.
 Constructors are side-effect free; schema changes are only made by the explicit
 migration command in market_data.migrations.
