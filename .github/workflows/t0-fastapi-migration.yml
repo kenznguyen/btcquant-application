@@ -7,6 +7,7 @@ on:
     paths:
       - market_data/test_fastapi_api.py
       - market_data/test_fastapi_parity.py
+      - market_data/api.py
       - market_data/runtime_smoke.py
       - market_data/fastapi_app.py
       - market_data/api_contract.py
