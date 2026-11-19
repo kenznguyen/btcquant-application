@@ -85,3 +85,14 @@
 - D1 (runtime-only clean-install smoke test) remains **NOT VERIFIED**. Independent second-person review remains **PENDING**; this CI proof is not independent review.
 - WSGI/Gunicorn retirement remains **NOT APPROVED**; runtime/deployment remains **NOT AUTHORIZED**; production readiness remains **NOT CERTIFIED**.
 - Scope unchanged: no API implementation behavior, canonical SQLite data, writer/lease/feeder/recovery, T1/T2, PostgreSQL, VPS/systemd, runtime, deployment, retention/deletion or trading was modified or accessed.
+
+
+### FastAPI independent review package refreshed after C1 closure — 2026-11-19
+
+- Updated reviewer package: [T0 FastAPI Independent Review Package](reviews/T0_FASTAPI_INDEPENDENT_REVIEW_PACKAGE_2026-11-19.md), commit `495c234d920feaec8a323044955b42a80c6d5ea1`.
+- Exact review snapshot: `440379b243d0b63e80f22b032fa8499bc2e1a6f4`; exact tested implementation/workflow SHA: `62054b53119308eca9d2256dcd5aae5561da235b`.
+- Verified compare: 4 commits ahead / 0 behind; only `docs/PROJECT_SESSION_HANDOFF.md` and `docs/T0_ACTIVE_SCOPE_INDEX.md` changed after the tested SHA; no executable source, test, workflow or dependency drift.
+- Package now includes C1's ten-case same-fixture differential test, exact FastAPI 26/26 run `44534512421` / job `135596271306` / artifact `14533664834` / SHA-256 `555c63db97aa8466857cb4dd84728808989edc8107b25af0af31336bd3e84883`, and SQLite 196/196 run `44534512612` / job `135596271401` / artifact `14534628423` / SHA-256 `8e9c5274d48a44bb779bdd1db4119d3a83f1873c61ff889b769fc03fd6a0cfb0`.
+- C1 remains **CLOSED / VERIFIED** for ten enumerated cases. D1 clean runtime-only install smoke test **NOT VERIFIED**. Independent second-person review **PENDING**; no reviewer has been assigned or approved.
+- No source/test/workflow/dependency/runtime/data changes; no tests or workflows run for this documentation refresh.
+- WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
