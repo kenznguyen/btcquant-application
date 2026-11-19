@@ -1,0 +1,170 @@
+name: T0 SQLite API isolated tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t0-sqlite-api-isolated
+  cancel-in-progress: false
+
+jobs:
+  sqlite-api-tests:
+    name: Six-module SQLite/API suite
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact approved test source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify source and prepare evidence directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f"
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$expected"
+
+          for module in \
+            market_data/test_feeder_recovery.py \
+            market_data/test_feeder_lease.py \
+            market_data/test_write_gateway.py \
+            market_data/test_storage.py \
+            market_data/test_sync.py \
+            market_data/test_api.py; do
+            test -f "$module"
+          done
+
+          mkdir -p "$RUNNER_TEMP/t0-test-artifacts"
+          chmod 0777 "$RUNNER_TEMP/t0-test-artifacts"
+          : > "$RUNNER_TEMP/t0-test-artifacts/unittest.log"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_commit=$GITHUB_SHA"
+            echo "checked_out_source_sha=$actual"
+            echo "runner_os=$RUNNER_OS"
+            echo "runner_arch=$RUNNER_ARCH"
+            echo "runner_image=ubuntu-24.04"
+            echo "test_modules=6"
+            echo "static_expected_test_methods=61"
+            echo "network_mode=none (Docker test container)"
+            echo "credentials=none passed to test container"
+            echo "canonical_database_mount=none"
+          } > "$RUNNER_TEMP/t0-test-artifacts/runner_metadata.txt"
+
+      - name: Verify Docker and pull immutable Python image
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          docker version
+          docker info --format 'docker_server_version={{.ServerVersion}}'
+          docker pull --platform linux/amd64 "$PYTHON_IMAGE"
+          docker image inspect --format 'image_id={{.Id}}{{println}}{{range .RepoDigests}}repo_digest={{.}}{{println}}{{end}}' "$PYTHON_IMAGE" \
+            | tee "$RUNNER_TEMP/t0-test-artifacts/container_image.txt"
+          echo "python_image=$PYTHON_IMAGE" >> "$RUNNER_TEMP/t0-test-artifacts/runner_metadata.txt"
+
+      - name: Run approved suite in network-isolated container
+        id: run-tests
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          workspace="$GITHUB_WORKSPACE"
+          artifacts="$RUNNER_TEMP/t0-test-artifacts"
+          log="$artifacts/unittest.log"
+
+          if docker run --rm \
+            --platform linux/amd64 \
+            --network none \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --pids-limit 128 \
+            --memory 2g \
+            --cpus 2 \
+            --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=256m,mode=1777 \
+            --mount "type=bind,src=$workspace,dst=/workspace,readonly" \
+            --mount "type=bind,src=$artifacts,dst=/artifacts" \
+            --env HOME=/tmp \
+            --env TMPDIR=/tmp \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace \
+            --workdir /workspace \
+            "$PYTHON_IMAGE" \
+            sh -c '
+              set -eu
+              python --version
+              python -c "import sys; assert sys.version_info[:3] == (3, 12, 16), sys.version"
+              python - <<'"'"'PY'"'"'
+          from pathlib import Path
+          interfaces = {
+              line.split(":", 1)[0].strip()
+              for line in Path("/proc/net/dev").read_text().splitlines()[2:]
+          }
+          if interfaces != {"lo"}:
+              raise SystemExit(f"unexpected network interfaces: {sorted(interfaces)}")
+          print("network_isolation_probe=PASS (loopback only; Docker --network none)")
+          PY
+              set +e
+              python -m unittest -v \
+                market_data.test_feeder_recovery \
+                market_data.test_feeder_lease \
+                market_data.test_write_gateway \
+                market_data.test_storage \
+                market_data.test_sync \
+                market_data.test_api \
+                > /artifacts/unittest.log 2>&1
+              test_status=$?
+              cat /artifacts/unittest.log
+              exit "$test_status"
+            '; then
+            test_status=0
+          else
+            test_status=$?
+          fi
+
+          test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
+          {
+            echo "python_version=3.12.16"
+            echo "test_command=python -m unittest -v [six approved modules]"
+            echo "test_count=${test_count:-NOT_REPORTED}"
+            echo "test_exit_code=$test_status"
+          } >> "$artifacts/runner_metadata.txt"
+
+          {
+            echo "## T0 SQLite/API isolated test run"
+            echo
+            echo "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo "- Workflow commit: `$GITHUB_SHA`"
+            echo "- Test source SHA: `32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f`"
+            echo "- Python: `3.12.16`"
+            echo "- Docker network: `none` (container interface probe requires loopback only)"
+            echo "- Discovered tests: `${test_count:-NOT_REPORTED}` (static inventory: 61)"
+            echo "- Test process exit code: `$test_status`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$test_status" -eq 0 && "$test_count" != "61" ]]; then
+            echo "Expected 61 tests from static inventory; observed ${test_count:-no test summary}." >&2
+            exit 1
+          fi
+          exit "$test_status"
+
+      - name: Upload test evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t0-sqlite-api-test-evidence
+          path: ${{ runner.temp }}/t0-test-artifacts/
+          if-no-files-found: error
+          retention-days: 14
