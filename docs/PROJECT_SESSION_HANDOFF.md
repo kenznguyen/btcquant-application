@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F4 Pipeline import/regression preflight BLOCKED
+
+- Owner authorized isolated import and regression verification for `pipeline/test_api.py` and `pipeline/test_decision.py`, after dependency/environment review; no automatic package installation or CI.
+- Evidence: `docs/evidence/F4_PIPELINE_API_DECISION_TEST_PREFLIGHT_2026-11-19.md`.
+- Baseline main HEAD: `8c618e4587857dfbdcbd91bf58f21fd801fea1e1`; test blobs: `pipeline/test_api.py` `4e2d92b24a7c8c0810ac5f2706707c5b9deb6fb2` (25 tests), `pipeline/test_decision.py` `6781f26d66635f56662a627bdd3b4a63f26c1f28` (15 tests).
+- Minimum SQLite fixture environment selected: Python 3.12.16 + standard library only (`unittest`, `sqlite3`); no `psycopg`, `ccxt`, Hummingbot service, credentials or network. PostgreSQL remains excluded.
+- Static import review PASS; runtime imports NOT VERIFIED. Local container only has Python 3.13.5; exact Python 3.12.16 environment unavailable. Read-only clone attempt blocked by DNS resolution failure for github.com.
+- Core-First blocker: six `pipeline/test_api.py` test methods inject AI intents into paper evaluation and expect Ledger/order/risk/kill-switch handling, including one expectation of a FILLED AI order. This conflicts with Strategy Core-only paper path and AI offline-only. Do not run these legacy assertions as valid regression criteria until a separately approved Core-First-compatible test/source treatment is defined.
+- No tests/import/compile/build/CI ran; no package installed; no source/test/workflow/dependency files changed; no runtime/database/VPS/exchange/trading access.
+- Status: dependency/environment decision PASS (static); runtime import NOT VERIFIED; `test_decision.py` execution BLOCKED by local environment/checkout; full `test_api.py` execution BLOCKED by Core-First test mismatch and environment.
+- Next: provide exact checkout/Python 3.12.16 isolated runner, then separately approve Core-First handling of the six conflicting API tests before executing the modules.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — Hummingbot temporarily deferred
 
 - Owner confirmed Hummingbot is not to be integrated into the current system for now, to reduce complexity; the target architecture retains the option for future integration.
