@@ -42,3 +42,24 @@
 - PostgreSQL migration SQL assets and dependency lock/requirements files are not included; PostgreSQL runtime setup is incomplete in this snapshot.
 - This snapshot does not establish completeness, execution, test success, deployment or production readiness.
 - T0 remains an independent data foundation. Do not connect T1/T2 or enable paper/live execution based solely on this snapshot.
+
+
+## F1 SQLite regression parity addendum — 2026-11-19
+
+The selected-file snapshot above remains the historical migration baseline. This addendum records the separately approved F1 regression parity increment; it does not imply full source parity or T0 completion.
+
+- Source repository/branch: `kenznguyen/btcusdt-telegram-signals2` / `feature/t0-centralized-data-feeder-p1-20261101`.
+- Exact source HEAD inspected: `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9`.
+- Source `market_data/write_gateway.py` blob: `585caf5250c7382f8e391533882f08c8ec97efaa`.
+- Target `market_data/write_gateway.py` blob: `0a77df443ae1a817ea74946fac5dc0f3809ddd83`. These files are byte-different; static comparison and the new malformed-schema regression confirm equivalent F1 schema-rejection behavior. Target production source was retained unchanged.
+- Source `market_data/test_write_gateway.py` blob: `2c55dff1729cdfd11bd0ef2188e1e41756ed7692`.
+- Target `market_data/test_write_gateway.py` blob after parity increment: `231f5e0184821c78cda0ca5d03625f71fd3a4b71`. Target-specific tests were preserved; two regression tests were added, with the Python `-S` fixture adapted to the target's existing initialization API.
+- Target test commit: `f2981271d42b7c3baee8cc4de1c670e8a54cdd85`.
+- Dedicated workflow: `.github/workflows/t0-f1-regression-parity.yml`, blob `967e160d7edbf438db9a53a35e6f27c8cfc3f934`, commit `b2bb35400ea1bb4fd0c9a54737ebdab5b6b8a838`.
+- Exact-SHA run: [44494341100](https://github.com/kenznguyen/btcquant-application/actions/runs/44494341100), job `135457600070`, checkout SHA `b2bb35400ea1bb4fd0c9a54737ebdab5b6b8a838`, SUCCESS, 14/14 tests.
+- Artifact: `t0-f1-regression-parity-evidence`, ID `14513793330`, digest `sha256:c778e6ab5f61de875c9ad585d05459c25fadb79bd344eee22841a55303e08876`.
+- Detailed report: `docs/evidence/T0_F1_SQLITE_REGRESSION_PARITY_2026-11-19.md`, report commit `ec0896c6ebd28dff850f8860926ff7f25485daab`.
+
+The pre-existing `.github/workflows/t0-sqlite-api-isolated.yml` also ran due its broad main-push trigger (run `44494340918`). It checked out fixed older source SHA `2668dd538a99d6021921432b3485f4ed84198364`, passed 91 tests, and is recorded only as incidental evidence—not as validation of the current target HEAD or F1 parity. That workflow was not modified.
+
+F1 target status: PASS within the isolated write-gateway regression scope. Full T0/API/storage parity remains PARTIAL / NOT VERIFIED. Runtime, canonical data/recovery, PostgreSQL/TimescaleDB and production readiness remain OUT OF SCOPE / NOT VERIFIED / NOT CERTIFIED.
