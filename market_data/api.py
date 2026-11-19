@@ -17,41 +17,69 @@ VOLUME_UNIT = "BTC_BASE_ASSET"
 DATA_SOURCE = "ccxt.binanceusdm"
 
 
-def _freshness(candles, timeframe, generated_at_ms):
+def _freshness(candles, timeframe, evaluation_time_ms, coverage_complete, evaluation_anchor):
     interval = INTERVAL_MS[timeframe]
-    latest_expected = (generated_at_ms // interval) * interval - interval
+    latest_expected = (evaluation_time_ms // interval) * interval - interval
     latest = candles[-1] if candles else None
-    if latest is None:
-        return {
-            "latestExpectedOpenTimeMs": latest_expected,
-            "latestReturnedOpenTimeMs": None,
-            "latestCloseTimeMs": None,
-            "latestAvailableAtMs": None,
-            "observationAgeMs": None,
-            "closeLagMs": None,
-            "evaluable": False,
-        }
+    base = {
+        "latestExpectedOpenTimeMs": latest_expected,
+        "latestReturnedOpenTimeMs": latest.get("openTimeMs") if latest else None,
+        "latestCloseTimeMs": latest.get("closeTimeMs") if latest else None,
+        "latestAvailableAtMs": latest.get("availableAtMs") if latest else None,
+        "evaluationTimeMs": evaluation_time_ms,
+        "evaluationAnchor": evaluation_anchor,
+        "observationAgeMs": None,
+        "closeLagMs": None,
+        "timestampValid": False,
+        "fresh": False,
+        "evaluable": False,
+    }
+    if not latest:
+        return base
+
+    timestamp_valid = type(evaluation_time_ms) is int and evaluation_time_ms >= 0
+    previous_open = None
+    for candle in candles:
+        open_time = candle.get("openTimeMs")
+        close_time = candle.get("closeTimeMs")
+        available_at = candle.get("availableAtMs")
+        valid = all(
+            type(value) is int and value >= 0
+            for value in (open_time, close_time, available_at)
+        )
+        if valid:
+            valid = (
+                open_time % interval == 0
+                and close_time == open_time + interval
+                and available_at >= close_time
+                and available_at <= evaluation_time_ms
+                and (previous_open is None or open_time > previous_open)
+            )
+        if not valid:
+            timestamp_valid = False
+            break
+        previous_open = open_time
 
     open_time = latest.get("openTimeMs")
     close_time = latest.get("closeTimeMs")
     available_at = latest.get("availableAtMs")
-    valid_timestamps = all(
-        type(value) is int and value >= 0
-        for value in (open_time, close_time, available_at, generated_at_ms)
-    )
-    observation_age = generated_at_ms - available_at if valid_timestamps else None
-    close_lag = generated_at_ms - close_time if valid_timestamps else None
-    evaluable = bool(valid_timestamps and observation_age >= 0 and close_lag >= 0)
-    return {
-        "latestExpectedOpenTimeMs": latest_expected,
-        "latestReturnedOpenTimeMs": open_time,
-        "latestCloseTimeMs": close_time,
-        "latestAvailableAtMs": available_at,
-        "observationAgeMs": observation_age,
-        "closeLagMs": close_lag,
-        "evaluable": evaluable,
-    }
+    if type(available_at) is int and available_at >= 0:
+        base["observationAgeMs"] = evaluation_time_ms - available_at
+    if type(close_time) is int and close_time >= 0:
+        base["closeLagMs"] = evaluation_time_ms - close_time
 
+    close_lag = base["closeLagMs"]
+    fresh = bool(
+        timestamp_valid
+        and type(open_time) is int
+        and open_time == latest_expected
+        and type(close_lag) is int
+        and 0 <= close_lag < interval
+    )
+    base["timestampValid"] = timestamp_valid
+    base["fresh"] = fresh
+    base["evaluable"] = bool(coverage_complete is True and timestamp_valid and fresh)
+    return base
 
 def candle_query(query):
     if len(query) > 2048:
@@ -114,15 +142,22 @@ def application(environ, start_response):
         store = create_store_from_env()
         result = store.read_window(**query)
         generated_at_ms = time.time_ns() // 1_000_000
+        if query["as_of_ms"] is not None and query["as_of_ms"] > generated_at_ms:
+            return reply("400 Bad Request", {"error": "INVALID_QUERY"})
+        evaluation_time_ms = (
+            query["as_of_ms"] if query["as_of_ms"] is not None else generated_at_ms
+        )
+        evaluation_anchor = "AS_OF" if query["as_of_ms"] is not None else "GENERATED_AT"
         return reply("200 OK", {
             **result,
-            "contractVersion": "1.0.0",
+            "contractVersion": "1.1.0",
             "schemaVersion": 1,
             "volumeUnit": VOLUME_UNIT,
             "source": DATA_SOURCE,
             "generatedAtMs": generated_at_ms,
             "freshness": _freshness(
-                result["candles"], query["timeframe"], generated_at_ms,
+                result["candles"], query["timeframe"], evaluation_time_ms,
+                result["coverage"].get("complete") is True, evaluation_anchor,
             ),
         })
     except (OSError, sqlite3.Error, ValueError, StoreUnavailable):

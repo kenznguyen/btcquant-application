@@ -58,7 +58,7 @@ jobs:
             echo "checked_out_source_sha=$actual"
             echo "test_scope=SQLite API and Storage only"
             echo "excluded=PostgreSQL-specific test methods; feeder lifecycle; runtime; canonical database"
-            echo "expected_tests=16"
+            echo "expected_tests=21"
             echo "runner_image=ubuntu-24.04"
             echo "network_mode=none"
             echo "credentials=none"
@@ -113,7 +113,12 @@ jobs:
               market_data.test_api.CandleApiTest.test_sync_to_reopened_api_preserves_gaps_and_observation_time \
               market_data.test_api.CandleApiTest.test_missing_sqlite_path_preserves_unconfigured_response \
               market_data.test_api.CandleApiTest.test_contract_v1_response_has_explicit_version_and_market_identity \
-              market_data.test_api.CandleApiTest.test_contract_v1_freshness_reports_exact_observation_and_close_lag \
+              market_data.test_api.CandleApiTest.test_contract_v1_freshness_requires_complete_coverage \
+              market_data.test_api.CandleApiTest.test_contract_v1_complete_current_window_is_evaluable \
+              market_data.test_api.CandleApiTest.test_contract_v1_stale_latest_candle_is_not_fresh_or_evaluable \
+              market_data.test_api.CandleApiTest.test_contract_v1_historical_as_of_anchors_freshness_to_replay_time \
+              market_data.test_api.CandleApiTest.test_contract_v1_future_as_of_is_rejected \
+              market_data.test_api.CandleApiTest.test_contract_v1_future_availability_timestamp_is_invalid \
               market_data.test_api.CandleApiTest.test_contract_v1_empty_as_of_window_has_null_freshness_and_is_not_evaluable \
               market_data.test_api.CandleApiTest.test_contract_v1_candle_has_explicit_exclusive_close_and_quality_provenance \
               market_data.test_storage.StorageFactoryTest.test_sqlite_is_the_default_and_preserves_existing_path_configuration \
@@ -137,14 +142,14 @@ jobs:
             echo
             echo "- Run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
             echo "- Exact source SHA: $GITHUB_SHA"
-            echo "- Approved tests: ${test_count:-NOT_REPORTED} (expected 16)"
+            echo "- Approved tests: ${test_count:-NOT_REPORTED} (expected 21)"
             echo "- PostgreSQL-specific methods: excluded"
             echo "- Feeder lifecycle tests: excluded"
             echo "- Network: disabled in test container"
             echo "- Canonical database/runtime: not mounted or accessed"
           } >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$test_status" -eq 0 && "$test_count" != "16" ]]; then
-            echo "Expected 16 SQLite-only tests; observed ${test_count:-no test summary}." >&2
+          if [[ "$test_status" -eq 0 && "$test_count" != "21" ]]; then
+            echo "Expected 21 SQLite-only tests; observed ${test_count:-no test summary}." >&2
             exit 1
           fi
           exit "$test_status"

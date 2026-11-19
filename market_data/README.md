@@ -58,7 +58,11 @@ Contract properties:
 - Explicit market identity, timeframe, coverage and gaps.
 - `datasetVersion` identifies the returned dataset/window content.
 - First-observed availability is preserved; importing old candles later does not backdate their availability.
-- A response with incomplete coverage is not a complete/evaluable window; consumers must inspect coverage and must not silently fill gaps.
+- `generatedAtMs` records response generation time. Freshness evaluation uses `asOfMs` when supplied (`evaluationAnchor=AS_OF`), otherwise `generatedAtMs` (`GENERATED_AT`). Future `asOfMs` values are rejected.
+- `timestampValid` requires every returned candle to have nonnegative integer timestamps, timeframe-aligned opens, an exclusive close equal to open plus one interval, first observation no earlier than close, no future availability relative to the evaluation time, and strictly increasing opens.
+- `fresh` is true only when the latest returned candle is exactly the latest closed candle expected at the evaluation time; its close lag must be within `[0, one timeframe)`.
+- `evaluable` is true only when coverage is complete, timestamps are valid and the latest candle is fresh. Empty, stale, timestamp-invalid or incomplete windows are not evaluable.
+- Contract version is `1.1.0`; schema version remains 1 because the new freshness fields are additive.
 - Missing storage/configuration fails closed; the API does not create a missing database.
 
 ## Verification
