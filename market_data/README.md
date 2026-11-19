@@ -1,6 +1,6 @@
 # T0 Canonical Market Data — SQLite-first
 
-T0 is the independent market-data foundation for the Five-Layer System. The selected scope in this repository is Binance USD-M perpetual BTCUSDT candles at 15m and 1h, stored in SQLite and exposed through a bounded read-only Candle API.
+T0 is the independent market-data foundation for the Five-Layer System. The selected scope in this repository is Binance USD-M perpetual BTCUSDT candles at 15m and 1h, stored in SQLite and exposed through a bounded read-only FastAPI Candle API.
 
 See [T0 Active Scope Index](../docs/T0_ACTIVE_SCOPE_INDEX.md) for scope, exclusions and current readiness limits.
 
@@ -15,20 +15,19 @@ See [T0 Active Scope Index](../docs/T0_ACTIVE_SCOPE_INDEX.md) for scope, exclusi
 | `feeder_service.py` | Production composition/entrypoint (not currently runtime-verified) |
 | `sync.py` | Bounded exchange candle synchronization |
 | `write_gateway.py` | Single-writer, lease-fenced SQLite writes and WAL keeper |
-| `api.py` | Authenticated read-only WSGI Candle API |
+| `fastapi_app.py` | Authenticated read-only FastAPI ASGI Candle API |
 
-Public OHLCV acquisition uses CCXT's Binance USD-M adapter and does not require exchange API keys. The API is read-only; it does not call the exchange or expose write/order endpoints.
+Public OHLCV acquisition uses CCXT's Binance USD-M adapter and does not require exchange API keys. The API is read-only; it does not call the exchange or expose write/order endpoints. FastAPI is the sole HTTP adapter; the legacy WSGI/Gunicorn serving path has been retired.
 
 ## Dependency contract
 
 Direct dependencies are declared in `requirements-market-data.txt`:
 
 - `ccxt==4.5.92`
-- `gunicorn==23.0.0`
 
-The committed `requirements-market-data.lock` pins the complete 25-package dependency set by exact version and SHA-256 wheel hash. Its verified compatibility target is **CPython 3.12 / Linux x86_64** only. Other Python versions and platforms are not certified by this lock.
+The committed `requirements-market-data.lock` pins the CCXT ingestion dependency closure by exact version and SHA-256 wheel hash. FastAPI/Uvicorn serving dependencies are pinned separately in `requirements-market-data-fastapi.lock`. Its verified compatibility target is **CPython 3.12 / Linux x86_64** only. Other Python versions and platforms are not certified by this lock.
 
-The dependency compatibility workflow verifies hash-enforced wheel download and a separate offline fresh installation. See [dependency evidence](../docs/evidence/T0_DEPENDENCY_COMPATIBILITY_GATE_2026-11-19.md).
+The dependency compatibility workflow verifies hash-enforced CCXT wheel download and a separate offline fresh installation. The dedicated FastAPI workflow independently verifies the ASGI runtime lock. See [dependency evidence](../docs/evidence/T0_DEPENDENCY_COMPATIBILITY_GATE_2026-11-19.md).
 
 ## SQLite initialization boundary
 

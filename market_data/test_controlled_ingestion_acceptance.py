@@ -4,7 +4,7 @@ All writes use temporary SQLite databases, synthetic exchange data, and a
 lease-fenced gateway. This suite never opens a canonical database or network.
 """
 import io
-import json
+from fastapi.testclient import TestClient
 import os
 import tempfile
 import unittest
@@ -12,7 +12,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from market_data.api import application
+from market_data.fastapi_app import app
 from market_data.feeder import LeaseStore
 from market_data.store import Candle, CandleStore, INTERVAL_MS, read_window
 from market_data.sync import sync_window
@@ -109,31 +109,22 @@ class ControlledIngestionAcceptanceTest(unittest.TestCase):
             exchange = SyntheticBinanceUSDM(timeframe)
             sync_window(exchange, self.writer, timeframe, START, END, now_ms=lambda: END + 1)
             canonical = read_window(self.db_path, "BTCUSDT", timeframe, START, END)
-            captured = {}
-
-            def start_response(status, headers):
-                captured["status"] = status
-                captured["headers"] = headers
-
             query = (
                 f"symbol=BTCUSDT&timeframe={timeframe}"
                 f"&startMs={START}&endMs={END}"
             )
-            environ = {
-                "REQUEST_METHOD": "GET",
-                "PATH_INFO": "/v1/candles",
-                "QUERY_STRING": query,
-                "HTTP_AUTHORIZATION": "Bearer acceptance-test-token",
-            }
             with patch.dict(os.environ, {
                 "MARKET_DATA_TOKEN": "acceptance-test-token",
                 "MARKET_DATA_BACKEND": "sqlite",
                 "MARKET_DATA_DB": self.db_path,
             }, clear=False):
-                payload = b"".join(application(environ, start_response))
+                response = TestClient(app).get(
+                    f"/v1/candles?{query}",
+                    headers={"Authorization": "Bearer acceptance-test-token"},
+                )
 
-            response = json.loads(payload)
-            self.assertEqual(captured["status"], "200 OK")
+            payload = response.json()
+            self.assertEqual(response.status_code, 200)
             self.assertEqual(response["coverage"]["complete"], True)
             self.assertEqual(response["coverage"]["returned"], 96 if timeframe == "15m" else 24)
             self.assertEqual(response["datasetVersion"], canonical["datasetVersion"])

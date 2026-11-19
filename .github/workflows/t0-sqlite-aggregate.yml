@@ -5,7 +5,6 @@ on:
     branches:
       - main
     paths:
-      - market_data/api.py
       - market_data/fastapi_app.py
       - market_data/api_contract.py
       - requirements-market-data-fastapi.lock
@@ -20,15 +19,12 @@ on:
       - market_data/storage.py
       - market_data/sync.py
       - market_data/write_gateway.py
-      - market_data/test_api.py
       - market_data/test_initialize_sqlite.py
       - market_data/test_store.py
       - market_data/test_fenced_store.py
       - market_data/test_feeder_health.py
       - market_data/test_feeder_retry.py
       - market_data/test_feeder_scheduler.py
-      - market_data/test_controlled_ingestion_acceptance.py
-      - market_data/test_t0_controlled_ingestion_acceptance.py
       - market_data/test_storage.py
       - market_data/test_write_gateway.py
       - market_data/test_sync.py
@@ -66,15 +62,13 @@ jobs:
           actual="$(git rev-parse HEAD)"
           test "$actual" = "$GITHUB_SHA"
           for file in \
-            market_data/api.py market_data/initialize_sqlite.py \
+            market_data/initialize_sqlite.py \
             market_data/feeder.py market_data/feeder_service.py \
             market_data/store.py market_data/storage.py market_data/sync.py \
-            market_data/write_gateway.py market_data/test_api.py \
+            market_data/write_gateway.py \
             market_data/test_initialize_sqlite.py market_data/test_store.py \
             market_data/test_fenced_store.py market_data/test_feeder_health.py \
             market_data/test_feeder_retry.py market_data/test_feeder_scheduler.py \
-            market_data/test_controlled_ingestion_acceptance.py \
-            market_data/test_t0_controlled_ingestion_acceptance.py \
             market_data/test_storage.py \
             market_data/test_write_gateway.py market_data/test_sync.py \
             market_data/test_feeder_lease.py market_data/test_feeder_recovery.py \
@@ -88,8 +82,8 @@ jobs:
             echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo "workflow_commit=$GITHUB_SHA"
             echo "checked_out_source_sha=$actual"
-            echo "expected_tests=196"
-            echo "test_scope=SQLite initializer/store/fencing, API/storage, write gateway, sync, lease, recovery, health, retry, scheduler, controlled ingestion and deterministic lifecycle"
+            echo "expected_tests=174"
+            echo "test_scope=SQLite initializer/store/fencing, storage, write gateway, sync, lease, recovery, health, retry, scheduler and deterministic lifecycle; FastAPI HTTP/acceptance tests run in dedicated FastAPI workflow"
             echo "postgresql_tests=excluded"
             echo "canonical_database=not mounted"
             echo "production_runtime=excluded"
@@ -142,31 +136,12 @@ jobs:
               market_data.test_feeder_health \
               market_data.test_feeder_retry \
               market_data.test_feeder_scheduler \
-              market_data.test_controlled_ingestion_acceptance \
-              market_data.test_t0_controlled_ingestion_acceptance \
               market_data.test_write_gateway \
               market_data.test_sync \
               market_data.test_feeder_lease \
               market_data.test_feeder_recovery \
               market_data.test_feeder_lifecycle \
               market_data.test_feeder_service_lifecycle \
-              market_data.test_api.CandleApiTest.test_reads_persisted_decimal_candles_and_reports_gap \
-              market_data.test_api.CandleApiTest.test_as_of_does_not_backdate_imported_history \
-              market_data.test_api.CandleApiTest.test_missing_auth_or_store_fails_without_creating_database \
-              market_data.test_api.CandleApiTest.test_invalid_duplicate_unbounded_and_unknown_parameters \
-              market_data.test_api.CandleApiTest.test_read_only_methods_and_process_health \
-              market_data.test_api.CandleApiTest.test_corrupt_stored_prices_are_not_served_as_validated \
-              market_data.test_api.CandleApiTest.test_sync_to_reopened_api_preserves_gaps_and_observation_time \
-              market_data.test_api.CandleApiTest.test_missing_sqlite_path_preserves_unconfigured_response \
-              market_data.test_api.CandleApiTest.test_contract_v1_response_has_explicit_version_and_market_identity \
-              market_data.test_api.CandleApiTest.test_contract_v1_freshness_requires_complete_coverage \
-              market_data.test_api.CandleApiTest.test_contract_v1_complete_current_window_is_evaluable \
-              market_data.test_api.CandleApiTest.test_contract_v1_stale_latest_candle_is_not_fresh_or_evaluable \
-              market_data.test_api.CandleApiTest.test_contract_v1_historical_as_of_anchors_freshness_to_replay_time \
-              market_data.test_api.CandleApiTest.test_contract_v1_future_as_of_is_rejected \
-              market_data.test_api.CandleApiTest.test_contract_v1_future_availability_timestamp_is_invalid \
-              market_data.test_api.CandleApiTest.test_contract_v1_empty_as_of_window_has_null_freshness_and_is_not_evaluable \
-              market_data.test_api.CandleApiTest.test_contract_v1_candle_has_explicit_exclusive_close_and_quality_provenance \
               market_data.test_storage.StorageFactoryTest.test_sqlite_is_the_default_and_preserves_existing_path_configuration \
               market_data.test_storage.StorageFactoryTest.test_sqlite_reader_does_not_create_a_missing_database \
               market_data.test_storage.StorageFactoryTest.test_sqlite_factory_ingestion_and_read_share_one_contract \
@@ -187,11 +162,11 @@ jobs:
             echo
             echo "- Run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
             echo "- Exact source SHA: $GITHUB_SHA"
-            echo "- Observed tests: ${test_count:-NOT_REPORTED} (expected 196)"
+            echo "- Observed tests: ${test_count:-NOT_REPORTED} (expected 174)"
             echo "- PostgreSQL-specific API/Storage tests excluded"
             echo "- No canonical DB, production runtime, exchange, network or credentials"
           } >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$test_status" -eq 0 && "$test_count" != "196" ]]; then
+          if [[ "$test_status" -eq 0 && "$test_count" != "174" ]]; then
             echo "Expected 196 tests; observed ${test_count:-no test summary}." >&2
             exit 1
           fi

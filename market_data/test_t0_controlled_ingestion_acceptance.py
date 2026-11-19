@@ -3,14 +3,14 @@
 All writes target a temporary SQLite database. Exchange responses are synthetic;
 this suite never opens a network connection or uses canonical storage.
 """
-import json
+from fastapi.testclient import TestClient
 import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from market_data.api import application
+from market_data.fastapi_app import app
 from market_data.feeder import LeaseStore
 from market_data.store import CandleStore, INTERVAL_MS, read_window
 from market_data.sync import EXCHANGE_SYMBOL, sync_window
@@ -59,20 +59,12 @@ class SyntheticBinanceUSDm:
 
 
 def call_api(query, token):
-    captured = {}
+    response = TestClient(app).get(
+        f"/v1/candles?{query}",
+        headers={"Authorization": "Bearer " + token},
+    )
+    return response.status_code, response.json()
 
-    def start_response(status, headers):
-        captured["status"] = status
-        captured["headers"] = headers
-
-    environ = {
-        "REQUEST_METHOD": "GET",
-        "PATH_INFO": "/v1/candles",
-        "QUERY_STRING": query,
-        "HTTP_AUTHORIZATION": "Bearer " + token,
-    }
-    body = b"".join(application(environ, start_response))
-    return captured["status"], json.loads(body)
 
 
 class T0ControlledIngestionOfflineAcceptanceTest(unittest.TestCase):
@@ -153,7 +145,7 @@ class T0ControlledIngestionOfflineAcceptanceTest(unittest.TestCase):
                 }, clear=False):
                     status, payload = call_api(query, token)
 
-                self.assertEqual(status, "200 OK")
+                self.assertEqual(status, 200)
                 self.assertEqual(payload["datasetVersion"], first_hashes[timeframe])
                 self.assertEqual(payload["coverage"]["returned"], expected_count)
                 self.assertTrue(payload["coverage"]["complete"])

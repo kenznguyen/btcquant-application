@@ -1,11 +1,10 @@
 # T0 Market Data Runtime Dependencies
 
-# Scope: SQLite-first T0 exchange ingestion and WSGI API serving only.
+# Scope: SQLite-first T0 exchange ingestion. The HTTP API is served by FastAPI.
 # SQLite regression tests use Python's standard library and need no third-party
 # packages. These runtime dependencies are not required by the isolated test gate.
 
 ccxt==4.5.92
-gunicorn==23.0.0
 
 # PostgreSQL/TimescaleDB is excluded from the selected target scope.
 # Do not add psycopg until PostgreSQL is separately approved and its migrations,

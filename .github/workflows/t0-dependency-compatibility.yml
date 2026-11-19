@@ -46,7 +46,7 @@ jobs:
             echo "checked_out_source_sha=$actual"
             echo "manifest=requirements-market-data.txt"
             echo "python_target=3.12.16"
-            echo "direct_dependencies=ccxt==4.5.92,gunicorn==23.0.0"
+            echo "direct_dependencies=ccxt==4.5.92"
             echo "postgresql=excluded"
             echo "runtime_startup=excluded"
             echo "canonical_database=not mounted"
@@ -135,8 +135,7 @@ jobs:
               python -m pip install --no-index --find-links=/artifacts/wheelhouse \
                 --require-hashes -r /artifacts/requirements-market-data.lock
               python -m pip check
-              python -c "import importlib.metadata as m, ccxt, gunicorn; assert m.version(\"ccxt\") == \"4.5.92\"; assert m.version(\"gunicorn\") == \"23.0.0\"; assert hasattr(ccxt, \"binanceusdm\"); print(\"python=3.12.16\"); print(\"ccxt=\" + m.version(\"ccxt\")); print(\"gunicorn=\" + m.version(\"gunicorn\")); print(\"ccxt_binanceusdm_adapter=available\"); print(\"gunicorn_import=available\")"
-              python -m gunicorn --version
+              python -c "import importlib.metadata as m, ccxt; assert m.version(\"ccxt\") == \"4.5.92\"; assert hasattr(ccxt, \"binanceusdm\"); print(\"python=3.12.16\"); print(\"ccxt=\" + m.version(\"ccxt\")); print(\"ccxt_binanceusdm_adapter=available\")"
               python -m pip list --format=freeze
             ' > "$artifacts/fresh-install.log" 2>&1; then
             install_status=0
@@ -157,7 +156,7 @@ jobs:
             echo "- Run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
             echo "- Exact source SHA: $GITHUB_SHA"
             echo "- Python: 3.12.16 (immutable image)"
-            echo "- Direct dependencies: ccxt 4.5.92; gunicorn 23.0.0"
+            echo "- Direct dependency: ccxt 4.5.92"
             echo "- Lock: committed requirements-market-data.lock; wheelhouse downloaded with SHA-256 enforcement"
             echo "- Fresh install: offline, network disabled"
             echo "- Scope excludes PostgreSQL, runtime startup, VPS and canonical database"
