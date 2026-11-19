@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19
+
+## Independent review of isolated SQLite/API suite
+
+- Latest preceding evidence: isolated GitHub Actions run [44443686889](https://github.com/kenznguyen/btcquant-application/actions/runs/44443686889), exact test source SHA `32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f`, six modules, 61/61 PASS, zero failures/skips; artifact ID `14491519041` and downloaded payload SHA-256 verified.
+- Independent static review report: `docs/evidence/T0_SQLITE_API_TEST_INDEPENDENT_REVIEW_2026-11-19.md`; report commit `a940b4a72b9d7ce6a5fd7130926b03a3f9b90349`.
+- Review verdict: focused SQLite/API test quality CONDITIONAL PASS; broader T0 feeder lifecycle coverage PARTIAL / NOT VERIFIED.
+- Finding F1: `SQLiteWriteGateway._validate_existing_schema()` does not reject a valid candles table when `feeder_leases` is absent; it defers failure until write time. Required follow-up: validate required lease table presence/schema and add a regression test.
+- Finding F2: `FeederScheduler`, `RetryPolicy`, and `FeederRuntime` lifecycle/state transitions are not covered by the six modules.
+- Finding F3: no direct regression test proves page 1 remains committed when a later sync page fails.
+- Finding F4: API is tested as a direct WSGI callable, not over a bound HTTP server; server/proxy behavior remains out of scope.
+- No source/test/workflow/dependency/schema/runtime/canonical-data changes were made by this review. No tests were run in this review; findings are static.
+- Next gate: owner decision on F1 and bounded approval for any source/test change. Preserve existing 61/61 evidence and immutable test SHA. Do not modify T0 runtime, canonical DB, exchange, VPS, PostgreSQL/TimescaleDB, T1/T2 or trading.
+
+---
+
 # TARGET REPOSITORY OVERRIDE — 2026-11-19
 
 ## GitHub Actions workflow implementation — 2026-11-19
