@@ -122,9 +122,9 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["reason"], "AI_CALIBRATION_ADMISSION_CONTEXT_UNAVAILABLE")
         self.assertIsNone(result["intent"])
         _, state = self.request("/v1/paper")
-        self.assertEqual(state["positionBase"], "0")
+        self.assertEqual(state["strategyCore"]["positionBase"], "0")
         self.assertFalse(state["liveTradingSupported"])
-        self.assertEqual(float(state["feesQuote"]), 0)
+        self.assertEqual(float(state["strategyCore"]["feesQuote"]), 0)
     def test_core_retries_do_not_duplicate_positions_or_fees(self):
         with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
             _, first = self.request("/v1/paper/evaluate", "POST", {"source": "CORE"})
@@ -138,8 +138,15 @@ class FiveLayerApiTest(unittest.TestCase):
             before = connection.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
             ).fetchall()
-        with patch.object(api, "decide", return_value=self.valid_ai_decision()):
+        with patch.object(api, "control_permit") as permit, \
+             patch.object(api, "ledger") as ledger, \
+             patch.object(api, "decide") as ai_decide, \
+             patch.object(api, "core_decide") as core_decide:
             code, result = self.request("/v1/paper/evaluate", "POST", {"source": "AI"})
+            permit.assert_not_called()
+            ledger.assert_not_called()
+            ai_decide.assert_not_called()
+            core_decide.assert_not_called()
         with sqlite3.connect(self.db) as connection:
             after = connection.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"

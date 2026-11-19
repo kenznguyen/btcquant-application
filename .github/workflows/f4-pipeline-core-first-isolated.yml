@@ -32,7 +32,7 @@ jobs:
       - name: Checkout exact approved source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 290bbefb3bfe98f6a13c053ec181ec3d556f27c0
+          ref: ${{ github.sha }}
           fetch-depth: 1
           persist-credentials: false
 
@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected_commit="290bbefb3bfe98f6a13c053ec181ec3d556f27c0"
+          expected_commit="$GITHUB_SHA"
           actual_commit="$(git rev-parse HEAD)"
           test "$actual_commit" = "$expected_commit"
 
@@ -69,8 +69,8 @@ jobs:
             echo "credentials=none"
             echo "canonical_database_mount=none"
           } > "$RUNNER_TEMP/f4-test-artifacts/runner_metadata.txt"
-          verify_blob pipeline/api.py 0301bbec82f99253b8a4c69e09db53ad108df686
-          verify_blob pipeline/test_api.py 30dd11a50c63f27680f7c65c4339ad955e586476
+          verify_blob pipeline/api.py 57b9c1ee3f09eef2691d3967ec5fb06665c2712f
+          verify_blob pipeline/test_api.py cd651a2a9d9d4f4aa0a3b5276d7ff557d31ebe5f
           verify_blob pipeline/test_decision.py 6781f26d66635f56662a627bdd3b4a63f26c1f28
           verify_blob pipeline/values.py 5576376454af129b944919fb588e26c0657a781e
           verify_blob market_data/store.py 4e1b0c54bd56455abe5be0e5c7d0807e63e0bc78
@@ -153,7 +153,7 @@ jobs:
               '' \
               "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
               "- Workflow HEAD SHA: $GITHUB_SHA" \
-              '- Checked-out source SHA: 290bbefb3bfe98f6a13c053ec181ec3d556f27c0' \
+              '- Checked-out source SHA: $GITHUB_SHA' \
               '- Python: 3.12.16' \
               '- Network: none inside test container' \
               "- Tests discovered: ${test_count:-NOT_REPORTED} (expected 41)" \

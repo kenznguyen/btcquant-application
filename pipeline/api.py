@@ -447,6 +447,9 @@ def application(environ, start_response):
     try:
         if method == "POST":
             payload = _body(environ)
+            # Core-First enforcement: reject AI before rate-limit accounting or any DB/Ledger side effect.
+            if path == "/v1/paper/evaluate" and payload == {"source": "AI"}:
+                return response("403 Forbidden", {"error": "AI_EXECUTION_DISABLED"})
             if not os.environ.get("MARKET_DATA_DB") or not Path(os.environ["MARKET_DATA_DB"]).is_file():
                 return response("503 Service Unavailable", {"error": "STORE_UNAVAILABLE"})
             if not control_permit(timestamp):
@@ -470,9 +473,6 @@ def application(environ, start_response):
             elif path == "/v1/paper/evaluate" and (not payload or payload in ({"source": "AI"}, {"source": "CORE"})):
                 # Core-First: paper evaluation is exclusively Strategy Core.
                 # AI candidates remain available through offline /v1/decision.
-                # Reject AI before touching the Ledger or evaluating a candidate.
-                if payload.get("source", "CORE") == "AI":
-                    return response("403 Forbidden", {"error": "AI_EXECUTION_DISABLED"})
                 source_id = "STRATEGY_CORE"
                 from paper_execution.ledger import dual_ledger_ready
                 dual_active = dual_ledger_ready(os.environ["MARKET_DATA_DB"])
