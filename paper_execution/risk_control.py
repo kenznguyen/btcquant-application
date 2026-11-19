@@ -27,15 +27,28 @@ def snapshot(connection):
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='paper_risk_control'"
     ).fetchone()
     if not exists:
-        return {"paused": False, "killed": False, "reason": None, "updatedAtMs": 0,
-                "mode": "PAPER", "liveTradingSupported": False}
-    row = connection.execute(
-        "SELECT paused,killed,reason,updated_at_ms FROM paper_risk_control WHERE id=1"
-    ).fetchone()
+        raise sqlite3.DatabaseError("RISK_CONTROL_STATE_UNAVAILABLE")
+    try:
+        row = connection.execute(
+            "SELECT paused,killed,reason,updated_at_ms FROM paper_risk_control WHERE id=1"
+        ).fetchone()
+    except sqlite3.Error:
+        raise sqlite3.DatabaseError("RISK_CONTROL_STATE_UNAVAILABLE") from None
     if row is None:
-        raise sqlite3.DatabaseError("Risk control state is missing")
-    return {"paused": bool(row[0]), "killed": bool(row[1]),
-            "reason": row[2], "updatedAtMs": row[3],
+        raise sqlite3.DatabaseError("RISK_CONTROL_STATE_UNAVAILABLE")
+    paused, killed, reason, updated_at_ms = row
+    if type(paused) is not int or paused not in (0, 1):
+        raise sqlite3.DatabaseError("RISK_CONTROL_STATE_INVALID")
+    if type(killed) is not int or killed not in (0, 1):
+        raise sqlite3.DatabaseError("RISK_CONTROL_STATE_INVALID")
+    try:
+        updated_at_ms = stamp(updated_at_ms)
+    except (TypeError, ValueError):
+        raise sqlite3.DatabaseError("RISK_CONTROL_STATE_INVALID") from None
+    if reason is not None and not isinstance(reason, str):
+        raise sqlite3.DatabaseError("RISK_CONTROL_STATE_INVALID")
+    return {"paused": paused == 1, "killed": killed == 1,
+            "reason": reason, "updatedAtMs": updated_at_ms,
             "mode": "PAPER", "liveTradingSupported": False}
 
 
