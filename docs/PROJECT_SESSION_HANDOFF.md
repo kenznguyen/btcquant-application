@@ -3897,3 +3897,17 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Updated reconciliation evidence: `docs/evidence/T0_MISSING_FILE_RECONCILIATION_2026-11-19.md`, update commit `d5b4d9dec349a43eee115d44c1fbded9995e5954`.
 - No tests/workflows were run. Test behavior remains NOT VERIFIED pending a separately approved test gate. No dependencies installed, source behavior modified, PostgreSQL assets copied, or runtime/canonical database accessed.
 - Next: verify exact target blob equality by readback; then request separate approval before test execution or dependency changes.
+
+
+## 2026-11-19 — Isolated SQLite/API test execution
+
+- GitHub Actions run [44443686889](https://github.com/kenznguyen/btcquant-application/actions/runs/44443686889), run attempt 1, `workflow_dispatch`, branch `main`; workflow HEAD `f024a233c6756e219c645083dc41cc6caa8f5967`; job `135290502856`: SUCCESS.
+- Exact checked-out test source SHA: `32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f`. Workflow file blob: `53411a017a977108f4ef4710647701f38147f8fe`.
+- GitHub-hosted runner `ubuntu-24.04` / Ubuntu 24.04.5 / x64; Docker `28.0.4`; pinned Python image digest `sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`; runtime Python `3.12.16`.
+- Exact SHA checkout, image digest, Python preflight and network probe passed. Test container used `--network none`; probe observed loopback only. Checkout, image pull and artifact upload remain networked runner operations outside the test container.
+- Six approved modules executed: recovery 10, lease 10, write gateway 11, storage 7, sync 10, API 13. Total 61; passed 61, failed 0, skipped 0; `Ran 61 tests in 0.796s`; process exit code 0.
+- Artifact `t0-sqlite-api-test-evidence`, ID `14491519041`, size 3,153 bytes, expires `2026-12-03T02:21:26Z`. Downloaded ZIP SHA-256 `15449d69e5295c6f399fd8a4b588c4fa15ef539b40faf413301f7497143cba86` matched GitHub artifact digest. Payload inspected; includes unittest log, runner metadata, Python version, image identity and network probe.
+- Detailed evidence: `docs/evidence/SQLITE_API_TEST_EXECUTION_2026-11-19.md`; report commit `0bb8b0863ca50ce973686079e1d61557bfb7b808`.
+- Status: workflow execution PASS; exact source checkout PASS; runtime preflight PASS; test-container network isolation probe PASS; six-module suite PASS (61/61); artifact payload/hash verification PASS.
+- Scope limits: this does not certify T0 live runtime, canonical database/data, PostgreSQL/TimescaleDB, Binance connectivity, T1/T2 integration, strategy/risk/ledger behavior, deployment or production. Those remain NOT VERIFIED / NOT CERTIFIED / OUT OF SCOPE. No source, test, dependency, workflow, schema, canonical data, runtime, VPS or trading behavior changed.
+- Next: preserve this evidence and exact source SHA. Any wider runtime/data/PostgreSQL/integration validation requires a separate bounded approval.
