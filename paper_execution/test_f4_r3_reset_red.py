@@ -56,7 +56,7 @@ class F4KillResetAtomicReadinessRedTest(unittest.TestCase):
         self.assertFalse(readiness["checks"]["accountRiskReady"])
         self.assertFalse(readiness["ready"])
 
-    def test_missing_account_cutover_is_not_ready_even_with_dual_schema(self):
+    def test_authoritative_account_risk_not_ready_blocks_reset_preflight(self):
         from pipeline import api
 
         with patch.dict(os.environ, {"MARKET_DATA_DB": str(self.path)}), \
