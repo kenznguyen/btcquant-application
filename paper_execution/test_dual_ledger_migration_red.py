@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from paper_execution.ledger import PaperLedger
+from paper_execution.risk_contract import provision_account_risk_contract
 
 
 class DualLedgerMigrationRedTest(unittest.TestCase):
@@ -42,6 +43,12 @@ class DualLedgerMigrationRedTest(unittest.TestCase):
 
     def make_legacy_database(self):
         legacy = PaperLedger(self.path, max_position_base="1", fee_rate="0.001")
+        provision_account_risk_contract(
+            self.path,
+            {"maxDrawdownPct": "99", "maxDailyLossUsdt": "1000000", "maxExposureUsdt": "1000000"},
+            source="DUAL_LEDGER_MIGRATION_TEST_FIXTURE",
+            recorded_at_ms=self.now,
+        )
         order = legacy.submit(self.intent(), self.book(), self.now, strategy_id="MANUAL")
         self.assertEqual(order["status"], "FILLED")
         legacy.record_equity(
