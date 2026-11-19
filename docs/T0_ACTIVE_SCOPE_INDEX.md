@@ -351,3 +351,11 @@
 - Coverage boundaries and acceptable-gap policy remain **BLOCKED pending owner decision**. No snapshot can be marked OFFICIAL / VERIFIED before those are approved and checked.
 - No source/test/workflow/dependency/schema/data changes; no SQLite opened, exchange access, Dropbox action, VPS/runtime, snapshot, restore or cutover. No tests/workflows run; no run/job/artifact exists.
 - Phase 1 remains DESIGN / STATIC ONLY. Next: owner review of clarified specification, including explicit M15/H1 coverage boundaries and gap policy. Implementation proposal requires separate approval.
+
+
+## Latest evidence — archive payload validation (2026-11-20)
+
+- **PASS:** `docs/evidence/T0_BINANCE_UM_BTCUSDT_ARCHIVE_PAYLOAD_VALIDATION_2026-11-20.md`
+- 202/202 ZIP checksum and ZIP/CSV structural validations passed; 241,440 M15 + 60,360 H1 rows; no detected gaps or duplicates across the selected archive partition.
+- **NOT VERIFIED:** completeness beyond 2019-12-31 through 2026-11-18; current REST tail and any SQLite build.
+- No REST, SQLite, Dropbox, VPS/runtime, feeder/writer, deployment or cutover was performed.
