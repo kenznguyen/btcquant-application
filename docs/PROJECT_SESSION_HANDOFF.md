@@ -3733,3 +3733,15 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Verdict: static source/workflow inventory PASS (static only); latest exact-HEAD CI/artifacts NOT VERIFIED; current runtime NOT VERIFIED; canonical data/OOS BLOCKED; production NOT CERTIFIED. T0 remains independent/protected; T1 inactive; paper-only; `AI_EXECUTION_ENABLED=false`.
 - No source, tests, workflows, dependencies, schema, canonical data, runtime, VPS, deployment, exchange or trading behavior changed. One documentation evidence file and this handoff entry were committed on the existing branch only.
 - Next: preserve the branch; resolve source/path divergence against current main before any integration decision. Any new CI execution, VPS/runtime inspection, data collection or export requires its own bounded approval.
+
+
+## 2026-11-19 — T0 selected snapshot migration and dependency inventory
+
+- Public target repository: `kenznguyen/btcquant-application`; owner explicitly chose to keep it Public.
+- T0 selected-file snapshot commit: `fcaa2efefdd4b3e481e9db951d538824596d0038`.
+- Provenance: `docs/T0_MIGRATION_PROVENANCE.md`; source repo `kenznguyen/btcusdt-telegram-signals2`, branch `feature/t0-centralized-data-feeder-p1-20261101`, source documentation/evidence HEAD `8623d1076d6b821091ff9da0d84033f48fd8ba7a`.
+- Read-only dependency/import inventory committed at `docs/evidence/T0_DEPENDENCY_IMPORT_INVENTORY_2026-11-19.md` (commit `3ef99199f9822f1f9375ddbd3513921a8d6f16a6`).
+- Findings: source requirements.txt was not copied; CCXT and Psycopg are not declared in that source manifest; `market_data/migrations.py` expects a sibling SQL migrations directory which is absent from the target; test_sync.py and test_api.py are also absent. The four copied tests do not represent full T0 regression coverage.
+- No code/dependency/workflow changes, test execution, workflow dispatch, database/data copy, runtime access or source repository mutation occurred.
+- Status: selected-file snapshot PASS; dependency closure BLOCKED/NOT VERIFIED; PostgreSQL migration completeness BLOCKED; tests NOT RUN; runtime NOT VERIFIED; production NOT CERTIFIED.
+- Next gate: bounded source-to-target reconciliation of missing T0 files, classifying SQLite baseline vs optional PostgreSQL vs out-of-scope. Do not install packages, copy missing files, run tests or dispatch workflows until that scope is explicitly approved.
