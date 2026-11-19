@@ -186,3 +186,13 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Dependency lock generation succeeded under CPython 3.12.16 with SHA-256. Lock artifacts are retained in FastAPI artifact `14529288115`; the lock files have not yet been committed.
 - Migration remains **PARTIAL**: old WSGI `application` in `market_data/api.py` and its existing `test_api.py` coverage remain. Port the full 1.1.0 suite to ASGI, commit locks, then remove WSGI/Gunicorn after full parity and independent review.
 - Runtime/API endpoint, Nginx, VPS, systemd, deployment and T1/T2 connection remain NOT AUTHORIZED. PostgreSQL remains PARKED; no canonical DB/data, retention or trading behavior changed. Production readiness NOT CERTIFIED.
+
+
+### FastAPI full Candle Contract 1.1.0 ASGI regression — 2026-11-19
+
+- Expanded FastAPI suite: **25/25 PASS**, run [44525859272](https://github.com/kenznguyen/btcquant-application/actions/runs/44525859272).
+- Existing SQLite-only aggregate: **196/196 PASS**, run [44525859257](https://github.com/kenznguyen/btcquant-application/actions/runs/44525859257).
+- Both exact-SHA runs tested `a03637372e3090595bf6e48c9426e7e076cf3bdc`.
+- Detailed evidence: [T0 FastAPI Full Contract Regression](evidence/T0_FASTAPI_FULL_CONTRACT_REGRESSION_2026-11-19.md), commit `43253b5b797a973fe71350bfe15dfc7bf58f2510`.
+- ASGI contract coverage is expanded, but WSGI entrypoint/tests remain; migration status **PARTIAL**. Dependency locks remain in CI artifact, not committed. Independent review pending.
+- Runtime/deployment, T1/T2, PostgreSQL, canonical data changes, retention/deletion and trading remain outside authorization.
