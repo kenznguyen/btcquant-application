@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Owner decision: REST tail remains NOT VERIFIED
+
+- Owner explicitly decided to leave the REST tail from 2026-11-19 00:00 UTC as **NOT VERIFIED** following the bounded Binance USD-M REST attempt blocked by HTTP 451.
+- Do not retry the endpoint, use alternate endpoints/domains, proxies, geo-routing or another execution environment. No further REST tail access is authorized.
+- Preserve archive payload validation as PASS through M15 2026-11-18 23:45 UTC and H1 2026-11-18 23:00 UTC. Do not infer coverage after those archive boundaries or completeness through a later retrieval cutoff.
+- Evidence: `docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_VALIDATION_2026-11-20.md`, commit `782d4a46f6a75dfc2aa4977e6a33b14e86ede268`.
+- Status: REST tail **NOT VERIFIED — CLOSED BY OWNER DECISION / NO FURTHER RETRIEVAL**. Archive payload validation remains **PASS** for its documented scope.
+- No source/test/workflow/dependency/schema/canonical data changes; no GitHub Actions run/job/artifact. SQLite, Dropbox, VPS/runtime, feeder/writer, deployment, restore and cutover remain NOT RUN / separately gated.
+- Next: preserve this boundary. Any future reconsideration requires a new explicit owner decision; do not reopen automatically.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — REST tail validation BLOCKED by HTTP 451
 
 - Owner approved a bounded, read-only public Binance USD-M REST tail check for BTCUSDT M15/H1 from 2026-11-19 00:00 UTC, maximum 500 rows/timeframe and 5 MiB isolated staging; only fully closed candles were eligible.
