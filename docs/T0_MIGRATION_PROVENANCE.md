@@ -144,3 +144,33 @@ This addendum preserves the source feeder/service lifecycle contracts without ov
 - Initial fixture attempts exposed six then one missing-F1-schema setup errors. The test-only fixture helper was corrected; the authoritative run passed. No production source was modified.
 - Evidence report: `docs/evidence/T0_FEEDER_LIFECYCLE_CONTRACTS_2026-11-19.md`, commit `f8b10455018f248cc97019e00be28466683e7f80`.
 - Status: deterministic lifecycle/scheduler/retry and feeder-service composition contracts PASS 62/62. Production feeder startup, systemd service operation, canonical DB/data, VPS/runtime, Binance connectivity, PostgreSQL and production readiness remain NOT VERIFIED / NOT AUTHORIZED.
+
+
+## SQLite foundation expansion — 2026-11-19
+
+Source repo/branch: `kenznguyen/btcusdt-telegram-signals2` / `feature/t0-centralized-data-feeder-p1-20261101`; exact source HEAD inspected: `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9`.
+
+The following selected SQLite-first T0 files were copied without content changes. Source and target blob SHA-1 values are identical:
+
+| Target path | Source and target blob SHA-1 |
+|---|---|
+| `market_data/initialize_sqlite.py` | `58bd2deba66cc667bad8d6446c5ff54e7f5dd240` |
+| `market_data/test_initialize_sqlite.py` | `9823f42fa1b346c7c5b96786eec7e996484b692d` |
+| `market_data/test_store.py` | `df1554a365ff5d619498dc4b07f7a1a435e761df` |
+| `market_data/test_fenced_store.py` | `0573d0728f3e62a95b8d2a4f16359e33dd4789b4` |
+| `market_data/test_feeder_health.py` | `80e0b7d042c821d4814d626b69c3196853dc49d9` |
+| `market_data/test_feeder_retry.py` | `0c556f2954188e2bf3bd643aa217f71b9bd8ba2c` |
+| `market_data/test_feeder_scheduler.py` | `695c53548c58763cffecc86626171f6a691e75fd` |
+| `market_data/test_controlled_ingestion_acceptance.py` | `92c76fea839858f128ed228ac25b36b6bb8ec375` |
+| `market_data/test_t0_controlled_ingestion_acceptance.py` | `a26d9f44012452fa663553e292e273d68d625e88` |
+
+The initializer is intentionally empty-only and refuses existing paths. It was tested only with disposable temporary SQLite paths; no canonical database was created and the initializer CLI was not run against a real data path.
+
+The dedicated aggregate workflow `.github/workflows/t0-sqlite-aggregate.yml` was extended to an explicit 191-test allowlist:
+- Workflow update commit / exact checked-out SHA: `42c8172a4b4b0234fa50e64eb6172f970f45ab66`.
+- Workflow blob: `32be957fbad1b04161b621c7e1c95f20aa9d9cf9`.
+- Run [44507725020](https://github.com/kenznguyen/btcquant-application/actions/runs/44507725020), job `135503600404`: SUCCESS, 191/191, 0 failures/errors.
+- Artifact `t0-sqlite-aggregate-evidence`, ID `14520188043`, size 6,093 bytes, SHA-256 `0389c4fc4cab0190ea7ada4115b24b53095a9ffb035cba3f7b1dcd01b22ceacb`; downloaded ZIP and payload independently verified.
+- Evidence report: `docs/evidence/T0_SQLITE_FOUNDATION_EXPANSION_2026-11-19.md`, commit `6c2df8129e336231ad0e55b39e844b14663244d5`.
+
+Additional source-only files remain intentionally unported pending separate classification: legacy app health API tests, process/SIGKILL restart tests, T2 end-to-end/parity tests, explicit Binance connectivity probe, PostgreSQL/TimescaleDB assets/tests, Kraken-specific modules, and legacy static RED contract spec. No source repository changes or runtime/production actions occurred.
