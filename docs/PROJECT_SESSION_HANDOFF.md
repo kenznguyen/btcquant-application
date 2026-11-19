@@ -4634,3 +4634,17 @@ These findings make the current stop condition explicit: completing Trusted Admi
 
 ## Next step
 - No further test copying is proposed. Close this source-only parity review unless a concrete missing T0 invariant is identified. Preserve the source branch and all runtime/data restrictions.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Official application repository boundary confirmed
+
+- Owner approved the repository boundary: `kenznguyen/btcquant-application` is the sole development repository for the Quant application.
+- `kenznguyen/btcusdt-telegram-signals2` is read-only/reference-only from this decision onward. It may be consulted for source provenance, historical behavior and file/commit mapping; do not create or continue feature implementation, tests, CI workflows or runtime integration there.
+- T0 HTTP Consumer Migration and all follow-on application changes must be prepared and implemented in `btcquant-application`, on an existing approved branch; avoid creating unnecessary branch/PR divergence.
+- Before implementation, map the active Core First source files and exact source SHAs from the legacy repository into the new repository's migration provenance. Treat the legacy branch as an immutable reference, not as the active development target.
+- This approval confirms repository scope only. It does not authorize source edits, test execution, CI dispatch, endpoint probes, runtime/network/database/credential access, deployment, activation, data mutation or trading. Each remains subject to its own explicit approval gate.
+- Current migration status: design amendments from the read-only review still need to be incorporated into the TDD scope; implementation NOT STARTED; tests/CI NOT RUN; endpoint/runtime NOT VERIFIED and NOT AUTHORIZED; production readiness NOT CERTIFIED.
+- Next bounded step: update the TDD migration scope and provenance plan in this repository to reflect the single-repository boundary and the page-aware 1.1.0 design amendments. Then present the amended scope for separate approval before writing RED tests.
+- Decision recorded against prior main HEAD `4081f9128ddf9b50bdd6641b4f5df49635f2e326`. No source or test files changed and no workflows were run for this decision.
