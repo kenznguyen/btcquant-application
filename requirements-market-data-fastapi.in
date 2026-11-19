@@ -1,5 +1,4 @@
-# FastAPI T0 read-only HTTP adapter and ASGI test client.
-# Starlette 1.10 recommends httpx2 for its TestClient integration.
-# Transitive dependencies are resolved and SHA-256 locked by the dedicated CI gate.
+# T0 FastAPI read-only HTTP adapter runtime dependencies.
+# Transitive dependencies are pinned with SHA-256 in requirements-market-data-fastapi.lock.
 fastapi==0.165.0
-httpx2==2.16.2
+uvicorn==0.54.0
