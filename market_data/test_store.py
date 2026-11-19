@@ -1,0 +1,196 @@
+import sqlite3
+from contextlib import closing
+import tempfile
+import unittest
+from pathlib import Path
+
+from market_data.store import Candle, CandleStore, INTERVAL_MS, MAX_CANDLES, MAX_READ_CANDLES, read_window
+from market_data.feeder import LeaseStore
+from market_data.write_gateway import SQLiteWriteGateway
+
+
+class CandleStoreTest(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.path = Path(self.directory.name) / "candles.sqlite3"
+        self.store = CandleStore(self.path)
+        self.leases = LeaseStore(str(self.path))
+        self.lease = self.leases.acquire("store-test", 0, ttl_seconds=1_000_000_000)
+        self.gateway = SQLiteWriteGateway(
+            store=self.store, lease_store=self.leases, owner_id="store-test",
+            generation_provider=lambda: self.lease.generation, clock=lambda: 1,
+        )
+        self.step = INTERVAL_MS["15m"]
+
+    def candle(self, slot=0, **changes):
+        values = dict(timeframe="15m", open_time_ms=slot * self.step,
+                      open="100.000", high="102", low="99", close="101", volume="5.00",
+                      available_at_ms=(slot + 1) * self.step + 100)
+        return Candle(**(values | changes))
+
+    def window(self, count=4, **changes):
+        return read_window(self.path, "BTCUSDT", "15m", 0, count * self.step, **changes)
+
+    def test_persists_exact_decimals_and_closed_candle_identity(self):
+        candle = self.candle(open="100.12345678901234567890123456789")
+        self.assertEqual(self.gateway.write_batch([candle]), 1)
+        CandleStore(self.path)
+        row = self.window(1)["candles"][0]
+        self.assertEqual(row["open"], "100.12345678901234567890123456789")
+        self.assertEqual(row["volume"], "5")
+        self.assertEqual(row["closeTimeMs"], self.step)
+        self.assertEqual(row["exchange"], "binance")
+        self.assertEqual(row["marketType"], "USDT_PERPETUAL")
+        self.assertTrue(row["isClosed"])
+        self.assertEqual(row["availabilityKind"], "FIRST_OBSERVED")
+
+    def test_duplicate_reimport_preserves_first_observation_and_dataset_version(self):
+        self.gateway.write_batch([self.candle()])
+        before = self.window(1)
+        self.assertEqual(self.gateway.write_batch([self.candle(available_at_ms=self.step + 500)]), 0)
+        self.assertEqual(self.window(1)["datasetVersion"], before["datasetVersion"])
+        self.assertEqual(self.window(1)["candles"][0]["availableAtMs"], self.step + 100)
+
+    def test_conflicting_candle_rolls_back_the_whole_batch(self):
+        self.gateway.write_batch([self.candle()])
+        with self.assertRaises(ValueError):
+            self.gateway.write_batch([self.candle(1), self.candle(close="100.5")])
+        self.assertEqual(self.window(2)["coverage"]["returned"], 1)
+
+    def test_conflicting_duplicate_in_one_batch_is_atomic(self):
+        with self.assertRaises(ValueError):
+            self.gateway.write_batch([self.candle(), self.candle(close="100.5")])
+        self.assertEqual(self.window(1)["candles"], [])
+
+    def test_reports_leading_internal_trailing_gaps_without_filling(self):
+        self.gateway.write_batch([self.candle(1), self.candle(3)])
+        result = self.window(5)
+        self.assertEqual([c["openTimeMs"] for c in result["candles"]], [self.step, 3 * self.step])
+        self.assertEqual(result["coverage"], {
+            "expected": 5, "returned": 2, "complete": False,
+            "gaps": [{"startMs": 0, "endMs": self.step},
+                     {"startMs": 2 * self.step, "endMs": 3 * self.step},
+                     {"startMs": 4 * self.step, "endMs": 5 * self.step}]})
+
+    def test_as_of_filters_by_first_seen_time_without_backdating_history(self):
+        self.gateway.write_batch([self.candle(available_at_ms=10 * self.step)])
+        hidden = self.window(1, as_of_ms=9 * self.step)
+        visible = self.window(1, as_of_ms=10 * self.step)
+        self.assertEqual(hidden["candles"], [])
+        self.assertTrue(visible["coverage"]["complete"])
+
+    def test_dataset_version_changes_only_with_selected_content_or_query(self):
+        empty = self.window(1)["datasetVersion"]
+        self.gateway.write_batch([self.candle()])
+        populated = self.window(1)["datasetVersion"]
+        self.assertNotEqual(empty, populated)
+        self.gateway.write_batch([self.candle(2)])
+        self.assertEqual(populated, self.window(1)["datasetVersion"])
+
+    def test_rejects_nonfinite_inconsistent_unclosed_and_oversized_values(self):
+        for changes in [
+            {"open": "NaN"}, {"close": "Infinity"}, {"volume": "-1"},
+            {"low": "103"}, {"high": "100"}, {"open": "0"},
+            {"open": "1e999999"}, {"volume": "0e999999"}, {"volume": "9" * 129},
+            {"available_at_ms": self.step - 1}, {"open_time_ms": 1},
+            {"open_time_ms": True}, {"available_at_ms": True},
+            {"symbol": "ETHUSDT"}, {"timeframe": "1m"}, {"open": 100.0},
+        ]:
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                self.candle(**changes)
+
+    def test_read_only_uri_rejects_mutations_and_preserves_dataset(self):
+        self.gateway.write_batch([self.candle()])
+        uri = self.path.resolve().as_uri() + "?mode=ro"
+        with closing(sqlite3.connect(uri, uri=True, timeout=5)) as reader:
+            with reader:
+                statements = [
+                    ("INSERT INTO candles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     ("binance", "USDT_PERPETUAL", "BTCUSDT", "15m", self.step,
+                      "100", "102", "99", "101", "5", self.step * 2 + 100)),
+                    ("UPDATE candles SET close='102' WHERE open_time_ms=0", ()),
+                    ("DELETE FROM candles WHERE open_time_ms=0", ()),
+                    ("CREATE TABLE forbidden_write (value INTEGER)", ()),
+                ]
+                for statement, parameters in statements:
+                    with self.subTest(statement=statement), self.assertRaises(sqlite3.OperationalError):
+                        reader.execute(statement, parameters)
+
+        result = self.window(1)
+        self.assertEqual(result["coverage"]["returned"], 1)
+        self.assertEqual(result["candles"][0]["close"], "101")
+
+    def test_read_only_reader_observes_wal_snapshot_while_writer_commits(self):
+        self.gateway.write_batch([self.candle()])
+        writer = sqlite3.connect(self.path, timeout=5, isolation_level=None)
+        self.addCleanup(writer.close)
+        self.assertEqual(writer.execute("PRAGMA journal_mode=WAL").fetchone()[0].lower(), "wal")
+
+        pending = self.candle(1)
+        writer.execute("BEGIN IMMEDIATE")
+        writer.execute(
+            """INSERT INTO candles (
+                exchange, market_type, symbol, timeframe, open_time_ms,
+                open, high, low, close, volume, available_at_ms
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            ("binance", "USDT_PERPETUAL", pending.symbol, pending.timeframe,
+             pending.open_time_ms, pending.open, pending.high, pending.low,
+             pending.close, pending.volume, pending.available_at_ms),
+        )
+
+        wal_path = Path(str(self.path) + "-wal")
+        shm_path = Path(str(self.path) + "-shm")
+        self.assertTrue(wal_path.exists())
+        self.assertTrue(shm_path.exists())
+
+        during_write = self.window(2)
+        self.assertEqual(during_write["coverage"]["returned"], 1)
+        self.assertEqual([row["openTimeMs"] for row in during_write["candles"]], [0])
+
+        writer.execute("COMMIT")
+        after_commit = self.window(2)
+        self.assertEqual(after_commit["coverage"]["returned"], 2)
+        self.assertEqual([row["openTimeMs"] for row in after_commit["candles"]], [0, self.step])
+
+    def test_readonly_query_does_not_create_missing_database(self):
+        missing = self.path.parent / "missing.sqlite3"
+        with self.assertRaises(FileNotFoundError):
+            read_window(missing, "BTCUSDT", "15m", 0, self.step)
+        self.assertFalse(missing.exists())
+
+
+    def test_reads_complete_30_day_m15_window_within_explicit_safety_cap(self):
+        count = 30 * 24 * 4
+        candles = [
+            self.candle(slot, available_at_ms=(slot + 1) * self.step + 100)
+            for slot in range(count)
+        ]
+        self.assertEqual(self.gateway.write_batch(candles), count)
+
+        result = self.window(count)
+
+        self.assertEqual(result["coverage"]["expected"], count)
+        self.assertEqual(result["coverage"]["returned"], count)
+        self.assertTrue(result["coverage"]["complete"])
+        self.assertEqual(result["candles"][0]["openTimeMs"], 0)
+        self.assertEqual(result["candles"][-1]["openTimeMs"], (count - 1) * self.step)
+        self.assertTrue(result["datasetVersion"].startswith("sha256:"))
+
+    def test_rejects_unaligned_unbounded_or_wrong_market_queries(self):
+        for args in [
+            ("ETHUSDT", "15m", 0, self.step, None),
+            ("BTCUSDT", "1m", 0, self.step, None),
+            ("BTCUSDT", "15m", 1, self.step, None),
+            ("BTCUSDT", "15m", 0, self.step + 1, None),
+            ("BTCUSDT", "15m", 0, 0, None),
+            ("BTCUSDT", "15m", 0, (MAX_READ_CANDLES + 1) * self.step, None),
+            ("BTCUSDT", "15m", 0, self.step, -1),
+            ("BTCUSDT", "15m", 0, self.step, True),
+        ]:
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                read_window(self.path, *args)
+
+
+if __name__ == "__main__":
+    unittest.main()
