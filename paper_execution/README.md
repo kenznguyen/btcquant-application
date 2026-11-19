@@ -6,10 +6,21 @@ hoặc hàm gửi lệnh thật**. `liveTradingSupported` luôn là `false`.
 
 ```python
 from paper_execution.ledger import PaperLedger
+from paper_execution.risk_contract import provision_account_risk_contract
 
-ledger = PaperLedger(".data/market-data.sqlite3",
-                     max_position_base="0.01", fee_rate="0.0005")
-result = ledger.submit(validated_paper_intent, hummingbot_snapshot, now_ms)
+db_path = ".data/market-data.sqlite3"
+provision_account_risk_contract(
+    db_path,
+    {
+        "maxDrawdownPct": "20",
+        "maxDailyLossUsdt": "10",
+        "maxExposureUsdt": "1000",
+    },
+    source="OPERATOR_APPROVED_CONFIGURATION",
+    recorded_at_ms=now_ms,
+)
+ledger = PaperLedger(db_path, max_position_base="0.01", fee_rate="0.0005")
+result = ledger.submit(validated_paper_intent, validated_orderbook_snapshot, now_ms)
 state = ledger.snapshot()
 ```
 
@@ -19,11 +30,16 @@ Khởi tạo local là thao tác riêng, không thực hiện trong HTTP GET:
 python3 -m paper_execution --db .data/market-data.sqlite3
 ```
 
-CLI có tham số `--max-position-base`, `--fee-rate`, `--max-spread-bps`; cấu hình risk
-là tham số của từng instance `PaperLedger`, không phải một chính sách được CLI lưu
-vĩnh viễn. Backend phải truyền đúng cấu hình đã chọn khi tạo writer. Client chỉ đọc
-dùng `read_snapshot(db_path)` (SQLite `mode=ro`), không gọi constructor để tự tạo
-state. Đọc khi thiếu database/tables/state báo lỗi, không tạo ledger rỗng.
+CLI có tham số `--max-position-base`, `--fee-rate`, `--max-spread-bps`.
+Risk limits thuộc một Account/Risk Contract được lưu và xác thực ở cấp account;
+mọi Ledger dùng chung contract này, không truyền bộ giới hạn riêng theo strategy.
+Provision lần đầu qua `provision_account_risk_contract`; lặp lại cùng cấu hình là
+idempotent, cấu hình xung đột bị từ chối. Cập nhật phải dùng
+`update_account_risk_contract` với `expected_contract_hash`, source và reason để
+ghi audit. Thiếu contract sẽ chặn tăng exposure; contract sai hash/schema cũng
+fail-closed. Client chỉ đọc dùng `read_snapshot(db_path)` (SQLite `mode=ro`),
+không gọi constructor để tự tạo state. Đọc khi thiếu database/tables/state báo lỗi,
+không tạo ledger rỗng.
 
 Intent và snapshot theo [`pipeline/CONTRACTS.md`](../pipeline/CONTRACTS.md).
 Tham số `targetPositionBase` là vị thế ròng mục tiêu có dấu, không phải khối lượng
