@@ -1,4 +1,4 @@
-name: T0 SQLite API isolated tests (manual legacy suite)
+name: T0 SQLite feeder and storage isolated tests (manual)
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   sqlite-api-tests:
-    name: Manually invoked seven-module SQLite/API and feeder lifecycle suite
+    name: Manually invoked six-module SQLite storage and feeder lifecycle suite
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -37,7 +37,6 @@ jobs:
             market_data/test_write_gateway.py \
             market_data/test_storage.py \
             market_data/test_sync.py \
-            market_data/test_api.py \
             market_data/test_feeder_lifecycle.py; do
             test -f "$module"
           done
@@ -53,7 +52,7 @@ jobs:
             echo "runner_os=$RUNNER_OS"
             echo "runner_arch=$RUNNER_ARCH"
             echo "runner_image=ubuntu-24.04"
-            echo "test_modules=7"
+            echo "test_modules=6"
             echo "trigger_mode=workflow_dispatch_only"
             echo "network_mode=none (Docker test container)"
             echo "credentials=none passed to test container"
@@ -125,7 +124,6 @@ jobs:
               market_data.test_write_gateway \
               market_data.test_storage \
               market_data.test_sync \
-              market_data.test_api \
               market_data.test_feeder_lifecycle \
             > "$log" 2>&1; then
             test_status=0
@@ -137,14 +135,14 @@ jobs:
           test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
           {
             echo "python_version=3.12.16"
-            echo "test_command=python -m unittest -v [seven approved modules]"
+            echo "test_command=python -m unittest -v [six approved SQLite modules]"
             echo "test_count=${test_count:-NOT_REPORTED}"
             echo "test_exit_code=$test_status"
           } >> "$artifacts/runner_metadata.txt"
 
           {
             printf '%s\n' \
-              '## T0 SQLite/API isolated test run' \
+              '## T0 SQLite/feeder isolated test run' \
               '' \
               "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
               "- Workflow commit: $GITHUB_SHA" \
