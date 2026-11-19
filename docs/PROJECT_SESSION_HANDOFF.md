@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — ChatGPT supplementary review completed
+
+- Review report: `docs/reviews/T0_FASTAPI_CHATGPT_SUPPLEMENTARY_REVIEW_2026-11-19.md`, commit `cd1dd1c3e55f635d9cc542ab3f9bb665d614f922`.
+- Exact implementation/workflow SHA statically inspected: `a92cca39a3c23c3325191922c80e73b81384d9ce`.
+- Documentation snapshot at review start: `379ac5021d347668dbfe42686e1bfb5fa0f14a6b`.
+- Review outcome: **NO CONFIRMED BLOCKING DEFECT IDENTIFIED IN THE INSPECTED STATIC SCOPE**. This is a ChatGPT supplementary adversarial review, not independent second-person review, independent certification or migration approval. The same assistant participated in implementation and earlier self-review.
+- Read-only inspection covered FastAPI/WSGI adapters, shared contract, storage selection/read paths, ASGI and parity tests, runtime smoke, dependency locks and workflow.
+- No source/test/workflow/dependency edits; no tests/workflows run or dispatched; no credentials/endpoints/canonical SQLite/runtime/deployment accessed.
+- Verification limitations recorded: C1 only ten enumerated cases; C2 api.py-only trigger not separately simulated; D1 is runtime-lock install/dependency check/import/in-process health only; no Uvicorn socket, Nginx, VPS, load, performance or dynamic security testing.
+- A residual inherited behavior was noted: readiness configuration is checked before authentication, exposing only a generic 401-versus-503 service-configuration distinction. No change recommended within this migration scope.
+- Genuine independent second-person review remains **PENDING**. Reviewer not yet assigned.
+- WSGI/Gunicorn retirement **NOT APPROVED**; Uvicorn/Nginx/VPS/systemd/runtime/deployment **NOT AUTHORIZED / NOT VERIFIED**; production readiness **NOT CERTIFIED**.
+- Next step: assign a genuinely independent reviewer to inspect exact SHA `a92cca39a3c23c3325191922c80e73b81384d9ce` and issue signed findings/verdict. Do not represent this ChatGPT report as satisfying that gate.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — Independent Review package refreshed and ready to assign
 
 - Repository: `kenznguyen/btcquant-application`, branch `main`.
