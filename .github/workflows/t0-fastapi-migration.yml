@@ -8,6 +8,12 @@ on:
       - market_data/test_fastapi_api.py
       - market_data/fastapi_app.py
       - market_data/api_contract.py
+      - market_data/storage.py
+      - market_data/store.py
+      - market_data/postgres.py
+      - market_data/feeder.py
+      - market_data/write_gateway.py
+      - market_data/sync.py
       - requirements-market-data-fastapi.in
       - requirements-market-data-fastapi-test.in
       - requirements-market-data-fastapi.lock
