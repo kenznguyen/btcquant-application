@@ -5057,3 +5057,18 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Status: selected GitHub artifact inspection **PASS — NOT DATA**; Dropbox search **NO MATCHES**; Releases **NOT VERIFIED**; exhaustive Actions history **PARTIAL**; canonical backup **NOT IDENTIFIED**; recovery readiness **BLOCKED / NOT VERIFIED**.
 - No data download/export/restore, runtime/VPS/SSH/API/exchange access, workflow dispatch, source/test/workflow/dependency/schema changes. Documentation-only; no tests/workflows run and no workflow artifact exists.
 - Next: inspect Releases through authenticated GitHub UI or supply an exact release asset reference; identify any other cloud account, local device, external disk or provider snapshot. If no original copy exists, submit a separate bounded proposal for **RECONSTRUCTED** Binance USD-M market history. No reconstruction/download, canonical initialization, writer, or migration is authorized.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Canonical SQLite + Dropbox snapshot design (Phase 1 only)
+
+- Owner decision: Dropbox stores versioned, downloadable official Canonical SQLite snapshots as an off-host backup repository; it is not the live operational primary. The operational primary remains on a controlled local filesystem suitable for SQLite locking/writes.
+- Design: `docs/decisions/T0_CANONICAL_SQLITE_DROPBOX_SNAPSHOT_DESIGN_2026-11-19.md`, commit `f0df0617c46a476ed89f313cbebf1c7e7f450fd2`.
+- Active scope index: `docs/T0_ACTIVE_SCOPE_INDEX.md`, update commit `65af419e0e8d0b191ee69273b5459ad7aafd8ebe`.
+- Snapshot design: SQLite Online Backup API to staging; close and validate; compute SHA-256; create manifest with lineage/schema/source/time/M15-H1 coverage/gaps/counts/checks; upload each snapshot under a new immutable version; read back and verify checksum. Never sync a live SQLite DB or WAL/SHM files directly.
+- Restore must target a separate path, verify checksum/integrity/schema/coverage/provenance, and preserve the existing primary until separately approved cutover. Snapshot without restore drill is UPLOADED / NOT RESTORE-VERIFIED.
+- Any reconstructed market history must carry lineage `RECONSTRUCTED`, never be represented as recovered original data.
+- Authorization: **Phase 1 DESIGN / STATIC ONLY**. Static implementation checks and independent review **NOT YET PERFORMED**. No database initialization, Binance download, data copy/export, snapshot creation, Dropbox upload, restore, VPS/runtime, writer/lease/feeder or deployment is authorized.
+- Documentation-only. No tests/workflows were run; no workflow run, job or artifact exists for this increment.
+- Next: perform bounded static review of the manifest and acceptance contract. Reconstruction, Dropbox operations, restore drill and primary cutover each require separate explicit approval.
