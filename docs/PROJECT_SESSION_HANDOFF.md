@@ -1,5 +1,20 @@
 # CURRENT STATUS OVERRIDE — 2026-11-19
 
+## SQLite workflow Step Summary Bash fix
+- Owner approved fixing the Bash Step Summary error and rerunning the isolated SQLite workflow.
+- Workflow-only fix committed on existing `main`: `0a00bc548deec507491cdbb8f143272cd1f53838`; workflow blob `5abef4127e5c7b68e13f0720f0ca88c9b9bccad3`.
+- Replaced backtick-containing double-quoted `echo` commands with `printf '%s\\n'`; static readback confirms no backticks in the summary block and output still targets `GITHUB_STEP_SUMMARY`.
+- Exact approved test source SHA remains pinned: `57b54116188167904e2a2a6020ab349588b42186`; six modules and expected 62 tests unchanged.
+- Evidence report: `docs/evidence/T0_SQLITE_STEP_SUMMARY_FIX_2026-11-19.md`; report commit `9435aa0f89f28c652cf73558f028c73772430059`.
+- Fresh workflow run is **BLOCKED / NOT RUN** in this session: connected GitHub Actions tools do not expose a new `workflow_dispatch` operation. Rerunning the previous run would not verify the updated workflow file and was not used as a substitute.
+- Prior F1 run `44444758997` remains PASS (62/62) on exact source SHA above, but does not prove the updated Step Summary executed. F2/F3/F4 remain NOT VERIFIED; production NOT CERTIFIED.
+- No source/test/SQLite schema/data/PostgreSQL/runtime/Feeder/VPS/exchange/T1/T2/trading changes or access.
+- Next: manually dispatch **T0 SQLite API isolated tests** from Actions on `main`; inspect the fresh run and artifact, then append exact run/job/artifact evidence here and in the report.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19
+
 ## F1 SQLite regression verification — PASS
 - GitHub Actions run [44444758997](https://github.com/kenznguyen/btcquant-application/actions/runs/44444758997), attempt 1, workflow_dispatch, overall SUCCESS; job `Six-module SQLite/API suite` ID `135294109828`, SUCCESS.
 - Exact test source SHA `57b54116188167904e2a2a6020ab349588b42186`; workflow/head SHA `688586adef2cb4f7380d3c06064483841522452e`.
