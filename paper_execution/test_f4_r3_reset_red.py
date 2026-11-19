@@ -72,6 +72,19 @@ class F4KillResetAtomicReadinessRedTest(unittest.TestCase):
         self.assertFalse(readiness["checks"]["accountRiskReady"])
         self.assertFalse(readiness["ready"])
 
+    def test_direct_reset_rechecks_account_risk_inside_write_transaction(self):
+        def not_ready(connection, *, now_ms):
+            self.assertTrue(connection.in_transaction)
+            return {"riskReady": False}
+
+        with patch("paper_execution.ledger._dual_ledger_migrations_ready", return_value=True), \
+             patch("paper_execution.ledger._read_account_risk_snapshot_connection",
+                   side_effect=not_ready):
+            with self.assertRaisesRegex(ValueError, "ACCOUNT_RISK_NOT_READY"):
+                self.ledger.reset_kill(True, True, self.now + 1)
+
+        self.assertTrue(self.ledger.snapshot()["riskControl"]["killed"])
+
     def test_api_rechecks_readiness_after_stale_preflight_before_clearing_kill(self):
         from pipeline import api
 
@@ -118,6 +131,13 @@ class F4KillResetAtomicReadinessRedTest(unittest.TestCase):
                 WHEN NEW.kind='KILL_SWITCH_RESET'
                 BEGIN SELECT RAISE(ABORT, 'AUDIT_WRITE_REJECTED'); END
             """)
-        with self.assertRaisesRegex(sqlite3.IntegrityError, "AUDIT_WRITE_REJECTED"):
-            self.ledger.reset_kill(True, True, self.now + 1)
+        def ready_in_transaction(connection, *, now_ms):
+            self.assertTrue(connection.in_transaction)
+            return {"riskReady": True}
+
+        with patch("paper_execution.ledger._dual_ledger_migrations_ready", return_value=True), \
+             patch("paper_execution.ledger._read_account_risk_snapshot_connection",
+                   side_effect=ready_in_transaction):
+            with self.assertRaisesRegex(sqlite3.IntegrityError, "AUDIT_WRITE_REJECTED"):
+                self.ledger.reset_kill(True, True, self.now + 1)
         self.assertTrue(self.ledger.snapshot()["riskControl"]["killed"])
