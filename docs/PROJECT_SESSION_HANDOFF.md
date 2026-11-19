@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 WSGI/Gunicorn retirement completed
+
+- Owner approval and human independent-review waiver: `docs/decisions/T0_WSGI_GUNICORN_RETIREMENT_APPROVAL_2026-11-19.md`.
+- Detailed evidence: `docs/evidence/T0_WSGI_GUNICORN_RETIREMENT_2026-11-19.md`.
+- Owner-approval baseline: `7fdf4e3eedaf0b568c7219ee8b140684ff066718`.
+- Retirement implementation commit: `7bc8fab6b6c6f49ed70b7370a113958d7981cd20`.
+- Corrected test/workflow exact tested source SHA: `c77ab92b621b2e79167d6b8eb910be015b428f62`.
+- Manual workflow cleanup: `d6c25716e07b9c8414e34bde11d31a6a62d33f43`.
+- Current branch main includes subsequent documentation-only updates. Compare from tested source SHA to manual-workflow cleanup was 1 ahead / 0 behind with only `.github/workflows/t0-sqlite-api-isolated.yml` changed; no source/test/dependency drift.
+- Removed `market_data/api.py` WSGI entrypoint, retired Gunicorn from T0 manifest/lock, migrated all API/ingestion acceptance tests to FastAPI ASGI, removed WSGI parity test after preserving C1 evidence, updated workflows and documentation.
+- Final exact-SHA evidence: FastAPI 50/50 PASS (run `44546084887`); SQLite aggregate 174/174 PASS (run `44546084972`); F1 14/14 PASS (run `44546084937`); runtime-lock install/import/in-process health PASS (run `44546084887`); dependency compatibility PASS (run `44545799691`, exact dependency-change SHA `7bc8fab...`).
+- WSGI/Gunicorn retirement: **PASS**.
+- Human independent review: **WAIVED BY OWNER**. Gemini review remains **BLOCKED / NOT VERIFIED**; no external-model approval is claimed.
+- Uvicorn process/socket, endpoint probe, Nginx, VPS/systemd/autostart, runtime activation and deployment remain **NOT AUTHORIZED / NOT VERIFIED**. Production readiness **NOT CERTIFIED**.
+- T0 canonical SQLite, writer fencing, lease, feeder, scheduler, recovery, schema/data, T1/T2, PostgreSQL, retention/deletion and trading were not changed. Paper-first and `ai_execution_enabled=false` remain in force.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — Owner approved T0 WSGI/Gunicorn retirement
 
 - Decision: `docs/decisions/T0_WSGI_GUNICORN_RETIREMENT_APPROVAL_2026-11-19.md`.
