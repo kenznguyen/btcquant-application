@@ -8,7 +8,7 @@ import time
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from market_data.api import DATA_SOURCE, VOLUME_UNIT, _freshness, candle_query
+from market_data.api_contract import DATA_SOURCE, VOLUME_UNIT, _freshness, candle_query
 from market_data.postgres import StoreUnavailable
 from market_data.storage import create_store_from_env
 
