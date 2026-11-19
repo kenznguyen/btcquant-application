@@ -96,10 +96,36 @@ Paired exact-SHA CI:
 
 ## Verdict
 
-**INTERNAL SELF-REVIEW: PASS WITH REQUIRED CI ACTION ITEM.**
+**INTERNAL SELF-REVIEW: PASS WITH NON-BLOCKING NITS; INDEPENDENT REVIEW PENDING.**
 
-The inspected API implementation has no identified blocking contract defect, and the required CI trigger correction (R1) is now verified by a dependency-only push and paired exact-SHA CI. This is not an independent review, runtime verification, completed migration or production-readiness certification.
+The inspected API implementation has no identified blocking contract defect, and the required CI trigger correction (R1) is verified by a dependency-only push and paired exact-SHA CI. This is not an independent review, runtime verification, completed migration or production-readiness certification.
 
 Next gates:
 1. Obtain an actual independent reviewer sign-off against the source diff and the updated trigger workflow.
 2. Only after independent review and owner approval, propose the bounded WSGI/Gunicorn retirement.
+
+
+## Follow-up self-review — 2026-11-19
+
+- Current `main` HEAD inspected: `324fe0112c7c1d1a4c7e59aff29797c2f3cad3f4`.
+- Compared against paired-test source SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`: four commits ahead, zero behind; all four commits touch documentation only. The implementation and workflow under review therefore remain the exact source/workflow tested by the paired runs below.
+- Re-read the FastAPI adapter, shared contract helper, ASGI tests, WSGI adapter, storage selector, SQLite/PostgreSQL read adapters, feeder/write/sync fixture dependencies, lock files, hash manifest and workflow path filters.
+- Confirmed the workflow path filter contains all six identified direct/transitive test dependencies: `storage.py`, `store.py`, `postgres.py`, `feeder.py`, `write_gateway.py`, and `sync.py`. The dependency-only push proof and paired test results remain:
+  - FastAPI run [44529575151](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575151), job `135579262823`: 25/25 PASS; artifact `14532693874`; SHA-256 `7bcf6fdd46e8c5e1c81f76bf078377437b81cdbb178a546ce0b18166a8ade5f5`.
+  - SQLite aggregate run [44529575307](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575307), job `135579168097`: 196/196 PASS; artifact `14531469720`; SHA-256 `93f30f492c9006a995c1f6248101080a3c2238be9d0530ab04421ce41f0580e8`.
+  - Both tested exact source SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`.
+- No new blocking API correctness or security defect was identified in this bounded static review. This review did not rerun CI, perform CVE research, dynamic penetration testing, load testing, proxy validation or runtime secret probes.
+
+### Follow-up finding R2 — Nit remains open
+
+`market_data/test_fastapi_api.py` still has a module docstring saying tests target the “not-yet-created ASGI app”, although `market_data/fastapi_app.py` exists. This is stale documentation only; it does not affect runtime or test behavior. Recommend correcting it in a separate small cleanup. **OPEN / NON-BLOCKING**.
+
+### Follow-up finding R3 — Review record consistency corrected
+
+The prior verdict text still described R1 as a required open action after R1 had been verified and closed. This record now states the accurate status: **R1 CLOSED / VERIFIED; R2 OPEN / NON-BLOCKING; independent review PENDING**.
+
+### Updated verdict
+
+**INTERNAL SELF-REVIEW: PASS WITH NON-BLOCKING NIT (R2); INDEPENDENT REVIEW PENDING.**
+
+This remains an internal self-review, not an independent reviewer sign-off. WSGI/Gunicorn retirement remains NOT APPROVED; runtime/deployment remains NOT AUTHORIZED; production readiness remains NOT CERTIFIED.
