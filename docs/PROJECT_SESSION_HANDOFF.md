@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 FastAPI 25/25 + SQLite 196/196 PASS
+
+- Repository `kenznguyen/btcquant-application`, branch `main`; latest paired source SHA `a03637372e3090595bf6e48c9426e7e076cf3bdc`.
+- FastAPI adapter: `market_data/fastapi_app.py`; ASGI contract suite: `market_data/test_fastapi_api.py`.
+- FastAPI run [44525859272](https://github.com/kenznguyen/btcquant-application/actions/runs/44525859272), job `135566117694`: **25/25 PASS**, artifact `14528454863`, SHA-256 `e6cafec6024a69cfa8fb2fbdfdb30eebfbd32214107455cee28934731b6d9196`.
+- SQLite aggregate run [44525859257](https://github.com/kenznguyen/btcquant-application/actions/runs/44525859257), job `135566117671`, same exact SHA: **196/196 PASS**, artifact `14531695273`, SHA-256 `5aefa96fd860f02a12a71f05f5db7a51c938676d7eff5d20cc3999405b169a6c`.
+- Evidence report: `docs/evidence/T0_FASTAPI_FULL_CONTRACT_REGRESSION_2026-11-19.md`, commit `43253b5b797a973fe71350bfe15dfc7bf58f2510`. Decision update `4583da8ac468efa138f67cdc9a8a7af3d287c582`; scope index update `a630bb7f40a5b302e7940fee2d289d98f4a48422`.
+- FastAPI/Uvicorn/httpx2 dependencies resolved under CPython 3.12.16. Runtime lock SHA-256 `ed5d71e2796303e45266637dc0bffd980e9f869d9c1f25dc61abed8fffa2ee54`; test lock SHA-256 `fe4b7109fb211671e90c26a8158b29d7b7d5be6cb0d8be3f9f4c150767bfd7ea`. Lock files are currently in the CI artifact, not committed to repo.
+- Migration status **PARTIAL**: old WSGI `application` remains in `market_data/api.py` and old tests remain in `market_data/test_api.py`. Independent code review is still pending.
+- Next: commit the exact runtime/test lock files and verify hash-based clean install; independently review FastAPI source/tests/workflow; after review acceptance, remove WSGI/Gunicorn in a bounded change and rerun both suites on one exact SHA.
+- Runtime endpoint probe, Nginx, VPS/systemd/deployment, T1/T2 connection, PostgreSQL, canonical data/schema, retention/deletion and trading remain outside authorization. Production readiness **NOT CERTIFIED**.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 FastAPI initial adapter CI PASS
 
 - Latest paired source SHA: `f72cff4d78bbfe7beb1a3b3fe1dd6e03fe26a4f5`, repository `kenznguyen/btcquant-application`, branch `main`.
