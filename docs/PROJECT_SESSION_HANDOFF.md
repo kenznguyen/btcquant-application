@@ -4751,3 +4751,18 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Remaining gates: actual independent second-reviewer sign-off **PENDING**; WSGI/Gunicorn removal **NOT APPROVED**; runtime/deployment/VPS/systemd **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
 - No canonical SQLite, feeder runtime, T1/T2, PostgreSQL, endpoint, VPS, deployment or trading behavior was accessed or changed.
 - Next step: obtain independent review of FastAPI adapter and updated CI workflow before proposing WSGI/Gunicorn retirement. Preserve all existing runtime/deployment and trading restrictions.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — FastAPI follow-up self-review
+
+- Re-reviewed FastAPI adapter, contract helper, tests, WSGI parity, storage selectors/adapters, fixture dependencies, dependency locks/hash manifest and workflow trigger paths.
+- Current main before this documentation update: `324fe0112c7c1d1a4c7e59aff29797c2f3cad3f4`; compared to paired-tested source SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`: 4 commits ahead, 0 behind, all documentation-only. Source and workflow remain unchanged from paired CI.
+- R1 dependency trigger finding: **CLOSED / VERIFIED**. FastAPI 25/25 PASS, run `44529575151`; SQLite aggregate 196/196 PASS, run `44529575307`; both exact SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`.
+- Follow-up self-review found no new blocking API correctness/security issue within the bounded static scope.
+- R2: stale test module docstring in `market_data/test_fastapi_api.py` says “not-yet-created ASGI app”. **OPEN / NON-BLOCKING NIT**; not changed during review.
+- Updated evidence: `docs/evidence/T0_FASTAPI_INTERNAL_SELF_REVIEW_2026-11-19.md`, commit `5d7e47e1d40be337148b6a74f552b5a345d794c8`.
+- Status: internal self-review **PASS WITH NON-BLOCKING NIT**. This is not an independent review. Independent second-reviewer sign-off **PENDING**.
+- WSGI/Gunicorn removal **NOT APPROVED**; runtime/deployment/VPS/systemd **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+- Next bounded step: correct R2 as a separate documentation-only source cleanup if authorized, then obtain independent review before proposing WSGI/Gunicorn retirement. Do not change canonical SQLite, feeder runtime, T1/T2, PostgreSQL, endpoints, VPS/deployment or trading.
