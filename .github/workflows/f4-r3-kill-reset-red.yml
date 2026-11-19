@@ -45,7 +45,7 @@ jobs:
           api_blob="$(git hash-object pipeline/api.py)"
           echo "IDENTITY head=$head_sha github_sha=$GITHUB_SHA test=$test_blob ledger=$ledger_blob risk_control=$risk_control_blob risk_contract=$risk_contract_blob api=$api_blob"
           [[ "$head_sha" == "$GITHUB_SHA" ]]
-          [[ "$test_blob" == "34b1238ac7ec787d3330f4d78db030ec2c85be40" ]]
+          [[ "$test_blob" == "89247eae792bfba48adea7648d3420c914545a5b" ]]
           [[ "$ledger_blob" == "9fbf195cd6b19bd4ce2217f3648b4722a2472dcb" ]]
           [[ "$risk_control_blob" == "c8fe573a7a5b0716159e50a678423e402d7df3ba" ]]
           [[ "$risk_contract_blob" == "7ae74740568e3bcad78acd928896ee363cc62613" ]]
