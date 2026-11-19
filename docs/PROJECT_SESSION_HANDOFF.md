@@ -1,3 +1,49 @@
+# TARGET REPOSITORY OVERRIDE — 2026-11-19
+
+> This section controls the current work in this repository. The legacy handoff below is retained as historical context and must not be treated as the active repository/branch status where it conflicts with this override.
+
+## Active repository
+
+- Application repository: `kenznguyen/btcquant-application` (Public, owner-selected).
+- Active branch: `main`. Do not create a parallel branch/PR or rewrite history for this work.
+- Previous handoff blob before this update: `30cbfe3019e601ce9abffbbc678ee2583fe89061`.
+- Target repository preflight report: `docs/evidence/T0_TARGET_REPOSITORY_PREFLIGHT_2026-11-19.md`, report commit `ff05e64cd5538862211d2dcc6060a3db9d1d8dfb`.
+- T0 snapshot commit: `fcaa2efefdd4b3e481e9db951d538824596d0038`.
+- T0 provenance manifest: `docs/T0_MIGRATION_PROVENANCE.md`.
+- Source repository/branch for migrated T0 assets: `kenznguyen/btcusdt-telegram-signals2` / `feature/t0-centralized-data-feeder-p1-20261101`; source code baseline `eb91528bab2b994f283dbe34cd7b0bcbfe406cb5`; source documentation/evidence HEAD `8623d1076d6b821091ff9da0d84033f48fd8ba7a`.
+
+## Current T0 migration status
+
+- Selected T0 snapshot and provenance are recorded; do not interpret snapshot as tested, deployed, runtime-verified or production-ready.
+- Six focused T0 test modules are present: feeder recovery, feeder lease, write gateway, storage, sync and API.
+- `market_data/test_sync.py` source/target blob: `319e084d9c0a9c5b0319e9bb7d1f93a930564dc8`; transfer commit `3aa983c1d71e8fa054ffc61dcea2ec889d504b48`.
+- `market_data/test_api.py` source/target blob: `49df7e0bec12908adae67f18a4aa19063e461093`; transfer commit `7f5cf81eebdc53aae76adbba98c980219aefa15a`.
+- Both transferred tests passed static isolation review only; they have NOT been executed.
+- Source requirements blob `f5c242bdac51eba200b19233e08e7d4b22f598c4` does not declare lazy dependencies `ccxt` and `psycopg`; target has no adopted dependency manifest. Python compatibility and dependency closure are NOT VERIFIED. Do not guess versions or install packages without a separate approval.
+- Four PostgreSQL/TimescaleDB migrations remain absent; PostgreSQL migration execution is BLOCKED/incomplete. `test_timescaledb.py` remains excluded pending an explicitly approved disposable TimescaleDB service.
+- Status: static import-link inspection PARTIAL PASS; two transferred test static isolation review PASS; dependency closure NOT VERIFIED; tests NOT RUN; target CI NOT VERIFIED; runtime/canonical data NOT VERIFIED; production NOT CERTIFIED.
+
+## Current operating guardrails
+
+- Personal research system; paper-only. No live trading, real orders, exchange execution, deployment or production claim.
+- Keep `AI_EXECUTION_ENABLED=false`.
+- T0 is an independent protected canonical data foundation. No canonical DB/data mutation, migration, restore or export without a separate bounded approval.
+- No package installation, test execution, workflow dispatch, runtime/VPS/service access or exchange connection is authorized by this documentation approval.
+- No PostgreSQL/TimescaleDB enablement or migration is authorized.
+- Preserve the selected migration scope and provenance; do not copy secrets, credentials, environment files, canonical market-data payloads, runtime/deployment configuration or retired legacy components into this public repository.
+
+## Next gate
+
+Request separate approval for an isolated SQLite/API test execution plan. Before execution, establish the Python version and dependency set from authoritative configuration/evidence, verify test discovery and prove network/exchange/database isolation. Do not install packages or dispatch workflows until separately approved.
+
+---
+
+## Legacy handoff retained below
+
+The remainder of this file is preserved from the previous handoff blob `30cbfe3019e601ce9abffbbc678ee2583fe89061`. Its historical repository and branch references describe the legacy source repository unless explicitly superseded above.
+
+---
+
 # Five-Layer System — Session Handoff
 
 Updated: 2026-11-11 (Asia/Ho_Chi_Minh)
