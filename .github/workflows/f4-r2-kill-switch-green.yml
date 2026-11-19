@@ -39,7 +39,7 @@ jobs:
           test_blob="$(git hash-object paper_execution/test_f4_risk_red.py)"
           echo "IDENTITY head=$head_sha github_sha=$GITHUB_SHA source=$source_blob test=$test_blob"
           [[ "$head_sha" == "$GITHUB_SHA" ]]
-          [[ "$source_blob" == "72769773e2618dea1d3c162d5d0f609e3b8887e8" ]]
+          [[ "$source_blob" == "c8fe573a7a5b0716159e50a678423e402d7df3ba" ]]
           [[ "$test_blob" == "7e03122ee72cb88cd039d99ca4a9ed6acfe1f656" ]]
           {
             echo "workflow_run_id=$GITHUB_RUN_ID"
