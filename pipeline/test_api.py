@@ -116,15 +116,15 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(intelligence["netTakerQuote"], "100")
         self.assertEqual(intelligence["collectorCommit"], "bc4f0ef633fbeee4a49defd72827f17162693805")
         self.assertEqual(len(intelligence["inputFiles"]["trades"][0]["sha256"]), 64)
+        with sqlite3.connect(self.db) as connection:
+            before_tables = connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+            ).fetchall()
         code, result = self.request("/v1/decision")
         self.assertEqual(code, 200, result)
         self.assertEqual(result["action"], "WAIT")
         self.assertEqual(result["reason"], "AI_CALIBRATION_ADMISSION_CONTEXT_UNAVAILABLE")
         self.assertIsNone(result["intent"])
-        with sqlite3.connect(self.db) as connection:
-            before_tables = connection.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-            ).fetchall()
         # Offline AI research must not initialize or mutate any paper Ledger state.
         with sqlite3.connect(self.db) as connection:
             after_tables = connection.execute(
