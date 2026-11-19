@@ -468,8 +468,13 @@ def application(environ, start_response):
                     return response("409 Conflict", {"error": "SYSTEM_NOT_READY", "checks": readiness["checks"]})
                 result = ledger().reset_kill(True, True, timestamp)
             elif path == "/v1/paper/evaluate" and (not payload or payload in ({"source": "AI"}, {"source": "CORE"})):
-                source = payload.get("source", "AI")
-                source_id = "STRATEGY_CORE" if source == "CORE" else "AI_FREQAI"
+                # Core-First: paper evaluation is exclusively Strategy Core.
+                # AI candidates remain available through the offline /v1/decision
+                # endpoint and must never initialize or write a Paper Ledger.
+                source = payload.get("source", "CORE")
+                if source == "AI":
+                    return response("403 Forbidden", {"error": "AI_EXECUTION_DISABLED"})
+                source_id = "STRATEGY_CORE"
                 from paper_execution.ledger import dual_ledger_ready
                 dual_active = dual_ledger_ready(os.environ["MARKET_DATA_DB"])
                 # AI must decide before an AI-scoped ledger can be constructed.
@@ -486,13 +491,6 @@ def application(environ, start_response):
                     decision["source"] = "AI_FREQAI"
                 timestamp = now_ms()
                 order = None
-                if source == "AI" and dual_active and decision.get("intent"):
-                    # No authoritative Trusted Admission Context / admitted leverage
-                    # provider is currently wired into this API. Never turn a raw
-                    # candidate into a ledger write or submit using a fixture/default.
-                    return response("409 Conflict", {
-                        "error": "AI_ADMISSION_NOT_ESTABLISHED",
-                    })
                 if decision.get("intent"):
                     end = timestamp // 900_000 * 900_000
                     mark_window = market_window("BTCUSDT","15m",

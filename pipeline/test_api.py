@@ -149,11 +149,10 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(after, before)
     def test_no_prediction_is_wait_with_no_order(self):
         self.pred_path.unlink()
-        code, result = self.request("/v1/paper/evaluate", "POST", {})
+        code, result = self.request("/v1/decision")
         self.assertEqual(code, 200)
-        self.assertEqual(result["decision"]["action"], "WAIT")
-        self.assertEqual(result["decision"]["reason"], "PREDICTION_UNAVAILABLE")
-        self.assertIsNone(result["order"])
+        self.assertEqual(result["action"], "WAIT")
+        self.assertEqual(result["reason"], "PREDICTION_UNAVAILABLE")
 
     def test_pause_is_persistent_and_distinct_auth_is_required(self):
         self.assertEqual(self.request("/v1/paper/pause", "POST", {"paused": True}, token="read-token")[0], 401)
@@ -178,9 +177,9 @@ class FiveLayerApiTest(unittest.TestCase):
     def test_corrupt_artifacts_and_stale_model_do_not_generate_orders(self):
         self.prediction["availableAtMs"] = self.now-31_000
         self.pred_path.write_text(json.dumps(self.prediction))
-        _, result = self.request("/v1/paper/evaluate", "POST", {})
-        self.assertEqual(result["decision"]["action"], "WAIT")
-        self.assertIsNone(result["order"])
+        result = self.request("/v1/decision")[1]
+        self.assertEqual(result["action"], "WAIT")
+        self.assertIsNone(result["intent"])
         snapshot = json.loads(self.intel_path.read_text())
         snapshot["netTakerQuote"] = "99999"
         self.intel_path.write_text(json.dumps(snapshot))
