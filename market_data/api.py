@@ -6,9 +6,9 @@ import os
 import sqlite3
 import time
 
+from market_data.api_contract import DATA_SOURCE, MAX_API_CANDLES, VOLUME_UNIT, _freshness, candle_query
 from market_data.postgres import StoreUnavailable
 from market_data.storage import create_store_from_env
-from market_data.api_contract import DATA_SOURCE, VOLUME_UNIT, _freshness, candle_query
 
 
 def application(environ, start_response):
