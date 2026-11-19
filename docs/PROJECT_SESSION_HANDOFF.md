@@ -4163,3 +4163,14 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Paper execution: NOT AUTHORIZED. Live trading: PROHIBITED.
 - Status: minimal source migration PASS; static import paths present PASS; functional verification NOT VERIFIED.
 - Next: separately authorize a bounded isolated test/import-verification plan for the now-present Pipeline API/decision paths. Do not install dependencies, run CI, or access runtime until that gate is approved.
+
+
+## 2026-11-19 — F4 GitHub Actions runner provisioned
+
+- User requested use of GitHub Actions after local Python 3.12.16 and network access were unavailable.
+- Dedicated workflow `.github/workflows/f4-pipeline-core-first-isolated.yml` added to existing `main`; initial commit `556e3ae43f76a51318d9117ed84935f252323ec3`; ordering fix commit `a0c19943bcd8329f3e388b2dae94df905085188`; final workflow blob `40e404784e78a0030debccac4846f2dbcd70e094`.
+- Workflow pins checkout source to `290bbefb3bfe98f6a13c053ec181ec3d556f27c0`, verifies all eight expected file blobs, uses Python 3.12.16 immutable image, network-disabled Docker, read-only source, non-root user, no secrets and no canonical DB mount.
+- Runs import verification and the 26 API + 15 decision unittest cases (expected 41). Push trigger is restricted to explicit F4 workflow/source/test/dependency paths; manual workflow_dispatch also configured. No deployment/runtime/trading steps.
+- GitHub connector readback confirmed workflow blob; combined status lookup for workflow-fix commit returned no status entries. This session's GitHub Actions tools do not provide recent push-run listing or workflow dispatch; run ID, job logs, test results and artifact remain NOT VERIFIED.
+- No source/test behavior, dependencies, T0, DB, runtime, VPS, exchange or trading path changed/accessed. Workflow execution must be confirmed from Actions run details before claiming tests ran.
+- Next: retrieve the F4 workflow run and artifact evidence; record exact run ID, workflow SHA, checked-out source SHA, job result, test count/output and artifact digest.
