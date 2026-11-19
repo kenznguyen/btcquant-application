@@ -79,6 +79,108 @@ class F4KillSwitchFailClosedRedTest(unittest.TestCase):
         ):
             risk_control.risk_block_reason(connection)
 
+    def test_missing_kill_switch_state_row_is_rejected(self):
+        connection = sqlite3.connect(":memory:")
+        self.addCleanup(connection.close)
+        connection.execute("""
+            CREATE TABLE paper_risk_control (
+                id INTEGER PRIMARY KEY,
+                paused INTEGER NOT NULL,
+                killed INTEGER NOT NULL,
+                reason TEXT,
+                updated_at_ms INTEGER NOT NULL
+            )
+        """)
+
+        with self.assertRaisesRegex(
+            sqlite3.DatabaseError, "RISK_CONTROL_STATE_UNAVAILABLE"
+        ):
+            risk_control.risk_block_reason(connection)
+
+    def test_non_boolean_pause_flag_is_rejected(self):
+        connection = sqlite3.connect(":memory:")
+        self.addCleanup(connection.close)
+        connection.execute("""
+            CREATE TABLE paper_risk_control (
+                id INTEGER PRIMARY KEY,
+                paused,
+                killed,
+                reason,
+                updated_at_ms
+            )
+        """)
+        connection.execute(
+            "INSERT INTO paper_risk_control VALUES (1, 2, 0, NULL, 1800000000000)"
+        )
+
+        with self.assertRaisesRegex(
+            sqlite3.DatabaseError, "RISK_CONTROL_STATE_INVALID"
+        ):
+            risk_control.risk_block_reason(connection)
+
+    def test_non_boolean_kill_flag_is_rejected(self):
+        connection = sqlite3.connect(":memory:")
+        self.addCleanup(connection.close)
+        connection.execute("""
+            CREATE TABLE paper_risk_control (
+                id INTEGER PRIMARY KEY,
+                paused,
+                killed,
+                reason,
+                updated_at_ms
+            )
+        """)
+        connection.execute(
+            "INSERT INTO paper_risk_control VALUES (1, 0, 2, NULL, 1800000000000)"
+        )
+
+        with self.assertRaisesRegex(
+            sqlite3.DatabaseError, "RISK_CONTROL_STATE_INVALID"
+        ):
+            risk_control.risk_block_reason(connection)
+
+    def test_text_pause_flag_is_rejected(self):
+        connection = sqlite3.connect(":memory:")
+        self.addCleanup(connection.close)
+        connection.execute("""
+            CREATE TABLE paper_risk_control (
+                id INTEGER PRIMARY KEY,
+                paused,
+                killed,
+                reason,
+                updated_at_ms
+            )
+        """)
+        connection.execute(
+            "INSERT INTO paper_risk_control VALUES (1, 'false', 0, NULL, 1800000000000)"
+        )
+
+        with self.assertRaisesRegex(
+            sqlite3.DatabaseError, "RISK_CONTROL_STATE_INVALID"
+        ):
+            risk_control.risk_block_reason(connection)
+
+    def test_text_kill_flag_is_rejected(self):
+        connection = sqlite3.connect(":memory:")
+        self.addCleanup(connection.close)
+        connection.execute("""
+            CREATE TABLE paper_risk_control (
+                id INTEGER PRIMARY KEY,
+                paused,
+                killed,
+                reason,
+                updated_at_ms
+            )
+        """)
+        connection.execute(
+            "INSERT INTO paper_risk_control VALUES (1, 0, 'false', NULL, 1800000000000)"
+        )
+
+        with self.assertRaisesRegex(
+            sqlite3.DatabaseError, "RISK_CONTROL_STATE_INVALID"
+        ):
+            risk_control.risk_block_reason(connection)
+
 
 class F4KillResetAtomicReadinessRedTest(unittest.TestCase):
     def test_caller_supplied_ready_true_cannot_clear_kill_without_account_readiness(self):
