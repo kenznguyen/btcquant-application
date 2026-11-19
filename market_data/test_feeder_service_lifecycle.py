@@ -844,6 +844,7 @@ class RuntimeIntegrationContractTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             db_path = Path(directory) / "canonical.sqlite3"
             SQLiteCandleStore(db_path).initialize()
+            provision_feeder_leases_schema(db_path)
             store, leases = Mock(), Mock()
             store.path = db_path
             store.initialize = Mock()
