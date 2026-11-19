@@ -167,3 +167,12 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Nginx remains the gateway. T0 SQLite, writer fencing, leases, feeder, scheduler, recovery and ingestion remain unchanged. No PostgreSQL, T1/T2 connection, runtime, VPS, systemd, deployment or trading expansion.
 - Existing 196/196 aggregate run [44515824622](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824622), exact SHA `8f49439fafc95186a8c854fe482aad707525a658`, and API/Storage run [44515824664](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824664) are pre-migration baseline evidence only.
 - Architecture decision: **APPROVED**. Migration plan: **RECORDED**. Source implementation, dependency changes, test edits/execution and CI dispatch: **NOT AUTHORIZED / NOT STARTED** pending separate approval. Endpoint/runtime/deployment: **NOT AUTHORIZED**. Production readiness: **NOT CERTIFIED**.
+
+
+### FastAPI source implementation approval and execution checkpoint — 2026-11-19
+
+- Owner has now separately approved TDD/source implementation. Implementation authorization: **APPROVED**.
+- Execution: **BLOCKED** before source changes. Local checkout failed because this execution environment could not resolve `github.com`; the available GitHub integration has no Actions workflow-dispatch operation. Local Python is 3.13.5 with FastAPI 0.128.2, not the pinned CPython 3.12.16 target.
+- No RED contract test has been run; no source, test, dependency, lock or workflow changes have been made. Do not start implementation before RED tests and dependency compatibility are proven in the target environment.
+- Detailed decision/checkpoint: [T0 FastAPI Migration Decision](decisions/T0_FASTAPI_MIGRATION_DECISION_2026-11-19.md), updated commit `0be75e990337bc079dca6a4291e53e104359b6d6`.
+- Next: resume in a repository-connected environment with CPython 3.12.16 and GitHub Actions execution; establish hashed dependency lock, run contract RED, implement, then GREEN + aggregate regression + independent review. Runtime/deployment remains separately unauthorized.
