@@ -9,6 +9,7 @@ on:
       - market_data/test_fastapi_parity.py
       - market_data/api.py
       - market_data/runtime_smoke.py
+      - market_data/test_wsgi_retirement.py
       - market_data/fastapi_app.py
       - market_data/api_contract.py
       - market_data/storage.py
@@ -128,7 +129,7 @@ jobs:
               python -m pip install --disable-pip-version-check --no-index \
                 --find-links=/wheelhouse --require-hashes \
                 -r /artifacts/requirements-market-data-fastapi-test.lock
-              python -m unittest -v market_data.test_fastapi_api market_data.test_fastapi_parity
+              python -m unittest -v market_data.test_fastapi_api market_data.test_fastapi_parity market_data.test_wsgi_retirement
             ' > "$log" 2>&1; then
             test_status=0
           else
