@@ -27,12 +27,13 @@ Paired CI on the exact reviewed source SHA:
 - Future `asOfMs` is rejected; historical evaluation uses the supplied anchor; freshness/evaluability are delegated to the shared 1.1.0 helper.
 - Missing SQLite configuration/path and explicit unavailable storage fail closed; the missing-path test verifies no database is created. No SQLite fallback is attempted for an explicit PostgreSQL backend.
 - The 25 ASGI tests cover contract fields, decimals, gaps, freshness, auth, status codes, read-only methods and error paths. The paired 196-test SQLite aggregate provides additional regression evidence.
-- No correctness defect requiring a source change was identified in the inspected scope. This is not proof of untested runtime behavior.
+- No runtime contract defect was identified in the inspected scope. This is not proof of untested runtime behavior.
 
 ### 2. Readability — PASS; minor nits
 
 - Module ownership is understandable: `api_contract.py` owns shared parsing/freshness; `fastapi_app.py` owns the ASGI boundary.
 - Minor cleanup only: add explicit type annotations to the shared helpers and reflow the long validation condition in `candle_query`. These are non-blocking and should be separate from WSGI retirement.
+- The test module's top-level docstring still says it targets a “not-yet-created ASGI app”; this is stale wording and a low-priority nit.
 
 ### 3. Architecture — PASS WITH MIGRATION PARTIAL
 
@@ -59,15 +60,32 @@ Paired CI on the exact reviewed source SHA:
 
 ## Findings and required disposition
 
-- **No Critical or Required source-code finding identified** within the reviewed scope.
-- **Nit:** type annotations and formatting cleanup in `api_contract.py`; defer to a separate non-behavioral cleanup.
+### R1 — Required: FastAPI CI trigger omits runtime/test dependencies
+
+The `.github/workflows/t0-fastapi-migration.yml` push-path filter covers the adapter, shared helper, ASGI test and lock files, but omits files imported or exercised by that suite: at minimum `market_data/storage.py`, `market_data/store.py`, and `market_data/postgres.py`; the test fixture also directly depends on `market_data/feeder.py`, `market_data/write_gateway.py`, and `market_data/sync.py`.
+
+The SQLite aggregate workflow does trigger for some of those files, but its explicit unittest command does not execute `market_data.test_fastapi_api`. Therefore a change to one of these dependencies can run the aggregate suite while silently skipping the FastAPI contract suite. Add the dependency paths to the FastAPI workflow trigger, then make a harmless test-only change or workflow dispatch to prove the expected trigger and both suites on one exact SHA. No production source change is required for this finding.
+
+- Severity: **Required CI coverage correction** before treating the FastAPI workflow as durable regression protection.
+- Status: **OPEN / NOT FIXED**. This review did not modify workflow or source.
+
+### R2 — Nit: stale test module docstring
+
+`market_data/test_fastapi_api.py` says tests intentionally target the “not-yet-created ASGI app”, although `market_data/fastapi_app.py` now exists. Correct the wording in a separate small cleanup.
+
+### Other dispositions
+
+- No Critical source-code finding identified in the bounded adapter review.
 - **Process gate remains OPEN:** this self-review cannot satisfy the project's independent second-reviewer requirement. WSGI/Gunicorn removal is therefore **NOT APPROVED** by this record.
 - **Runtime/deployment remains NOT AUTHORIZED**. No endpoint probe, Uvicorn startup, Nginx routing, VPS/systemd operation or production readiness claim is made.
 
 ## Verdict
 
-**INTERNAL SELF-REVIEW: PASS WITH LIMITATIONS.**
+**INTERNAL SELF-REVIEW: PASS WITH REQUIRED CI ACTION ITEM.**
 
-This verdict means no blocking defect was found in the bounded source/CI review. It does not mean the migration is complete, independently approved, runtime-verified or production-ready.
+The inspected API implementation has no identified blocking contract defect, but the FastAPI CI trigger has a regression-coverage gap (R1). The 25/25 and 196/196 results remain valid for their exact historical SHA; they do not prove the missing trigger behavior. This is not an independent review, runtime verification, completed migration or production-readiness certification.
 
-Next gate: obtain an actual independent reviewer sign-off against the same source diff. Only after that acceptance may the separately bounded WSGI/Gunicorn retirement be proposed and executed under owner approval.
+Next gates:
+1. Correct and verify the FastAPI CI dependency-path triggers.
+2. Obtain an actual independent reviewer sign-off against the source diff.
+3. Only after both gates and owner approval, propose the bounded WSGI/Gunicorn retirement.
