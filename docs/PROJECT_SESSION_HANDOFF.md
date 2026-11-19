@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — committed T0 dependency lock and offline validation PASS
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`; no new branch or PR divergence.
+- Added `requirements-market-data.lock`: commit `6dbd5ac180626b3d80512feabcbf52b172a184c6`; blob `0a78b53d6d142d2ddc526a31e368adf4562bcb22`; SHA-256 `d90c0b25ee62a10d53292cf5b4bf6b40b567af89647607f55b548d05e2126a7f`.
+- Lock covers 25 packages (two direct dependencies plus transitives), each pinned to an exact version and exact wheel SHA-256. It is explicitly scoped to CPython 3.12 / Linux x86_64, matching the successful compatibility target; it is not a universal multi-platform lock.
+- Updated `.github/workflows/t0-dependency-compatibility.yml` to consume the committed lock instead of regenerating it. Workflow commit and exact checkout SHA: `215cf14c621a63b5e000198fb3a0caf70f1bc081`; workflow blob `5f6570cb5c45a8cf60a0e09ffd5d7b647be88298`.
+- Revalidation run [44504927709](https://github.com/kenznguyen/btcquant-application/actions/runs/44504927709), job `135493925822`: **SUCCESS**, exact SHA checkout.
+- Resolver downloaded 25 wheels using `--require-hashes --only-binary=:all:`; separate clean container installed from wheelhouse with `--network none`, `--no-index`, and `--require-hashes`.
+- `pip check`: no broken requirements. CCXT 4.5.92, Gunicorn 23.0.0, imports and `ccxt.binanceusdm` availability PASS.
+- Artifact `t0-dependency-compatibility-evidence`, ID `14518967642`, size 21,541,582 bytes, SHA-256 `48ffeb8c4f72e68b690358489de95f4a51606ae6aa8585b4b16bafd5d456295c`, expires 2026-12-03T10:22:05Z. Downloaded ZIP and embedded lock checksum independently verified; embedded lock SHA equals committed lock SHA.
+- Evidence report updated: `docs/evidence/T0_DEPENDENCY_COMPATIBILITY_GATE_2026-11-19.md`, commit `686a85f11b9f044bc86528b7287ea0a17c351d1f`.
+- Status: committed lock and exact-lock fresh offline install **PASS** for CPython 3.12/Linux x86_64. Other Python versions/platforms, runtime startup, Binance connectivity, API/feeder lifecycle, PostgreSQL/TimescaleDB, VPS/deployment and production readiness remain **NOT VERIFIED / NOT CERTIFIED**.
+- No T0 production source, canonical DB/data, runtime, VPS, deployment, T1/T2 or trading path was changed/accessed. No live orders.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 dependency resolver/fresh-environment gate PASS
 
 - Repository: `kenznguyen/btcquant-application`, existing branch `main`; no branch/PR split.
