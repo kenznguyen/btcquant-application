@@ -15,14 +15,14 @@ concurrency:
 
 jobs:
   sqlite-api-tests:
-    name: Six-module SQLite/API suite
+    name: Seven-module SQLite/API and feeder lifecycle suite
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Checkout exact approved test source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 15d404cb970de14415b21bbadd843027cea7441d
+          ref: caa88f7259fe596f77493170c2404c469b8408dc
           fetch-depth: 1
           persist-credentials: false
 
@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected="15d404cb970de14415b21bbadd843027cea7441d"
+          expected="caa88f7259fe596f77493170c2404c469b8408dc"
           actual="$(git rev-parse HEAD)"
           test "$actual" = "$expected"
 
@@ -40,7 +40,8 @@ jobs:
             market_data/test_write_gateway.py \
             market_data/test_storage.py \
             market_data/test_sync.py \
-            market_data/test_api.py; do
+            market_data/test_api.py \
+            market_data/test_feeder_lifecycle.py; do
             test -f "$module"
           done
 
@@ -55,8 +56,8 @@ jobs:
             echo "runner_os=$RUNNER_OS"
             echo "runner_arch=$RUNNER_ARCH"
             echo "runner_image=ubuntu-24.04"
-            echo "test_modules=6"
-            echo "static_expected_test_methods=63"
+            echo "test_modules=7"
+            echo "static_expected_test_methods=87"
             echo "network_mode=none (Docker test container)"
             echo "credentials=none passed to test container"
             echo "canonical_database_mount=none"
@@ -128,6 +129,7 @@ jobs:
               market_data.test_storage \
               market_data.test_sync \
               market_data.test_api \
+              market_data.test_feeder_lifecycle \
             > "$log" 2>&1; then
             test_status=0
           else
@@ -138,7 +140,7 @@ jobs:
           test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
           {
             echo "python_version=3.12.16"
-            echo "test_command=python -m unittest -v [six approved modules]"
+            echo "test_command=python -m unittest -v [seven approved modules]"
             echo "test_count=${test_count:-NOT_REPORTED}"
             echo "test_exit_code=$test_status"
           } >> "$artifacts/runner_metadata.txt"
@@ -149,15 +151,15 @@ jobs:
               '' \
               "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
               "- Workflow commit: $GITHUB_SHA" \
-              "- Test source SHA: 15d404cb970de14415b21bbadd843027cea7441d" \
+              "- Test source SHA: caa88f7259fe596f77493170c2404c469b8408dc" \
               '- Python: 3.12.16' \
               '- Docker network: none (network interface probe: loopback only)' \
-              "- Discovered tests: ${test_count:-NOT_REPORTED} (static inventory: 63)" \
+              "- Discovered tests: ${test_count:-NOT_REPORTED} (static inventory: 87)" \
               "- Test process exit code: $test_status"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          if [[ "$test_status" -eq 0 && "$test_count" != "63" ]]; then
-            echo "Expected 62 tests from static inventory; observed ${test_count:-no test summary}." >&2
+          if [[ "$test_status" -eq 0 && "$test_count" != "87" ]]; then
+            echo "Expected 87 tests from static inventory; observed ${test_count:-no test summary}." >&2
             exit 1
           fi
           exit "$test_status"
