@@ -32,13 +32,22 @@
     "sidecar_individual_sha256_retained": 0,
     "aggregate_bytes": 14929033,
     "zip_aggregate_bytes": 14922117,
-    "sidecar_aggregate_bytes": 6916
+    "sidecar_aggregate_bytes": 6916,
+    "zip_aggregate_bytes_from_per_object_rows": 14910840,
+    "zip_aggregate_bytes_declared_in_evidence": 14922117,
+    "zip_aggregate_byte_discrepancy": 11277,
+    "sidecar_aggregate_bytes_declared_in_evidence": 6916,
+    "total_bytes_recomputed_from_object_rows_plus_declared_sidecar_total": 14917756,
+    "total_bytes_declared_in_evidence": 14929033,
+    "total_aggregate_byte_discrepancy": 11277,
+    "aggregate_reconciliation_status": "BLOCKED_MISMATCH_11277_BYTES"
   },
   "limitations": [
     "Sidecar object keys are paired deterministically as ZIP key + .CHECKSUM, consistent with the evidence report.",
     "The evidence report does not retain individual sidecar byte sizes or hashes of the sidecar payloads; these fields are NOT_VERIFIED and are not inferred from the ZIP digest.",
     "The ZIP SHA-256 is recorded as the expected digest confirmed by the paired sidecar, not as the sidecar object's own SHA-256.",
-    "No source object was accessed or downloaded in this inventory-generation step."
+    "No source object was accessed or downloaded in this inventory-generation step.",
+    "The 202 ZIP per-object byte sizes sum to 14,910,840 bytes, while the same evidence report declares 14,922,117 ZIP bytes (difference 11,277 bytes). Including the reported 6,916 sidecar bytes gives 14,917,756 bytes versus the declared 14,929,033 aggregate (same 11,277-byte difference). Preserve both values; do not silently reconcile or alter source evidence."
   ],
   "objects": [
     {
