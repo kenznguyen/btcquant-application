@@ -49,6 +49,10 @@ class DualLedgerMigrationRedTest(unittest.TestCase):
             source="DUAL_LEDGER_MIGRATION_TEST_FIXTURE",
             recorded_at_ms=self.now,
         )
+        legacy.record_equity(
+            "100", self.now - 120_000, self.now - 60_001,
+            "sha256:legacy-risk-baseline", "100",
+        )
         order = legacy.submit(self.intent(), self.book(), self.now, strategy_id="MANUAL")
         self.assertEqual(order["status"], "FILLED")
         legacy.record_equity(
