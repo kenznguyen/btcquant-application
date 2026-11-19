@@ -213,3 +213,13 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Committed runtime/test wheel locks hash-verified. FastAPI tests now execute non-root, read-only, with no network and bounded writable tmpfs.
 - Detailed report: [T0 FastAPI Locked Offline CI and Review](evidence/T0_FASTAPI_LOCKED_OFFLINE_CI_AND_REVIEW_2026-11-19.md), follow-up commit `c2c575dad69c7e4eda2c86df13a324485bd0ee14`.
 - WSGI entrypoint remains. Independent code review pending. Migration PARTIAL; runtime/deployment NOT AUTHORIZED.
+
+
+### FastAPI internal self-review — 2026-11-19
+
+- Internal self-review: **PASS WITH LIMITATIONS** for source SHA `0a4432d8d101381e8b07c88a1a65bbf1ee3a787f`; no Critical or Required source-code finding identified in the bounded review.
+- Five axes reviewed: correctness, readability, architecture, security and performance. Minor non-blocking cleanup: type annotations and formatting in `api_contract.py`.
+- Transitional WSGI/FastAPI orchestration duplication is documented; WSGI retirement remains gated.
+- Detailed report: [T0 FastAPI Internal Self-Review](evidence/T0_FASTAPI_INTERNAL_SELF_REVIEW_2026-11-19.md), commit `68816a9c25d10d7587ead3cdefef32f47b05a6eb`.
+- This is not an independent second-reviewer sign-off. Independent review remains **PENDING**; WSGI/Gunicorn removal is **NOT APPROVED** by this self-review.
+- Runtime/deployment remains **NOT AUTHORIZED**; production readiness remains **NOT CERTIFIED**.
