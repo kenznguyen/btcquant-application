@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Owner accepts RECONSTRUCTED partial archive coverage; SQLite remains gated
+
+- Owner decision: `docs/decisions/T0_RECONSTRUCTED_PARTIAL_COVERAGE_ACCEPTANCE_2026-11-20.md`, commit `1a1910648bba711710b6f159d539f1f8a4ab209c`.
+- Accepted label: **RECONSTRUCTED — PARTIAL COVERAGE** only. This does not assert earliest-ever Binance history, current tail completeness, recovery of the deleted original DB, or OFFICIAL / VERIFIED status.
+- Validated bounds: M15 2019-12-31 00:00–2026-11-18 23:45 UTC, 241,440 rows; H1 2019-12-31 00:00–2026-11-18 23:00 UTC, 60,360 rows. Continuity PASS only within these observed bounds.
+- Leading history before 2019-12-31 and trailing history from 2026-11-19 00:00 UTC remain NOT VERIFIED. REST tail remains CLOSED BY OWNER DECISION / NO FURTHER RETRIEVAL; do not retry or bypass.
+- Manifest draft: `docs/manifests/T0_RECONSTRUCTED_BTCUSDT_M15_H1_MANIFEST_DRAFT.json`, commit `635f5927cc6415d2bd09cf08ce923e9199d2cca6`. It is explicitly DRAFT_NOT_FOR_DATABASE_BUILD; machine-readable inventory of all 404 ZIP/sidecar objects remains pending.
+- Staging plan: `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md`, commit `ef9bd47ab0e61c0aed1486cc6d29bf88bf776439`.
+- Static schema inspection only: Candle Contract 1.1.0, SQLite user_version 1, tables candles + feeder_leases; current candles schema stores OHLCV and available_at_ms. Archive-only CSV fields must remain auditable in preserved raw payloads; no schema extension authorized.
+- This approval authorizes documentation/static preparation only. Raw payload materialization/re-download, SQLite initialization/writes, database build/validation, Dropbox, restore, VPS/runtime, feeder/writer, deployment and cutover remain separately gated and NOT AUTHORIZED / NOT RUN.
+- No source code, schema, dependencies, tests or workflows changed or run. No market-data endpoint/archive accessed. No SQLite file created/opened/modified. No Actions run/job/artifact.
+- Next: complete machine-readable per-object provenance inventory and independent static review. Then request separate approval for bounded raw archive materialization; request a separate explicit approval again before SQLite creation/writes.
+ 
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Owner decision: REST tail remains NOT VERIFIED
 
 - Owner explicitly decided to leave the REST tail from 2026-11-19 00:00 UTC as **NOT VERIFIED** following the bounded Binance USD-M REST attempt blocked by HTTP 451.
