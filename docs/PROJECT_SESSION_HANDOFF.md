@@ -1,15 +1,16 @@
-# CURRENT STATUS OVERRIDE — 2026-11-20 — 404-object provenance inventory; byte reconciliation blocker; materialization approval proposal
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Owner approved archive materialization; exact local target; preflight pending
 
-- Inventory: `docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json`, latest update commit `023dd6150c69f412ce5dff71768a08eb1838e2d5`. Contains 404 identities: 202 ZIP + 202 paired checksum sidecars. ZIP keys, per-object byte sizes, SHA-256 and row counts are present; sidecar keys are paired, but sidecar own byte sizes/hashes remain NOT VERIFIED.
-- ZIP row totals reconcile: M15 241,440; H1 60,360. ZIP object count: 38 daily + 164 monthly = 202.
-- **BLOCKED — byte aggregate mismatch:** 202 ZIP table sizes sum to 14,910,840 bytes; evidence summary declares 14,922,117 ZIP bytes, difference 11,277. With declared 6,916 sidecar bytes, recomputed total is 14,917,756 vs declared 14,929,033. Both values are preserved; no silent correction.
-- Manifest latest update: `docs/manifests/T0_RECONSTRUCTED_BTCUSDT_M15_H1_MANIFEST_DRAFT.json`, commit `9a76d07df2c73c28a9107f70c1d50b7c03b9c4ec`. Remains DRAFT_NOT_FOR_DATABASE_BUILD; SQLite NOT_CREATED_NOT_AUTHORIZED.
-- Staging plan latest update: `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md`, commit `ab9fd93ec7501a7a1050e823748553c07a76eecb`. Records row-count reconciliation and byte mismatch.
-- Separate approval proposal latest update: `docs/plans/T0_RECONSTRUCTED_ARCHIVE_MATERIALIZATION_APPROVAL_REQUEST_2026-11-20.md`, commit `19923a3af263bea7f96293178ba6c66486050856`. Requires exact 404-key allowlist, owner-specified new local destination, 100 MiB hard cap, actual per-object sidecar metadata measurement, aggregate reconciliation, quarantine on mismatch, preserve-until-review retention and exclusions.
-- Status: DOCUMENTATION / INVENTORY IDENTITY / ROW COUNT CROSS-CHECK PASS; SIDECAR OWN METADATA NOT VERIFIED; AGGREGATE BYTE RECONCILIATION BLOCKED; RAW MATERIALIZATION NOT AUTHORIZED / NOT RUN.
-- No source archive accessed; no raw bytes materialized; no SQLite created/opened/modified; no Dropbox/VPS/runtime/feeder/writer/lease/restore/deployment/cutover. No code/schema/dependency/tests/workflows changed or run; no Actions run/job/artifact.
-- REST tail remains NOT VERIFIED and closed by owner decision; no retry or bypass.
-- Next gate: owner reviews/reconciles historical byte discrepancy and explicitly approves or rejects the materialization proposal, including exact local destination. SQLite creation/writes remain a separate later approval.
+- Owner decision: `docs/decisions/T0_RECONSTRUCTED_ARCHIVE_MATERIALIZATION_APPROVAL_2026-11-20.md`, commit `c8793aee2ac3cab5594372e718421c33aa0d46ff`.
+- Approved exact local staging target: `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001`. This path is not yet verified or created. Before any network request, verify owner-controlled local filesystem, outside Dropbox and operational T0/database paths, empty/new, no symlink, create-only, sufficient free space; record filesystem/mount identity, owner and permissions. If preflight fails, STOP; no alternate path without new owner approval.
+- Historical 11,277-byte difference accepted as aggregate reporting/reconciliation discrepancy of unknown root cause, not evidence of missing candle data. Preserve old figures. New run must verify each of 404 objects individually, measure actual size/SHA-256 for each sidecar and compute a fresh aggregate; do not require matching historical 14,929,033-byte summary. Any per-object size/hash/checksum mismatch, missing/extra object or validation failure quarantines the run.
+- Exact approved scope: 202 ZIP + 202 paired checksum sidecars, exact committed allowlist, official S3-compatible source, max 100 MiB transferred including retries, bounded concurrency/timeouts/retries, raw create-only files, preserve until owner review and separate cleanup decision.
+- Approval proposal updated: `docs/plans/T0_RECONSTRUCTED_ARCHIVE_MATERIALIZATION_APPROVAL_REQUEST_2026-11-20.md`, commit `4946ad2d88b297f20e7d412f5d537f217ffa2001`.
+- Inventory updated: `docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json`, commit `6225e55a7efd68981a95211efd8bc2c7f0dd1403`.
+- Staging plan updated: `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md`, commit `5f2fc22c7bfb6a4274e4f1e0ca9d05cda00777a0`.
+- Current status: APPROVED — PREFLIGHT PENDING / NOT RUN. No archive request/materialization has started. SQLite creation/open/write/import remains NOT AUTHORIZED and requires separate later owner approval.
+- Explicit exclusions remain: REST tail (NOT VERIFIED, closed, no retry/bypass); SQLite; Dropbox; VPS/runtime; feeder/writer/lease; T1/T2; restore; deployment/cutover; auto-delete/cleanup; OFFICIAL/VERIFIED promotion.
+- No tests/workflows run; no workflow run/job/artifact. No source archive accessed; no raw data staged; no SQLite/Dropbox/VPS/runtime action.
+- Next: perform only the approved destination preflight. If it passes, execute exact 404-object materialization; if not, stop and request owner direction.
 
 ---
 
