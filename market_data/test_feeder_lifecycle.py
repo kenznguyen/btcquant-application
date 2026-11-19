@@ -225,6 +225,57 @@ class FeederSchedulerLifecycleTest(unittest.TestCase):
         scheduler.mark_failed("15m")
         self.assertTrue(scheduler.wait_for_idle(timeout=0))
 
+    def test_background_scheduler_thread_stops_and_cannot_restart(self):
+        scheduler = self.make_scheduler(now_ms=BASE)
+        self.assertTrue(scheduler.start())
+        self.assertFalse(scheduler.start())
+
+        scheduler.stop()
+
+        self.assertTrue(scheduler.wait_for_idle(timeout=2))
+        with self.assertRaisesRegex(RuntimeError, "cannot be restarted"):
+            scheduler.start()
+
+    def test_stop_during_inflight_sync_drains_without_starting_next_timeframe(self):
+        entered = threading.Event()
+        release = threading.Event()
+        calls = []
+        result = []
+        errors = []
+
+        def sync(frame, start, end):
+            calls.append(frame)
+            entered.set()
+            if frame == "15m":
+                self.assertTrue(release.wait(timeout=3))
+            return frame
+
+        scheduler = self.make_scheduler(
+            now_ms=BASE + H1 + 5_000,
+            timeframes=("15m", "1h"),
+            sync=sync,
+        )
+
+        def run_scheduler():
+            try:
+                result.append(scheduler.run_due())
+            except Exception as error:
+                errors.append(error)
+
+        worker = threading.Thread(target=run_scheduler)
+        worker.start()
+        self.assertTrue(entered.wait(timeout=2))
+        scheduler.stop()
+        self.assertFalse(scheduler.wait_for_idle(timeout=0))
+        release.set()
+        worker.join(timeout=3)
+
+        self.assertFalse(worker.is_alive())
+        self.assertEqual(errors, [])
+        self.assertEqual(calls, ["15m"])
+        self.assertEqual(result, [{"15m": "15m"}])
+        self.assertTrue(scheduler.wait_for_idle(timeout=0))
+
 
 class FakeScheduler:
     def __init__(self, order=None, idle_results=None, sync_callback=None):
@@ -298,6 +349,20 @@ class FakeRecovery:
         if self.error is not None:
             raise self.error
         return self.result
+
+
+class FakeHealth:
+    def __init__(self):
+        self.events = []
+
+    def mark_ready(self):
+        self.events.append("ready")
+
+    def mark_not_ready(self):
+        self.events.append("not_ready")
+
+    def mark_stopped(self):
+        self.events.append("stopped")
 
 
 class FakeWalKeeper:
@@ -496,6 +561,20 @@ class FeederRuntimeLifecycleTest(unittest.TestCase):
 
         self.assertEqual(runtime.state, "STOPPED")
         self.assertEqual(leases.releases, [])
+
+    def test_health_readiness_tracks_start_lease_loss_and_shutdown(self):
+        health = FakeHealth()
+        runtime = self.make_runtime(lease_store=FakeLeaseStore())
+        runtime.health = health
+
+        self.assertTrue(runtime.start())
+        self.assertEqual(health.events, ["ready"])
+
+        runtime.on_lease_lost()
+        self.assertEqual(health.events, ["ready", "not_ready"])
+
+        self.assertTrue(runtime.stop(timeout=2))
+        self.assertEqual(health.events, ["ready", "not_ready", "stopped"])
 
     def test_retry_wrapper_rechecks_write_authorization_before_each_attempt(self):
         original_sync = Mock(side_effect=TimeoutError("first attempt"))
