@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - ".github/workflows/f4-r3-kill-reset-red.yml"
-      - "paper_execution/test_f4_risk_red.py"
+      - "paper_execution/test_f4_r3_reset_red.py"
       - "paper_execution/ledger.py"
       - "paper_execution/risk_control.py"
       - "paper_execution/risk_contract.py"
@@ -38,14 +38,14 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/f4-r3-evidence"
           head_sha="$(git rev-parse HEAD)"
-          test_blob="$(git hash-object paper_execution/test_f4_risk_red.py)"
+          test_blob="$(git hash-object paper_execution/test_f4_r3_reset_red.py)"
           ledger_blob="$(git hash-object paper_execution/ledger.py)"
           risk_control_blob="$(git hash-object paper_execution/risk_control.py)"
           risk_contract_blob="$(git hash-object paper_execution/risk_contract.py)"
           api_blob="$(git hash-object pipeline/api.py)"
           echo "IDENTITY head=$head_sha github_sha=$GITHUB_SHA test=$test_blob ledger=$ledger_blob risk_control=$risk_control_blob risk_contract=$risk_contract_blob api=$api_blob"
           [[ "$head_sha" == "$GITHUB_SHA" ]]
-          [[ "$test_blob" == "ea4bce9cc1fc19c47a08113db4477d612ab98ad5" ]]
+          [[ "$test_blob" == "34b1238ac7ec787d3330f4d78db030ec2c85be40" ]]
           [[ "$ledger_blob" == "9fbf195cd6b19bd4ce2217f3648b4722a2472dcb" ]]
           [[ "$risk_control_blob" == "c8fe573a7a5b0716159e50a678423e402d7df3ba" ]]
           [[ "$risk_contract_blob" == "7ae74740568e3bcad78acd928896ee363cc62613" ]]
@@ -89,7 +89,7 @@ jobs:
             --env PYTHONPATH=/workspace \
             --workdir /workspace \
             python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df \
-            python -m unittest -v paper_execution.test_f4_risk_red.F4KillResetAtomicReadinessRedTest \
+            python -m unittest -v paper_execution.test_f4_r3_reset_red.F4KillResetAtomicReadinessRedTest \
             2>&1 | tee "$artifacts/unittest.log"
           test_exit=${PIPESTATUS[0]}
           set -e
