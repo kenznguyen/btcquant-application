@@ -7,6 +7,7 @@ on:
     paths:
       - market_data/test_fastapi_api.py
       - market_data/fastapi_app.py
+      - market_data/api_contract.py
       - requirements-market-data-fastapi.in
       - requirements-market-data-fastapi-test.in
       - requirements-market-data-fastapi.lock
@@ -24,7 +25,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  fastapi-contract-red:
+  fastapi-contract-tests:
     name: FastAPI contract tests on CPython 3.12.16
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -57,6 +58,8 @@ jobs:
             echo "checked_out_source_sha=$actual"
             echo "python_target=3.12.16"
             echo "test_scope=FastAPI contract tests, offline"
+            echo "dependency_download_network=bridge"
+            echo "test_container_network=none"
             echo "canonical_database=not mounted"
             echo "runtime_or_exchange=not accessed"
             echo "credentials=none"
@@ -130,7 +133,8 @@ jobs:
             echo "- Python: CPython 3.12.16"
             echo "- Test count: ${test_count:-NOT_REPORTED}"
             echo "- Exit code: $test_status"
-            echo "- Runtime and test dependency locks: SHA-256 recorded in artifact"
+            echo "- Committed runtime/test lock SHA-256: verified"
+            echo "- Test container network: disabled"
             echo "- Canonical SQLite/runtime/exchange: not accessed"
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$test_status"
