@@ -4376,3 +4376,27 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Evidence report: `docs/evidence/T0_LEGACY_SQLITE_API_WORKFLOW_ISOLATION_2026-11-19.md`, commit `6f323b3652e00f38b9edd8e4c4f685cc32fc9ccf`.
 - Scope guard: no source repo, application production/test code, PostgreSQL/TimescaleDB, canonical DB/data, VPS, runtime, T1/T2, paper/live trading or execution changed/accessed.
 - Status: CI trigger isolation PASS (static); runtime execution NOT VERIFIED. Continue with read-only SQLite API/Storage parity inventory; no runtime or PostgreSQL expansion.
+
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 read-only SQLite API/Storage parity inventory
+
+- After CI trigger isolation, owner requested read-only API and Storage comparison. Source repository remained unchanged.
+- Source: `kenznguyen/btcusdt-telegram-signals2`, branch `feature/t0-centralized-data-feeder-p1-20261101`, inspected HEAD `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9`.
+- Target: `kenznguyen/btcquant-application`, branch `main`, inspected HEAD `c80aa8e31481d237cb8d17ab547d65e7e790976a` (documentation commits followed this inspected source snapshot).
+- Direct byte parity PASS:
+  - `market_data/api.py`: source/target blob `81733c9b6de811cbebb2f5d472d41f37f337990c`.
+  - `market_data/storage.py`: `13fe1ae01ebb5318b69e69eef3e512d207f74c49`.
+  - `market_data/test_api.py`: `49df7e0bec12908adae67f18a4aa19063e461093`, 13 test methods.
+  - `market_data/test_storage.py`: `b2635f575323187f936360d033b4fc630d8138e0`, 7 test methods.
+- Inspected dependency byte parity PASS: `market_data/store.py` blob `4e1b0c54bd56455abe5be0e5c7d0807e63e0bc78`; `feeder.py` blob `299a9b5a8b1ebd581eb620d5ee860d9f9ff5dc5c`; `sync.py` blob `e7ad4e6f2074225957b01f74abb0befe37675ea2`; `postgres.py` blob `2fe27fe2d066dda0c192a381b72d27404487b800` (identity only; no PostgreSQL behavior executed).
+- Only inspected dependency byte divergence: `market_data/write_gateway.py`; source blob `585caf5250c7382f8e391533882f08c8ec97efaa`, target blob `0a77df443ae1a817ea74946fac5dc0f3809ddd83`. Source uses helper-based `feeder_leases` schema inspection; target uses direct PRAGMA inspection. Exact ordered columns and primary key are checked in both. Target F1 malformed-schema behavior was separately tested in the 14-test F1 gate; no source or target production file changed in this inventory.
+- Static API observations: read-only WSGI GET interface; Bearer token; bounded BTCUSDT/timeframe/[start,end) query; max 2,000 candles; explicit contract/schema/market/freshness metadata; no-store response; fail-closed configuration/store errors.
+- Static Storage observations: SQLite default; side-effect-free constructor; explicit initialization; read-only read path does not create a missing DB; unknown backend and missing PostgreSQL DSN fail closed; no implicit migrations.
+- Evidence report: `docs/evidence/T0_SQLITE_API_STORAGE_READONLY_PARITY_2026-11-19.md`, commit `73376e93e7edf4e5eecb09ba50b2ae696ff10c52`.
+- Provenance addendum commit: `3d4760265dc3edb99df590bced9ec97ccddc363f`.
+- No API/Storage test was executed; test specs are byte-identical only. Runtime behavior, full T0 parity, canonical data/recovery, lifecycle, PostgreSQL runtime and production readiness remain NOT VERIFIED / NOT CERTIFIED.
+- Scope guard: no source repo changes; no application production/test changes; no PostgreSQL execution/migration, canonical DB/data, VPS, runtime, T1/T2, paper/live trading, exchange or execution access; no dependency installation; no workflow dispatch.
+- Next bounded step, pending separate approval: design/implement a dedicated exact-SHA SQLite-only API/Storage regression gate, selecting only approved SQLite tests and excluding PostgreSQL-specific cases and feeder lifecycle. Do not use the manual legacy seven-module workflow for routine checks.
