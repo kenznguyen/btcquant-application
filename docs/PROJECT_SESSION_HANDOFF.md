@@ -1,3 +1,23 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 deterministic feeder lifecycle contracts PASS
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`; latest verified pre-handoff HEAD `e1c3d7dc931048de4f3b5319e3b1c64d31abfcc9`. No new branch or PR divergence.
+- Preserved the source's 34 feeder/service lifecycle contract tests in `market_data/test_feeder_service_lifecycle.py` rather than overwriting the target's existing `market_data/test_feeder_lifecycle.py` (28 different tests). Final new test blob: `590c29a0fbf553d19582912a113a92bb74da083f`.
+- Source repo/branch: `kenznguyen/btcusdt-telegram-signals2` / `feature/t0-centralized-data-feeder-p1-20261101`, source HEAD `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9`. Source lifecycle test blob `5797d51e3165721863ceacb1fac76f44055f18a7`, 34 tests.
+- Target production `market_data/feeder.py` matches source blob `299a9b5a8b1ebd581eb620d5ee860d9f9ff5dc5c`; `market_data/feeder_service.py` matches source blob `6d238a01f35003b943e2b22c8e05f05090ccb518`.
+- Test-only fixture adaptation provisions the exact F1 `feeder_leases` schema in disposable temporary SQLite DBs before constructing the write gateway. No production code changed.
+- Workflow `.github/workflows/t0-feeder-lifecycle-unit.yml`, commit `6e921720d5e97727033516c386bce213e6930cf8`, blob `4f4b3e9a08caeaa3ee5b0ef1006697a19477d89c`. It checks out exact `github.sha` and runs the two lifecycle modules only.
+- Authoritative run [44506249466](https://github.com/kenznguyen/btcquant-application/actions/runs/44506249466), job `135498576940`, exact checkout `9938b01b2b14b651dc7b65f70bef5a446d28594a`: SUCCESS, 62/62 tests, 0 failures/errors, 2.111s.
+- Test isolation: immutable Python 3.12.16 image; Docker `--network none`, read-only source/root, non-root, no credentials, no canonical DB, no PostgreSQL, no production process/systemd manager, no exchange or external network. Tests use fake/synthetic collaborators and disposable temporary SQLite only.
+- Artifact `t0-feeder-lifecycle-evidence`, ID `14519797216`, size 2,755 bytes, SHA-256 `80c29fbca88ade5ffc2cbb650f8fdbb64f03a689461a6ee223aacec073ed1cef`, expires 2026-12-03T10:30:39Z. Downloaded ZIP independently hashed and payload inspected; metadata confirms exact SHA and 62/62 exit code 0.
+- Initial attempts: run `44505987189` had 6 fixture errors; run `44506204245` had 1 remaining fixture error. F1 schema fixtures were corrected; only final run `44506249466` is acceptance evidence.
+- Evidence report: `docs/evidence/T0_FEEDER_LIFECYCLE_CONTRACTS_2026-11-19.md`, commit `f8b10455018f248cc97019e00be28466683e7f80`.
+- Provenance addendum: `docs/T0_MIGRATION_PROVENANCE.md`, commit `e1c3d7dc931048de4f3b5319e3b1c64d31abfcc9`.
+- Status: deterministic feeder lifecycle/scheduler/retry and service composition contracts **PASS 62/62**. Production process startup, systemd operation, current VPS/runtime, canonical database/data, Binance connectivity, PostgreSQL/TimescaleDB and production readiness remain **NOT VERIFIED / NOT AUTHORIZED / NOT CERTIFIED**.
+- Other T0 isolated gates remain: F1 write gateway 14/14; SQLite API/Storage 16/16; sync/lease/recovery 31/31; dependency lock offline installation PASS for CPython 3.12/Linux x86_64.
+- Next bounded step: consider a single exact-SHA aggregate regression gate for the already-approved SQLite-only T0 test allowlist (write gateway, API/Storage, sync/lease/recovery and deterministic lifecycle). Keep PostgreSQL, canonical data, production runtime, VPS, deployment, T1/T2 and trading excluded.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — committed T0 dependency lock and offline validation PASS
 
 - Repository: `kenznguyen/btcquant-application`, existing branch `main`; no new branch or PR divergence.
