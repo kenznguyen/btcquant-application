@@ -94,7 +94,7 @@ Root-owned module `pipeline.api:application`:
 - POST `/v1/paper/pause` body `{paused:bool}` -> snapshot.
 - POST `/v1/paper/cancel` body `{orderId:str}` -> order.
 - POST `/v1/paper/kill` body `{enabled:true}` -> paper snapshot with persistent kill latch.
-- POST `/v1/paper/reset-kill` body `{acknowledge:true,ready:true}` -> snapshot; generic Resume never clears the kill latch.
+- POST `/v1/paper/reset-kill` body `{acknowledge:true}` -> snapshot only when the server verifies account-wide risk readiness and no pending paper orders; generic Resume never clears the kill latch. Caller-supplied readiness is not accepted as proof.
 
 GET bearer uses MARKET_DATA_TOKEN. POST bearer uses separate CONTROL_TOKEN.
 Both tokens only kept in frontend memory. Server config MARKET_DATA_DB,
@@ -105,6 +105,6 @@ served at `/control` (Vite base `/control/`) from built control_dashboard/dist.
 
 ## Shared risk latch and independent signals
 
-`paper_execution.risk_control` stores the pause/kill latch in the same SQLite database as the paper ledger. `PaperLedger.submit` checks it after `BEGIN IMMEDIATE` and before creating a new order, so a kill action and an order submission serialize on the same database write lock. Kill is sticky: `set_paused(false)` cannot clear it. Reset requires both `acknowledge=true` and `ready=true`; this is an operator assertion, not an automated proof that all external systems are healthy. The current latch blocks new paper intents; it does not claim to cancel existing open paper orders or flatten positions.
+`paper_execution.risk_control` stores the pause/kill latch in the same SQLite database as the paper ledger. `PaperLedger.submit` checks it after `BEGIN IMMEDIATE` and before creating a new order, so a kill action and an order submission serialize on the same database write lock. Kill is sticky: `set_paused(false)` cannot clear it. Reset requires explicit operator acknowledgement plus server-side proof: complete validated Dual Ledger migrations, a reconciled account risk snapshot with `riskReady=true`, and no pending OPEN/PARTIALLY_FILLED paper orders. These checks run after `BEGIN IMMEDIATE` on the same SQLite connection and transaction that clears the latch and writes the reset audit event. A missing, stale, corrupt or unreconciled account state fails closed. The API's candle/order-book preflight remains an additional gate, not a substitute for the transactional account-risk checks. The current latch blocks new paper intents; it does not claim to cancel existing open paper orders or flatten positions.
 
 Strategy Core and AI/FreqAI are separate signal streams. Core's producer contract is a validated JSON artifact at `STRATEGY_CORE_REPORT_PATH` (schema v1, `source=STRATEGY_CORE`, BTCUSDT Binance USDT perpetual M15, direction, strategy/data provenance, timestamps, signed target and limit price). AI remains the existing FreqAI evaluation. Both selected sources submit through `PaperLedger`, including the shared kill/pause latch and existing position/spread/visible-depth constraints. The adapter does not yet compute RSI/ADX/Smart-DCA itself; the upstream Strategy Core producer must publish the artifact.
