@@ -7,6 +7,7 @@ on:
     paths:
       - market_data/test_fastapi_api.py
       - market_data/runtime_smoke.py
+      - market_data/uvicorn_nginx_smoke.py
       - market_data/test_api.py
       - market_data/test_controlled_ingestion_acceptance.py
       - market_data/test_t0_controlled_ingestion_acceptance.py
@@ -278,5 +279,104 @@ jobs:
         with:
           name: t0-fastapi-runtime-lock-smoke
           path: ${{ runner.temp }}/t0-fastapi-runtime-artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+
+  uvicorn-nginx-socket-integration:
+    name: Isolated Uvicorn process/socket + Nginx reverse-proxy integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify source and prepare isolated integration image
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
+          test -f market_data/uvicorn_nginx_smoke.py
+          sha256sum -c requirements-market-data-fastapi.sha256
+          context="$RUNNER_TEMP/t0-uvicorn-nginx-build"
+          artifacts="$RUNNER_TEMP/t0-uvicorn-nginx-artifacts"
+          mkdir -p "$context" "$artifacts"
+          cp requirements-market-data-fastapi.lock "$context/"
+          chmod 0777 "$artifacts"
+          cat > "$context/Dockerfile" <<'DOCKERFILE'
+          FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+          RUN apt-get update && apt-get install -y --no-install-recommends nginx && rm -rf /var/lib/apt/lists/*
+          COPY requirements-market-data-fastapi.lock /tmp/requirements.lock
+          RUN python -m pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock && rm /tmp/requirements.lock
+          DOCKERFILE
+          docker build --platform linux/amd64 --tag t0-uvicorn-nginx-ci:"$GITHUB_SHA" "$context"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_commit=$GITHUB_SHA"
+            echo "checked_out_source_sha=$actual"
+            echo "python_image=$PYTHON_IMAGE"
+            echo "runtime_lock_sha256_verified=PASS"
+            echo "nginx_install=isolated_ephemeral_container"
+            echo "test_network=none"
+            echo "listeners=127.0.0.1_only"
+            echo "canonical_t0_database=not_mounted"
+            echo "credentials=synthetic_dummy_token_only"
+            echo "vps_or_deployment=NOT_ACCESSED"
+            echo "trading=NOT_ACCESSED"
+          } > "$artifacts/runner_metadata.txt"
+          docker run --rm --network none --entrypoint nginx t0-uvicorn-nginx-ci:"$GITHUB_SHA" -v 2>&1 | tee "$artifacts/nginx-version.txt"
+
+      - name: Run real Uvicorn and Nginx processes with external network disabled
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/t0-uvicorn-nginx-artifacts"
+          log="$artifacts/uvicorn-nginx-integration.log"
+          if docker run --rm --platform linux/amd64 \
+            --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --pids-limit 64 \
+            --memory 1g --cpus 2 --user 65534:65534 \
+            --tmpfs /tmp:rw,exec,nosuid,nodev,size=256m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --env HOME=/tmp --env TMPDIR=/tmp --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace --workdir /workspace \
+            "t0-uvicorn-nginx-ci:$GITHUB_SHA" \
+            python /workspace/market_data/uvicorn_nginx_smoke.py > "$log" 2>&1; then
+            smoke_status=0
+          else
+            smoke_status=$?
+          fi
+          cat "$log"
+          {
+            echo "integration_exit_code=$smoke_status"
+            echo "integration_status=$([ "$smoke_status" -eq 0 ] && echo PASS || echo FAIL)"
+          } >> "$artifacts/runner_metadata.txt"
+          {
+            echo "## Isolated Uvicorn + Nginx integration"
+            echo
+            echo "- Exact source SHA: $GITHUB_SHA"
+            echo "- Uvicorn: real subprocess, TCP loopback socket"
+            echo "- Nginx: real subprocess, loopback reverse proxy"
+            echo "- Test container: non-root, read-only root, network disabled, bounded resources"
+            echo "- Data: temporary SQLite fixture only"
+            echo "- Canonical T0 SQLite, VPS, credentials, exchange, T1/T2 and trading: not accessed"
+            echo "- Result: $([ "$smoke_status" -eq 0 ] && echo PASS || echo FAIL)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$smoke_status"
+
+      - name: Upload Uvicorn and Nginx integration evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t0-uvicorn-nginx-socket-integration
+          path: ${{ runner.temp }}/t0-uvicorn-nginx-artifacts/
           if-no-files-found: error
           retention-days: 14
