@@ -63,6 +63,7 @@ class AccountRiskContractTest(unittest.TestCase):
             )
 
     def test_required_account_contract_missing_fails_closed(self):
+        PaperLedger(self.path, max_position_base="1")
         with self.assertRaisesRegex(
             sqlite3.DatabaseError, "ACCOUNT_RISK_CONTRACT_UNAVAILABLE"
         ):
