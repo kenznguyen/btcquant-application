@@ -66,9 +66,19 @@ Contract properties:
 
 ## Verification
 
-The current aggregate workflow is [T0 SQLite-only aggregate regression](https://github.com/kenznguyen/btcquant-application/actions/workflows/t0-sqlite-aggregate.yml).
+The current regression gates are:
+- [T0 FastAPI contract regression](https://github.com/kenznguyen/btcquant-application/actions/workflows/t0-fastapi-migration.yml)
+- [T0 SQLite-only aggregate regression](https://github.com/kenznguyen/btcquant-application/actions/workflows/t0-sqlite-aggregate.yml)
+- [T0 dependency compatibility](https://github.com/kenznguyen/btcquant-application/actions/workflows/t0-dependency-compatibility.yml)
 
-Latest exact-SHA run: [44515824622](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824622), SHA `8f49439fafc95186a8c854fe482aad707525a658`, **196/196 PASS**. Dedicated API/Storage run: [44515824664](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824664), **21/21 PASS**.
+Post-retirement verification:
+- FastAPI, migrated API/ingestion acceptance and retirement guards: [run 44546084887](https://github.com/kenznguyen/btcquant-application/actions/runs/44546084887), exact SHA `c77ab92b621b2e79167d6b8eb910be015b428f62`, **50/50 PASS**.
+- Runtime-lock-only install, ASGI import and in-process health: same run, **PASS**; no socket was opened.
+- SQLite aggregate: [run 44546084972](https://github.com/kenznguyen/btcquant-application/actions/runs/44546084972), same exact SHA, **174/174 PASS**.
+- F1 write-gateway regression: [run 44546084937](https://github.com/kenznguyen/btcquant-application/actions/runs/44546084937), same exact SHA, **14/14 PASS**.
+- Dependency compatibility after removing Gunicorn: [run 44545799691](https://github.com/kenznguyen/btcquant-application/actions/runs/44545799691), exact dependency-change SHA `7bc8fab6b6c6f49ed70b7370a113958d7981cd20`, **PASS**.
+
+Detailed evidence, job IDs and artifact SHA-256 digests: [T0 WSGI/Gunicorn retirement report](../docs/evidence/T0_WSGI_GUNICORN_RETIREMENT_2026-11-19.md).
 
 The isolated tests use temporary SQLite databases, fake/synthetic exchange collaborators and no external network. PostgreSQL-specific tests are excluded. Passing CI does not prove real Binance connectivity, canonical historical-data availability, production feeder/API startup, systemd/VPS operation or production readiness.
 
