@@ -22,7 +22,7 @@ jobs:
       - name: Checkout exact approved test source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: caa88f7259fe596f77493170c2404c469b8408dc
+          ref: c664fa9a46ce415b42e1ae6368c205e37a6c9dfb
           fetch-depth: 1
           persist-credentials: false
 
@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected="caa88f7259fe596f77493170c2404c469b8408dc"
+          expected="c664fa9a46ce415b42e1ae6368c205e37a6c9dfb"
           actual="$(git rev-parse HEAD)"
           test "$actual" = "$expected"
 
@@ -151,7 +151,7 @@ jobs:
               '' \
               "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
               "- Workflow commit: $GITHUB_SHA" \
-              "- Test source SHA: caa88f7259fe596f77493170c2404c469b8408dc" \
+              "- Test source SHA: c664fa9a46ce415b42e1ae6368c205e37a6c9dfb" \
               '- Python: 3.12.16' \
               '- Docker network: none (network interface probe: loopback only)' \
               "- Discovered tests: ${test_count:-NOT_REPORTED} (static inventory: 87)" \
