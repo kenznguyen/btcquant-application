@@ -77,6 +77,23 @@ class RetryPolicyLifecycleTest(unittest.TestCase):
         self.assertEqual(policy.execute(operation), "ok")
         self.assertEqual(delays, [9.0])
 
+    def test_retries_server_error_with_deterministic_upper_jitter_bound(self):
+        error = RuntimeError("upstream server error")
+        error.status_code = 503
+        delays = []
+        policy = RetryPolicy(
+            max_attempts=2,
+            base_delay_seconds=2,
+            max_delay_seconds=10,
+            jitter_ratio=0.25,
+            random_fn=lambda: 1.0,
+            sleep=delays.append,
+        )
+        operation = Mock(side_effect=[error, "ok"])
+
+        self.assertEqual(policy.execute(operation), "ok")
+        self.assertEqual(delays, [2.5])
+
     def test_stops_after_max_attempts_and_raises_last_error(self):
         operation = Mock(side_effect=TimeoutError("still unavailable"))
         sleep = Mock()
