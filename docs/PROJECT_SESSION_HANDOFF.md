@@ -4733,3 +4733,21 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - No TDD RED contract test has been run. No source, tests, dependency manifest/lock or workflow changes have been made. Do not implement without RED evidence and target dependency compatibility.
 - Resume prerequisites: repository-connected checkout; CPython 3.12.16/Linux x86_64; create exact-version SHA-256 wheel lock; add and run API 1.1.0 contract RED tests; implement minimal FastAPI adapter; run focused tests, 196-test SQLite aggregate plus new tests; independent review; record exact SHA/workflow/artifacts.
 - Preserve all boundaries: T0 SQLite canonical and writer/lease/feeder/recovery untouched; Nginx remains gateway; PostgreSQL PARKED; no T1/T2 connection; no VPS/systemd/deployment; no data deletion/retention changes; no trading/live orders. Production readiness remains **NOT CERTIFIED**.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — FastAPI dependency trigger fixed and paired CI verified
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`.
+- Corrected `.github/workflows/t0-fastapi-migration.yml` push-path filters to include `market_data/storage.py`, `market_data/store.py`, `market_data/postgres.py`, `market_data/feeder.py`, `market_data/write_gateway.py`, and `market_data/sync.py`.
+- Workflow correction commit: `3bdcaf093c381b2b767be3c903f9e86d5bf75bde`.
+- Trigger proof commit: `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`, a harmless comment-only sentinel in `market_data/storage.py`. GitHub recorded both FastAPI and SQLite aggregate workflows as push-triggered runs on that exact SHA.
+- Paired FastAPI run [44529575151](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575151), job `135579262823`: **25/25 PASS**; artifact `14532693874`, SHA-256 `7bcf6fdd46e8c5e1c81f76bf078377437b81cdbb178a546ce0b18166a8ade5f5`.
+- Paired SQLite aggregate run [44529575307](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575307), job `135579168097`: **196/196 PASS**; artifact `14531469720`, SHA-256 `93f30f492c9006a995c1f6248101080a3c2238be9d053f58c4200ea5f206f7f23`.
+- Both jobs checked out exact source SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`; artifact metadata confirms 25/196 tests respectively and exit code 0.
+- Review report updated in commit `608caa27910816e549fb109448004b1e080985b0`; T0 active scope index updated in commit `1743ecb77b9a5577ab199d3a06323e632ac432b1`. Finding R1 is **CLOSED / VERIFIED**.
+- Scope status: FastAPI contract **25/25 PASS**; SQLite aggregate **196/196 PASS**; dependency-path trigger proof **PASS**.
+- Remaining gates: actual independent second-reviewer sign-off **PENDING**; WSGI/Gunicorn removal **NOT APPROVED**; runtime/deployment/VPS/systemd **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+- No canonical SQLite, feeder runtime, T1/T2, PostgreSQL, endpoint, VPS, deployment or trading behavior was accessed or changed.
+- Next step: obtain independent review of FastAPI adapter and updated CI workflow before proposing WSGI/Gunicorn retirement. Preserve all existing runtime/deployment and trading restrictions.
