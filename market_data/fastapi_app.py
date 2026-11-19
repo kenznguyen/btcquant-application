@@ -20,9 +20,6 @@ app = FastAPI(
     openapi_url=None,
 )
 
-_METHODS = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-
-
 def _reply(status_code, body, headers=None):
     response_headers = {"Cache-Control": "no-store"}
     if headers:
@@ -30,21 +27,27 @@ def _reply(status_code, body, headers=None):
     return JSONResponse(status_code=status_code, content=body, headers=response_headers)
 
 
-@app.api_route("/", methods=_METHODS)
-@app.api_route("/{path:path}", methods=_METHODS)
-def dispatch(request: Request, path: str = ""):
-    """Use synchronous handlers because the canonical SQLite read is blocking."""
+@app.middleware("http")
+async def enforce_read_only_methods(request: Request, call_next):
+    """Reject every non-GET method before route matching, including extension verbs."""
     if request.method != "GET":
         return _reply(
             405,
             {"error": "METHOD_NOT_ALLOWED"},
             {"Allow": "GET"},
         )
+    return await call_next(request)
 
-    if request.url.path == "/health":
+
+@app.api_route("/", methods=["GET"])
+@app.api_route("/{path:path}", methods=["GET"])
+def dispatch(request: Request, path: str = ""):
+    """Use synchronous handlers because the canonical SQLite read is blocking."""
+    route_path = "/" + path if path else "/"
+    if route_path == "/health":
         return _reply(200, {"ok": True, "service": "canonical-market-data"})
 
-    if request.url.path != "/v1/candles":
+    if route_path != "/v1/candles":
         return _reply(404, {"error": "NOT_FOUND"})
 
     token = os.environ.get("MARKET_DATA_TOKEN", "")
