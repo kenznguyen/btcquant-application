@@ -1,0 +1,193 @@
+{
+  "manifest_format": "T0_RECONSTRUCTED_DATASET_MANIFEST",
+  "format_version": "1.0.0",
+  "manifest_status": "DRAFT_NOT_FOR_DATABASE_BUILD",
+  "dataset_id": "binance-usdm-btcusdt-m15-h1-reconstructed-archive-partial-20261120",
+  "lineage": "RECONSTRUCTED",
+  "acceptance_status": "RECONSTRUCTED_PARTIAL_COVERAGE",
+  "official_status": false,
+  "source": {
+    "exchange": "BINANCE",
+    "market_family": "BINANCE_USDM",
+    "market_type_contract_value": "USDT_PERPETUAL",
+    "symbol": "BTCUSDT",
+    "source_family": "BINANCE_PUBLIC_DATA_UM_DAILY_AND_MONTHLY_KLINE_ARCHIVES",
+    "source_base": "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision/",
+    "api_key_used": false,
+    "rest_tail": {
+      "status": "NOT_VERIFIED_CLOSED_BY_OWNER_DECISION_NO_FURTHER_RETRIEVAL",
+      "requested_start_utc": "2026-11-19T00:00:00Z",
+      "http_status": 451,
+      "payload_received": false,
+      "retry_authorized": false
+    }
+  },
+  "retrieval_evidence": {
+    "retrieval_execution_environment": "isolated Firecrawl staging; original temporary staging persistence is not assumed",
+    "archive_objects_total": 404,
+    "zip_objects": 202,
+    "checksum_sidecars": 202,
+    "aggregate_bytes": 14929033,
+    "zip_bytes": 14922117,
+    "checksum_sidecar_bytes": 6916,
+    "zip_sha256_sidecar_matches": {
+      "passed": 202,
+      "total": 202
+    },
+    "zip_crc_and_csv_structure": {
+      "passed": 202,
+      "total": 202,
+      "csv_columns": 12
+    },
+    "archive_partition": {
+      "monthly_full_months": "2020-01 through 2026-10",
+      "daily_boundary_date": "2019-12-31",
+      "daily_current_partial_month": "2026-11-01 through 2026-11-18",
+      "daily_fallback_used": false,
+      "daily_monthly_overlap_payload_comparison": "NOT_APPLICABLE_SELECTED_PARTITIONS_ARE_DISJOINT"
+    },
+    "retrieval_cutoff_utc": null,
+    "note": "The recorded archive evidence is a bounded validation result. Do not invent a unified current retrieval cutoff; archive last-modified metadata is not a candle retrieval cutoff."
+  },
+  "timeframes": {
+    "15m": {
+      "interval_ms": 900000,
+      "first_observed_open_time_utc": "2019-12-31T00:00:00Z",
+      "last_validated_open_time_utc": "2026-11-18T23:45:00Z",
+      "first_observed_open_time_ms": 1577750400000,
+      "last_validated_open_time_ms": 1795045500000,
+      "observed_rows": 241440,
+      "expected_rows_within_observed_bounds": 241440,
+      "missing_rows_within_observed_bounds": 0,
+      "coverage_ratio_within_observed_bounds": 1.0,
+      "continuity_status_within_observed_bounds": "PASS",
+      "earliest_available_history": "NOT_VERIFIED",
+      "post_archive_tail": "NOT_VERIFIED_CLOSED_BY_OWNER_DECISION"
+    },
+    "1h": {
+      "interval_ms": 3600000,
+      "first_observed_open_time_utc": "2019-12-31T00:00:00Z",
+      "last_validated_open_time_utc": "2026-11-18T23:00:00Z",
+      "first_observed_open_time_ms": 1577750400000,
+      "last_validated_open_time_ms": 1795042800000,
+      "observed_rows": 60360,
+      "expected_rows_within_observed_bounds": 60360,
+      "missing_rows_within_observed_bounds": 0,
+      "coverage_ratio_within_observed_bounds": 1.0,
+      "continuity_status_within_observed_bounds": "PASS",
+      "earliest_available_history": "NOT_VERIFIED",
+      "post_archive_tail": "NOT_VERIFIED_CLOSED_BY_OWNER_DECISION"
+    }
+  },
+  "boundary_limitations": [
+    {
+      "type": "LEADING_HISTORY",
+      "from": null,
+      "through": "2019-12-31T00:00:00Z",
+      "status": "NOT_VERIFIED",
+      "description": "The first observed archive candle is not proven to be the earliest candle ever available from Binance."
+    },
+    {
+      "type": "TRAILING_TAIL",
+      "from": "2026-11-19T00:00:00Z",
+      "through": null,
+      "status": "NOT_VERIFIED_CLOSED_BY_OWNER_DECISION_NO_FURTHER_RETRIEVAL",
+      "description": "No REST tail payload was retrieved. No further retrieval is authorized without a new owner decision."
+    }
+  ],
+  "gap_inventory": {
+    "status": "PASS_WITHIN_OBSERVED_ARCHIVE_BOUNDS_ONLY",
+    "synthetic_fill": false,
+    "interpolation": false,
+    "forward_fill": false,
+    "silent_omission": false,
+    "records": [],
+    "note": "Empty records means no internal timestamp gaps were detected inside the validated archive bounds. It does not close the leading or trailing boundary limitations."
+  },
+  "provenance": {
+    "archive_validation_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_ARCHIVE_PAYLOAD_VALIDATION_2026-11-20.md",
+    "rest_tail_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_VALIDATION_2026-11-20.md",
+    "archive_metadata_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_ARCHIVE_METADATA_INSPECTION_2026-11-20.md",
+    "evidence_commits": {
+      "archive_metadata": "0b37e158e30824e7e6cfd80ff9d8a457ee715ec9",
+      "archive_payload_validation": "c40d5b68af5493199c5601ce7133caa2f9088823",
+      "rest_tail_attempt": "782d4a46f6a75dfc2aa4977e6a33b14e86ede268",
+      "owner_tail_closure": "600bb812236e8445286b6a6cbb036b4afd6b20b8"
+    },
+    "per_object_inventory": {
+      "status": "REFERENCE_ONLY_MACHINE_READABLE_EXPORT_PENDING",
+      "expected_zip_entries": 202,
+      "expected_sidecar_entries": 202,
+      "authoritative_reference": "archive_validation_evidence",
+      "note": "The final runtime manifest must include one immutable record per ZIP and checksum sidecar with object key, byte size, SHA-256, row count, timeframe, period and validation result. Do not treat this draft as complete until that inventory is materialized and verified."
+    }
+  },
+  "candle_contract": {
+    "version": "1.1.0",
+    "sqlite_schema_user_version": 1,
+    "schema_compatibility": "STATICALLY_INSPECTED_NOT_YET_ACCEPTED_FOR_DATA_IMPORT",
+    "canonical_identity": [
+      "exchange",
+      "market_type",
+      "symbol",
+      "timeframe",
+      "open_time_ms"
+    ],
+    "stored_candle_fields": [
+      "exchange",
+      "market_type",
+      "symbol",
+      "timeframe",
+      "open_time_ms",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "available_at_ms"
+    ],
+    "first_observed_semantics": "available_at_ms must represent first observation/import time; never backdate to historical candle close.",
+    "archive_extra_fields": "The source CSV contains 12 columns. Preserve original ZIP/CSV payloads and record the explicit mapping/disposition for source-only fields not represented in the current CandleStore schema. No schema extension is authorized."
+  },
+  "sqlite": {
+    "status": "NOT_CREATED_NOT_AUTHORIZED",
+    "filename": null,
+    "byte_size": null,
+    "sha256": null,
+    "schema_version": 1,
+    "user_version": 1,
+    "integrity_check": "NOT_RUN",
+    "row_counts": null,
+    "database_path": null
+  },
+  "snapshot": {
+    "status": "NOT_AUTHORIZED_NOT_RUN",
+    "provider": "Dropbox",
+    "file_id": null,
+    "revision": null,
+    "byte_size": null,
+    "sha256": null
+  },
+  "restore": {
+    "status": "NOT_AUTHORIZED_NOT_RUN",
+    "destination": null,
+    "source_revision": null,
+    "checksum_verified": false,
+    "sqlite_validation": "NOT_RUN"
+  },
+  "owner_dispositions": [
+    {
+      "decision": "ACCEPT_BOUNDED_ARCHIVE_AS_RECONSTRUCTED_PARTIAL_COVERAGE",
+      "decision_date": "2026-11-20",
+      "scope": "Accept archive payload evidence through the per-timeframe last validated candle only; do not infer full-history or current-tail completeness.",
+      "evidence": "docs/decisions/T0_RECONSTRUCTED_PARTIAL_COVERAGE_ACCEPTANCE_2026-11-20.md"
+    },
+    {
+      "decision": "LEAVE_REST_TAIL_NOT_VERIFIED_AND_CLOSED",
+      "decision_date": "2026-11-20",
+      "scope": "No retry, alternate endpoint/domain, proxy, geo-routing or other execution environment.",
+      "evidence": "docs/PROJECT_SESSION_HANDOFF.md"
+    }
+  ],
+  "next_gate": "Separate owner approval required for raw archive materialization/retrieval into approved staging, then separate approval for SQLite initialization and writes. This draft itself authorizes neither."
+}
