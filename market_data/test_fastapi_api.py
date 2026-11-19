@@ -390,5 +390,28 @@ class FastApiCandleContractTest(unittest.TestCase):
         self.assertEqual(candle["volume"], "2.5")
 
 
+    def test_duplicate_query_parameters_are_rejected(self):
+        query = (
+            f"symbol=BTCUSDT&symbol=BTCUSDT&timeframe=15m"
+            f"&startMs={self.start}&endMs={self.start+self.interval}"
+        )
+        with patch.dict(os.environ, self.env, clear=True):
+            response = self.client.get(
+                f"/v1/candles?{query}",
+                headers={"Authorization": "Bearer read-only-token"},
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"error": "INVALID_QUERY"})
+
+    def test_all_non_get_methods_are_rejected_with_allow_header(self):
+        with patch.dict(os.environ, self.env, clear=True):
+            for method in ("POST", "PUT", "PATCH", "DELETE", "OPTIONS"):
+                with self.subTest(method=method):
+                    response = self.client.request(method, "/v1/candles")
+                    self.assertEqual(response.status_code, 405)
+                    self.assertEqual(response.headers.get("allow"), "GET")
+                    self.assertEqual(response.json(), {"error": "METHOD_NOT_ALLOWED"})
+
+
 if __name__ == "__main__":
     unittest.main()
