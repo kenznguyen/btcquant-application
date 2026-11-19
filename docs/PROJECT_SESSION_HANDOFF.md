@@ -5072,3 +5072,18 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Authorization: **Phase 1 DESIGN / STATIC ONLY**. Static implementation checks and independent review **NOT YET PERFORMED**. No database initialization, Binance download, data copy/export, snapshot creation, Dropbox upload, restore, VPS/runtime, writer/lease/feeder or deployment is authorized.
 - Documentation-only. No tests/workflows were run; no workflow run, job or artifact exists for this increment.
 - Next: perform bounded static review of the manifest and acceptance contract. Reconstruction, Dropbox operations, restore drill and primary cutover each require separate explicit approval.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Canonical Dropbox snapshot design static review
+
+- Static review: `docs/reviews/T0_CANONICAL_SQLITE_DROPBOX_SNAPSHOT_STATIC_REVIEW_2026-11-19.md`, commit `c08d5e225140d02235206d4dabc4e24349370f3f`.
+- Clarified design update: `docs/decisions/T0_CANONICAL_SQLITE_DROPBOX_SNAPSHOT_DESIGN_2026-11-19.md`, commit `d7274fa2678caca5a0fedb8ca64083809cdf356c`.
+- Active scope index update: `docs/T0_ACTIVE_SCOPE_INDEX.md`, commit `b3cae468c757f6fc7bd0ad17d76c716ec556b03d`.
+- Static review baseline HEAD: `5955423a8edc1661e9cd4f9b7b80a317c6bc77cf`; read-only inspected SQLite initializer, candle store, storage facade, feeder source, design and prior inventory.
+- Verdict: **PASS WITH REQUIRED SPECIFICATION CLARIFICATIONS**. Required clarifications: Dropbox create-only/no-overwrite and file ID/revision; exact-revision readback and SHA-256; owner-approved M15/H1 coverage windows and gap policy; mandatory external provenance manifest; Online Backup API staging and isolated restore path without stale WAL/SHM; manifest validation/status transitions. Also validate SQLite `PRAGMA user_version`.
+- No snapshot publisher, Dropbox adapter, manifest validator or restore verifier exists in the inspected implementation. Backup/restore behavior is not implemented or tested.
+- Exact M15/H1 UTC coverage boundaries and accepted-gap policy remain **BLOCKED pending owner decision**. No snapshot may be marked OFFICIAL / VERIFIED before those values are approved and validated.
+- No source/test/workflow/dependency/schema/data changes. No SQLite database opened; no Binance, Dropbox, VPS or runtime action; no snapshot/upload/restore/cutover. No tests/workflows run; no run/job/artifact exists.
+- Phase 1 remains **DESIGN / STATIC ONLY**. Next: owner review of the clarified specification and decision on M15/H1 coverage boundaries and gap policy. Any implementation, reconstruction, Dropbox operation, restore drill or cutover requires separate approval.
