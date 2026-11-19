@@ -4,7 +4,11 @@ import unittest
 from pathlib import Path
 
 from paper_execution.ledger import PaperLedger
-from paper_execution.risk_contract import provision_account_risk_contract
+from paper_execution.risk_contract import (
+    provision_account_risk_contract,
+    read_account_risk_contract,
+    update_account_risk_contract,
+)
 
 
 class AccountRiskContractTest(unittest.TestCase):
@@ -48,6 +52,8 @@ class AccountRiskContractTest(unittest.TestCase):
             {key: str(value) for key, value in core.risk_limits.items()},
             self.limits,
         )
+        with self.assertRaises(TypeError):
+            core.risk_limits["maxExposureUsdt"] = 1
 
     def test_strategy_cannot_supply_or_override_account_risk_limits(self):
         self.provision()
@@ -125,6 +131,39 @@ class AccountRiskContractTest(unittest.TestCase):
             {key: str(value) for key, value in reopened.risk_limits.items()},
             self.limits,
         )
+
+    def test_contract_revision_requires_compare_and_swap_and_records_audit(self):
+        original = self.provision()
+        revised_limits = {
+            "maxDrawdownPct": "25",
+            "maxDailyLossUsdt": "12",
+            "maxExposureUsdt": "900",
+        }
+        revised = update_account_risk_contract(
+            self.path, revised_limits,
+            expected_contract_hash=original["contractHash"],
+            source="ISOLATED_TEST_OPERATOR",
+            reason="Verify explicit account risk policy revision",
+            recorded_at_ms=self.now + 1,
+        )
+        self.assertEqual(revised["contractVersion"], 2)
+        self.assertEqual(
+            {key: str(value) for key, value in revised["limits"].items()},
+            revised_limits,
+        )
+        with self.assertRaisesRegex(ValueError, "ACCOUNT_RISK_CONTRACT_VERSION_CONFLICT"):
+            update_account_risk_contract(
+                self.path, self.limits,
+                expected_contract_hash=original["contractHash"],
+                source="ISOLATED_TEST_OPERATOR",
+                reason="Stale revision must be rejected",
+                recorded_at_ms=self.now + 2,
+            )
+        with sqlite3.connect(self.path) as connection:
+            count = connection.execute(
+                "SELECT COUNT(*) FROM paper_account_risk_contract_audit"
+            ).fetchone()[0]
+        self.assertEqual(count, 2)
 
     def test_contract_tampering_is_detected_before_ledger_admission(self):
         self.provision()
