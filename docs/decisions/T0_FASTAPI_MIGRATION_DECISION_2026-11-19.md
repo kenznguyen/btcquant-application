@@ -151,3 +151,13 @@ FastAPI's default validation response (commonly 422) must not silently replace t
 - Internal five-axis code review: **PASS for current source/test/CI scope**. Independent second-reviewer sign-off remains **PENDING**; do not remove WSGI/Gunicorn until independent review accepts the migration diff.
 - Detailed report: [T0 FastAPI Locked Offline CI and Review](../evidence/T0_FASTAPI_LOCKED_OFFLINE_CI_AND_REVIEW_2026-11-19.md), commit `2d130f5e0ddb3d7137febc403f53d9709f6d9d78`.
 - WSGI entrypoint and `market_data/test_api.py` remain. Migration is **PARTIAL**; runtime/endpoint/deployment remains **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+
+
+## 13. Final hardened offline CI — 2026-11-19
+
+- Latest paired exact source SHA: `0a4432d8d101381e8b07c88a1a65bbf1ee3a787f`.
+- FastAPI run [44527300856](https://github.com/kenznguyen/btcquant-application/actions/runs/44527300856), job `135571152796`: **25/25 PASS**, artifact `14532510818`, SHA-256 `563e4841b1139c16f55198407a890f6ea60400564c8c2b2cc1641576267ad49c`.
+- SQLite aggregate run [44527300813](https://github.com/kenznguyen/btcquant-application/actions/runs/44527300813), job `135571149659`, same SHA: **196/196 PASS**, artifact `14533320216`, SHA-256 `6ef67fb1512cb06a62a35d74a5c34e333814cf33c865f58c4200ea5f206f7f23`.
+- FastAPI workflow verifies committed runtime/test lock hashes and runs tests offline, as non-root, with a read-only root filesystem, dropped capabilities, no-new-privileges, resource bounds, and `--network none`. The only executable temporary filesystem is the bounded `/tmp` needed for SQLite temp DBs and native Python extension loading.
+- Detailed update: [T0 FastAPI Locked Offline CI and Review](../evidence/T0_FASTAPI_LOCKED_OFFLINE_CI_AND_REVIEW_2026-11-19.md), follow-up commit `c2c575dad69c7e4eda2c86df13a324485bd0ee14`.
+- Internal review remains PASS for the bounded adapter/CI scope; independent second-reviewer sign-off remains PENDING. WSGI entrypoint and WSGI tests remain; migration is PARTIAL. No runtime/deployment authorization is implied.
