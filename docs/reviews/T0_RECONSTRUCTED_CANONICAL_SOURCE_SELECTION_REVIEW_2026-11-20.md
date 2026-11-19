@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Owner approved T0 archive source partition
+
+- Decision: `docs/decisions/T0_RECONSTRUCTED_CANONICAL_SOURCE_PARTITION_APPROVAL_2026-11-20.md`, commit `ce42ae530d5b11a46e46c4e79e573bd4b5d0f3d2`.
+- Owner approved monthly USD-M archive as default bulk source for full months 2020-01–2026-10; daily archive for 2019-12-31 and 2026-11-01–2026-11-18; daily as targeted fallback/diagnostic for payload-level gaps/conflicts.
+- Any retrieved daily/monthly overlap must be compared using complete normalized candle payloads. Exact duplicates may be deduplicated with both provenances retained; conflicts must be quarantined.
+- REST `/fapi/v1/klines` tail remains a separate future approval gate; this decision does not authorize REST calls.
+- Approval is source-partition/documentation only. ZIP/checksum body download, raw staging, market-data retrieval, SQLite, Dropbox, restore, VPS/runtime, writer/feeder and cutover remain NOT AUTHORIZED.
+- Archive listing remains PASS for object-key coverage only. ZIP/checksum integrity, candle-level completeness, row counts, actual first/last candle timestamps, intra-file gaps and closed state remain NOT VERIFIED.
+- Tests/workflows NOT RUN; no run/job/artifact. Documentation-only update.
+- Next gate: request separate bounded approval for exact ZIP/checksum payload retrieval and validation, including staging destination and resource/retention budgets.
+
+---
+
 # T0 Reconstructed Canonical — Historical Source Selection Review
 
 Date: 2026-11-20
