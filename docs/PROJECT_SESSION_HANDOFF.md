@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 SQLite-first docs and scope index recorded
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`; pre-handoff docs/provenance HEAD `b4431acdaa1909207e854cb9eaf3e66a8a1888c5`.
+- Added target-specific `docs/T0_ACTIVE_SCOPE_INDEX.md`, commit `ef91391fc6a381981d8c0321dd5d196adadf006b`, blob `9d33f36ada44e221b463e1114ed40c719aec699f`.
+- Added target-specific `market_data/README.md`, commit `bcca30363da1ac1de09d8e930bd336cec1b5afcd`, blob `269c861b3c5f88fbd48c8c757a6ae587fa2486aa`.
+- These documents adapt source T0 documentation rather than copy it verbatim; they remove stale requirements/workflow/topology references and state the current target scope, lock limits, 191-test evidence and all operational exclusions.
+- The scope index preserves the no-destructive-authority boundary: no auto TTL/deletion-after-use/cleanup/archive/compaction/vacuum/backup expiry without separate approval.
+- Provenance update commit: `b4431acdaa1909207e854cb9eaf3e66a8a1888c5`, blob `3196819c6bab661ee89c6a893cf4df7493661144`.
+- Latest selected SQLite-only aggregate acceptance remains run [44507725020](https://github.com/kenznguyen/btcquant-application/actions/runs/44507725020), exact tested SHA `42c8172a4b4b0234fa50e64eb6172f970f45ab66`, **191/191 PASS**. Documentation-only commits do not alter the tested source.
+- T0 current status: selected SQLite-only implementation/tests/dependency lock and documentation are present; canonical data/OOS bundle, production process startup, systemd/VPS runtime, real Binance connectivity, PostgreSQL/TimescaleDB, T1/T2 integration and production readiness remain NOT VERIFIED / NOT AUTHORIZED / NOT CERTIFIED.
+- No canonical DB/data, production runtime, VPS, deployment, source repo, T1/T2 or trading behavior changed/accessed.
+- Next bounded step: continue read-only classification of remaining T0 source-only test assets. Process/SIGKILL restart tests, connectivity probe, T2 E2E, PostgreSQL, Kraken and legacy app tests remain excluded unless separately approved.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 SQLite foundation expanded; aggregate 191/191 PASS
 
 - Repository: `kenznguyen/btcquant-application`, existing branch `main`; pre-handoff HEAD `31a913256611e2b508596b9cd7715a7ff27ae8ac`. No branch/PR split.
