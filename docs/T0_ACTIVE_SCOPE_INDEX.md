@@ -273,3 +273,17 @@
 - Authorization: **Phase 1 DESIGN / STATIC ONLY**. Static implementation checks and independent review are **NOT YET PERFORMED**. No database initialization, exchange download, data copy/export, snapshot, Dropbox upload, restore, VPS/runtime, writer/lease/feeder or deployment is authorized.
 - No tests or workflows were run; no test run, job or artifact exists for this documentation-only increment.
 - Next: bounded static review of the manifest/acceptance contract and update this handoff. Any reconstruction, snapshot/Dropbox operation, restore drill or primary cutover requires separate explicit approval.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Canonical Dropbox snapshot design static review
+
+- Static review report: `docs/reviews/T0_CANONICAL_SQLITE_DROPBOX_SNAPSHOT_STATIC_REVIEW_2026-11-19.md`, commit `c08d5e225140d02235206d4dabc4e24349370f3f`.
+- Clarified design: `docs/decisions/T0_CANONICAL_SQLITE_DROPBOX_SNAPSHOT_DESIGN_2026-11-19.md`, update commit `d7274fa2678caca5a0fedb8ca64083809cdf356c`.
+- Review baseline main HEAD: `5955423a8edc1661e9cd4f9b7b80a317c6bc77cf`. Read-only inspection covered the design, SQLite initializer/store/storage and feeder source, and prior T0 inventory.
+- Verdict: **PASS WITH REQUIRED SPECIFICATION CLARIFICATIONS**. R1–R5 recorded: Dropbox create-only/no-overwrite plus file ID/revision and exact-revision readback; owner-approved M15/H1 UTC coverage/gap policy; mandatory provenance manifest; SQLite Online Backup API and isolated restore path/sidecar handling; explicit manifest validation/status transitions. R6 records `PRAGMA user_version` validation.
+- Static source finding: no snapshot publisher, Dropbox adapter, manifest validator or restore verifier exists in the inspected repository scope. No implementation or restore behavior is proven.
+- Coverage boundaries and acceptable-gap policy remain **BLOCKED pending owner decision**. No snapshot can be marked OFFICIAL / VERIFIED before those are approved and checked.
+- No source/test/workflow/dependency/schema/data changes; no SQLite opened, exchange access, Dropbox action, VPS/runtime, snapshot, restore or cutover. No tests/workflows run; no run/job/artifact exists.
+- Phase 1 remains DESIGN / STATIC ONLY. Next: owner review of clarified specification, including explicit M15/H1 coverage boundaries and gap policy. Implementation proposal requires separate approval.
