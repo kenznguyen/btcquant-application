@@ -332,7 +332,7 @@ def quality_snapshot(timestamp):
                        "maxDailyLossUsdt":str(risk_limits["maxDailyLossUsdt"]) if risk_ready else None,
                        "maxExposureUsdt":str(risk_limits["maxExposureUsdt"]) if risk_ready else None,
                        "reason":None if risk_ready else "RISK_LIMITS_UNCONFIGURED"}
-    except ValueError:
+    except (ValueError, sqlite3.Error, OSError):
         risk_stream = {"name":"Shared Risk Limits","status":"INVALID","reason":"RISK_LIMITS_INVALID"}
     streams.append(risk_stream)
     core = core_decide(timestamp, book)
