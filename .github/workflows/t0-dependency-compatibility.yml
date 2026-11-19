@@ -1,0 +1,186 @@
+name: T0 dependency resolver and fresh-environment compatibility
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - requirements-market-data.txt
+      - .github/workflows/t0-dependency-compatibility.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t0-dependency-compatibility
+  cancel-in-progress: false
+
+jobs:
+  python312-dependency-compatibility:
+    name: Resolve and install T0 dependencies on Python 3.12.16
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source and prepare evidence directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
+          test -s requirements-market-data.txt
+          mkdir -p "$RUNNER_TEMP/t0-dependency-compatibility-artifacts"
+          chmod 0777 "$RUNNER_TEMP/t0-dependency-compatibility-artifacts"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_commit=$GITHUB_SHA"
+            echo "checked_out_source_sha=$actual"
+            echo "manifest=requirements-market-data.txt"
+            echo "python_target=3.12.16"
+            echo "direct_dependencies=ccxt==4.5.92,gunicorn==23.0.0"
+            echo "postgresql=excluded"
+            echo "runtime_startup=excluded"
+            echo "canonical_database=not mounted"
+            echo "credentials=none"
+          } > "$RUNNER_TEMP/t0-dependency-compatibility-artifacts/runner_metadata.txt"
+
+      - name: Pull immutable Python 3.12.16 image
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          docker version
+          docker pull --platform linux/amd64 "$PYTHON_IMAGE"
+          docker image inspect --format '{{.Id}} {{json .RepoDigests}}' "$PYTHON_IMAGE" \
+            | tee "$RUNNER_TEMP/t0-dependency-compatibility-artifacts/container_image.txt"
+
+      - name: Resolve dependencies and build a hash-locked wheelhouse
+        id: resolve
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/t0-dependency-compatibility-artifacts"
+          mkdir -p "$artifacts/wheelhouse"
+          chmod -R 0777 "$artifacts"
+          if docker run --rm --platform linux/amd64 \
+            --read-only --cap-drop ALL --security-opt no-new-privileges \
+            --pids-limit 128 --memory 1g --cpus 2 --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=512m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$artifacts,dst=/artifacts" \
+            --env HOME=/tmp --env TMPDIR=/tmp --env PYTHONUSERBASE=/tmp/userbase \
+            --env PATH=/tmp/userbase/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin \
+            --env PIP_INDEX_URL=https://pypi.org/simple \
+            --env PIP_DISABLE_PIP_VERSION_CHECK=1 \
+            --workdir /workspace "$PYTHON_IMAGE" \
+            bash -euc '
+              python --version
+              python -m pip --version
+              python -m pip install --user "pip-tools==7.4.1"
+              pip-compile --version
+              pip-compile --resolver=backtracking --generate-hashes --strip-extras \
+                --no-emit-index-url --output-file=/artifacts/requirements-market-data.lock \
+                /workspace/requirements-market-data.txt
+              python -m pip download --require-hashes --only-binary=:all: \
+                --dest=/artifacts/wheelhouse -r /artifacts/requirements-market-data.lock
+              sha256sum /artifacts/requirements-market-data.lock \
+                > /artifacts/lock.sha256
+              find /artifacts/wheelhouse -maxdepth 1 -type f -printf "%f\\n" \
+                | sort > /artifacts/wheelhouse-files.txt
+              (cd /artifacts/wheelhouse && sha256sum * > ../wheelhouse.sha256)
+              {
+                echo "resolver_python=$(python --version 2>&1)"
+                echo "resolver_pip=$(python -m pip --version)"
+                echo "pip_tools=$(pip-compile --version)"
+                echo "lock_file=requirements-market-data.lock"
+                echo "lock_sha256=$(cut -d " " -f 1 /artifacts/lock.sha256)"
+                echo "wheel_count=$(find /artifacts/wheelhouse -maxdepth 1 -type f | wc -l)"
+              } >> /artifacts/runner_metadata.txt
+            ' > "$artifacts/resolver.log" 2>&1; then
+            resolve_status=0
+          else
+            resolve_status=$?
+          fi
+          cat "$artifacts/resolver.log"
+          echo "resolver_exit_code=$resolve_status" >> "$artifacts/runner_metadata.txt"
+          test "$resolve_status" -eq 0
+
+      - name: Install from lock in a clean offline environment
+        id: fresh_install
+        if: steps.resolve.outcome == 'success'
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/t0-dependency-compatibility-artifacts"
+          if docker run --rm --platform linux/amd64 --network none \
+            --read-only --cap-drop ALL --security-opt no-new-privileges \
+            --pids-limit 128 --memory 1g --cpus 2 --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=256m,mode=1777 \
+            --mount "type=bind,src=$artifacts,dst=/artifacts,readonly" \
+            --env HOME=/tmp --env TMPDIR=/tmp --env PIP_DISABLE_PIP_VERSION_CHECK=1 \
+            "$PYTHON_IMAGE" bash -euc '
+              test "$(python -c "import platform; print(platform.python_version())")" = "3.12.16"
+              python -m pip install --no-index --find-links=/artifacts/wheelhouse \
+                --require-hashes -r /artifacts/requirements-market-data.lock
+              python -m pip check
+              python - << "PY"
+              import importlib.metadata as metadata
+              import ccxt
+              import gunicorn
+              assert metadata.version("ccxt") == "4.5.92"
+              assert metadata.version("gunicorn") == "23.0.0"
+              assert hasattr(ccxt, "binanceusdm")
+              print("python=3.12.16")
+              print("ccxt=" + metadata.version("ccxt"))
+              print("gunicorn=" + metadata.version("gunicorn"))
+              print("ccxt_binanceusdm_adapter=available")
+              print("gunicorn_import=available")
+              PY
+              gunicorn --version
+              python -m pip list --format=freeze
+            ' > "$artifacts/fresh-install.log" 2>&1; then
+            install_status=0
+          else
+            install_status=$?
+          fi
+          cat "$artifacts/fresh-install.log"
+          echo "fresh_install_exit_code=$install_status" >> "$artifacts/runner_metadata.txt"
+          test "$install_status" -eq 0
+
+      - name: Publish gate summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## T0 dependency compatibility gate"
+            echo
+            echo "- Run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo "- Exact source SHA: $GITHUB_SHA"
+            echo "- Python: 3.12.16 (immutable image)"
+            echo "- Direct dependencies: ccxt 4.5.92; gunicorn 23.0.0"
+            echo "- Resolver: PyPI; hash-locked requirements and wheelhouse"
+            echo "- Fresh install: offline, network disabled"
+            echo "- Scope excludes PostgreSQL, runtime startup, VPS and canonical database"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload dependency compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t0-dependency-compatibility-evidence
+          path: ${{ runner.temp }}/t0-dependency-compatibility-artifacts/
+          if-no-files-found: error
+          retention-days: 14
