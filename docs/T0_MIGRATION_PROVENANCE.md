@@ -92,3 +92,17 @@ The API and Storage implementation/test files are byte-identical at the inspecte
 Static contract notes and limitations are in `docs/evidence/T0_SQLITE_API_STORAGE_READONLY_PARITY_2026-11-19.md`, created by commit `73376e93e7edf4e5eecb09ba50b2ae696ff10c52`.
 
 Status: direct API, Storage and their test specifications PASS byte-parity; inspected shared dependencies PASS except the documented write-gateway byte divergence. No API/Storage test was run. Runtime behavior, full T0 parity, canonical data/recovery, PostgreSQL runtime, lifecycle and production readiness remain NOT VERIFIED / NOT CERTIFIED.
+
+
+
+## SQLite API/Storage isolated gate — 2026-11-19
+
+- Approved dedicated workflow: `.github/workflows/t0-sqlite-api-storage.yml`.
+- Implementation commit / exact checked-out SHA: `dc7190e392de1b0bb940ba4acf9a1df0f44eb130`; workflow blob `48f06ecc27bba90fcd4d6d05ff7ed3158a0b7014`.
+- Path-filtered push to `main` plus `workflow_dispatch`; exact checkout uses `${{ github.sha }}` and asserts `HEAD == GITHUB_SHA`.
+- Explicit SQLite-only allowlist: 12 API test methods + 4 Storage test methods = 16. Excludes the API PostgreSQL-no-DSN method, all 3 PostgreSQL-specific Storage methods, and feeder lifecycle tests.
+- Isolated exact-SHA run: [44496561587](https://github.com/kenznguyen/btcquant-application/actions/runs/44496561587), job `135465125699`, SUCCESS; `Ran 16 tests in 0.025s`; OK.
+- Artifact `t0-sqlite-api-storage-evidence`, ID `14514253952`, SHA-256 `bd75b0a6053b4ea4a1558f85947cf28ba2b10667eb51fa64d710d9eed4a49870`, expires `2026-12-03T09:27:39Z`.
+- Docker uses immutable Python 3.12.16 image, `--network none`, read-only source, non-root, no credentials, no canonical DB mount.
+- Evidence report: `docs/evidence/T0_SQLITE_API_STORAGE_ISOLATED_GATE_2026-11-19.md`, commit `9879c8671342e948f7bd0317451c28fc283c0a40` (subsequently corrected with exact workflow blob metadata).
+- Status: isolated SQLite API 12/12 PASS; SQLite Storage 4/4 PASS; combined 16/16 PASS. PostgreSQL, lifecycle, runtime, canonical data/recovery and production readiness remain NOT TESTED / OUT OF SCOPE / NOT CERTIFIED.
