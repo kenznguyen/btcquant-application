@@ -51,11 +51,9 @@ jobs:
           risk_contract_blob="$(git hash-object paper_execution/risk_contract.py)"
           ledger_test_blob="$(git hash-object paper_execution/test_ledger.py)"
           api_test_blob="$(git hash-object pipeline/test_api.py)"
-          risk_test_blob="$(git hash-object paper_execution/test_risk_control.py)"
           dual_test_blob="$(git hash-object paper_execution/test_dual_ledger_red.py)"
-          baseline_test_blob="$(git hash-object paper_execution/test_daily_baseline_persistence.py)"
           contracts_blob="$(git hash-object pipeline/CONTRACTS.md)"
-          echo "IDENTITY head=$head_sha github_sha=$GITHUB_SHA test=$test_blob ledger=$ledger_blob api=$api_blob risk_control=$risk_control_blob risk_contract=$risk_contract_blob ledger_test=$ledger_test_blob api_test=$api_test_blob risk_test=$risk_test_blob dual_test=$dual_test_blob baseline_test=$baseline_test_blob contracts=$contracts_blob"
+          echo "IDENTITY head=$head_sha github_sha=$GITHUB_SHA test=$test_blob ledger=$ledger_blob api=$api_blob risk_control=$risk_control_blob risk_contract=$risk_contract_blob ledger_test=$ledger_test_blob api_test=$api_test_blob dual_test=$dual_test_blob contracts=$contracts_blob"
           [[ "$head_sha" == "$GITHUB_SHA" ]]
           [[ "$test_blob" == "5f20078ae92b1d61bff296475f65060fb73a4e2c" ]]
           [[ "$ledger_blob" == "afbfba8a0721e3d3dd9caefa4799a180358779f4" ]]
@@ -64,9 +62,7 @@ jobs:
           [[ "$risk_contract_blob" == "7ae74740568e3bcad78acd928896ee363cc62613" ]]
           [[ "$ledger_test_blob" == "71c7719d3e84be41bb7ca200b50fe6b5ee0f68e9" ]]
           [[ "$api_test_blob" == "3ddb51d763eb9bef836c5cf85a1ddc471bae0875" ]]
-          [[ "$risk_test_blob" == "69c9177a249369f52d0c81e442c9c4583c9f5b77" ]]
           [[ "$dual_test_blob" == "0cf05418940a07a8357ee9d6039325a1efcb16f2" ]]
-          [[ "$baseline_test_blob" == "7935111b7bb57e9558e88bef7a03ce425ebfccdb" ]]
           [[ "$contracts_blob" == "14368ea20d56879b9c9fc6c2eddf07e8c44ab5da" ]]
           {
             echo "workflow_run_id=$GITHUB_RUN_ID"
@@ -79,9 +75,7 @@ jobs:
             echo "risk_contract_blob=$risk_contract_blob"
             echo "ledger_test_blob=$ledger_test_blob"
             echo "api_test_blob=$api_test_blob"
-            echo "risk_test_blob=$risk_test_blob"
             echo "dual_test_blob=$dual_test_blob"
-            echo "baseline_test_blob=$baseline_test_blob"
             echo "contracts_blob=$contracts_blob"
             echo "python_image=python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df"
             echo "network_mode=none"
@@ -114,15 +108,14 @@ jobs:
             python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df \
             python -m unittest -v \
               paper_execution.test_f4_r3_reset_red \
+              paper_execution.test_f4_risk_red \
               paper_execution.test_ledger \
-              paper_execution.test_risk_control \
               paper_execution.test_dual_ledger_red \
-              paper_execution.test_daily_baseline_persistence \
               pipeline.test_api \
             2>&1 | tee "$artifacts/unittest.log"
           {
             echo "result=PASS"
-            echo "test_modules=6"
+            echo "test_modules=5"
           } >> "$artifacts/metadata.txt"
 
       - name: Upload F4 R3 GREEN evidence
