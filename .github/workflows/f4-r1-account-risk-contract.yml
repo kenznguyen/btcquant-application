@@ -6,11 +6,10 @@ on:
       - main
     paths:
       - ".github/workflows/f4-r1-account-risk-contract.yml"
-      - "paper_execution/test_f4_r1_account_contract.py"
-      - "paper_execution/risk_contract.py"
-      - "paper_execution/ledger.py"
-      - "paper_execution/equity.py"
+      - "paper_execution/**"
       - "pipeline/api.py"
+      - "pipeline/test_api.py"
+      - "pipeline/test_decision.py"
 
 permissions:
   contents: read
@@ -21,7 +20,7 @@ concurrency:
 
 jobs:
   f4-r1-isolated:
-    name: F4 R1 — Python 3.12.16 isolated
+    name: F4 R1 — account risk and API regression — Python 3.12.16 isolated
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -37,18 +36,34 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          actual="$(git hash-object paper_execution/test_f4_r1_account_contract.py)"
-          test "$actual" = "d231aa9e2de14fc7417c6595dc82158d99dabee0"
+          verify_blob() {
+            local path="$1"
+            local expected="$2"
+            local actual
+            test -f "$path"
+            actual="$(git hash-object "$path")"
+            test "$actual" = "$expected"
+            printf '%s %s\\n' "$path" "$actual"
+          }
           mkdir -p "$RUNNER_TEMP/f4-r1-evidence"
           {
             echo "workflow_run_id=$GITHUB_RUN_ID"
             echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo "workflow_head_sha=$GITHUB_SHA"
-            echo "test_blob_sha=$actual"
             echo "python_image=python:3.12.16-slim-bookworm"
             echo "network_mode=none"
             echo "canonical_database_mount=none"
             echo "credentials=none"
+            verify_blob paper_execution/test_f4_r1_account_contract.py d231aa9e2de14fc7417c6595dc82158d99dabee0
+            verify_blob paper_execution/test_risk_limits.py d6d4fc5f667e8c0a154ac22e494a6d996f63bc3f
+            verify_blob paper_execution/test_ledger.py d352303e2088cbba0538ac4709f92ab74952a4e9
+            verify_blob paper_execution/test_dual_ledger_red.py 0cf05418940a07a8357ee9d6039325a1efcb16f2
+            verify_blob paper_execution/test_f4_risk_red.py 6ac5c5f30b73421cb1f8ba8c1d1fd4d52adc7a43
+            verify_blob paper_execution/ledger.py 80561db85c269e0b8fb7cb26da03b360526bde35
+            verify_blob paper_execution/risk_contract.py 7ae74740568e3bcad78acd928896ee363cc62613
+            verify_blob pipeline/api.py 26d0082d4254fce6d2a95a9f8fc6ec803344404d
+            verify_blob pipeline/test_api.py 4fb30360d49d4d6645cfc0ff55792769aaa697c3
+            verify_blob pipeline/test_decision.py 6781f26d66635f56662a627bdd3b4a63f26c1f28
           } > "$RUNNER_TEMP/f4-r1-evidence/metadata.txt"
 
       - name: Run focused R1 regression tests in isolated container
@@ -75,7 +90,7 @@ jobs:
             --env PYTHONPATH=/workspace \
             --workdir /workspace \
             python:3.12.16-slim-bookworm \
-            python -m unittest -v paper_execution.test_f4_r1_account_contract \
+            python -m unittest -v paper_execution.test_f4_r1_account_contract paper_execution.test_risk_limits paper_execution.test_ledger paper_execution.test_dual_ledger_red paper_execution.test_f4_risk_red pipeline.test_api pipeline.test_decision \
             > "$log" 2>&1; then
             status=0
           else
@@ -83,7 +98,7 @@ jobs:
           fi
           cat "$log"
           {
-            echo "test_command=python -m unittest -v paper_execution.test_f4_r1_account_contract"
+            echo "test_command=python -m unittest -v paper_execution.test_f4_r1_account_contract paper_execution.test_risk_limits paper_execution.test_ledger paper_execution.test_dual_ledger_red paper_execution.test_f4_risk_red pipeline.test_api pipeline.test_decision"
             echo "test_exit_code=$status"
             echo "test_count=$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || echo NOT_REPORTED)"
           } >> "$artifacts/metadata.txt"
