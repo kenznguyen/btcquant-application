@@ -116,3 +116,15 @@ FastAPI's default validation response (commonly 422) must not silently replace t
 - TDD RED has not been run. No code was written ahead of the failing contract tests. No dependency manifest/lock, workflow, source, canonical data or runtime was changed.
 - Next execution prerequisite: run in an environment with repository checkout and GitHub Actions execution capability, first establish the CPython 3.12.16 dependency lock with exact wheel hashes, then add/run contract RED tests before implementing the FastAPI adapter. Do not bypass the dependency gate or claim PASS from the local Python 3.13 environment.
 - Current statuses: architecture **APPROVED**; implementation authorization **APPROVED**; execution **BLOCKED**; FastAPI tests **NOT RUN**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+
+
+## 10. Initial ASGI adapter implementation and CI checkpoint — 2026-11-19
+
+- Initial FastAPI adapter implemented in `market_data/fastapi_app.py`; focused contract tests in `market_data/test_fastapi_api.py`.
+- Runtime/test dependency inputs: FastAPI 0.165.0, Uvicorn 0.54.0, httpx2 2.16.2. Starlette 1.10.0 and Pydantic 2.14.3 resolved under the CPython 3.12.16 CI environment.
+- Dependency locks were generated with SHA-256 hashes in GitHub Actions. Runtime lock hash `ed5d71e2796303e45266637dc0bffd980e9f869d9c1f25dc61abed8fffa2ee54`; test lock hash `fe4b7109fb211671e90c26a8158b29d7b7d5be6cb0d8be3f9f4c150767bfd7ea`. They are preserved in artifact `14529288115` but are not yet committed to the repository.
+- FastAPI focused GREEN: run [44525016702](https://github.com/kenznguyen/btcquant-application/actions/runs/44525016702), exact SHA `f72cff4d78bbfe7beb1a3b3fe1dd6e03fe26a4f5`, **10/10 PASS**, artifact `14529288115`, SHA-256 `6ca6bf9531af536d2cd140e7609934e3b876105c8bfcc4fb6ac74e7a49b4054b`.
+- SQLite aggregate on the same exact SHA: run [44525016662](https://github.com/kenznguyen/btcquant-application/actions/runs/44525016662), **196/196 PASS**, artifact `14529039136`, SHA-256 `e4fe7e0bece4353b438c6a22cd7b2c36f27c88b2152fd2d9849b84a88388d09e`.
+- Detailed evidence: [T0 FastAPI Initial Adapter Regression](../evidence/T0_FASTAPI_INITIAL_ADAPTER_REGRESSION_2026-11-19.md), report commit `0122ea21d870236230c30f2c5361598fe2e0fa3c`.
+- Implementation is **PARTIAL**, not a completed WSGI migration: `market_data/api.py` still contains the WSGI entrypoint and `market_data/test_api.py` still exercises it. Full 1.1.0 parity, committed dependency locks, WSGI removal and independent review remain pending.
+- Runtime, endpoint probe, Nginx/VPS/systemd/deployment, T1/T2 connection and trading remain **NOT AUTHORIZED**. PostgreSQL remains PARKED. Production readiness remains **NOT CERTIFIED**.
