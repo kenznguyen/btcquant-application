@@ -83,3 +83,42 @@ The target README was read in full. Its verification section points to the SQLit
 ## Next bounded step
 
 No additional source files should be copied now. If future review is needed, perform a focused semantic diff of source/target `test_sync.py` only against a named contract gap. Keep PostgreSQL, Kraken, connectivity, process/systemd/VPS, T0-to-T2 and legacy app tests separately gated. Update the target handoff with this report's commit/SHA; do not change source branch, workflows, canonical data or runtime.
+
+
+## Semantic review of `test_sync.py` — 2026-11-19
+
+### Compared artifacts
+
+- Source test blob: `319e084d9c0a9c5b0319e9bb7d1f93a930564dc8`.
+- Target test blob: `7621c85a4c7eb2ad233de94da89e6fbb411ea534`.
+- Source implementation `market_data/sync.py` blob: `e7ad4e6f2074225957b01f74abb0befe37675ea2`.
+- Target implementation `market_data/sync.py` blob: same `e7ad4e6f2074225957b01f74abb0befe37675ea2`.
+
+### Finding
+
+The test difference is additive and narrowly scoped:
+- Target imports the existing `Candle` model.
+- Target adds `test_second_page_write_conflict_rolls_back_page_without_removing_first_page`.
+- The pre-existing source test cases and assertions remain present in the target version; no source test behavior was removed in the reviewed diff.
+- Source and target `sync.py` implementations are byte-identical.
+
+The added test seeds a conflicting closed candle, returns a valid new candle followed by the conflicting candle on page 2, and asserts:
+1. Page 1's 1,000 committed candles remain.
+2. The new candle earlier in failed page 2 is rolled back.
+3. The pre-existing conflicting candle is not overwritten.
+4. The conflict raises `ValueError`.
+
+The target `SQLiteWriteGateway.write_batch` implementation uses `BEGIN IMMEDIATE`, performs writes inside one transaction, commits only after lease revalidation, and rolls back on every exception. The new test directly exercises this page-level atomicity contract through `sync_window`, which commits each fetched page using one `write_batch` call. It is not a redundant implementation-detail test: it protects the externally relevant boundary between a previously committed page and a later failed page.
+
+### Verdict
+
+**SEMANTIC REVIEW PASS.** Keep the target `test_sync.py` as-is. Do not copy the source version over it. No code/test change is needed.
+
+This was static source review only. No test was executed and no workflow was dispatched. The existing 191/191 aggregate evidence remains tied to exact tested SHA `42c8172a4b4b0234fa50e64eb6172f970f45ab66`.
+
+### Updated disposition
+
+- SQLite test parity for the reviewed sync contract: **PASS**.
+- No remaining test-only source file is currently justified for copying into the target by this review.
+- Overall scope remains deliberately narrower than full source-repository parity; separately gated runtime, PostgreSQL, Kraken, connectivity and T0→T2 work remain excluded.
+- Production readiness remains **NOT CERTIFIED**.
