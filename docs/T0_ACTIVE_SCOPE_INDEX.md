@@ -1,3 +1,15 @@
+### FastAPI C2 workflow trigger correction — CLOSED / VERIFIED — 2026-11-19
+
+- User-approved workflow-only fix: added `market_data/api.py` to `.github/workflows/t0-fastapi-migration.yml` `on.push.paths`.
+- Commit / exact tested SHA: `a92cca39a3c23c3325191922c80e73b81384d9ce`; workflow blob `7dabf111a2b89e22a80c3e02a5cf7f65a667095b`.
+- Diff: one workflow file, +1/-0. No app source, test, dependency, runtime or data files changed.
+- Static config verification: exactly one `market_data/api.py` path entry.
+- Push-triggered FastAPI workflow [44538454822](https://github.com/kenznguyen/btcquant-application/actions/runs/44538454822): **success** on exact SHA; contract job `135610069787`, runtime-lock smoke job `135610069433`; artifacts `14535834201` (SHA-256 `350db8e7ec0dd7a876d814b8116306a37b3ca8c89ae7f826d9acf656db952983`) and `14536258780` (SHA-256 `b705d5c57283eff983d6d16e9301e2b9f882eaf8c038a2d058499864ebfefba7`).
+- SQLite aggregate workflow [44538454988](https://github.com/kenznguyen/btcquant-application/actions/runs/44538454988): **success** on exact SHA; job `135610069795`; artifact `14536023784`, SHA-256 `a3ed69d72ceec7bf06e4a5c790d5b00f16f9ca46104e6a8a77e2e8a2d95d07a1`.
+- Detailed evidence: `docs/evidence/T0_FASTAPI_ADVERSARIAL_SELF_REVIEW_FOLLOWUP_2026-11-19.md`, addendum commit `7ceea5a826b27242fa671948304aef225318892c`.
+- C2: **CLOSED / VERIFIED** for path-filter configuration and successful push-triggered workflow execution. Qualification: the push changed the workflow file itself; an isolated api.py-only commit was not created because the approved scope excluded WSGI implementation changes.
+- Independent second-person review remains **PENDING**; WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+
 ### FastAPI adversarial self-review C2 finding — 2026-11-19
 
 - Review report: [T0 FastAPI Adversarial Self-Review Follow-up](evidence/T0_FASTAPI_ADVERSARIAL_SELF_REVIEW_FOLLOWUP_2026-11-19.md), commit `2815e6f4917f74679c19e88026c433e6258538fc`.
