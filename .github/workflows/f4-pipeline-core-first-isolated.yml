@@ -70,7 +70,7 @@ jobs:
             echo "canonical_database_mount=none"
           } > "$RUNNER_TEMP/f4-test-artifacts/runner_metadata.txt"
           verify_blob pipeline/api.py 26d0082d4254fce6d2a95a9f8fc6ec803344404d
-          verify_blob pipeline/test_api.py 4fb30360d49d4d6645cfc0ff55792769aaa697c3
+          verify_blob pipeline/test_api.py 5481c3072c79891161f992299783a9ba5879f955
           verify_blob pipeline/test_decision.py 6781f26d66635f56662a627bdd3b4a63f26c1f28
           verify_blob pipeline/values.py 5576376454af129b944919fb588e26c0657a781e
           verify_blob market_data/store.py 4e1b0c54bd56455abe5be0e5c7d0807e63e0bc78
