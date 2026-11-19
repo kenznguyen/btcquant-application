@@ -27,7 +27,10 @@ class F4RiskContractRedTest(unittest.TestCase):
             "maxDailyLossUsdt": "15",
             "maxExposureUsdt": "1200",
         }
-        PaperLedger(self.path, max_position_base="1")
+        bootstrap = PaperLedger(self.path, max_position_base="1")
+        bootstrap.record_equity(
+            "100", self.now - 60_000, self.now, "sha256:f4-risk-seed", "100"
+        )
         provision_account_risk_contract(
             self.path, core_limits, source="F4_R1_REGRESSION_FIXTURE",
             recorded_at_ms=self.now,
