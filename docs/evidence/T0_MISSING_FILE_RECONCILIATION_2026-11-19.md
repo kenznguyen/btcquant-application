@@ -91,3 +91,21 @@ Keep PostgreSQL migrations and `test_timescaledb.py` excluded until PostgreSQL/T
 - Canonical data/database/runtime/VPS/deployment: untouched.
 - Tests and workflows: NOT RUN.
 - No merge, rebase, cherry-pick, reset, force-push, or branch creation.
+
+
+## 7. Approved SQLite/API test-file transfer (2026-11-19)
+
+Owner separately approved copying only the two SQLite/API regression test modules listed below. Source contents were fetched from the source branch named in this report and added unchanged to target `main`.
+
+| Path | Source blob SHA | Target commit |
+|---|---|---|
+| `market_data/test_sync.py` | `319e084d9c0a9c5b0319e9bb7d1f93a930564dc8` | `3aa983c1d71e8fa054ffc61dcea2ec889d504b48` |
+| `market_data/test_api.py` | `49df7e0bec12908adae67f18a4aa19063e461093` | `7f5cf81eebdc53aae76adbba98c980219aefa15a` |
+
+Static isolation review before transfer:
+- Both tests create temporary directories/databases and register cleanup.
+- The sync test uses a mocked exchange object; its subprocess checks module help and verifies the manual CLI rejects a request lacking `--shadow-only` before exchange access.
+- The API test invokes the WSGI application directly, patches environment variables, and uses temporary SQLite paths. Its PostgreSQL case verifies fail-closed behavior without a DSN; it does not connect to PostgreSQL.
+- No canonical database path, network exchange connection, shared database, live order, or runtime service is invoked by the reviewed test code.
+
+Transfer result: source text copied unchanged. Target blob equality and test behavior remain subject to readback verification and later test execution respectively. No tests were run in this transfer increment.
