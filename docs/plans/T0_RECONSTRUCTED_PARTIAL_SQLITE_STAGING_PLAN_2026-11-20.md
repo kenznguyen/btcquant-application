@@ -148,6 +148,10 @@ Database/snapshot/restore fields remain null or NOT_RUN until those phases are s
 
 ## 8. Approval gates and current status
 
+- Owner approved bounded archive materialization, conditional on exact destination preflight: `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001`. Decision: `docs/decisions/T0_RECONSTRUCTED_ARCHIVE_MATERIALIZATION_APPROVAL_2026-11-20.md`.
+- The 11,277-byte historical aggregate discrepancy is accepted as an unexplained reporting/reconciliation discrepancy. New run verifies each object individually and computes a fresh aggregate; it does not need to match the historical aggregate. Any per-object mismatch quarantines the run.
+- Current status: APPROVED — PREFLIGHT PENDING / NOT RUN. If destination preflight fails, stop and request a new owner decision. SQLite creation/writes remain a separate approval gate.
+
 | Phase | Scope | Status |
 |---|---|---|
 | Owner acceptance of archive as partial | Decision only | APPROVED |
