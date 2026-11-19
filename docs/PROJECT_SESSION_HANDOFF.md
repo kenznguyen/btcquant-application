@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F3 automatic CI first run PASS
+
+- User approved automatic workflow execution on every push to `main`; workflow trigger is committed in `bd0b885f97627955ac02b72d89ad86db6e722b70`, blob `cc772e6595cbe8b7ecda583039ddefbda98b3176`.
+- First automatic push-triggered run: [44445881770](https://github.com/kenznguyen/btcquant-application/actions/runs/44445881770), attempt 1, event push, branch main, workflow/head SHA `bd0b885f97627955ac02b72d89ad86db6e722b70`, overall SUCCESS.
+- Job `Six-module SQLite/API suite` ID `135297771597`: SUCCESS. Exact checked-out test source SHA `15d404cb970de14415b21bbadd843027cea7441d`.
+- Test result **63/63 PASS**, 0 failed, 0 skipped; `Ran 63 tests in 0.720s`; exit code 0. F3 test `test_second_page_write_conflict_rolls_back_page_without_removing_first_page` explicitly PASS.
+- Isolation: Docker `network_mode=none`, loopback-only probe PASS, no credentials, no canonical DB mount. No Binance/exchange access.
+- Artifact ID `14493172181`, name `t0-sqlite-api-test-evidence`, GitHub digest and independently computed downloaded ZIP SHA-256 both `4682dea8c447fe6ce201d30ed11b2ed9af110df7e4c264db036ba8c51cb09ff8`; payload inspected.
+- Detailed evidence report: `docs/evidence/T0_SQLITE_F3_MULTIPAGE_ATOMICITY_2026-11-19.md`, updated in commit `25aa7e530174fc44b97978fbd2d99bc58bff333b`.
+- F3 isolated SQLite regression verification: **PASS**. This does not certify canonical DB, production runtime, Binance connectivity or trading.
+- F2 Scheduler/RetryPolicy/Runtime test design remains deferred until separately requested. No PostgreSQL/TimescaleDB, Scheduler, RetryPolicy, Runtime, VPS, T1/T2 or trading changes/access.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — F3 automatic CI trigger approved and configured
 
 - User explicitly approved automatic execution on every push to `main`.
