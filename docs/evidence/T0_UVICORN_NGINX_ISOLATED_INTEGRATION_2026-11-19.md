@@ -84,3 +84,14 @@ The fixture is created and removed inside the integration process. No canonical 
 ## Next step and limits
 
 The isolated CI integration gate is complete. A separate owner decision is required before any VPS probe, deployment, persistent service, Nginx modification, public endpoint, TLS or runtime activation. Do not infer VPS readiness from this CI result.
+
+
+## Governance update — dual-track validation approved — 2026-11-19
+
+Owner approved replacing the prior GitHub-only validation decision with two independent tracks. Full decision: [T0 Dual-Track CI and Runtime Validation Decision](../decisions/T0_DUAL_TRACK_CI_RUNTIME_VALIDATION_DECISION_2026-11-19.md).
+
+- Track A — GitHub Actions isolated integration: preserve existing **PASS — CI ONLY** at exact tested SHA `65661cd4a2492f9552fe05186581c66d14fbe293`, FastAPI workflow run `44550458804`, Uvicorn/Nginx job `135652465869`, integration artifact `14543536038`, SHA-256 `af07b99fa0a53ff315bad148c508533ea0e808d6365fc2c81faafa11ebe8c872`.
+- Track B — VPS runtime integration: **NOT VERIFIED / NOT RUN**. This decision does not authorize a probe or any runtime action. A separate explicit owner authorization must define any future runtime test scope.
+- CI and VPS statuses/evidence/acceptance criteria must remain independent. Do not combine into one PASS or infer VPS readiness from CI.
+- This documentation update did not modify code, tests, workflows, dependencies, runtime configuration or data; no CI or runtime validation was run.
+- Existing restrictions remain: no canonical T0 SQLite/feeder/writer/lease/recovery access or changes; no T1/T2/PostgreSQL/retention/trading changes; no live orders; no systemd/autostart, persistent service, public ingress, DNS/TLS or production deployment authorization. Paper-first and `ai_execution_enabled=false` remain in force.
