@@ -56,13 +56,13 @@ jobs:
             echo "credentials=none"
             verify_blob paper_execution/test_f4_r1_account_contract.py e71cf941c7e59db44dcd7f3e0b948940e7f25cdc
             verify_blob paper_execution/test_risk_limits.py 3dd3afb6e7b7d361829bae0355412c468cbbc313
-            verify_blob paper_execution/test_ledger.py 9606db101989cb50fd7104b930b35faa3fce671e
+            verify_blob paper_execution/test_ledger.py 71c7719d3e84be41bb7ca200b50fe6b5ee0f68e9
             verify_blob paper_execution/test_dual_ledger_red.py 0cf05418940a07a8357ee9d6039325a1efcb16f2
             verify_blob paper_execution/test_dual_ledger_migration_red.py 09320d363c8cb52806280c1de366895e09af3eeb
-            verify_blob paper_execution/ledger.py 9fbf195cd6b19bd4ce2217f3648b4722a2472dcb
+            verify_blob paper_execution/ledger.py afbfba8a0721e3d3dd9caefa4799a180358779f4
             verify_blob paper_execution/risk_contract.py 7ae74740568e3bcad78acd928896ee363cc62613
-            verify_blob pipeline/api.py 0c288741afe386cacaa8d2c7d3991274a00c43ef
-            verify_blob pipeline/test_api.py f7bd8ff60b489ac309b20ea78f37b0708d7bba9a
+            verify_blob pipeline/api.py e60e9800e4735902ec46b3fe927d6108cac5b6c2
+            verify_blob pipeline/test_api.py 3ddb51d763eb9bef836c5cf85a1ddc471bae0875
             verify_blob pipeline/test_decision.py 6781f26d66635f56662a627bdd3b4a63f26c1f28
           } > "$RUNNER_TEMP/f4-r1-evidence/metadata.txt"
 
