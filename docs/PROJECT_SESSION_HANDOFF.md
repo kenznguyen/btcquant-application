@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F4-R2 phase A RED matrix verified; implementation awaits approval
+
+- Owner explicitly approved phase A only: complete and execute the F4-R2 Kill Switch fail-closed RED specification; report results and wait for separate phase B approval.
+- Repository: `kenznguyen/btcquant-application`, existing `main`; pre-evidence HEAD `68419ae03f2af4e3b25899644b3db5f016ab8041`; phase-A evidence commit `50953e808472d11b806a18d61fff9f20c8256a50`.
+- Test-only commit: `2e4b28f73a2776c59ecedd1ea8c329a9b4643de7`; `paper_execution/test_f4_risk_red.py` blob `7e03122ee72cb88cd039d99ca4a9ed6acfe1f656`. Seven Kill Switch cases now specify missing table, malformed timestamp, missing row, numeric out-of-domain pause/kill flags and text pause/kill flags.
+- Production source remains unchanged: `paper_execution/risk_control.py` blob `3c76e462b0b4d924c2418842d95ed74285e2315d`.
+- Dedicated isolated workflow: `.github/workflows/f4-r2-kill-switch-red.yml` blob `7a673e95efd9975b5a379a2885301a64fe3aa81d`.
+- Authoritative RED run [44485444946](https://github.com/kenznguyen/btcquant-application/actions/runs/44485444946), job `135427624721`, workflow/source HEAD `68419ae03f2af4e3b25899644b3db5f016ab8041`: SUCCESS — expected RED confirmed. Python 3.12.16; `Ran 7 tests in 0.002s`; `FAILED (failures=7)`; 7 expected assertion failures, 0 errors.
+- Isolation: Docker `--network none`, read-only source mount, non-root, no credentials, no canonical DB mount. No runtime, VPS, exchange or trading path accessed.
+- Artifact `f4-r2-kill-switch-red-evidence`, ID `14510895644`, SHA-256 `8981282a6f9efb06977b7fbc6875423e8248473f8df1dc28129d8c0d501b50d7`.
+- Evidence report: `docs/evidence/F4_R2_KILL_SWITCH_RED_2026-11-19.md`, committed in `50953e808472d11b806a18d61fff9f20c8256a50`.
+- Earlier preflight attempts `44485036026`, `44485121025`, `44485200258`, `44485369179` failed only due to a transcribed source blob pin; no tests ran. The pin was corrected against GitHub's exact blob and final run above verified both source and test identities before execution.
+- Status: F4-R2 phase A test specification PASS; expected RED execution PASS (7/7); production source preservation PASS. F4-R2 implementation NOT AUTHORIZED pending separate phase B approval. F4-R3 OPEN / untouched. F4-R1 preserved.
+- Next: wait for explicit phase B approval. Do not modify `risk_control.py`, Ledger, Account Risk Contract, API or runtime before approval. No GREEN attempt, canonical DB, VPS, exchange, paper orders or live trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — Runner recheck BLOCKED; no tests executed
 
 - Continued from verified main HEAD `d7636fe1bb8f619cf61f69b60464903c740091c9`, after re-reading this handoff.
