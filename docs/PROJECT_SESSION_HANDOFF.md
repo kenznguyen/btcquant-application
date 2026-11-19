@@ -5041,3 +5041,19 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Status: repository/schema inventory **PASS — STATIC ONLY**; current canonical DB existence/access, current integrity, full historical M15/H1 coverage, complete provenance, recovery continuity and backup/restore **BLOCKED / NOT VERIFIED**.
 - This increment was documentation-only. No database/VPS/runtime/API access; no copy/export/restore; no source/test/workflow/dependency changes; no tests or workflows run. No workflow run, job or artifact exists for this inventory.
 - Next required input: identify an owner-held canonical SQLite file or immutable backup and its approved read-only access location. Do not create an empty replacement, run the initializer against a candidate path, start a writer, restore/copy data, or activate runtime without separate approval.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Canonical data external recovery source search
+
+- Owner explicitly authorized read-only inspection of GitHub Actions artifacts, GitHub Releases and Dropbox if connected.
+- Evidence report: `docs/evidence/T0_CANONICAL_DATA_RECOVERY_SOURCE_SEARCH_2026-11-19.md`, commit `137f104ba3a1fb5bb748a256e7037fb87f27c58e`.
+- Active scope index update: `d79360a86b35e198cfde470dc174269e7d5629ec`.
+- Historical source inventory blob `92b36a488619512ef64297b53a8fadb7db8608d8`, exact source HEAD `93f3b0e350cf62b205f8d2a3a84fd139e9c5f59e`, scanned a complete 994-entry tree and found no tracked raw candle/database payload or canonical M15/H1 bundle. Nine selected T0 Actions artifact ZIPs contained CI/test/systemd/recovery/fencing evidence only; two P1.8 artifacts were synthetic. Historical run listing covered newest 1,000 of 1,387 only.
+- Current known-run spot check: run `44272495963` artifact `14413755795` is Core-First code operational proof, not market data. Artifact listing for known run IDs `42021445350` and `41996998169` returned 404; this is not proof all artifacts are absent.
+- Dropbox active indexed search returned no results for 16 relevant terms. Deleted/unindexed content, other accounts, local devices and disconnected storage were not checked.
+- GitHub Releases listing and a fresh exhaustive Actions-run listing remain **NOT VERIFIED** because no corresponding list operation is exposed by connected GitHub tools.
+- Status: selected GitHub artifact inspection **PASS — NOT DATA**; Dropbox search **NO MATCHES**; Releases **NOT VERIFIED**; exhaustive Actions history **PARTIAL**; canonical backup **NOT IDENTIFIED**; recovery readiness **BLOCKED / NOT VERIFIED**.
+- No data download/export/restore, runtime/VPS/SSH/API/exchange access, workflow dispatch, source/test/workflow/dependency/schema changes. Documentation-only; no tests/workflows run and no workflow artifact exists.
+- Next: inspect Releases through authenticated GitHub UI or supply an exact release asset reference; identify any other cloud account, local device, external disk or provider snapshot. If no original copy exists, submit a separate bounded proposal for **RECONSTRUCTED** Binance USD-M market history. No reconstruction/download, canonical initialization, writer, or migration is authorized.
