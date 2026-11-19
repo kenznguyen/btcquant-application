@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F3 automatic CI trigger approved and configured
+
+- User explicitly approved automatic execution on every push to `main`.
+- Workflow now has both `push: branches: [main]` and manual `workflow_dispatch`.
+- Trigger change commit: `bd0b885f97627955ac02b72d89ad86db6e722b70`; workflow blob `cc772e6595cbe8b7ecda583039ddefbda98b3176`.
+- The isolated suite intentionally remains pinned to exact F3 source snapshot `15d404cb970de14415b21bbadd843027cea7441d`, expects 63 tests, and uses the existing network-disabled Docker test container without Binance access or canonical DB mount. Every push to main rechecks this fixed approved snapshot; it does not automatically track arbitrary future changes to test source.
+- This is test automation only: no application deployment, runtime, feeder, VPS or trading execution.
+- Evidence report updated in commit `2636cb84e4b5678182e4e4ef9e8b29e67b99e888`.
+- First push-triggered run has not yet been verified. F3 execution status remains NOT VERIFIED until a run and artifact are inspected. F2 remains deferred.
+- No Binance/exchange, canonical DB, PostgreSQL/TimescaleDB, Scheduler, RetryPolicy, Runtime, VPS, T1/T2 or trading access/change.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19
 
 ## F3 SQLite multi-page atomicity regression — implementation committed; execution NOT VERIFIED
