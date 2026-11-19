@@ -246,3 +246,15 @@
 - Disposition: repository/schema inventory PASS (static only); current canonical DB existence/access, current integrity, full M15/H1 coverage, provenance completeness, recovery continuity and backup/restore **BLOCKED / NOT VERIFIED**.
 - No database/runtime/VPS access, copy/export/restore, source/test/workflow/dependency changes, tests or workflow runs. Documentation-only commit.
 - Next: identify an owner-held canonical SQLite file or immutable backup and its approved read-only access location. No initializer, writer, restore, or migration action is authorized.
+
+
+### Canonical data external recovery source search — 2026-11-19
+
+- Owner explicitly authorized read-only external source inspection.
+- Evidence: [T0 Canonical Data Recovery Source Search](evidence/T0_CANONICAL_DATA_RECOVERY_SOURCE_SEARCH_2026-11-19.md), commit `137f104ba3a1fb5bb748a256e7037fb87f27c58e`.
+- Historical source inventory (blob `92b36a488619512ef64297b53a8fadb7db8608d8`, exact source HEAD `93f3b0e350cf62b205f8d2a3a84fd139e9c5f59e`) scanned a complete 994-entry tree and found no tracked raw candle/database payload or canonical M15/H1 bundle. Nine selected T0 Actions artifacts contained test/runtime logs only; two P1.8 artifacts were synthetic. Historical run listing covered newest 1,000 of 1,387 only.
+- Current known-run artifact spot check: run `44272495963` artifact `14413755795` is Core-First code operational proof (not market data). Known runs `42021445350` and `41996998169` returned 404 from artifact listing. GitHub Releases listing and a fresh exhaustive Actions-run listing are NOT VERIFIED because the connected GitHub tool set exposes no such list operations.
+- Dropbox active indexed search returned no matches for 16 relevant queries. Deleted/unindexed content, other accounts and local devices were not inspected.
+- Status: selected GitHub artifacts **PASS — NOT DATA**; Dropbox search **NO MATCHES**; Releases **NOT VERIFIED**; exhaustive Actions history **PARTIAL**; canonical backup **NOT IDENTIFIED**; recovery readiness **BLOCKED / NOT VERIFIED**.
+- No data downloaded/exported/restored, no runtime/VPS/SSH/API/exchange access, no workflow dispatch, no source/test/workflow/dependency/schema changes. Documentation-only; no workflow run/job/artifact.
+- Next: inspect Releases in authenticated GitHub UI or provide an exact release asset URL; identify other owner-held cloud/local/device snapshots. If none exists, prepare a separate owner-approval proposal for RECONSTRUCTED Binance USD-M history. No reconstruction, download, T0 initialization, writer or canonical acceptance is authorized.
