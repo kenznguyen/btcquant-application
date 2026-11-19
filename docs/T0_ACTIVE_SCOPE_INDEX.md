@@ -258,3 +258,18 @@
 - Status: selected GitHub artifacts **PASS — NOT DATA**; Dropbox search **NO MATCHES**; Releases **NOT VERIFIED**; exhaustive Actions history **PARTIAL**; canonical backup **NOT IDENTIFIED**; recovery readiness **BLOCKED / NOT VERIFIED**.
 - No data downloaded/exported/restored, no runtime/VPS/SSH/API/exchange access, no workflow dispatch, no source/test/workflow/dependency/schema changes. Documentation-only; no workflow run/job/artifact.
 - Next: inspect Releases in authenticated GitHub UI or provide an exact release asset URL; identify other owner-held cloud/local/device snapshots. If none exists, prepare a separate owner-approval proposal for RECONSTRUCTED Binance USD-M history. No reconstruction, download, T0 initialization, writer or canonical acceptance is authorized.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Canonical SQLite + Dropbox snapshot design (Phase 1 only)
+
+- Owner decision: Dropbox is the versioned, downloadable repository for validated official Canonical SQLite snapshots; it is not the live operational primary.
+- Operational primary remains on a controlled local filesystem suitable for SQLite locking and writes. Never synchronize an actively written SQLite database or its WAL/SHM files directly through Dropbox.
+- Design: `docs/decisions/T0_CANONICAL_SQLITE_DROPBOX_SNAPSHOT_DESIGN_2026-11-19.md`, commit `f0df0617c46a476ed89f313cbebf1c7e7f450fd2`.
+- Snapshot protocol uses SQLite Online Backup API to a staging path, then closes and validates the snapshot, computes SHA-256, emits a provenance/coverage manifest, uploads as a new immutable version, and requires read-back checksum verification. Restore occurs to a separate destination and requires validation before any cutover.
+- Official/verified acceptance requires SQLite integrity, schema, row counts, M15/H1 coverage, gaps, duplicate/OHLCV checks, lineage, manifest and checksum. A snapshot without a successful restore drill is only UPLOADED / NOT RESTORE-VERIFIED.
+- Reconstructed market history must be explicitly labeled `RECONSTRUCTED`; it must never be represented as recovery of the historical original database.
+- Authorization: **Phase 1 DESIGN / STATIC ONLY**. Static implementation checks and independent review are **NOT YET PERFORMED**. No database initialization, exchange download, data copy/export, snapshot, Dropbox upload, restore, VPS/runtime, writer/lease/feeder or deployment is authorized.
+- No tests or workflows were run; no test run, job or artifact exists for this documentation-only increment.
+- Next: bounded static review of the manifest/acceptance contract and update this handoff. Any reconstruction, snapshot/Dropbox operation, restore drill or primary cutover requires separate explicit approval.
