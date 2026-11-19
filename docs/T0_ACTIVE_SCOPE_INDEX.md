@@ -176,3 +176,13 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - No RED contract test has been run; no source, test, dependency, lock or workflow changes have been made. Do not start implementation before RED tests and dependency compatibility are proven in the target environment.
 - Detailed decision/checkpoint: [T0 FastAPI Migration Decision](decisions/T0_FASTAPI_MIGRATION_DECISION_2026-11-19.md), updated commit `0be75e990337bc079dca6a4291e53e104359b6d6`.
 - Next: resume in a repository-connected environment with CPython 3.12.16 and GitHub Actions execution; establish hashed dependency lock, run contract RED, implement, then GREEN + aggregate regression + independent review. Runtime/deployment remains separately unauthorized.
+
+
+## T0 FastAPI initial adapter implementation — 2026-11-19
+
+- Detailed implementation and CI evidence: [T0 FastAPI Initial Adapter Regression](evidence/T0_FASTAPI_INITIAL_ADAPTER_REGRESSION_2026-11-19.md), report commit `0122ea21d870236230c30f2c5361598fe2e0fa3c`.
+- FastAPI adapter source: `market_data/fastapi_app.py`; focused ASGI tests: `market_data/test_fastapi_api.py`.
+- Paired exact-SHA evidence on `f72cff4d78bbfe7beb1a3b3fe1dd6e03fe26a4f5`: FastAPI run [44525016702](https://github.com/kenznguyen/btcquant-application/actions/runs/44525016702) **10/10 PASS**; SQLite aggregate run [44525016662](https://github.com/kenznguyen/btcquant-application/actions/runs/44525016662) **196/196 PASS**.
+- Dependency lock generation succeeded under CPython 3.12.16 with SHA-256. Lock artifacts are retained in FastAPI artifact `14529288115`; the lock files have not yet been committed.
+- Migration remains **PARTIAL**: old WSGI `application` in `market_data/api.py` and its existing `test_api.py` coverage remain. Port the full 1.1.0 suite to ASGI, commit locks, then remove WSGI/Gunicorn after full parity and independent review.
+- Runtime/API endpoint, Nginx, VPS, systemd, deployment and T1/T2 connection remain NOT AUTHORIZED. PostgreSQL remains PARKED; no canonical DB/data, retention or trading behavior changed. Production readiness NOT CERTIFIED.
