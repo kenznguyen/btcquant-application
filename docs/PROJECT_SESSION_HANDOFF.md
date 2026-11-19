@@ -1,5 +1,19 @@
 # CURRENT STATUS OVERRIDE — 2026-11-19
 
+## F1 SQLite schema preflight fix
+- Owner approved bounded F1 fix + regression test; SQLite only. PostgreSQL/TimescaleDB and runtime remain excluded.
+- Source/test commit: `57b54116188167904e2a2a6020ab349588b42186`.
+- Changed only `market_data/write_gateway.py` and `market_data/test_write_gateway.py`: schema preflight now rejects missing `feeder_leases`; regression verifies rejection with valid `candles` table and no implicit table creation.
+- Isolated workflow update commit: `5d8ea2e2f9945db90f1799509e156571b77eb87b`; workflow pins exact source/test SHA above and expects 62 tests.
+- Workflow run was not dispatched in this session; test execution is NOT RUN / NOT VERIFIED. Existing 61/61 PASS run `44443686889` remains tied only to source SHA `32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f`.
+- No runtime, canonical SQLite data, exchange, VPS, PostgreSQL/TimescaleDB, T1/T2 or trading path accessed. Production NOT CERTIFIED.
+- Evidence report: `docs/evidence/T0_SQLITE_F1_FIX_2026-11-19.md`.
+- Next: manually dispatch **T0 SQLite API isolated tests** from Actions on `main`; verify exact source SHA, 62 tests, zero failures/skips, isolation probe and artifact payload; then record run/artifact evidence. No scope expansion.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19
+
 ## Independent review of isolated SQLite/API suite
 
 - Latest preceding evidence: isolated GitHub Actions run [44443686889](https://github.com/kenznguyen/btcquant-application/actions/runs/44443686889), exact test source SHA `32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f`, six modules, 61/61 PASS, zero failures/skips; artifact ID `14491519041` and downloaded payload SHA-256 verified.
