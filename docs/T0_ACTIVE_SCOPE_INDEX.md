@@ -71,3 +71,17 @@
 - Current source/test verification: **PENDING CI**. Do not claim C1 closed until the exact-SHA FastAPI workflow passes and its logs/artifact confirm the differential test ran. SQLite aggregate workflow is expected to trigger because its path filter includes the FastAPI workflow file; its result is also pending.
 - No API implementation, WSGI/Gunicorn lifecycle, dependencies, canonical SQLite data, feeder, T1/T2, PostgreSQL, runtime, endpoint, VPS, deployment, retention/deletion or trading behavior changed.
 - C1 remains **OPEN / NOT VERIFIED** pending CI. Independent second-person review remains **PENDING**. WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+
+
+### C1 WSGI–FastAPI differential parity — CLOSED / VERIFIED — 2026-11-19
+
+- Exact tested source SHA: `62054b53119308eca9d2256dcd5aae5561da235b`.
+- FastAPI workflow run [44534512421](https://github.com/kenznguyen/btcquant-application/actions/runs/44534512421), job `135596271306`: **26/26 PASS**. The log explicitly records `test_same_fixture_has_identical_status_headers_and_body_for_contract_cases ... ok`, followed by `Ran 26 tests` and `OK`.
+- FastAPI artifact `14533664834`, SHA-256 `555c63db97aa8466857cb4dd84728808989edc8107b25af0af31336bd3e84883`. Downloaded and inspected ZIP: `runner_metadata.txt` confirms both `workflow_commit` and `checked_out_source_sha` equal the exact SHA; `test_count=26`, `test_exit_code=0`. Test log included in artifact.
+- SQLite aggregate workflow run [44534512612](https://github.com/kenznguyen/btcquant-application/actions/runs/44534512612), job `135596271401`: **196/196 PASS**, log ends `Ran 196 tests` / `OK`.
+- SQLite artifact `14534628423`, SHA-256 `8e9c5274d48a44bb779bdd1db4119d3a83f1873c61ff889b769fc03fd6a0cfb0`. Downloaded and inspected ZIP: metadata confirms exact source SHA and expected 196 tests; aggregate test log confirms pass.
+- Both workflow runs have event `push`, branch `main`, and exact `head_sha` equal to `62054b53119308eca9d2256dcd5aae5561da235b`; both conclusions are `success`.
+- C1 finding (absence of same-fixture WSGI–FastAPI differential test): **CLOSED / VERIFIED** for the ten explicit contract cases in `market_data/test_fastapi_parity.py`. This does not claim exhaustive equivalence for every possible HTTP request or environment.
+- D1 (runtime-only clean-install smoke test) remains **NOT VERIFIED**. Independent second-person review remains **PENDING**; this CI proof is not independent review.
+- WSGI/Gunicorn retirement remains **NOT APPROVED**; runtime/deployment remains **NOT AUTHORIZED**; production readiness remains **NOT CERTIFIED**.
+- Scope unchanged: no API implementation behavior, canonical SQLite data, writer/lease/feeder/recovery, T1/T2, PostgreSQL, VPS/systemd, runtime, deployment, retention/deletion or trading was modified or accessed.
