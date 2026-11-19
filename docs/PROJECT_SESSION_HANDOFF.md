@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — D1 closed; review package refreshed
+
+- D1 runtime-lock-only clean install and in-process ASGI health smoke: **CLOSED / PASS** on exact tested SHA `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
+- FastAPI contract/parity: **26/26 PASS**; SQLite aggregate: **196/196 PASS**. Exact workflow/job/artifact IDs and SHA-256 digests are recorded in `docs/evidence/T0_FASTAPI_RUNTIME_LOCK_SMOKE_2026-11-19.md`.
+- Updated independent review package: `docs/reviews/T0_FASTAPI_INDEPENDENT_REVIEW_PACKAGE_2026-11-19.md`, commit `8a50de8b23566a57cc56f62755dda0f3b504b682`. Review snapshot: `4651bf1b26132ca028e6bb428ee0869963432bc0`; tested implementation/workflow SHA: `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
+- Active scope index refresh follows in the repository history.
+- Independent second-person review: **PENDING**; reviewer not assigned. WSGI/Gunicorn retirement **NOT APPROVED**.
+- Uvicorn process/socket startup, Nginx, VPS/systemd, endpoint/runtime qualification and deployment remain **NOT VERIFIED / NOT AUTHORIZED**. Production readiness **NOT CERTIFIED**.
+- No canonical SQLite, writer/lease/feeder/recovery, T1/T2, PostgreSQL, retention/deletion or trading changes/access.
+- Next step: obtain a real second-person review using the refreshed package and exact review snapshot. Preserve all runtime/deployment and trading gates.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — D1 runtime-lock-only smoke PASS
 
 - Repository `kenznguyen/btcquant-application`, branch `main`.
