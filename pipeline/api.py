@@ -469,26 +469,18 @@ def application(environ, start_response):
                 result = ledger().reset_kill(True, True, timestamp)
             elif path == "/v1/paper/evaluate" and (not payload or payload in ({"source": "AI"}, {"source": "CORE"})):
                 # Core-First: paper evaluation is exclusively Strategy Core.
-                # AI candidates remain available through the offline /v1/decision
-                # endpoint and must never initialize or write a Paper Ledger.
-                source = payload.get("source", "CORE")
-                if source == "AI":
+                # AI candidates remain available through offline /v1/decision.
+                # Reject AI before touching the Ledger or evaluating a candidate.
+                if payload.get("source", "CORE") == "AI":
                     return response("403 Forbidden", {"error": "AI_EXECUTION_DISABLED"})
                 source_id = "STRATEGY_CORE"
                 from paper_execution.ledger import dual_ledger_ready
                 dual_active = dual_ledger_ready(os.environ["MARKET_DATA_DB"])
-                # AI must decide before an AI-scoped ledger can be constructed.
-                # Core retains its existing strategy-scoped writer path.
                 strategy_ledger = (
                     ledger(strategy_id=source_id) if dual_active else ledger()
-                ) if source == "CORE" or not dual_active else None
-                if source == "CORE":
-                    data = {"book": book_snapshot(timestamp)}
-                    decision = core_decide(timestamp, data["book"])
-                else:
-                    data = context(timestamp)
-                    decision = decide(data, timestamp)
-                    decision["source"] = "AI_FREQAI"
+                )
+                data = {"book": book_snapshot(timestamp)}
+                decision = core_decide(timestamp, data["book"])
                 timestamp = now_ms()
                 order = None
                 if decision.get("intent"):
