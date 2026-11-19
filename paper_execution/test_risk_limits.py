@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from paper_execution.ledger import PaperLedger
+from paper_execution.risk_contract import provision_account_risk_contract, read_account_risk_contract, update_account_risk_contract
 
 
 class SharedRiskLimitTest(unittest.TestCase):
@@ -13,8 +14,18 @@ class SharedRiskLimitTest(unittest.TestCase):
         self.path=Path(self.temp.name)/"paper.sqlite3"
         self.now=1_800_000_000_000
         self.limits={"maxDrawdownPct":20,"maxDailyLossUsdt":10,"maxExposureUsdt":1000}
-        self.ledger=PaperLedger(self.path,max_position_base="1",risk_limits=self.limits,
-                                require_risk_limits=True)
+        provision_account_risk_contract(
+            self.path, self.limits, source="RISK_LIMIT_TEST_FIXTURE", recorded_at_ms=self.now
+        )
+        self.ledger=PaperLedger(self.path,max_position_base="1",require_risk_limits=True)
+
+    def update_limits(self, limits):
+        contract = read_account_risk_contract(self.path)
+        update_account_risk_contract(
+            self.path, limits, expected_contract_hash=contract["contractHash"],
+            source="RISK_LIMIT_TEST_FIXTURE", reason="Change account risk limits for regression case",
+            recorded_at_ms=self.now + 1,
+        )
 
     def intent(self,name="risk-order",target="0.1"):
         return {"intentId":name,"symbol":"BTCUSDT","exchange":"binance","marketType":"USDT_PERPETUAL",
@@ -41,7 +52,8 @@ class SharedRiskLimitTest(unittest.TestCase):
 
     def test_daily_loss_breach_latches_kill(self):
         limits={**self.limits,"maxDrawdownPct":90}
-        ledger=PaperLedger(self.path,max_position_base="1",risk_limits=limits,require_risk_limits=True)
+        self.update_limits(limits)
+        ledger=PaperLedger(self.path,max_position_base="1",require_risk_limits=True)
         ledger.record_equity("100",self.now,self.now,"sha256:"+"c"*64)
         with sqlite3.connect(self.path) as db:
             db.execute("UPDATE paper_state SET realized='-12' WHERE id=1")
@@ -52,17 +64,17 @@ class SharedRiskLimitTest(unittest.TestCase):
 
     def test_exposure_limit_rejects_without_latching_global_kill(self):
         limits={**self.limits,"maxExposureUsdt":5}
-        ledger=PaperLedger(self.path,max_position_base="1",risk_limits=limits,require_risk_limits=True)
+        self.update_limits(limits)
+        ledger=PaperLedger(self.path,max_position_base="1",require_risk_limits=True)
         ledger.record_equity("100",self.now,self.now,"sha256:"+"c"*64)
         result=ledger.submit(self.intent("exposure"),self.book(self.now),self.now)
         self.assertEqual(result["reason"],"MAX_EXPOSURE_LIMIT")
         self.assertFalse(ledger.snapshot()["riskControl"]["killed"])
 
     def test_missing_limits_fail_closed(self):
-        ledger=PaperLedger(self.path,max_position_base="1",require_risk_limits=True)
-        ledger.record_equity("100",self.now,self.now,"sha256:"+"c"*64)
-        result=ledger.submit(self.intent("unconfigured"),self.book(self.now),self.now)
-        self.assertEqual(result["reason"],"RISK_LIMITS_UNCONFIGURED")
+        missing_path = Path(self.temp.name) / "missing.sqlite3"
+        with self.assertRaisesRegex(sqlite3.DatabaseError, "ACCOUNT_RISK_CONTRACT_UNAVAILABLE"):
+            PaperLedger(missing_path, max_position_base="1", require_risk_limits=True)
 
 
 if __name__=="__main__":
