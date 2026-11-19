@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Uvicorn + Nginx isolated GitHub Actions integration PASS
+
+- Evidence report: `docs/evidence/T0_UVICORN_NGINX_ISOLATED_INTEGRATION_2026-11-19.md`, commit `15563d2a4d47b0ac860f82b37b3050c6ebba238a`.
+- Repository: `kenznguyen/btcquant-application`, branch `main`.
+- Exact tested source/workflow SHA: `65661cd4a2492f9552fe05186581c66d14fbe293`.
+- Added `market_data/uvicorn_nginx_smoke.py` (blob `38e5fcdf10990af265f68f3597cdfef386f5a0aa`) and a dedicated `uvicorn-nginx-socket-integration` job in `.github/workflows/t0-fastapi-migration.yml` (blob `82b65cad3ea90d437d73998f33384f66b543431b`).
+- FastAPI workflow [44550458804](https://github.com/kenznguyen/btcquant-application/actions/runs/44550458804): exact SHA above, **SUCCESS**. Uvicorn/Nginx job `135652465869` SUCCESS; existing FastAPI contract job `135652465887` SUCCESS; runtime-lock smoke job `135652465650` SUCCESS.
+- Integration artifact `14543536038`, SHA-256 `af07b99fa0a53ff315bad148c508533ea0e808d6365fc2c81faafa11ebe8c872`.
+- FastAPI contract artifact `14541653518`, SHA-256 `cdcc7a4c039c1b3fe4115c3d770c42754312b660efd384bc34319e59a447cdaa`; runtime smoke artifact `14543502169`, SHA-256 `e6779dd50b10d003e0e850c35cab245e003f9e5babafd3f8ee5be45ca7a1b6e7`.
+- SQLite aggregate workflow [44550458851](https://github.com/kenznguyen/btcquant-application/actions/runs/44550458851): exact same SHA, **SUCCESS**; job `135652463602`; artifact `14543096166`, SHA-256 `852ce0109b95bd7f9d021d9fc2ccda4db076409f45cf189d989d2dd7c4bdd78f`.
+- Verified behavior: real Uvicorn and Nginx subprocesses; loopback TCP sockets; Nginx health proxy; Bearer header forwarding and Candle Contract 1.1.0 read; missing token 401; unknown path 404; POST 405/Allow GET; stopped upstream returns 502; dummy token absent from Nginx logs.
+- Isolation: temporary SQLite fixture only, synthetic token, listeners bound to 127.0.0.1, external network disabled during test, non-root/read-only/bounded container. Canonical T0 SQLite not mounted.
+- Status: Uvicorn process/socket + Nginx reverse proxy **PASS — isolated CI only**. VPS/Scaleway runtime and Nginx **NOT VERIFIED**. systemd/autostart, public ingress, TLS, deployment and production readiness **NOT AUTHORIZED / NOT VERIFIED**.
+- No canonical T0 writer/lease/feeder/recovery/data, T1/T2, PostgreSQL, retention/deletion, exchange, strategy/risk/trading changes or access. Paper-first and `ai_execution_enabled=false` remain unchanged.
+- Next step: only a separate explicit owner approval may authorize a VPS probe, persistent service, Nginx modification, public endpoint, TLS or runtime activation. Do not infer VPS readiness from CI.
+ 
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 WSGI/Gunicorn retirement completed
 
 - Owner approval and human independent-review waiver: `docs/decisions/T0_WSGI_GUNICORN_RETIREMENT_APPROVAL_2026-11-19.md`.
