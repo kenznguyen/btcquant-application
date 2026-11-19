@@ -96,3 +96,16 @@
 - C1 remains **CLOSED / VERIFIED** for ten enumerated cases. D1 clean runtime-only install smoke test **NOT VERIFIED**. Independent second-person review **PENDING**; no reviewer has been assigned or approved.
 - No source/test/workflow/dependency/runtime/data changes; no tests or workflows run for this documentation refresh.
 - WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+
+
+### FastAPI adversarial self-review follow-up — 2026-11-19
+
+- Review report: [T0 FastAPI Adversarial Self-Review Follow-up](evidence/T0_FASTAPI_ADVERSARIAL_SELF_REVIEW_FOLLOWUP_2026-11-19.md), commit `17ab5aa4cc246f5eafb618fbe9eaddc963399bee`.
+- Reviewed snapshot: `440379b243d0b63e80f22b032fa8499bc2e1a6f4`; tested implementation/workflow SHA: `62054b53119308eca9d2256dcd5aae5561da235b`.
+- Same-assistant static review inspected FastAPI/WSGI adapters, shared contract, parity/ASGI tests, storage selection, dependency locks and workflow. No additional blocking source defect identified in the bounded review.
+- D1 remains **OPEN / NOT VERIFIED**: workflow downloads runtime-lock wheels but installs only the test lock in its test container; a separate clean runtime-only install/import smoke test is not evidenced.
+- Dependency CVE/advisory research, dynamic security testing, Nginx/reverse-proxy validation, Uvicorn/VPS runtime, load and latency testing remain NOT PERFORMED.
+- Verdict: **PASS WITH VERIFICATION GAPS — SELF-REVIEW ONLY**. This reviewer participated in implementation and prior reviews; this is explicitly **NOT INDEPENDENT** and does not satisfy the second-person review gate.
+- C1 remains **CLOSED / VERIFIED** for ten cases. Independent second-person review **PENDING**.
+- No source/test/workflow/dependency/runtime/data changes; no tests or workflows run.
+- WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
