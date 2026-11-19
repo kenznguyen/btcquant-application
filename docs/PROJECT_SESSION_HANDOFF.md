@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Owner approved reconstructed Canonical coverage target
+
+- Decision: docs/decisions/T0_RECONSTRUCTED_CANONICAL_COVERAGE_DECISION_2026-11-19.md.
+- Owner approved target: Binance USD-M BTCUSDT M15 and H1, each timeframe independently spanning from the earliest candle actually available at retrieval to the latest fully closed candle available at the recorded UTC retrieval cutoff.
+- Retrieve all history available through the selected Binance USD-M historical-data interface at retrieval time, subject to source/endpoint limits. Record exact first/last candle times, retrieval cutoff, counts, gaps, partial boundaries and all provenance.
+- Every missing expected interval must be reported. No synthetic fill/interpolation/forward-fill or silent omission. Gap acceptability and final official status remain pending validation evidence and explicit owner disposition.
+- Lineage is RECONSTRUCTED; never describe this as recovery of the deleted historical database.
+- Design updated: docs/decisions/T0_CANONICAL_SQLITE_DROPBOX_SNAPSHOT_DESIGN_2026-11-19.md.
+- Active scope index updated: docs/T0_ACTIVE_SCOPE_INDEX.md.
+- Authorization: Phase 1 design/documentation only. No Binance access/download, reconstruction, SQLite initialization/write, Dropbox action, snapshot, restore drill, VPS/runtime, feeder/writer or cutover. Each later phase still requires separate explicit approval.
+- Tests/workflows: NOT RUN; no run/job/artifact exists for these documentation-only changes.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — Owner approved independent CI and VPS runtime validation tracks
 
 - Decision: `docs/decisions/T0_DUAL_TRACK_CI_RUNTIME_VALIDATION_DECISION_2026-11-19.md`.
