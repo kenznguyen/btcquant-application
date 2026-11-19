@@ -124,6 +124,16 @@ def load_account_risk_contract(connection):
     }
 
 
+def read_account_risk_contract(db_path):
+    """Read the validated contract without creating or migrating the database."""
+    path = Path(db_path)
+    if not path.is_file():
+        return None
+    uri = path.resolve().as_uri() + "?mode=ro"
+    with closing(sqlite3.connect(uri, uri=True, timeout=10)) as connection:
+        return load_account_risk_contract(connection)
+
+
 def _validate_metadata(source, recorded_at_ms):
     if not isinstance(source, str) or not source.strip() or len(source) > 128:
         raise ValueError("ACCOUNT_RISK_CONTRACT_INVALID")
