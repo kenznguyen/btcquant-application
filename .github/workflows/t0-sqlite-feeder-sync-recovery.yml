@@ -1,0 +1,146 @@
+name: T0 SQLite feeder, sync and recovery regression
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - market_data/feeder.py
+      - market_data/sync.py
+      - market_data/store.py
+      - market_data/write_gateway.py
+      - market_data/test_sync.py
+      - market_data/test_feeder_lease.py
+      - market_data/test_feeder_recovery.py
+      - .github/workflows/t0-sqlite-feeder-sync-recovery.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t0-sqlite-feeder-sync-recovery
+  cancel-in-progress: false
+
+jobs:
+  sqlite-feeder-sync-recovery:
+    name: SQLite-only feeder, sync and recovery tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact checkout and prepare evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
+          for file in \
+            market_data/feeder.py market_data/sync.py market_data/store.py \
+            market_data/write_gateway.py market_data/test_sync.py \
+            market_data/test_feeder_lease.py market_data/test_feeder_recovery.py; do
+            test -f "$file"
+          done
+          mkdir -p "$RUNNER_TEMP/t0-sqlite-feeder-sync-recovery-artifacts"
+          chmod 0777 "$RUNNER_TEMP/t0-sqlite-feeder-sync-recovery-artifacts"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_commit=$GITHUB_SHA"
+            echo "checked_out_source_sha=$actual"
+            echo "test_scope=SQLite feeder lease, sync ingestion, recovery planner/coordinator"
+            echo "test_modules=market_data.test_sync,market_data.test_feeder_lease,market_data.test_feeder_recovery"
+            echo "expected_tests=31"
+            echo "dependencies=Python standard library only"
+            echo "runner_image=ubuntu-24.04"
+            echo "network_mode=none inside test container"
+            echo "credentials=none"
+            echo "canonical_database_mount=none"
+            echo "feeder_service_runtime=excluded"
+            echo "postgresql=excluded"
+          } > "$RUNNER_TEMP/t0-sqlite-feeder-sync-recovery-artifacts/runner_metadata.txt"
+
+      - name: Verify Docker and pull immutable Python image
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          docker version
+          docker pull --platform linux/amd64 "$PYTHON_IMAGE"
+          docker image inspect --format '{{.Id}} {{json .RepoDigests}}' "$PYTHON_IMAGE" \
+            | tee "$RUNNER_TEMP/t0-sqlite-feeder-sync-recovery-artifacts/container_image.txt"
+
+      - name: Run only the approved SQLite feeder, sync and recovery modules
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/t0-sqlite-feeder-sync-recovery-artifacts"
+          log="$artifacts/unittest.log"
+          if docker run --rm \
+            --platform linux/amd64 \
+            --network none \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --pids-limit 128 \
+            --memory 1g \
+            --cpus 2 \
+            --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$artifacts,dst=/artifacts" \
+            --env HOME=/tmp \
+            --env TMPDIR=/tmp \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace \
+            --workdir /workspace \
+            "$PYTHON_IMAGE" \
+            python -m unittest -v \
+              market_data.test_sync \
+              market_data.test_feeder_lease \
+              market_data.test_feeder_recovery \
+            > "$log" 2>&1; then
+            test_status=0
+          else
+            test_status=$?
+          fi
+          cat "$log"
+          test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
+          {
+            echo "test_command=python -m unittest -v market_data.test_sync market_data.test_feeder_lease market_data.test_feeder_recovery"
+            echo "test_count=${test_count:-NOT_REPORTED}"
+            echo "test_exit_code=$test_status"
+          } >> "$artifacts/runner_metadata.txt"
+          {
+            echo "## T0 SQLite feeder, sync and recovery regression"
+            echo
+            echo "- Run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo "- Exact source SHA: $GITHUB_SHA"
+            echo "- Approved tests: ${test_count:-NOT_REPORTED} (expected 31)"
+            echo "- Scope: SQLite lease/fencing, sync ingestion and recovery planner/coordinator"
+            echo "- PostgreSQL, feeder service runtime and canonical database: excluded"
+            echo "- Network: disabled in test container"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$test_status" -eq 0 && "$test_count" != "31" ]]; then
+            echo "Expected 31 tests; observed ${test_count:-no test summary}." >&2
+            exit 1
+          fi
+          exit "$test_status"
+
+      - name: Upload feeder, sync and recovery evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t0-sqlite-feeder-sync-recovery-evidence
+          path: ${{ runner.temp }}/t0-sqlite-feeder-sync-recovery-artifacts/
+          if-no-files-found: error
+          retention-days: 14
