@@ -149,7 +149,7 @@ jobs:
               print("ccxt_binanceusdm_adapter=available")
               print("gunicorn_import=available")
               PY
-              gunicorn --version
+              python -m gunicorn --version
               python -m pip list --format=freeze
             ' > "$artifacts/fresh-install.log" 2>&1; then
             install_status=0
