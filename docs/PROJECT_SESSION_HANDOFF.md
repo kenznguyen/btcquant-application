@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 SQLite aggregate regression PASS 123/123
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`; pre-handoff tested HEAD `ccf8348e86b637d42343982d306f65c14cf4aaa5`. No new branch/PR split.
+- Added aggregate workflow `.github/workflows/t0-sqlite-aggregate.yml`: commit `ccf8348e86b637d42343982d306f65c14cf4aaa5`; blob `89beb460326015abf5daaaaab606e142b50c486d`.
+- Workflow checks out exact `github.sha`, verifies `HEAD == GITHUB_SHA`, and runs an explicit SQLite-only allowlist: write gateway 14, sync 11, lease 10, recovery 10, target lifecycle 28, source feeder/service lifecycle 34, SQLite API 12, SQLite Storage 4; total **123**.
+- PostgreSQL-specific API/Storage tests are explicitly excluded. No broad test discovery.
+- Authoritative run [44506768218](https://github.com/kenznguyen/btcquant-application/actions/runs/44506768218), job `135500303865`, exact SHA `ccf8348e86b637d42343982d306f65c14cf4aaa5`: SUCCESS, 123/123, 0 failures/errors, 3.259s.
+- Environment: immutable Python 3.12.16 image digest `935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`; actual image ID `sha256:313cf8f190a1abab00472c1f0c950c10486c22114bcd8aef2a8198fb587a6d18`; Docker network none, read-only source/root, non-root, dropped capabilities, no-new-privileges, no credentials, no canonical DB.
+- Artifact `t0-sqlite-aggregate-evidence`, ID `14518344977`, size 4,363 bytes, SHA-256 `2dc7bdc991aa01592bc37bd0b29511599af5612034c0fc0435784634c853aebc`, expires 2026-12-03T10:33:40Z. ZIP independently hashed and payload inspected; metadata confirms exact SHA, 123 tests and exit 0.
+- Evidence report: `docs/evidence/T0_SQLITE_AGGREGATE_REGRESSION_2026-11-19.md`, commit `79a6e55ec74ee735b83a0aed717137565df363f8`.
+- Prior lifecycle source-test preservation remains: target file `market_data/test_feeder_service_lifecycle.py` blob `590c29a0fbf553d19582912a113a92bb74da083f`; source 34 tests plus existing target 28 tests passed in run `44506249466`, exact SHA `9938b01b2b14b651dc7b65f70bef5a446d28594a`.
+- Status: combined SQLite-only T0 regression **PASS 123/123** at exact SHA `ccf8348e86b637d42343982d306f65c14cf4aaa5`. Dependency lock remains verified for CPython 3.12/Linux x86_64 only. PostgreSQL/TimescaleDB, canonical historical data/OOS bundle, production feeder/API startup, systemd, real Binance connectivity, VPS/runtime, deployment and production readiness remain **NOT VERIFIED / NOT CERTIFIED**.
+- No T0 production source, canonical DB/data, runtime, VPS, deployment, T1/T2 or trading path was changed or accessed. No live orders.
+- Next: continue with read-only reconciliation of any remaining source/target T0 file and contract gaps. Do not infer runtime or production readiness from these isolated tests; any canonical-data reacquisition or production runtime activation remains separately gated.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 deterministic feeder lifecycle contracts PASS
 
 - Repository: `kenznguyen/btcquant-application`, existing branch `main`; latest verified pre-handoff HEAD `e1c3d7dc931048de4f3b5319e3b1c64d31abfcc9`. No new branch or PR divergence.
