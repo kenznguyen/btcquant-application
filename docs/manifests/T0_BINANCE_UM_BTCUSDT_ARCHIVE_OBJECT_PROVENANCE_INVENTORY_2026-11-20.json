@@ -5706,5 +5706,16 @@
       "sidecar_object_sha256": "NOT_VERIFIED",
       "sidecar_byte_size": "NOT_VERIFIED"
     }
-  ]
+  ],
+  "approval": {
+    "status": "APPROVED_CONDITIONAL_ON_DESTINATION_PREFLIGHT",
+    "decision_path": "docs/decisions/T0_RECONSTRUCTED_ARCHIVE_MATERIALIZATION_APPROVAL_2026-11-20.md",
+    "decision_commit": "c8793aee2ac3cab5594372e718421c33aa0d46ff",
+    "approved_staging_path": "/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001",
+    "preflight": "PENDING_NOT_RUN",
+    "materialization": "NOT_RUN",
+    "sqlite": "NOT_AUTHORIZED_REQUIRES_SEPARATE_OWNER_APPROVAL",
+    "historical_aggregate_discrepancy": "ACCEPTED_AS_REPORTING_RECONCILIATION_DISCREPANCY_UNKNOWN_ROOT_CAUSE",
+    "new_run_aggregate_policy": "MEASURE_ALL_404_OBJECTS; VERIFY_PER_OBJECT; DO_NOT_REQUIRE_MATCH_TO_HISTORICAL_SUMMARY"
+  }
 }
