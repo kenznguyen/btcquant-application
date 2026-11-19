@@ -205,3 +205,11 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Shared contract helpers moved to `market_data/api_contract.py`; FastAPI no longer imports the WSGI module. Legacy JSON Content-Type and non-GET behavior are covered.
 - Detailed report: [T0 FastAPI Locked Offline CI and Review](evidence/T0_FASTAPI_LOCKED_OFFLINE_CI_AND_REVIEW_2026-11-19.md), commit `2d130f5e0ddb3d7137febc403f53d9709f6d9d78`.
 - Internal review PASS for this bounded scope; independent second review pending. WSGI application/tests remain, so migration status **PARTIAL**. Runtime/deployment remains NOT AUTHORIZED.
+
+
+### Final hardened FastAPI CI — 2026-11-19
+
+- Paired exact SHA `0a4432d8d101381e8b07c88a1a65bbf1ee3a787f`: FastAPI **25/25 PASS**, run [44527300856](https://github.com/kenznguyen/btcquant-application/actions/runs/44527300856); SQLite aggregate **196/196 PASS**, run [44527300813](https://github.com/kenznguyen/btcquant-application/actions/runs/44527300813).
+- Committed runtime/test wheel locks hash-verified. FastAPI tests now execute non-root, read-only, with no network and bounded writable tmpfs.
+- Detailed report: [T0 FastAPI Locked Offline CI and Review](evidence/T0_FASTAPI_LOCKED_OFFLINE_CI_AND_REVIEW_2026-11-19.md), follow-up commit `c2c575dad69c7e4eda2c86df13a324485bd0ee14`.
+- WSGI entrypoint remains. Independent code review pending. Migration PARTIAL; runtime/deployment NOT AUTHORIZED.
