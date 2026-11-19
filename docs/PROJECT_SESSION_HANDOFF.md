@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T0 historical source selection review recorded
+
+- Review: `docs/reviews/T0_RECONSTRUCTED_CANONICAL_SOURCE_SELECTION_REVIEW_2026-11-20.md`, commit `70f6c26b9f205c7d0198c5e58f46308642f5f48f`.
+- Documentation-only comparison of official Binance USD-M REST Klines and Binance Public Data USD-M (`um`) daily/monthly archives.
+- Proposed (not owner-approved): use USD-M archive for bulk history and REST `/fapi/v1/klines` for the latest closed-candle tail; retain per-chunk provenance, compare overlaps, quarantine conflicts.
+- REST docs specify max 1,500 rows and limit-dependent request weight. Archive docs identify `um` vs `cm`, checksum sidecars, daily next-day/monthly first-Monday publication, and possibility of archive corrections.
+- Earliest BTCUSDT M15/H1 archive boundaries, listing completeness, daily/monthly overlap behavior and current latest archive objects remain NOT VERIFIED.
+- Review status: **DOCUMENTATION REVIEW COMPLETE**; source selection **PROPOSED / OWNER APPROVAL PENDING**.
+- No archive index/listing metadata queried, no REST API call, no ZIP/checksum/candle payload downloaded, no raw staging, SQLite, Dropbox, VPS/runtime, writer/feeder or cutover. Tests/workflows NOT RUN; no run/job/artifact.
+- Next gate proposed: separate owner approval for read-only archive index/listing metadata inspection only. No ZIP candle payload or REST klines probe. Bulk reconstruction remains separately gated.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — Reconstructed Canonical workflow design recorded
 
 - Workflow/validation contract: docs/decisions/T0_RECONSTRUCTED_CANONICAL_SQLITE_RECONSTRUCTION_WORKFLOW_2026-11-19.md.
