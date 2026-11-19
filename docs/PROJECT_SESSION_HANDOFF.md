@@ -4545,3 +4545,31 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Status: SQLite API 12/12 PASS; SQLite Storage 4/4 PASS; isolated gate 16/16 PASS. PostgreSQL/TimescaleDB, lifecycle, runtime, canonical data/recovery and production readiness remain NOT TESTED / OUT OF SCOPE / NOT CERTIFIED.
 - Scope guard: no source repo, application production/test source, PostgreSQL, canonical DB/data, VPS, runtime, T1/T2, paper/live trading or execution changed/accessed.
 - Next: read-only review of remaining T0 API/Storage integration dependencies and contract boundaries. Do not broaden test scope without separate approval.
+
+
+# T0 source-to-target parity and sync-test semantic review — 2026-11-19
+
+## Scope
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`.
+- Source: `kenznguyen/btcusdt-telegram-signals2`, branch `feature/t0-centralized-data-feeder-p1-20261101`.
+- Review-only task: compare source/target `market_data/test_sync.py` and the corresponding `market_data/sync.py` plus the SQLite write transaction contract.
+- No source/test implementation, workflow, dependency, canonical data, database, VPS or runtime was changed. No tests were run and no workflow was dispatched.
+
+## Exact provenance
+- Source `test_sync.py` blob: `319e084d9c0a9c5b0319e9bb7d1f93a930564dc8`.
+- Target `test_sync.py` blob: `7621c85a4c7eb2ad233de94da89e6fbb411ea534`.
+- Source and target `sync.py` blob: `e7ad4e6f2074225957b01f74abb0befe37675ea2` (byte-identical).
+- Target `write_gateway.py` blob inspected: `0a77df443ae1a817ea74946fac5dc0f3809ddd83`.
+- Parity audit report: `docs/evidence/T0_SOURCE_TARGET_PARITY_AUDIT_2026-11-19.md`.
+
+## Finding and disposition
+- Target `test_sync.py` retains the reviewed source test cases and adds one focused page-atomicity regression.
+- The added regression proves a failed second page rolls back all inserts from that page, preserves the already committed first page, and does not overwrite a pre-existing conflicting candle.
+- This matches `SQLiteWriteGateway.write_batch`: `BEGIN IMMEDIATE`, transaction-scoped writes, lease revalidation before commit, and rollback on exception.
+- Verdict: **SEMANTIC REVIEW PASS**. Keep target test; do not copy/overwrite from source. No additional test migration is justified by this review.
+- Overall T0 source-only migration remains scoped, not full repository parity. PostgreSQL, Kraken, connectivity diagnostics, process/systemd/VPS, and T0→T2 remain separately gated.
+- Existing aggregate evidence remains 191/191 PASS only at exact tested SHA `42c8172a4b4b0234fa50e64eb6172f970f45ab66`. This documentation update is not a new test run.
+- Status: sync test semantic parity **PASS**; production readiness **NOT CERTIFIED**.
+
+## Next step
+- No further test copying is proposed. Close this source-only parity review unless a concrete missing T0 invariant is identified. Preserve the source branch and all runtime/data restrictions.
