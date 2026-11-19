@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F4-R2 fail-closed implementation GREEN and independently recorded
+
+- Owner explicitly approved phase B after the seven-case phase-A RED matrix.
+- Repository: `kenznguyen/btcquant-application`, existing `main`; final verified source/workflow HEAD before evidence docs: `0d7d8074f1aa23735f9451190044e86aebf002fa`. Evidence commit: `2d06fdea84a92705afb052f9ff7cb751b2df597d`.
+- Production change commit: `be5326f3f34a49d7b7c3b53ccd62fdb903a6b841`; `paper_execution/risk_control.py` blob `c8fe573a7a5b0716159e50a678423e402d7df3ba`.
+- Seven RED tests unchanged: `paper_execution/test_f4_risk_red.py` blob `7e03122ee72cb88cd039d99ca4a9ed6acfe1f656`.
+- `snapshot()` now fails closed for missing table/row, malformed SQLite state, non-domain flags, invalid timestamps and invalid reason types. Arbitrary persisted values are no longer coerced through `bool()`.
+- Dedicated GREEN workflow: `.github/workflows/f4-r2-kill-switch-green.yml` blob `4b6b9d75a981673e1a7e8761c424a3a808a2abd6`; creation commit `fb646cb9b1297fd5db5b8f809cdcb31bc4485e25`; corrected exact source pin commit `0d7d8074f1aa23735f9451190044e86aebf002fa`.
+- Authoritative GREEN run [44486561151](https://github.com/kenznguyen/btcquant-application/actions/runs/44486561151), job `135431373983`, workflow/source HEAD `0d7d8074f1aa23735f9451190044e86aebf002fa`: SUCCESS; **7/7 PASS**, 0 failures, 0 errors; `Ran 7 tests in 0.001s`; Python 3.12.16.
+- Artifact `f4-r2-kill-switch-green-evidence`, ID `14510194136`, 1,180 bytes, SHA-256 `6946394a2a02a8baea772d708c59b1fe6b94951dc5a33d36a1c10dea9b72cfd9`; downloaded ZIP independently hashed to the same SHA-256 and payload inspected.
+- Iteration: initial run `44486491736` failed at source-identity preflight due to incorrect pin; no tests ran and no artifact was produced. Pin corrected and authoritative run `44486561151` passed.
+- Evidence report: `docs/evidence/F4_R2_KILL_SWITCH_GREEN_2026-11-19.md`, commit `2d06fdea84a92705afb052f9ff7cb751b2df597d`.
+- Scope: only `paper_execution/risk_control.py`, dedicated GREEN workflow, and evidence/handoff docs changed. Ledger, Account Risk Contract, API, F4-R1, F4-R3, T0, runtime, canonical DB, VPS, exchange and trading behavior untouched. CI used Docker `--network none`, read-only source mount, no credentials and no canonical DB mount.
+- Status: F4-R2 implementation **PASS**; isolated regression **PASS 7/7**; exact identity/artifact checks **PASS**. F4-R1 preserved. F4-R3 remains **OPEN / NOT VERIFIED / untouched**. Runtime/production operational certification **NOT GRANTED**; no paper/live order execution.
+- Next: preserve this state; F4-R3 requires its own bounded review and explicit approval. Do not infer runtime/trading readiness from the F4-R2 isolated tests.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — F4-R2 phase A RED matrix verified; implementation awaits approval
 
 - Owner explicitly approved phase A only: complete and execute the F4-R2 Kill Switch fail-closed RED specification; report results and wait for separate phase B approval.
