@@ -397,8 +397,17 @@ class FiveLayerApiTest(unittest.TestCase):
             _, result = self.request("/v1/paper/evaluate", "POST", {"source": "CORE"})
         self.assertEqual(result["order"]["status"], "REJECTED")
         self.assertEqual(result["order"]["reason"], "KILL_SWITCH")
-        self.assertEqual(self.request("/v1/paper/reset-kill", "POST",
-                                      {"acknowledge": True})[0], 200)
+        with patch.object(api, "control_readiness", return_value={
+                "ready": True, "checks": {
+                    "closedCandles": True, "orderBook": True,
+                    "noPendingPaperOrders": True, "accountRiskReady": True,
+                },
+            }), \
+             patch("paper_execution.ledger._dual_ledger_migrations_ready", return_value=True), \
+             patch("paper_execution.ledger._read_account_risk_snapshot_connection",
+                   return_value={"riskReady": True}):
+            self.assertEqual(self.request("/v1/paper/reset-kill", "POST",
+                                          {"acknowledge": True})[0], 200)
         # A rejected intent remains idempotently rejected. A fresh Core signal
         # timestamp creates a new signal identity after the operator reset.
         self.core_signal["decisionAtMs"] = self.now-500
