@@ -60,14 +60,29 @@ Paired CI on the exact reviewed source SHA:
 
 ## Findings and required disposition
 
-### R1 — Required: FastAPI CI trigger omits runtime/test dependencies
+### R1 — RESOLVED: FastAPI CI trigger covers runtime/test dependencies
 
-The `.github/workflows/t0-fastapi-migration.yml` push-path filter covers the adapter, shared helper, ASGI test and lock files, but omits files imported or exercised by that suite: at minimum `market_data/storage.py`, `market_data/store.py`, and `market_data/postgres.py`; the test fixture also directly depends on `market_data/feeder.py`, `market_data/write_gateway.py`, and `market_data/sync.py`.
+The push-path filter in `.github/workflows/t0-fastapi-migration.yml` now includes:
+- `market_data/storage.py`
+- `market_data/store.py`
+- `market_data/postgres.py`
+- `market_data/feeder.py`
+- `market_data/write_gateway.py`
+- `market_data/sync.py`
 
-The SQLite aggregate workflow does trigger for some of those files, but its explicit unittest command does not execute `market_data.test_fastapi_api`. Therefore a change to one of these dependencies can run the aggregate suite while silently skipping the FastAPI contract suite. Add the dependency paths to the FastAPI workflow trigger, then make a harmless test-only change or workflow dispatch to prove the expected trigger and both suites on one exact SHA. No production source change is required for this finding.
+The trigger correction was committed on existing `main`:
+- Workflow commit: `3bdcaf093c381b2b767be3c903f9e86d5bf75bde`.
+- Dependency-path trigger proof commit: `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`, which adds only a CI sentinel comment to `market_data/storage.py`; no runtime behavior changed.
+- GitHub recorded both workflows as `push` events for the same exact SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`, proving a dependency-only path change starts the FastAPI workflow as intended.
 
-- Severity: **Required CI coverage correction** before treating the FastAPI workflow as durable regression protection.
-- Status: **OPEN / NOT FIXED**. This review did not modify workflow or source.
+Paired exact-SHA CI:
+- FastAPI: run [44529575151](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575151), job `135579262823`, **25/25 PASS**; artifact `14532693874`, SHA-256 `7bcf6fdd46e8c5e1c81f76bf078377437b81cdbb178a546ce0b18166a8ade5f5`.
+- SQLite aggregate: run [44529575307](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575307), job `135579168097`, **196/196 PASS**; artifact `14531469720`, SHA-256 `93f30f492c9006a995c1f6248101080a3c2238be9d0530ab04421ce41f0580e8`.
+- Both workflow metadata files independently record `workflow_commit` and `checked_out_source_sha` as `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`.
+- FastAPI test lock SHA-256 remains `2916098771a482a21637b94fff1f79afc0ddeb37a2a01fdae05032509a889cb6`; runtime lock SHA-256 remains `fb4cf8f63131cb36636b3c3230378a49bfb2d3a56b8750778ed5b3b5dac8d786`.
+
+- Severity: **Required CI coverage correction**.
+- Status: **CLOSED / VERIFIED** for the six identified dependency paths and the paired exact-SHA test run.
 
 ### R2 — Nit: stale test module docstring
 
@@ -83,9 +98,8 @@ The SQLite aggregate workflow does trigger for some of those files, but its expl
 
 **INTERNAL SELF-REVIEW: PASS WITH REQUIRED CI ACTION ITEM.**
 
-The inspected API implementation has no identified blocking contract defect, but the FastAPI CI trigger has a regression-coverage gap (R1). The 25/25 and 196/196 results remain valid for their exact historical SHA; they do not prove the missing trigger behavior. This is not an independent review, runtime verification, completed migration or production-readiness certification.
+The inspected API implementation has no identified blocking contract defect, and the required CI trigger correction (R1) is now verified by a dependency-only push and paired exact-SHA CI. This is not an independent review, runtime verification, completed migration or production-readiness certification.
 
 Next gates:
-1. Correct and verify the FastAPI CI dependency-path triggers.
-2. Obtain an actual independent reviewer sign-off against the source diff.
-3. Only after both gates and owner approval, propose the bounded WSGI/Gunicorn retirement.
+1. Obtain an actual independent reviewer sign-off against the source diff and the updated trigger workflow.
+2. Only after independent review and owner approval, propose the bounded WSGI/Gunicorn retirement.
