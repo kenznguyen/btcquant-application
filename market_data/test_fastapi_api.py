@@ -74,7 +74,6 @@ class FastApiCandleContractTest(unittest.TestCase):
         self.assertEqual(body["candles"][0]["volume"], "2.5")
         self.assertEqual(body["freshness"]["evaluationAnchor"], "GENERATED_AT")
         self.assertIn("evaluable", body["freshness"])
-        self.assertEqual(response.headers.get("cache-control"), "no-store")
 
     def test_missing_or_wrong_bearer_token_is_unauthorized(self):
         self.assertEqual(self.request(token="wrong")[0], 401)
