@@ -113,12 +113,15 @@ class FeederSchedulerLifecycleTest(unittest.TestCase):
             close_grace_seconds=5,
             timeframes=timeframes,
         )
-        return FeederScheduler(
+        clock_value = [BASE]
+        scheduler = FeederScheduler(
             config=config,
-            clock=lambda: now_ms,
+            clock=lambda: clock_value[0],
             sync_callback=sync,
             coverage_reader=coverage,
         )
+        clock_value[0] = now_ms
+        return scheduler
 
     def test_close_grace_excludes_candle_until_boundary_is_reached(self):
         before_grace = BASE + M15 + 4_999
