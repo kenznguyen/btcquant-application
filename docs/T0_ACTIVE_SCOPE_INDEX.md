@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — 404-object provenance inventory and materialization approval proposal prepared
+
+- Inventory: `docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json`, commit `dc8fc0e2ba019bda2dba6a15e4b8d6fb99669c17`. Contains 404 identities: 202 ZIP + 202 paired checksum sidecars.
+- ZIP provenance: 202/202 records include key, timeframe, partition/period, bytes, SHA-256, CSV row count and PASS; 202/202 ZIP hashes matched paired sidecar digests in historical validation.
+- Sidecar limitation: all 202 keys are paired deterministically as ZIP key + `.CHECKSUM`; individual sidecar byte sizes and payload SHA-256 were not retained in historical evidence and remain NOT VERIFIED. Inventory status is IDENTITY COMPLETE / METADATA PARTIAL, not complete independent metadata for every sidecar.
+- Manifest cross-reference update: `docs/manifests/T0_RECONSTRUCTED_BTCUSDT_M15_H1_MANIFEST_DRAFT.json`, commit `624bcc4e09abe222b5f282e30ff4263bd243f7c7`. Remains DRAFT_NOT_FOR_DATABASE_BUILD; SQLite NOT_CREATED_NOT_AUTHORIZED.
+- Staging plan cross-check: `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md`, commit `efebc9fdb07d06047afa756e47c6a2cbdf076a7d`. Inventory count and ZIP metadata reconcile; sidecar metadata limitation is explicit.
+- Separate materialization approval proposal: `docs/plans/T0_RECONSTRUCTED_ARCHIVE_MATERIALIZATION_APPROVAL_REQUEST_2026-11-20.md`, commit `5072f312584b321238e07c794cccaeb6e08f3432`. Proposal only; exact 404 allowlist, official source, 100 MiB hard cap, owner-specified new local destination, per-sidecar hash/size measurement, preserve-until-review retention and explicit exclusions.
+- Current state: DOCUMENTATION / STATIC CROSS-CHECK PASS; raw materialization NOT AUTHORIZED / NOT RUN. The prior temporary Firecrawl staging is ephemeral and treated as unavailable; any future run is a fresh bounded retrieval requiring explicit approval.
+- No source archive was accessed, no raw bytes materialized, no SQLite created/opened/modified, no Dropbox/VPS/runtime/feeder/writer/lease/restore/deployment/cutover. No code/schema/dependency/tests/workflows changed or run; no Actions run/job/artifact.
+- REST tail remains NOT VERIFIED and closed by owner decision. No retry, alternate endpoint/domain, proxy or geo-routing.
+- Next gate: owner reviews and explicitly approves or rejects the materialization proposal, including exact local destination. SQLite creation/writes remain a separate later approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Owner accepts RECONSTRUCTED partial archive coverage; SQLite remains gated
 
 - Owner decision: `docs/decisions/T0_RECONSTRUCTED_PARTIAL_COVERAGE_ACCEPTANCE_2026-11-20.md`, commit `1a1910648bba711710b6f159d539f1f8a4ab209c`.
