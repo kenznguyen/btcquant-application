@@ -64,6 +64,7 @@ class FastApiCandleContractTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"ok": True, "service": "canonical-market-data"})
         self.assertEqual(response.headers.get("cache-control"), "no-store")
+        self.assertEqual(response.headers.get("content-type"), "application/json; charset=utf-8")
 
     def test_candle_response_preserves_contract_110_and_decimal_strings(self):
         evaluation = self.start + self.interval + 1_000
