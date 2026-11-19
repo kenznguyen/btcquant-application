@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F4 snapshot migrated, NOT VERIFIED
+
+- Owner approved a provenance-controlled F4 snapshot transfer to the official application repository. This explicitly supersedes the earlier audit's recommendation to defer migration; it does not approve execution.
+- Target: `kenznguyen/btcquant-application`, existing `main`; parent SHA `a55ecccde7fd3e308fd54223f947cd3820ac7ac0`.
+- Source: `kenznguyen/btcusdt-telegram-signals2`, branch `feature/t0-centralized-data-feeder-p1-20261101`, exact HEAD `5223cef02f0e296c4f58afc5d7992b9c641ab208`.
+- Migration evidence: `docs/evidence/F4_SNAPSHOT_MIGRATION_2026-11-19.md` (included in this commit).
+- Transferred 39 files: complete `paper_execution/` package, selected pipeline/API/Core/decision/value contracts and tests, risk policy, and Core-First architecture records. Per-file source blob SHAs are recorded in the report and match target blobs.
+- No legacy Git history, legacy workflows, dependency manifests, DB/data payloads, runtime configuration, or unrelated legacy components were copied. T0 assets were not changed; legacy source repo was not changed.
+- F4-R1/R2/R3 remain open and uncorrected. RED tests are specifications only; no test or workflow was run.
+- Core-First remains controlling: Strategy Core only in paper path; AI offline research only; no AI Ledger entries or paper orders; `AI_EXECUTION_ENABLED=false`.
+- Dependency closure, target integration and exact-target-SHA CI: NOT VERIFIED. Runtime/database/VPS/exchange: NOT ACCESSED. Paper execution: NOT AUTHORIZED. Live trading: PROHIBITED.
+- Status: source snapshot MIGRATED; functional verification NOT VERIFIED; production NOT CERTIFIED.
+- Next: read-only target verification of all transferred blob identities and dependency/import closure. Separate approval is required before tests, F4 corrections, workflow changes or runtime work.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — F2 isolated feeder lifecycle suite PASS
 
 - Owner approved F2 test-only on the existing `main`: add `market_data/test_feeder_lifecycle.py`, update the isolated SQLite/API workflow, run CI, preserve evidence and handoff. No production source behavior was authorized or changed.
