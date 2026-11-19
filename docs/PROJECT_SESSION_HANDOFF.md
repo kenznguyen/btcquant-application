@@ -4821,3 +4821,21 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - No FastAPI/WSGI implementation behavior, dependency locks, canonical SQLite, writer/lease/feeder/recovery, T1/T2, PostgreSQL, runtime, endpoint, VPS, systemd, deployment, retention/deletion or trading changed or accessed.
 - Current status: differential test **ADDED**; C1 **OPEN / NOT VERIFIED**; independent second-person review **PENDING**; WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
 - Next step: inspect exact-SHA GitHub Actions runs, job logs and artifacts; correct only any demonstrated test/CI issue, then record final C1 disposition with exact run IDs, artifact IDs and digests.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — C1 parity CI VERIFIED / CLOSED
+
+- Exact tested source SHA: `62054b53119308eca9d2256dcd5aae5561da235b`, branch `main`.
+- FastAPI workflow [44534512421](https://github.com/kenznguyen/btcquant-application/actions/runs/44534512421), job `135596271306`: **26/26 PASS**. Log explicitly shows the WSGI–FastAPI differential test `test_same_fixture_has_identical_status_headers_and_body_for_contract_cases ... ok`, `Ran 26 tests`, `OK`.
+- FastAPI artifact `14533664834`; SHA-256 `555c63db97aa8466857cb4dd84728808989edc8107b25af0af31336bd3e84883`. Downloaded and inspected. Metadata confirms `workflow_commit` and `checked_out_source_sha` both equal the exact source SHA; `test_count=26`; `test_exit_code=0`.
+- SQLite aggregate workflow [44534512612](https://github.com/kenznguyen/btcquant-application/actions/runs/44534512612), job `135596271401`: **196/196 PASS**, `Ran 196 tests` / `OK`.
+- SQLite artifact `14534628423`; SHA-256 `8e9c5274d48a44bb779bdd1db4119d3a83f1873c61ff889b769fc03fd6a0cfb0`. Downloaded and inspected; metadata confirms exact source SHA and expected 196 tests.
+- Both Actions runs are push events on `main`, and both `head_sha` values exactly match `62054b53119308eca9d2256dcd5aae5561da235b`.
+- C1 (missing WSGI–FastAPI same-fixture differential test): **CLOSED / VERIFIED** for the ten explicitly enumerated contract cases. This is not a claim of exhaustive equivalence for every possible request or environment.
+- D1 clean runtime-only install smoke test remains **NOT VERIFIED**. Independent second-person review remains **PENDING**; same-assistant review and CI evidence are not independent review.
+- WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+- No API implementation behavior, canonical SQLite, writer/lease/feeder/recovery, T1/T2, PostgreSQL, VPS/systemd, runtime/deployment, retention/deletion or trading changes.
+- Active scope index updated in commit `b6f14ed7306796aee0a47cee5bb097876d9f30e5`.
+- Next permitted step: retain current source and seek actual second-person review against the review package. Do not retire WSGI/Gunicorn until that reviewer has accepted the parity evidence and remaining findings.
