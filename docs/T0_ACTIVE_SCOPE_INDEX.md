@@ -1,3 +1,15 @@
+### Independent Review package refreshed — READY TO ASSIGN — 2026-11-19
+
+- Refreshed `docs/reviews/T0_FASTAPI_INDEPENDENT_REVIEW_PACKAGE_2026-11-19.md`, commit `50d6fc71629ab03f9841959e0900dba50107425f`, blob `ec5f86bb4a5165cb8a66609cf0c6ff8eebc74f0c`.
+- Exact tested implementation/workflow SHA: `a92cca39a3c23c3325191922c80e73b81384d9ce`; review snapshot before package refresh: `71be9bf1b477577643c557e69727bb92dec0c011`.
+- Tested SHA to review snapshot: 3 ahead / 0 behind; only three documentation files changed. No executable source/test/workflow/dependency drift.
+- Exact-SHA FastAPI workflow `44538454822`: contract job `135610069787` success, artifact `14535834201`, SHA-256 `350db8e7ec0dd7a876d814b8116306a37b3ca8c89ae7f826d9acf656db952983`; runtime job `135610069433` success, artifact `14536258780`, SHA-256 `b705d5c57283eff983d6d16e9301e2b9f882eaf8c038a2d058499864ebfefba7`.
+- Exact-SHA SQLite aggregate workflow `44538454988`, job `135610069795` success, artifact `14536023784`, SHA-256 `a3ed69d72ceec7bf06e4a5c790d5b00f16f9ca46104e6a8a77e2e8a2d95d07a1`.
+- C1 remains CLOSED / VERIFIED for ten enumerated cases; D1 CLOSED / PASS for runtime-lock installation, dependency check, ASGI import and in-process health; C2 CLOSED / VERIFIED for workflow path config and push-triggered success, with api.py-only trigger simulation not performed.
+- Independent second-person reviewer **NOT YET ASSIGNED**. Package readiness is not independent review approval.
+- WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+- Documentation-only preparation. No tests/workflows run or dispatched; no source, runtime, data or trading changes.
+
 ### FastAPI C2 workflow trigger correction — CLOSED / VERIFIED — 2026-11-19
 
 - User-approved workflow-only fix: added `market_data/api.py` to `.github/workflows/t0-fastapi-migration.yml` `on.push.paths`.
