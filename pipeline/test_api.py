@@ -13,6 +13,7 @@ from futures_intelligence.import_collector import build_snapshot
 from market_data.store import Candle, CandleStore, read_window
 from market_data.test_support import seed_candles
 from pipeline import api
+from paper_execution.risk_contract import read_account_risk_contract, update_account_risk_contract
 
 
 class FiveLayerApiTest(unittest.TestCase):
@@ -347,6 +348,15 @@ class FiveLayerApiTest(unittest.TestCase):
         self.request("/v1/equity")
         with sqlite3.connect(self.db) as connection:
             connection.execute("UPDATE paper_state SET realized='-25' WHERE id=1")
+        contract = read_account_risk_contract(self.db)
+        update_account_risk_contract(
+            self.db,
+            {"maxDrawdownPct": "20", "maxDailyLossUsdt": "10", "maxExposureUsdt": "1000"},
+            expected_contract_hash=contract["contractHash"],
+            source="API_TEST_ACCOUNT_POLICY",
+            reason="Exercise account-level drawdown enforcement",
+            recorded_at_ms=self.now + 1,
+        )
         with patch.dict(os.environ,{"PAPER_MAX_DRAWDOWN_PCT":"20","PAPER_MAX_DAILY_LOSS_USDT":"10","PAPER_MAX_EXPOSURE_USDT":"1000"}):
             with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
                 code, result = self.request("/v1/paper/evaluate","POST",{"source":"CORE"})
