@@ -21,3 +21,14 @@
 - Updated internal review report in commit `608caa27910816e549fb109448004b1e080985b0`; R1 status **CLOSED / VERIFIED**.
 - Scope: no FastAPI/SQLite runtime behavior changed; no canonical DB, feeder runtime, VPS, T1/T2, PostgreSQL, endpoint, deployment or trading access.
 - Remaining gates: independent second-reviewer sign-off is still **PENDING**; WSGI/Gunicorn retirement is **NOT APPROVED**; runtime/deployment is **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+
+
+### FastAPI follow-up internal self-review — 2026-11-19
+
+- Re-reviewed current source/workflow at main HEAD `324fe0112c7c1d1a4c7e59aff29797c2f3cad3f4`; compared with tested source SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`: four documentation-only commits, no source/workflow drift.
+- Re-read FastAPI adapter, shared contract helper, ASGI tests, WSGI adapter, storage and SQLite/PostgreSQL adapters, fixture dependencies, locks/hash manifest and workflow filters.
+- R1 dependency trigger: **CLOSED / VERIFIED**. FastAPI 25/25 and SQLite aggregate 196/196 remain PASS on exact SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`; runs `44529575151` and `44529575307`.
+- No new blocking API correctness/security issue found in bounded static review. No CVE research, dynamic pentest, load test, reverse-proxy or runtime validation performed.
+- R2 stale docstring in `market_data/test_fastapi_api.py` (“not-yet-created ASGI app”): **OPEN / NON-BLOCKING NIT**; no source edit made.
+- Current verdict: internal self-review **PASS WITH NON-BLOCKING NIT**; independent second review **PENDING**.
+- WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
