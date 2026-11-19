@@ -3745,3 +3745,17 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - No code/dependency/workflow changes, test execution, workflow dispatch, database/data copy, runtime access or source repository mutation occurred.
 - Status: selected-file snapshot PASS; dependency closure BLOCKED/NOT VERIFIED; PostgreSQL migration completeness BLOCKED; tests NOT RUN; runtime NOT VERIFIED; production NOT CERTIFIED.
 - Next gate: bounded source-to-target reconciliation of missing T0 files, classifying SQLite baseline vs optional PostgreSQL vs out-of-scope. Do not install packages, copy missing files, run tests or dispatch workflows until that scope is explicitly approved.
+
+
+## 2026-11-19 — T0 Missing-File Reconciliation
+
+- Owner approved a bounded read-only reconciliation and then approved recording its result on the existing target `main`.
+- Evidence report: `docs/evidence/T0_MISSING_FILE_RECONCILIATION_2026-11-19.md`.
+- Report commit: `b6f6087cbdd2eabc5bbd5ca29232465514eb5873`.
+- Source: `kenznguyen/btcusdt-telegram-signals2`, branch `feature/t0-centralized-data-feeder-p1-20261101`; code baseline `eb91528bab2b994f283dbe34cd7b0bcbfe406cb5`; documentation/evidence HEAD `8623d1076d6b821091ff9da0d84033f48fd8ba7a`.
+- Exact source blob SHAs for two SQLite/API regression candidates, four PostgreSQL/TimescaleDB migrations, and the TimescaleDB integration test are recorded in the report.
+- Classification: `test_sync.py` and `test_api.py` are SQLite/API regression candidates; four SQL migration files and `test_timescaledb.py` are optional PostgreSQL/TimescaleDB assets. No `market_data/__init__.py` existed at the inspected source baseline.
+- Dependency closure remains NOT VERIFIED: source `requirements.txt` omits lazily imported `ccxt` and `psycopg`; compatible versions and minimum Python remain unresolved.
+- Status: source-to-target inventory PASS; classification PASS; missing-file SHA identification PASS; dependency closure NOT VERIFIED; SQLite test parity PARTIAL; PostgreSQL migration completeness BLOCKED; tests/workflows NOT RUN; runtime/canonical database NOT VERIFIED; production NOT CERTIFIED.
+- No missing files copied, packages installed, tests/workflows run, source/application behavior changed, or runtime/database/canonical data accessed. Source repository unchanged.
+- Next proposed gate: separately approve copying only `market_data/test_sync.py` and `market_data/test_api.py`, after import/isolation review. PostgreSQL assets remain excluded pending an explicit PostgreSQL decision and disposable test target.
