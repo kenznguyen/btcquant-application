@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — FastAPI C2 remediated
+
+- C2 finding: **CLOSED / VERIFIED for workflow path-filter configuration and successful push-triggered CI**.
+- User approved a bounded workflow-only correction. Added `market_data/api.py` exactly once to `.github/workflows/t0-fastapi-migration.yml` `on.push.paths`.
+- Workflow-only commit / tested head SHA: `a92cca39a3c23c3325191922c80e73b81384d9ce`; workflow blob `7dabf111a2b89e22a80c3e02a5cf7f65a667095b`.
+- Diff from previous HEAD `53ffd0576ad045f1f5b4477f4af765958d06a2db`: one workflow file, +1/-0. No source/test/dependency/runtime/data edits.
+- FastAPI workflow [44538454822](https://github.com/kenznguyen/btcquant-application/actions/runs/44538454822): **success** on exact SHA; contract job `135610069787`, runtime-lock smoke job `135610069433`; artifacts `14535834201` (SHA-256 `350db8e7ec0dd7a876d814b8116306a37b3ca8c89ae7f826d9acf656db952983`) and `14536258780` (SHA-256 `b705d5c57283eff983d6d16e9301e2b9f882eaf8c038a2d058499864ebfefba7`).
+- SQLite aggregate workflow [44538454988](https://github.com/kenznguyen/btcquant-application/actions/runs/44538454988): **success** on exact SHA; job `135610069795`; artifact `14536023784`, SHA-256 `a3ed69d72ceec7bf06e4a5c790d5b00f16f9ca46104e6a8a77e2e8a2d95d07a1`.
+- Evidence addendum: `docs/evidence/T0_FASTAPI_ADVERSARIAL_SELF_REVIEW_FOLLOWUP_2026-11-19.md`, commit `7ceea5a826b27242fa671948304aef225318892c`.
+- Qualification: push commit changed the workflow file itself, which is also a configured trigger. No api.py-only commit was made because the approved scope prohibited changing WSGI implementation; isolated api.py-only trigger simulation remains NOT PERFORMED.
+- Independent second-person review remains **PENDING**. WSGI/Gunicorn retirement **NOT APPROVED**. Uvicorn socket/Nginx/VPS/endpoint runtime and deployment **NOT AUTHORIZED**. Production readiness **NOT CERTIFIED**.
+- No FastAPI/WSGI application source, tests, dependencies, runtime, canonical SQLite, feeder/writer/lease/recovery, T1/T2, PostgreSQL, retention/deletion or trading changes.
+- Next step: arrange genuine independent second-person review. Preserve all runtime/deployment/trading gates.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — FastAPI adversarial self-review C2 finding
 
 - Review report: `docs/evidence/T0_FASTAPI_ADVERSARIAL_SELF_REVIEW_FOLLOWUP_2026-11-19.md`, commit `2815e6f4917f74679c19e88026c433e6258538fc`.
