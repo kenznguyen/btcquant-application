@@ -24,6 +24,10 @@ class PaperLedgerTest(unittest.TestCase):
             recorded_at_ms=self.now,
         )
         self.ledger = PaperLedger(self.path, max_position_base="1", fee_rate="0.001")
+        self.ledger.record_equity(
+            "100", self.now - 960_000, self.now - 900_001,
+            "sha256:paper-ledger-risk-baseline", "100",
+        )
 
     def intent(self, identifier="intent-1", target="0.1", limit="100.1"):
         return dict(intentId=identifier, symbol="BTCUSDT", exchange="binance", marketType="USDT_PERPETUAL",
