@@ -4744,7 +4744,7 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Workflow correction commit: `3bdcaf093c381b2b767be3c903f9e86d5bf75bde`.
 - Trigger proof commit: `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`, a harmless comment-only sentinel in `market_data/storage.py`. GitHub recorded both FastAPI and SQLite aggregate workflows as push-triggered runs on that exact SHA.
 - Paired FastAPI run [44529575151](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575151), job `135579262823`: **25/25 PASS**; artifact `14532693874`, SHA-256 `7bcf6fdd46e8c5e1c81f76bf078377437b81cdbb178a546ce0b18166a8ade5f5`.
-- Paired SQLite aggregate run [44529575307](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575307), job `135579168097`: **196/196 PASS**; artifact `14531469720`, SHA-256 `93f30f492c9006a995c1f6248101080a3c2238be9d053f58c4200ea5f206f7f23`.
+- Paired SQLite aggregate run [44529575307](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575307), job `135579168097`: **196/196 PASS**; artifact `14531469720`, SHA-256 `93f30f492c9006a995c1f6248101080a3c2238be9d0530ab04421ce41f0580e8`.
 - Both jobs checked out exact source SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`; artifact metadata confirms 25/196 tests respectively and exit code 0.
 - Review report updated in commit `608caa27910816e549fb109448004b1e080985b0`; T0 active scope index updated in commit `1743ecb77b9a5577ab199d3a06323e632ac432b1`. Finding R1 is **CLOSED / VERIFIED**.
 - Scope status: FastAPI contract **25/25 PASS**; SQLite aggregate **196/196 PASS**; dependency-path trigger proof **PASS**.
