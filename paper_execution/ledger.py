@@ -1541,12 +1541,14 @@ def cancel_dual_order(db_path, order_id, now_ms, *, expected_strategy_id=None):
 
 
 class PaperLedger:
-    def __init__(self, db_path, *, max_position_base="0.01", fee_rate="0.0005", max_spread_bps="50", risk_limits=None, require_risk_limits=False, leverage="13", strategy_id="MANUAL", source_sha=None, apply_migrations=True):
+    def __init__(self, db_path, *, max_position_base="0.01", fee_rate="0.0005", max_spread_bps="50", risk_limits=None, require_risk_limits=True, leverage="13", strategy_id="MANUAL", source_sha=None, apply_migrations=True):
         self.path = Path(db_path)
         self.maximum, self.fee_rate, self.spread = number(max_position_base), number(fee_rate), number(max_spread_bps)
         if risk_limits is not None:
             raise ValueError("ACCOUNT_RISK_CONTRACT_CALLER_LIMITS_FORBIDDEN")
-        self.risk_limits, self.require_risk_limits = None, bool(require_risk_limits)
+        if require_risk_limits is not True:
+            raise ValueError("ACCOUNT_RISK_CONTRACT_REQUIRED")
+        self.risk_limits, self.require_risk_limits = None, True
         self.leverage = number(leverage)
         if strategy_id not in {"MANUAL", *DUAL_STRATEGIES}:
             raise ValueError("Invalid paper ledger strategy scope")
