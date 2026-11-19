@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Independent Review package refreshed and ready to assign
+
+- Repository: `kenznguyen/btcquant-application`, branch `main`.
+- Reviewer package refreshed: `docs/reviews/T0_FASTAPI_INDEPENDENT_REVIEW_PACKAGE_2026-11-19.md`, package commit `50d6fc71629ab03f9841959e0900dba50107425f`, blob `ec5f86bb4a5165cb8a66609cf0c6ff8eebc74f0c`.
+- Exact tested implementation/workflow SHA: `a92cca39a3c23c3325191922c80e73b81384d9ce`.
+- Review snapshot before package refresh: `71be9bf1b477577643c557e69727bb92dec0c011`; compare is 3 ahead / 0 behind and contains only documentation changes in handoff, active scope index and C2 evidence report. No source/test/workflow/dependency drift.
+- Exact-SHA CI: FastAPI workflow [44538454822](https://github.com/kenznguyen/btcquant-application/actions/runs/44538454822), contract job `135610069787` success, artifact `14535834201`, SHA-256 `350db8e7ec0dd7a876d814b8116306a37b3ca8c89ae7f826d9acf656db952983`; runtime-only job `135610069433` success, artifact `14536258780`, SHA-256 `b705d5c57283eff983d6d16e9301e2b9f882eaf8c038a2d058499864ebfefba7`.
+- SQLite aggregate workflow [44538454988](https://github.com/kenznguyen/btcquant-application/actions/runs/44538454988), job `135610069795` success, artifact `14536023784`, SHA-256 `a3ed69d72ceec7bf06e4a5c790d5b00f16f9ca46104e6a8a77e2e8a2d95d07a1`.
+- Package distinguishes verified scope from limitations: C1 ten-case parity; D1 runtime-lock install/import/in-process health only; C2 push-triggered workflow success, but api.py-only trigger not separately simulated. Reviewer must inspect exact latest logs/artifacts and independently verify.
+- Review package is **READY TO ASSIGN**. Independent reviewer is **NOT YET ASSIGNED**; no independent verdict or sign-off exists.
+- Review independence requirement: reviewer must not have authored implementation/tests/workflow or prior self-reviews; must record identity/conflicts, inspected SHA/files, evidence, severity-tagged findings, six separate assessment areas, verdict and WSGI/Gunicorn retirement recommendation.
+- This preparation changed documentation only. No source/tests/workflows/dependencies/runtime/canonical SQLite/feeder/writer/lease/recovery/T1/T2/PostgreSQL/retention/trading changes; no tests or workflows dispatched.
+- WSGI/Gunicorn retirement **NOT APPROVED**. Uvicorn socket, Nginx, VPS/systemd, endpoint runtime and deployment **NOT AUTHORIZED / NOT VERIFIED**. Production readiness **NOT CERTIFIED**.
+- Next step: assign the package to a genuinely independent reviewer and receive their signed report tied to the exact tested SHA. Preserve all runtime/deployment/trading gates.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — FastAPI C2 remediated
 
 - C2 finding: **CLOSED / VERIFIED for workflow path-filter configuration and successful push-triggered CI**.
