@@ -1,5 +1,7 @@
 """Behavioral tests for the canonical T0 write gateways."""
 import sqlite3
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -226,6 +228,63 @@ os._exit(0)
         with self.assertRaisesRegex(FileNotFoundError, "must already exist"):
             SQLiteWalKeeper(missing)
         self.assertFalse(missing.exists())
+
+
+    def test_gateway_rejects_incompatible_feeder_leases_schema(self):
+        malformed = Path(self.temp.name) / "malformed-leases.sqlite3"
+        CandleStore(malformed)
+        with sqlite3.connect(malformed) as connection:
+            connection.execute(
+                "CREATE TABLE feeder_leases (lease_name TEXT PRIMARY KEY, owner TEXT)"
+            )
+        fake_lease = type("LeaseRef", (), {
+            "db_path": str(malformed),
+            "lease_name": "binance-btcusdt-canonical",
+        })()
+        with self.assertRaisesRegex(ValueError, "feeder_leases"):
+            SQLiteWriteGateway(
+                store=CandleStore(malformed), lease_store=fake_lease,
+                owner_id="worker-A", generation_provider=lambda: 1,
+                clock=lambda: NOW,
+            )
+
+    def test_sqlite_runtime_dependency_closure_without_site_packages(self):
+        database = str(Path(self.temp.name) / "dependency-closure.sqlite3")
+        script = r"""
+import sys
+sys.dont_write_bytecode = True
+from market_data import api, feeder_service, storage
+from market_data.feeder import LeaseStore
+from market_data.store import Candle, INTERVAL_MS
+from market_data.storage import create_store
+from market_data.write_gateway import SQLiteWriteGateway
+
+path = sys.argv[1]
+store = create_store("sqlite", sqlite_path=path)
+store.initialize()
+leases = LeaseStore(path)
+lease = leases.acquire("dependency-closure-test", 0, ttl_seconds=3600)
+step = INTERVAL_MS["15m"]
+gateway = SQLiteWriteGateway(
+    store=store, lease_store=leases, owner_id="dependency-closure-test",
+    generation_provider=lambda: lease.generation, clock=lambda: 1,
+)
+assert gateway.write_batch([
+    Candle("15m", 0, "100", "102", "99", "101", "1", step + 1)
+]) == 1
+assert store.read_window("BTCUSDT", "15m", 0, step)["coverage"]["returned"] == 1
+print("SQLITE_RUNTIME_IMPORT_AND_WRITE_WITHOUT_SITE_PACKAGES=PASS")
+"""
+        result = subprocess.run(
+            [sys.executable, "-S", "-c", script, database],
+            cwd=Path(__file__).resolve().parents[1],
+            capture_output=True, text=True, timeout=15,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            "SQLITE_RUNTIME_IMPORT_AND_WRITE_WITHOUT_SITE_PACKAGES=PASS",
+            result.stdout,
+        )
 
 
 class ShadowWriteGatewayTest(unittest.TestCase):
