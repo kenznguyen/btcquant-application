@@ -43,13 +43,13 @@ Core production modules in the target include:
 - `market_data/write_gateway.py`
 - `market_data/api.py`
 
-The aggregate SQLite-only workflow runs an explicit 191-test allowlist covering initializer/store/fencing, API/Storage, write gateway, sync, lease/recovery, health, retry, scheduler, controlled ingestion and deterministic lifecycle.
+The aggregate SQLite-only workflow runs an explicit 196-test allowlist covering initializer/store/fencing, API/Storage, write gateway, sync, lease/recovery, health, retry, scheduler, controlled ingestion and deterministic lifecycle.
 
 Latest aggregate evidence:
 - Workflow: [T0 SQLite-only aggregate](https://github.com/kenznguyen/btcquant-application/actions/workflows/t0-sqlite-aggregate.yml)
-- Run: [44507725020](https://github.com/kenznguyen/btcquant-application/actions/runs/44507725020)
-- Exact tested SHA: `42c8172a4b4b0234fa50e64eb6172f970f45ab66`
-- Result: 191/191 PASS.
+- Run: [44515824622](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824622)
+- Exact tested SHA: `8f49439fafc95186a8c854fe482aad707525a658`
+- Result: 196/196 PASS.
 
 This is isolated contract-test evidence only. It does not establish current data availability, process startup, exchange connectivity, deployment or production readiness.
 
@@ -79,7 +79,7 @@ This is isolated contract-test evidence only. It does not establish current data
 
 | Area | Status |
 |---|---|
-| Selected SQLite-only T0 contracts | PASS 191/191 |
+| Selected SQLite-only T0 contracts | PASS 196/196 |
 | Dependency lock | PASS for CPython 3.12 / Linux x86_64 |
 | Source/target provenance | PARTIAL; documented per selected file |
 | Canonical historical data/OOS bundle | BLOCKED / NOT PRESENT IN TARGET REPO |

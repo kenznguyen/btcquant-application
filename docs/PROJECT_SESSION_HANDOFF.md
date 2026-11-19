@@ -1,7 +1,7 @@
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 Availability & Freshness Contract 1.1.0 PASS
 
 - Repository: `kenznguyen/btcquant-application`, existing branch `main`.
-- Final exact HEAD / aggregate checkout SHA: `8f49439fafc95186a8c854fe482aad707525a658`.
+- Exact source SHA tested by aggregate run: `8f49439fafc95186a8c854fe482aad707525a658`. The documentation-only base HEAD before this handoff update is `de9a8a58be2e05fd10882700d0d213320cc72f4d`; no source/test code changed after the tested SHA.
 - Work item: `T0 Availability & Freshness Contract Audit`; approved bounded scope completed. No new branch or PR divergence.
 - API implementation commit: `c82530153c63b7c6eb17782f6e95def0817a7afb`; API blob `4f923d400b8e133a602cec7239982fdf357e9e21`.
 - Final regression fixture commit: `8f49439fafc95186a8c854fe482aad707525a658`; test blob `add00a2a91899d8e496df5b64c122442fc7c65c9`.
