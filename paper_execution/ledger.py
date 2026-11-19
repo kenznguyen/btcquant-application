@@ -298,10 +298,7 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
             raise sqlite3.DatabaseError(f"ACCOUNT_RISK_{field}_INVALID")
         return value
 
-    uri = path.as_uri() + "?mode=ro"
     db.row_factory = sqlite3.Row
-    db.execute("PRAGMA query_only=ON")
-    db.execute("BEGIN")
     required_migrations = (
         (MIGRATION_VERSION, MIGRATION_CHECKSUM),
         (LEGACY_BOOK_MIGRATION_VERSION, LEGACY_BOOK_MIGRATION_CHECKSUM),
