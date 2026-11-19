@@ -136,13 +136,22 @@ Before execution it must include:
 
 Database/snapshot/restore fields remain null or NOT_RUN until those phases are separately approved and actually executed.
 
+## 7A. Provenance inventory result — 2026-11-20
+
+- Machine-readable inventory: `docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json` (404 records: 202 ZIP + 202 paired `.CHECKSUM` sidecars).
+- ZIP records: all 202 have object key, byte size, SHA-256, timeframe, period, CSV row count and PASS validation; 202/202 SHA-256 values matched the paired sidecar.
+- Sidecar records: all 202 object keys are deterministically paired as ZIP key + `.CHECKSUM`; each record carries the expected ZIP digest as the digest asserted by that sidecar. The sidecar object's own byte size and payload SHA-256 were not retained individually in the source report and remain `NOT_VERIFIED` (not inferred from the ZIP digest).
+- Inventory status: **IDENTITY COMPLETE / METADATA PARTIAL**. It is not a claim that every sidecar has a complete independent object metadata record.
+- Static cross-check: ZIP counts 38 daily + 164 monthly = 202; total inventory 404. ZIP row totals, archive bounds and timeframe counts remain consistent with the evidence and manifest. Selected daily/monthly periods are disjoint; overlap comparison remains NOT APPLICABLE.
+- Before raw materialization, approval must explicitly accept the missing historical per-sidecar size/hash fields as unavailable, or separately authorize a bounded metadata-only retrieval of the 202 sidecar objects. No such retrieval is included in the proposal below.
+
 ## 8. Approval gates and current status
 
 | Phase | Scope | Status |
 |---|---|---|
 | Owner acceptance of archive as partial | Decision only | APPROVED |
 | Manifest draft and staging plan | Documentation/static | AUTHORIZED |
-| Raw archive materialization | 404 archive objects | NOT AUTHORIZED |
+| Raw archive materialization | 202 ZIP + 202 sidecars; identity inventory complete, sidecar own size/hash NOT VERIFIED | NOT AUTHORIZED |
 | Normalization/source reconciliation | Read staged payloads | NOT AUTHORIZED |
 | SQLite creation and writes | New disposable DB only | NOT AUTHORIZED |
 | SQLite validation | Read-only after approved build | NOT AUTHORIZED |
