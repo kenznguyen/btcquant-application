@@ -3,7 +3,7 @@
 Date: 2026-11-19  
 Repository: `kenznguyen/btcquant-application`  
 Branch: `main`  
-Verified source/workflow HEAD for R1: `48dc689a6b52c8f732690f997b410b139261608e`
+Verified source/workflow HEAD for R1: `f9dc54c56c84b24b33d4332609ec57ec6e0d0a63`
 
 ## Approval and scope
 
@@ -39,15 +39,15 @@ Out of scope:
 | File | Blob SHA |
 |---|---|
 | `paper_execution/risk_contract.py` | `7ae74740568e3bcad78acd928896ee363cc62613` |
-| `paper_execution/ledger.py` | `5a04bbc27904dfab6ab139c6d5a47e538611405b` |
+| `paper_execution/ledger.py` | `9fbf195cd6b19bd4ce2217f3648b4722a2472dcb` |
 | `pipeline/api.py` | `0c288741afe386cacaa8d2c7d3991274a00c43ef` |
 | `paper_execution/test_f4_r1_account_contract.py` | `a8b8be332e2b8e0ec9d2707b0c7cb7334ca0e851` |
 | `paper_execution/test_risk_limits.py` | `3dd3afb6e7b7d361829bae0355412c468cbbc313` |
-| `paper_execution/test_ledger.py` | `d352303e2088cbba0538ac4709f92ab74952a4e9` |
+| `paper_execution/test_ledger.py` | `9606db101989cb50fd7104b930b35faa3fce671e` |
 | `paper_execution/test_dual_ledger_red.py` | `0cf05418940a07a8357ee9d6039325a1efcb16f2` |
 | `pipeline/test_api.py` | `f7bd8ff60b489ac309b20ea78f37b0708d7bba9a` |
 | `pipeline/test_decision.py` | `6781f26d66635f56662a627bdd3b4a63f26c1f28` |
-| `.github/workflows/f4-r1-account-risk-contract.yml` | `bbac7930904fe6837c7452205da35d8bc0260568` |
+| `.github/workflows/f4-r1-account-risk-contract.yml` | `3decb8c18c0fa14b3b4f92db63f558252c7fb366` |
 | `.github/workflows/f4-pipeline-core-first-isolated.yml` | `929ce3ca1030f5f5b5516812fb2590c562c9ab2f` |
 
 ## TDD and CI evidence
@@ -57,20 +57,20 @@ Out of scope:
 - Run [44466409033](https://github.com/kenznguyen/btcquant-application/actions/runs/44466409033), job `135365143505`, confirmed the contract implementation was absent and the new cases failed. This was an intentional RED run, not final verification.
 
 ### R1 GREEN — authoritative
-- Run [44468671840](https://github.com/kenznguyen/btcquant-application/actions/runs/44468671840), branch `main`, exact workflow/source HEAD `48dc689a6b52c8f732690f997b410b139261608e`.
-- Job `135372566774`: SUCCESS.
+- Run [44469440356](https://github.com/kenznguyen/btcquant-application/actions/runs/44468671840), branch `main`, exact workflow/source HEAD `48dc689a6b52c8f732690f997b410b139261608e`.
+- Job `135375130582`: SUCCESS.
 - Python `3.12.16`; pinned image `python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`.
-- Command: `python -m unittest -v paper_execution.test_f4_r1_account_contract paper_execution.test_risk_limits paper_execution.test_ledger paper_execution.test_dual_ledger_red pipeline.test_api pipeline.test_decision`.
-- Result: `Ran 144 tests in 2.928s`; `OK`; 144/144 passed, 0 failures.
-- Artifact: `f4-r1-account-risk-contract-evidence`, ID `14503760398`, SHA-256 `aa6c8e834b91d9be285f0e9fe07d1736a7540ab80c5e90f7e3750d6d4c493dd3`.
-- Workflow verified the exact test/source blob SHAs above. The test container ran with `--network none`, read-only source mount, non-root user, no credentials and no canonical database mount.
+- Command: `python -m unittest -v paper_execution.test_f4_r1_account_contract paper_execution.test_risk_limits paper_execution.test_ledger paper_execution.test_dual_ledger_red paper_execution.test_dual_ledger_migration_red pipeline.test_api pipeline.test_decision`.
+- Result: `Ran 150 tests in 2.031s`; `OK`; 150/150 passed, 0 failures.
+- Artifact: `f4-r1-account-risk-contract-evidence`, ID `14502923623`, SHA-256 `bcc3bf4f8b4fe691e18f09dc3c839807a5ad1c59f1fc55c6e638c1846b4db425`.
+- Workflow verified the exact test/source blob SHAs above. The test container ran with `--network none`, read-only source mount, non-root user, no credentials and no canonical database mount. The suite includes legacy dual-ledger migration fixtures, now seeded with an account contract and equity baseline before simulated orders.
 
 ### API / Decision regression
 - Run [44468781493](https://github.com/kenznguyen/btcquant-application/actions/runs/44468781493), exact workflow/source HEAD `ff0c644a6143400735f271b8073253d545ba3606`.
 - Job `135372900876`: SUCCESS.
 - Result: `Ran 42 tests in 0.191s`; 42/42 passed, 0 failures.
 - Artifact: `f4-pipeline-api-decision-evidence`, ID `14502974074`, SHA-256 `19d0b652584f3717104a97b13b929505eeb69d70c487e9f068ea872da8a11289`.
-- The API workflow checked out the exact source, verified source blobs, confirmed Python 3.12.16 and a loopback-only network probe, then ran the API/decision modules in a network-disabled Docker container. Added coverage verifies a tampered contract produces an INVALID quality stream without crashing the API.
+- The API workflow checked out the exact source, verified source blobs, confirmed Python 3.12.16 and a loopback-only network probe, then ran the API/decision modules in a network-disabled Docker container. Added coverage verifies a tampered contract produces an INVALID quality stream without crashing the API. The same API/decision modules are also included in the final 150-test R1 run at the latest R1 source SHA.
 
 ## Review and limitations
 
@@ -78,15 +78,18 @@ Out of scope:
 - Architecture: account contract is persisted once and consumed by both strategy ledgers; policy updates require an explicit expected hash and reason. No per-strategy risk-limit source remains in the paper API path.
 - Security: SQL uses parameterized statements; contract content is canonicalized and hash-checked; read-only lookup opens SQLite in read-only URI mode; tests run without network/secrets/canonical DB.
 - Performance: one small contract read is performed inside each order-admission transaction. No external dependency was added.
-- Full repository test suite: NOT VERIFIED. The 144-test result is the bounded impacted-module suite, not the full repository suite.
+- Fixture correction: run `44469280970` exposed missing equity baselines in legacy `PaperLedger` tests after making the contract mandatory. Test fixtures were updated to provision the shared contract and a valid equity baseline; the production risk behavior was not weakened. Final run `44469440356` passes all 150 cases.
+- Full repository test suite: NOT VERIFIED. The 150-test result is the bounded impacted-module suite, not the full repository suite.
 - F4-R2 and F4-R3: remain OPEN / NOT VERIFIED; their separate RED specifications were not included in the R1 suite.
 - Runtime/deployment/VPS/canonical DB/exchange/trading: NOT ACCESSED / NOT VERIFIED. No real orders were placed.
 - Paper path policy unchanged: Core-First only; AI offline research only; live trading prohibited.
 
+- Additional exact blobs: `paper_execution/test_dual_ledger_migration_red.py` `09320d363c8cb52806280c1de366895e09af3eeb`; `paper_execution/README.md` `814f9f6e185cb38ef9dc7368b39f882307943a44`; `pipeline/CONTRACTS.md` `b513eb99bcf95817b6b27a5f2d62fb750fd10c5d`.
+
 ## Status
 
 - F4-R1 account risk contract: **PASS** within the bounded source and isolated regression scope.
-- API/Decision regression: **PASS** (42/42).
+- API/Decision regression: **PASS** (42/42 dedicated run; also rerun in final 150-test suite).
 - Full repository suite: **NOT VERIFIED**.
 - F4-R2/R3: **OPEN / NOT VERIFIED**.
 - Runtime, deployment and production readiness: **NOT VERIFIED / NOT CERTIFIED**.
