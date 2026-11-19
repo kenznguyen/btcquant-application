@@ -38,7 +38,7 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           actual="$(git hash-object paper_execution/test_f4_r1_account_contract.py)"
-          test "$actual" = "cd6cbd880f4e3ede1403f1b6c189fe83010a8180"
+          test "$actual" = "1e2b4900938cfcabab14aa28354c79ae3a43e049"
           mkdir -p "$RUNNER_TEMP/f4-r1-evidence"
           {
             echo "workflow_run_id=$GITHUB_RUN_ID"
