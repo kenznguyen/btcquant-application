@@ -253,7 +253,7 @@ os._exit(0)
         script = r"""
 import sys
 sys.dont_write_bytecode = True
-from market_data import api, feeder_service, storage
+from market_data import feeder_service, storage
 from market_data.feeder import LeaseStore
 from market_data.store import Candle, INTERVAL_MS
 from market_data.storage import create_store

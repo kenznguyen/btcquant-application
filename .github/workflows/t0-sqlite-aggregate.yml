@@ -167,7 +167,7 @@ jobs:
             echo "- No canonical DB, production runtime, exchange, network or credentials"
           } >> "$GITHUB_STEP_SUMMARY"
           if [[ "$test_status" -eq 0 && "$test_count" != "174" ]]; then
-            echo "Expected 196 tests; observed ${test_count:-no test summary}." >&2
+            echo "Expected 174 tests; observed ${test_count:-no test summary}." >&2
             exit 1
           fi
           exit "$test_status"

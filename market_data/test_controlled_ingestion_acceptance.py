@@ -125,9 +125,9 @@ class ControlledIngestionAcceptanceTest(unittest.TestCase):
 
             payload = response.json()
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response["coverage"]["complete"], True)
-            self.assertEqual(response["coverage"]["returned"], 96 if timeframe == "15m" else 24)
-            self.assertEqual(response["datasetVersion"], canonical["datasetVersion"])
+            self.assertEqual(payload["coverage"]["complete"], True)
+            self.assertEqual(payload["coverage"]["returned"], 96 if timeframe == "15m" else 24)
+            self.assertEqual(payload["datasetVersion"], canonical["datasetVersion"])
 
     def test_conflicting_duplicate_rolls_back_entire_batch(self):
         original = Candle("15m", START, "100", "103", "99", "102", "1", END + 1)
