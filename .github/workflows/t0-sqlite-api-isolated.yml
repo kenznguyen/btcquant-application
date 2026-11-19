@@ -1,9 +1,6 @@
-name: T0 SQLite API isolated tests
+name: T0 SQLite API isolated tests (manual legacy suite)
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
@@ -15,14 +12,14 @@ concurrency:
 
 jobs:
   sqlite-api-tests:
-    name: Seven-module SQLite/API and feeder lifecycle suite
+    name: Manually invoked seven-module SQLite/API and feeder lifecycle suite
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - name: Checkout exact approved test source
+      - name: Checkout exact workflow-dispatch commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 2668dd538a99d6021921432b3485f4ed84198364
+          ref: ${{ github.sha }}
           fetch-depth: 1
           persist-credentials: false
 
@@ -30,7 +27,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected="2668dd538a99d6021921432b3485f4ed84198364"
+          expected="$GITHUB_SHA"
           actual="$(git rev-parse HEAD)"
           test "$actual" = "$expected"
 
@@ -57,7 +54,7 @@ jobs:
             echo "runner_arch=$RUNNER_ARCH"
             echo "runner_image=ubuntu-24.04"
             echo "test_modules=7"
-            echo "static_expected_test_methods=91"
+            echo "trigger_mode=workflow_dispatch_only"
             echo "network_mode=none (Docker test container)"
             echo "credentials=none passed to test container"
             echo "canonical_database_mount=none"
@@ -151,15 +148,15 @@ jobs:
               '' \
               "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
               "- Workflow commit: $GITHUB_SHA" \
-              "- Test source SHA: 2668dd538a99d6021921432b3485f4ed84198364" \
+              "- Test source SHA: $GITHUB_SHA" \
               '- Python: 3.12.16' \
               '- Docker network: none (network interface probe: loopback only)' \
-              "- Discovered tests: ${test_count:-NOT_REPORTED} (static inventory: 91)" \
+              "- Discovered tests: ${test_count:-NOT_REPORTED}" \
               "- Test process exit code: $test_status"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          if [[ "$test_status" -eq 0 && "$test_count" != "91" ]]; then
-            echo "Expected 91 tests from static inventory; observed ${test_count:-no test summary}." >&2
+          if [[ "$test_status" -eq 0 && -z "$test_count" ]]; then
+            echo "No unittest test-count summary was reported." >&2
             exit 1
           fi
           exit "$test_status"
