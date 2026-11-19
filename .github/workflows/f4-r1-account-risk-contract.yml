@@ -60,8 +60,8 @@ jobs:
             verify_blob paper_execution/test_dual_ledger_red.py 0cf05418940a07a8357ee9d6039325a1efcb16f2
             verify_blob paper_execution/ledger.py 5a04bbc27904dfab6ab139c6d5a47e538611405b
             verify_blob paper_execution/risk_contract.py 7ae74740568e3bcad78acd928896ee363cc62613
-            verify_blob pipeline/api.py 986424f2f3631de367e56b33e50d47f4c0a4f263
-            verify_blob pipeline/test_api.py 5481c3072c79891161f992299783a9ba5879f955
+            verify_blob pipeline/api.py 0c288741afe386cacaa8d2c7d3991274a00c43ef
+            verify_blob pipeline/test_api.py f7bd8ff60b489ac309b20ea78f37b0708d7bba9a
             verify_blob pipeline/test_decision.py 6781f26d66635f56662a627bdd3b4a63f26c1f28
           } > "$RUNNER_TEMP/f4-r1-evidence/metadata.txt"
 
