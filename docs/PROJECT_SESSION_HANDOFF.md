@@ -1,3 +1,22 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 SQLite foundation expanded; aggregate 191/191 PASS
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`; pre-handoff HEAD `31a913256611e2b508596b9cd7715a7ff27ae8ac`. No branch/PR split.
+- Added nine selected SQLite-first T0 source files with exact source/target blob parity: `market_data/initialize_sqlite.py`, `test_initialize_sqlite.py`, `test_store.py`, `test_fenced_store.py`, `test_feeder_health.py`, `test_feeder_retry.py`, `test_feeder_scheduler.py`, `test_controlled_ingestion_acceptance.py`, `test_t0_controlled_ingestion_acceptance.py`. Source HEAD inspected: `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9`. Exact blobs are recorded in `docs/T0_MIGRATION_PROVENANCE.md`.
+- The empty-only initializer refuses existing DB paths and verifies an empty schema. It was exercised only by tests using disposable temporary paths. No canonical DB was created; CLI was not run on a real path.
+- Expanded `.github/workflows/t0-sqlite-aggregate.yml`: update commit / exact checkout SHA `42c8172a4b4b0234fa50e64eb6172f970f45ab66`; workflow blob `32be957fbad1b04161b621c7e1c95f20aa9d9cf9`.
+- Exact-SHA run [44507725020](https://github.com/kenznguyen/btcquant-application/actions/runs/44507725020), job `135503600404`: **SUCCESS**, 191/191 tests, 0 failures/errors, 3.131s.
+- Suite explicitly covers initializer/store/fenced writes, API/Storage, write gateway, sync, lease/fencing, recovery, health, retry, scheduler, synthetic controlled ingestion and deterministic feeder lifecycle. PostgreSQL-specific API/Storage tests are excluded.
+- Artifact `t0-sqlite-aggregate-evidence`, ID `14520188043`, size 6,093 bytes, SHA-256 `0389c4fc4cab0190ea7ada4115b24b53095a9ffb035cba3f7b1dcd01b22ceacb`, expires 2026-12-03T10:40:03Z. ZIP independently hashed and payload inspected; exact SHA, 191 count and exit 0 confirmed.
+- Immutable Python 3.12.16 image; Docker `--network none`, read-only source/root, non-root, no credentials, no canonical DB. Tests use temporary SQLite and fake/synthetic exchange responses only.
+- Evidence report: `docs/evidence/T0_SQLITE_FOUNDATION_EXPANSION_2026-11-19.md`, commit `6c2df8129e336231ad0e55b39e844b14663244d5`.
+- Provenance addendum: `docs/T0_MIGRATION_PROVENANCE.md`, commit `31a913256611e2b508596b9cd7715a7ff27ae8ac`.
+- Overall selected SQLite-only T0 contract coverage now **PASS 191/191**. This does not certify canonical data availability, production runtime, systemd, VPS, Binance connectivity, PostgreSQL/TimescaleDB, T1/T2 integration or production readiness.
+- Remaining source-only items require classification: T0 README/index docs; legacy app health API tests; process/SIGKILL restart tests; T2 end-to-end/parity; explicit Binance connectivity probe; PostgreSQL/TimescaleDB assets/tests; Kraken modules; legacy static RED spec. Do not copy/execute these indiscriminately.
+- No source repository changes, canonical DB/data, production runtime, VPS, deployment, T1/T2 or trading behavior occurred. No live orders.
+- Next bounded step: read-only classify the remaining source-only documentation and test assets, then select only non-runtime SQLite/T0 items for migration. Keep process-level runtime, canonical data, exchange connectivity, PostgreSQL, T2 and deployment separately gated.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 SQLite aggregate regression PASS 123/123
 
 - Repository: `kenznguyen/btcquant-application`, existing branch `main`; pre-handoff tested HEAD `ccf8348e86b637d42343982d306f65c14cf4aaa5`. No new branch/PR split.
