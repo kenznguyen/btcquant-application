@@ -4839,3 +4839,18 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - No API implementation behavior, canonical SQLite, writer/lease/feeder/recovery, T1/T2, PostgreSQL, VPS/systemd, runtime/deployment, retention/deletion or trading changes.
 - Active scope index updated in commit `b6f14ed7306796aee0a47cee5bb097876d9f30e5`.
 - Next permitted step: retain current source and seek actual second-person review against the review package. Do not retire WSGI/Gunicorn until that reviewer has accepted the parity evidence and remaining findings.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Independent review package refreshed after C1 closure
+
+- Repository: `kenznguyen/btcquant-application`, branch `main`.
+- Updated `docs/reviews/T0_FASTAPI_INDEPENDENT_REVIEW_PACKAGE_2026-11-19.md`, commit `495c234d920feaec8a323044955b42a80c6d5ea1`.
+- The package now targets exact review snapshot `440379b243d0b63e80f22b032fa8499bc2e1a6f4` and records exact tested implementation/workflow SHA `62054b53119308eca9d2256dcd5aae5561da235b`.
+- Verified compare from tested SHA to review snapshot: 4 ahead / 0 behind; only the handoff and active scope index documentation changed after CI. No executable source, test, workflow or dependency drift.
+- C1 evidence is incorporated: FastAPI 26/26 run `44534512421`, job `135596271306`, artifact `14533664834`, SHA-256 `555c63db97aa8466857cb4dd84728808989edc8107b25af0af31336bd3e84883`; SQLite 196/196 run `44534512612`, job `135596271401`, artifact `14534628423`, SHA-256 `8e9c5274d48a44bb779bdd1db4119d3a83f1873c61ff889b769fc03fd6a0cfb0`.
+- C1: **CLOSED / VERIFIED** for ten enumerated cases. D1 clean runtime-only install smoke test: **NOT VERIFIED**. Independent second-person review: **PENDING / reviewer not assigned**.
+- This package refresh is documentation-only. No source/test/workflow/dependency/runtime/data changes; no tests or workflows run.
+- Next: assign/send the updated package to an actual independent reviewer and record their findings/verdict against the exact review snapshot. D1 remains a separate evidence gap.
+- WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment/VPS/systemd **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
