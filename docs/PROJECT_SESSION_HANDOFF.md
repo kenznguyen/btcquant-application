@@ -1,3 +1,14 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 HTTP consumer migration TDD scope approved
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`.
+- Scope document commit: `7c8c4c9e505536766075c6393539366b88dc6b23`; file: `docs/evidence/T0_HTTP_CONSUMER_MIGRATION_TDD_SCOPE_2026-11-19.md`.
+- Approval meaning: approved for TDD migration scope preparation/documentation only. This does not authorize source implementation, test execution, CI dispatch, endpoint probes, runtime connection, deployment, activation, data mutation or trading.
+- Authority: official T0 Candle API contract 1.1.0. Active Core First branch remains blocked pending page-aware client and Core Bundle compatibility.
+- Source implementation: NOT STARTED. Tests/workflows: NOT RUN. Endpoint/runtime: NOT VERIFIED and connection not authorized. Production readiness: NOT CERTIFIED.
+- Next gate: review the scope and obtain/record separate authorization before implementation. After source-level GREEN and independent review, obtain another separate decision before any endpoint/runtime connection.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 External HTTP Consumer Audit
 
 - Official application repository: `kenznguyen/btcquant-application`, branch `main`.
