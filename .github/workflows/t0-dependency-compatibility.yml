@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - requirements-market-data.txt
+      - requirements-market-data.lock
       - .github/workflows/t0-dependency-compatibility.yml
   workflow_dispatch:
 
@@ -87,11 +88,7 @@ jobs:
             bash -euc '
               python --version
               python -m pip --version
-              python -m pip install --user "pip-tools==7.4.1"
-              python /tmp/userbase/bin/pip-compile --version
-              python /tmp/userbase/bin/pip-compile --resolver=backtracking --generate-hashes --strip-extras \
-                --no-emit-index-url --output-file=/artifacts/requirements-market-data.lock \
-                /workspace/requirements-market-data.txt
+              cp /workspace/requirements-market-data.lock /artifacts/requirements-market-data.lock
               python -m pip download --require-hashes --only-binary=:all: \
                 --dest=/artifacts/wheelhouse -r /artifacts/requirements-market-data.lock
               sha256sum /artifacts/requirements-market-data.lock \
@@ -102,7 +99,7 @@ jobs:
               {
                 echo "resolver_python=$(python --version 2>&1)"
                 echo "resolver_pip=$(python -m pip --version)"
-                echo "pip_tools=$(python /tmp/userbase/bin/pip-compile --version)"
+                echo "lock_source=committed requirements-market-data.lock"
                 echo "lock_file=requirements-market-data.lock"
                 echo "lock_sha256=$(cut -d " " -f 1 /artifacts/lock.sha256)"
                 echo "wheel_count=$(find /artifacts/wheelhouse -maxdepth 1 -type f | wc -l)"
@@ -161,7 +158,7 @@ jobs:
             echo "- Exact source SHA: $GITHUB_SHA"
             echo "- Python: 3.12.16 (immutable image)"
             echo "- Direct dependencies: ccxt 4.5.92; gunicorn 23.0.0"
-            echo "- Resolver: PyPI; hash-locked requirements and wheelhouse"
+            echo "- Lock: committed requirements-market-data.lock; wheelhouse downloaded with SHA-256 enforcement"
             echo "- Fresh install: offline, network disabled"
             echo "- Scope excludes PostgreSQL, runtime startup, VPS and canonical database"
           } >> "$GITHUB_STEP_SUMMARY"
