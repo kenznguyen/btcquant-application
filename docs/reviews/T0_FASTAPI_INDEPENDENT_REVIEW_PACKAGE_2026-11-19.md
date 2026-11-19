@@ -3,9 +3,10 @@
 - Prepared: 2026-11-19
 - Repository: `kenznguyen/btcquant-application`
 - Target branch: `main`
-- Exact review snapshot: `d69e2e44707ea9b177548c79d36bf72ac8a18f0b`
+- Exact review snapshot: `440379b243d0b63e80f22b032fa8499bc2e1a6f4`
+- Exact tested implementation/workflow SHA: `62054b53119308eca9d2256dcd5aae5561da235b`
 - Review type requested: **independent second-person code review**. The implementation author/self-reviewer must not submit this as independent sign-off.
-- Package status: **READY FOR REVIEW — reviewer not yet assigned; no independent approval recorded**.
+- Package status: **UPDATED / READY FOR REVIEW — reviewer not yet assigned; no independent approval recorded**.
 
 ## 1. Review objective
 
@@ -16,46 +17,54 @@ This package does **not** authorize WSGI/Gunicorn removal, runtime startup, endp
 ## 2. Exact source and provenance
 
 Review snapshot:
-- `main`: `d69e2e44707ea9b177548c79d36bf72ac8a18f0b`
-- FastAPI implementation file blob: `market_data/fastapi_app.py` — `9f8f3352ad5510fc970ae78e9e8b9410e049bc83`
-- Shared contract helper blob: `market_data/api_contract.py` — `77f4f1ab124caba07d1ba6ab16d0a1df9166b134`
-- ASGI test file: `market_data/test_fastapi_api.py`
+- `main`: `440379b243d0b63e80f22b032fa8499bc2e1a6f4`
+- FastAPI implementation file: `market_data/fastapi_app.py`
+- Shared contract helper: `market_data/api_contract.py`
+- ASGI contract tests: `market_data/test_fastapi_api.py`
 - WSGI reference adapter: `market_data/api.py`
+- WSGI regression tests: `market_data/test_api.py`
+- Differential parity test: `market_data/test_fastapi_parity.py`
 - FastAPI workflow: `.github/workflows/t0-fastapi-migration.yml`
 - Runtime lock: `requirements-market-data-fastapi.lock`
 - Test lock: `requirements-market-data-fastapi-test.lock`
 - Lock hash manifest: `requirements-market-data-fastapi.sha256`
 
-The exact tested implementation/workflow source SHA is `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`. GitHub comparison from that SHA to the review snapshot reports 8 commits ahead, 0 behind. The four changed paths are documentation files plus a one-line test-module docstring correction; no executable application logic, workflow, or dependency lock changed. Therefore the paired CI evidence below covers the same executable FastAPI implementation and workflow present in the review snapshot. The reviewer should still inspect the full target snapshot, not rely only on this summary.
+The exact tested implementation/workflow source SHA is `62054b53119308eca9d2256dcd5aae5561da235b`. The subsequent current main HEAD is `440379b243d0b63e80f22b032fa8499bc2e1a6f4`; the verified compare is 4 commits ahead / 0 behind, and only `docs/PROJECT_SESSION_HANDOFF.md` and `docs/T0_ACTIVE_SCOPE_INDEX.md` changed after the tested SHA. No executable source, test, workflow or dependency input changed after CI. The reviewer must still inspect the full review snapshot and verify this provenance directly.
 
 Relevant history:
 - Workflow path correction: `3bdcaf093c381b2b767be3c903f9e86d5bf75bde`
-- Dependency-only trigger proof / paired test source SHA: `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`
-- R2 docstring correction and latest main snapshot: `d69e2e44707ea9b177548c79d36bf72ac8a18f0b`
+- Differential test: `78770e49c61075ff10da9ba94526b2d3aef0141d`
+- Workflow integration and exact tested source SHA: `62054b53119308eca9d2256dcd5aae5561da235b`
+- Current review snapshot: `440379b243d0b63e80f22b032fa8499bc2e1a6f4`
 
-## 3. Paired CI evidence
+## 3. Exact-SHA CI evidence
 
-Both workflows checked out the exact same SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`.
+Both workflows were push-triggered on `main`, checked out the exact same source SHA `62054b53119308eca9d2256dcd5aae5561da235b`, and concluded successfully.
 
-### FastAPI contract regression
-- Run: [44529575151](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575151)
-- Job: `135579262823`
-- Result: **25/25 PASS**
-- Artifact ID: `14532693874`
-- Artifact SHA-256: `7bcf6fdd46e8c5e1c81f76bf078377437b81cdbb178a546ce0b18166a8ade5f5`
+### FastAPI contract and differential regression
+- Run: [44534512421](https://github.com/kenznguyen/btcquant-application/actions/runs/44534512421)
+- Job: `135596271306`
+- Result: **26/26 PASS**
+- The log explicitly shows `test_same_fixture_has_identical_status_headers_and_body_for_contract_cases ... ok`, then `Ran 26 tests` / `OK`.
+- Artifact ID: `14533664834`
+- Artifact SHA-256: `555c63db97aa8466857cb4dd84728808989edc8107b25af0af31336bd3e84883`
+- Artifact ZIP downloaded and inspected; `runner_metadata.txt` confirms both `workflow_commit` and `checked_out_source_sha` equal the exact tested SHA, `test_count=26`, and `test_exit_code=0`.
 
 ### SQLite aggregate regression
-- Run: [44529575307](https://github.com/kenznguyen/btcquant-application/actions/runs/44529575307)
-- Job: `135579168097`
-- Result: **196/196 PASS**
-- Artifact ID: `14531469720`
-- Artifact SHA-256: `93f30f492c9006a995c1f6248101080a3c2238be9d0530ab04421ce41f0580e8`
+- Run: [44534512612](https://github.com/kenznguyen/btcquant-application/actions/runs/44534512612)
+- Job: `135596271401`
+- Result: **196/196 PASS**, log ends `Ran 196 tests` / `OK`.
+- Artifact ID: `14534628423`
+- Artifact SHA-256: `8e9c5274d48a44bb779bdd1db4119d3a83f1873c61ff889b769fc03fd6a0cfb0`
+- Artifact ZIP downloaded and inspected; metadata confirms exact tested SHA and expected test count.
 
-### Dependency locks
+The SQLite aggregate is complementary coverage; the WSGI–FastAPI differential test is included in the 26-test FastAPI workflow, not counted among the 196 SQLite aggregate tests.
+
+### Dependency locks and CI isolation
 - Runtime lock SHA-256: `fb4cf8f63131cb36636b3c3230378a49bfb2d3a56b8750778ed5b3b5dac8d786`
 - Test lock SHA-256: `2916098771a482a21637b94fff1f79afc0ddeb37a2a01fdae05032509a889cb6`
 
-The workflow verifies committed lock hashes, downloads hash-pinned wheels, and runs the test container with network disabled, read-only root filesystem, non-root UID, dropped capabilities, no-new-privileges and resource limits. The canonical database and runtime/exchange credentials are not mounted.
+CI verifies committed lock hashes, downloads hash-pinned wheels, and runs the test container with network disabled, read-only root filesystem, non-root UID, dropped capabilities, no-new-privileges and resource limits. The canonical database and runtime/exchange credentials are not mounted.
 
 ## 4. Required review scope
 
@@ -64,8 +73,9 @@ Please inspect source and evidence directly. At minimum:
 1. **Contract parity**
    - `GET /health` and `GET /v1/candles`.
    - Candle Contract 1.1.0 fields, decimal serialization, coverage/gaps, dataset provenance, freshness/evaluability and historical `asOfMs`.
-   - HTTP 400/401/404/405/503 behavior, response bodies, content type and `Cache-Control: no-store`.
-   - Compare WSGI and FastAPI behavior; identify any untested differences. In particular, consider adding/running a same-fixture differential test if needed before accepting parity.
+   - HTTP 400/401/404/405/503 behavior, response bodies, complete response headers, content type and `Cache-Control: no-store`.
+   - Inspect `market_data/test_fastapi_parity.py`: one temporary SQLite fixture and deterministic clock are used for both adapters; status, all headers and exact body bytes are compared for ten cases: health, successful candle read, unauthorized, missing token configuration, malformed query, duplicate query parameter, unknown path, non-GET, unavailable store and historical `asOfMs`.
+   - C1 is **CLOSED / VERIFIED for those ten enumerated cases only**. Assess whether other relevant request classes or environment differences remain untested.
 
 2. **Authentication and security**
    - Bearer-token handling, constant-time comparison, missing configuration and secret exposure through URLs/logging/errors.
@@ -90,20 +100,20 @@ Please inspect source and evidence directly. At minimum:
 
 ## 5. Known evidence limitations — reviewer must independently assess
 
-- No automated differential suite has been recorded that invokes WSGI and FastAPI against identical fixtures and compares complete HTTP responses.
-- No dependency CVE research, dynamic penetration test, reverse-proxy/Nginx validation, runtime secret probe, load test, production latency benchmark or Uvicorn/VPS startup was performed.
-- The runtime lock is hash-verified and its wheels are downloaded by CI; the test lock is installed for the ASGI suite. A clean, independent runtime-only installation/smoke test is not recorded.
+- C1 differential parity is verified only for the ten enumerated cases; this is not exhaustive proof of equivalence for all requests or environments.
+- D1 clean runtime-only install/smoke test remains **NOT VERIFIED**. Runtime lock hash verification and CI wheel download do not by themselves establish a separately executed clean runtime-only installation.
+- No dependency CVE/advisory research, dynamic penetration test, reverse-proxy/Nginx validation, runtime secret probe, load/concurrency/latency test or Uvicorn/VPS startup was performed.
+- Independent second-person review has not yet been performed.
 - Existing CI success is not proof of production readiness.
 
-These are **NOT VERIFIED** items, not claims that defects exist. Please promote any item to a finding only with evidence and severity.
+These are **NOT VERIFIED** items, not claims that defects exist. Promote any item to a finding only with evidence and severity.
 
 ## 6. Required reviewer output
 
-Please return a review tied to exact commit `d69e2e44707ea9b177548c79d36bf72ac8a18f0b`, containing:
-
+Please return a review tied to exact commit `440379b243d0b63e80f22b032fa8499bc2e1a6f4`, containing:
 - Reviewer identity and confirmation that they did not author the implementation or the internal self-review.
 - Files/commits inspected and review method.
-- Findings with severity (Critical/High/Medium/Low), exact file/line or evidence, impact, and required remediation.
+- Findings with severity (Critical/High/Medium/Low), exact file/line or evidence, impact and required remediation.
 - Separate statuses for correctness, security, architecture, dependency/CI, contract parity and runtime qualification.
 - Verdict: **APPROVE**, **APPROVE WITH NON-BLOCKING FINDINGS**, or **REQUEST CHANGES**.
 - Explicit statement whether WSGI/Gunicorn retirement may be proposed as a separate owner-approved change. This review alone does not authorize that change.
@@ -112,10 +122,12 @@ Please return a review tied to exact commit `d69e2e44707ea9b177548c79d36bf72ac8a
 
 | Item | Status |
 |---|---|
-| FastAPI 25/25 CI | PASS |
-| SQLite aggregate 196/196 CI | PASS |
-| Workflow dependency trigger proof | PASS |
-| Internal self-review | PASS |
+| FastAPI contract + differential CI | 26/26 PASS |
+| SQLite aggregate CI | 196/196 PASS |
+| C1 ten-case differential parity | CLOSED / VERIFIED |
+| Dependency trigger proof | PASS |
+| Internal self-review | PASS WITH VERIFICATION GAPS |
+| D1 clean runtime-only install smoke test | NOT VERIFIED |
 | Independent second-person review | PENDING |
 | WSGI/Gunicorn retirement | NOT APPROVED |
 | Runtime / endpoint / Nginx / VPS / deployment | NOT AUTHORIZED |
@@ -123,13 +135,14 @@ Please return a review tied to exact commit `d69e2e44707ea9b177548c79d36bf72ac8a
 
 ## 8. Reviewer checklist
 
-- [ ] Confirmed exact review SHA.
+- [ ] Confirmed exact review SHA `440379b243d0b63e80f22b032fa8499bc2e1a6f4`.
+- [ ] Verified no executable source/test/workflow/dependency drift after tested SHA `62054b53119308eca9d2256dcd5aae5561da235b`.
 - [ ] Inspected FastAPI adapter and shared contract.
 - [ ] Inspected WSGI adapter and assessed parity.
-- [ ] Inspected ASGI tests and identified coverage gaps.
+- [ ] Inspected ASGI tests and ten-case differential test; identified remaining coverage gaps.
 - [ ] Inspected storage failure paths and read-only guarantees.
 - [ ] Inspected dependency locks, hashes and CI workflow.
-- [ ] Reviewed paired CI evidence and artifact digests.
+- [ ] Verified exact-SHA workflow logs, artifact metadata and digests.
 - [ ] Recorded findings and severity.
 - [ ] Recorded explicit verdict and WSGI retirement recommendation.
 - [ ] Confirmed no runtime/deployment authorization is implied.
