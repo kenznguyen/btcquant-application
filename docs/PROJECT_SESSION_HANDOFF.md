@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F4-R3 phase A RED evidence complete; phase B not authorized
+
+- Owner approved F4-R3 phase A only: test-only RED specification and isolated execution. Separate phase B approval is required before any production source correction.
+- Repository: `kenznguyen/btcquant-application`, existing `main`. Test-only commit: `37d82cff0f5e9d0e487382b9959f6ce502f0da9d`; workflow pin/update commit: `2e748c5e84441593a3ff2d312ec1ffe11058407d`; evidence commit: `66bf543a7898a57c858909837485801e9c6662ac`.
+- Dedicated test file: `paper_execution/test_f4_r3_reset_red.py`, blob `89247eae792bfba48adea7648d3420c914545a5b`. The F4-R2 test file was restored unchanged to blob `7e03122ee72cb88cd039d99ca4a9ed6acfe1f656`; F4-R3 tests are isolated in their own file.
+- Six F4-R3 cases: forged direct `ready=True`; pending order; legacy fallback missing cutover; authoritative risk snapshot not ready; readiness TOCTOU between API preflight and reset; rollback when audit write fails.
+- Authoritative RED run [44487694102](https://github.com/kenznguyen/btcquant-application/actions/runs/44487694102), job `135435198428`, workflow/source HEAD `2e748c5e84441593a3ff2d312ec1ffe11058407d`: SUCCESS. Expected RED result: **6 tests, 4 assertion failures, 2 passes, 0 errors**. Four failures reproduce defects; two passing controls verify existing authoritative account-risk preflight handling and SQLite rollback on audit failure.
+- Workflow: `.github/workflows/f4-r3-kill-reset-red.yml`, blob `7574a6d4bf8ab1954b8c6f7ec735178e5741403a`. Verified source blobs: ledger `9fbf195cd6b19bd4ce2217f3648b4722a2472dcb`; API `0c288741afe386cacaa8d2c7d3991274a00c43ef`; risk control `c8fe573a7a5b0716159e50a678423e402d7df3ba`; account risk contract `7ae74740568e3bcad78acd928896ee363cc62613`.
+- Artifact `f4-r3-kill-reset-red-evidence`, ID `14510199597`, size 1,695 bytes, SHA-256 `03165d9a6db7fab99ee1108835a8ece5ea9f663580c88b322c0edf418e807a09`; downloaded ZIP independently hashed to same SHA and payload inspected.
+- Python 3.12.16 container pinned by digest `sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`; Docker `--network none`, read-only source, non-root, no credentials, no canonical DB mount.
+- Evidence report: `docs/evidence/F4_R3_KILL_RESET_RED_2026-11-19.md`, commit `66bf543a7898a57c858909837485801e9c6662ac`.
+- Iteration: initial isolated workflow run `44487513363` failed preflight after test extraction; no tests ran. Corrected pin/path; authoritative run `44487694102` passed identity checks and confirmed RED. Historical R2 RED workflow `44487513396` auto-triggered on restoring its shared test file and failed its old pre-F4-R2 source pin at preflight; no tests ran. F4-R2 GREEN rerun `44487513293` passed 7/7; F4-R1 workflow `44487513398` passed.
+- Production source files `paper_execution/ledger.py`, `paper_execution/risk_control.py`, `paper_execution/risk_contract.py`, and `pipeline/api.py` were not modified. No runtime, canonical DB, VPS, exchange or trading action occurred.
+- Status: F4-R3 phase A RED **PASS**; production correction **NOT AUTHORIZED / awaiting separate phase B approval**. F4-R1 preserved; F4-R2 preserved and isolated GREEN rerun PASS 7/7. Runtime/production operational readiness remains NOT CERTIFIED.
+- Next: preserve current state and wait for explicit phase B approval. Any correction must derive authoritative readiness and clear the Kill Switch atomically within the same database write transaction; keep F4-R1/F4-R2 unchanged and avoid runtime/trading activation.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — F4-R2 fail-closed implementation GREEN and independently recorded
 
 - Owner explicitly approved phase B after the seven-case phase-A RED matrix.
