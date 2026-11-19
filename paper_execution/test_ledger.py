@@ -8,6 +8,7 @@ import tempfile
 import unittest
 
 from paper_execution.ledger import PaperLedger
+from paper_execution.risk_contract import provision_account_risk_contract
 
 
 class PaperLedgerTest(unittest.TestCase):
@@ -252,7 +253,11 @@ class PaperLedgerTest(unittest.TestCase):
         self.ledger.record_equity("70",1800000000000,self.now+1,"sha256:"+"b"*64,"100")
         limits={"maxDrawdownPct":Decimal("1"),"maxDailyLossUsdt":Decimal("1"),
                 "maxExposureUsdt":Decimal("1000")}
-        guarded=PaperLedger(self.path,max_position_base="1",risk_limits=limits,require_risk_limits=True)
+        provision_account_risk_contract(
+            self.path, limits, source="PAPER_LEDGER_TEST_FIXTURE",
+            recorded_at_ms=self.now + 2,
+        )
+        guarded=PaperLedger(self.path,max_position_base="1",require_risk_limits=True)
         guarded.set_killed(True,self.now+2,"TEST_RISK_LATCH")
         book=self.book(time=self.now+3)
         book["bids"]=[{"price":"70","quantity":"1"}]
