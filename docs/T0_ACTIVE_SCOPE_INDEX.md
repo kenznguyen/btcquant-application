@@ -40,3 +40,13 @@
 - Documentation-only change; executable source/test logic, dependencies, workflows and runtime unchanged.
 - R2: **CLOSED / VERIFIED**. No new CI run claimed; prior paired FastAPI 25/25 and SQLite aggregate 196/196 evidence remains tied to exact tested SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`.
 - Independent second review **PENDING**. WSGI/Gunicorn retirement **NOT APPROVED**. Runtime/deployment **NOT AUTHORIZED**.
+
+
+### FastAPI independent review package — 2026-11-19
+
+- Prepared reviewer package: [T0 FastAPI Independent Review Package](reviews/T0_FASTAPI_INDEPENDENT_REVIEW_PACKAGE_2026-11-19.md), commit `814721fb3974672fc936befc5267719a5b14bd28`.
+- Exact review snapshot: `d69e2e44707ea9b177548c79d36bf72ac8a18f0b`; paired CI source SHA: `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`. Compare: 8 ahead / 0 behind; changed paths are documentation plus the already-closed test docstring correction; executable source/workflow/dependency locks unchanged.
+- Package includes FastAPI 25/25 run `44529575151`, SQLite aggregate 196/196 run `44529575307`, artifact IDs/digests, source file inventory, review checklist, required verdict and scope restrictions.
+- Independent reviewer: **NOT YET ASSIGNED / REVIEW PENDING**. This package is not itself a review approval.
+- WSGI/Gunicorn retirement: **NOT APPROVED**. Runtime/deployment: **NOT AUTHORIZED**. Production readiness: **NOT CERTIFIED**.
+- No source, tests, workflow, runtime, canonical data, T1/T2, PostgreSQL or trading changes; no tests or workflows run during package preparation.
