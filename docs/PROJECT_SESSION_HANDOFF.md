@@ -4766,3 +4766,19 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Status: internal self-review **PASS WITH NON-BLOCKING NIT**. This is not an independent review. Independent second-reviewer sign-off **PENDING**.
 - WSGI/Gunicorn removal **NOT APPROVED**; runtime/deployment/VPS/systemd **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
 - Next bounded step: correct R2 as a separate documentation-only source cleanup if authorized, then obtain independent review before proposing WSGI/Gunicorn retirement. Do not change canonical SQLite, feeder runtime, T1/T2, PostgreSQL, endpoints, VPS/deployment or trading.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — R2 documentation-only correction
+
+- Commit purpose: close R2 stale test module docstring only.
+- Changed `market_data/test_fastapi_api.py` module docstring from the obsolete “not-yet-created ASGI app” wording to “Contract tests for the FastAPI ASGI adapter.”
+- No executable test logic, imports, application source, workflow, dependency lock, canonical data, runtime, T1/T2 or trading behavior changed.
+- R2: **CLOSED / VERIFIED** by diff inspection.
+- No new test run claimed. Paired CI remains: FastAPI 25/25 PASS (run `44529575151`) and SQLite aggregate 196/196 PASS (run `44529575307`), both on tested source SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`.
+- Internal self-review: **PASS**. R1 and R2 closed.
+- Independent second-reviewer sign-off: **PENDING**. This self-review is not independent.
+- WSGI/Gunicorn removal: **NOT APPROVED** pending independent review and owner approval.
+- Runtime/deployment/VPS/systemd: **NOT AUTHORIZED**. Production readiness: **NOT CERTIFIED**.
+- Next step: wait for independent reviewer to inspect FastAPI adapter, shared contract, tests, lock/hash files, workflow and paired CI evidence. Do not retire WSGI/Gunicorn or alter runtime before accepted independent review and explicit owner approval.

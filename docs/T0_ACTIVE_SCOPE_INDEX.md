@@ -32,3 +32,11 @@
 - R2 stale docstring in `market_data/test_fastapi_api.py` (“not-yet-created ASGI app”): **OPEN / NON-BLOCKING NIT**; no source edit made.
 - Current verdict: internal self-review **PASS WITH NON-BLOCKING NIT**; independent second review **PENDING**.
 - WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+
+
+### FastAPI R2 closure — 2026-11-19
+
+- Corrected stale module docstring in `market_data/test_fastapi_api.py` to “Contract tests for the FastAPI ASGI adapter.”
+- Documentation-only change; executable source/test logic, dependencies, workflows and runtime unchanged.
+- R2: **CLOSED / VERIFIED**. No new CI run claimed; prior paired FastAPI 25/25 and SQLite aggregate 196/196 evidence remains tied to exact tested SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`.
+- Independent second review **PENDING**. WSGI/Gunicorn retirement **NOT APPROVED**. Runtime/deployment **NOT AUTHORIZED**.

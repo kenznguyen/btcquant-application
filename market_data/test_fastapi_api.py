@@ -1,4 +1,4 @@
-"""FastAPI adapter contract tests. These intentionally target the not-yet-created ASGI app."""
+"""Contract tests for the FastAPI ASGI adapter."""
 
 import os
 import sqlite3

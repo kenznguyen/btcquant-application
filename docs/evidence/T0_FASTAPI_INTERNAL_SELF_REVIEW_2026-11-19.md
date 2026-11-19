@@ -122,10 +122,19 @@ Next gates:
 
 ### Follow-up finding R3 — Review record consistency corrected
 
-The prior verdict text still described R1 as a required open action after R1 had been verified and closed. This record now states the accurate status: **R1 CLOSED / VERIFIED; R2 OPEN / NON-BLOCKING; independent review PENDING**.
+The prior verdict text still described R1 as a required open action after R1 had been verified and closed. This record now states the accurate status: **R1 CLOSED / VERIFIED; R2 CLOSED / VERIFIED; independent review PENDING**.
 
 ### Updated verdict
 
-**INTERNAL SELF-REVIEW: PASS WITH NON-BLOCKING NIT (R2); INDEPENDENT REVIEW PENDING.**
+**INTERNAL SELF-REVIEW: PASS; R1 AND R2 CLOSED; INDEPENDENT REVIEW PENDING.**
 
 This remains an internal self-review, not an independent reviewer sign-off. WSGI/Gunicorn retirement remains NOT APPROVED; runtime/deployment remains NOT AUTHORIZED; production readiness remains NOT CERTIFIED.
+
+
+## R2 closure — 2026-11-19
+
+- Updated only the module docstring in `market_data/test_fastapi_api.py` to accurately describe the existing FastAPI ASGI adapter.
+- No executable test statements, imports, assertions, application code, dependency locks, workflow files, or runtime configuration were changed.
+- R2: **CLOSED / VERIFIED** by exact diff inspection.
+- This is a documentation-only correction. The prior paired CI evidence remains associated with source SHA `b53e3e4f800d498317ac7ab4d0d01b44ef63a55c`; this commit does not claim a new test run.
+- Independent second review remains **PENDING**. WSGI/Gunicorn retirement remains **NOT APPROVED**; runtime/deployment remains **NOT AUTHORIZED**.
