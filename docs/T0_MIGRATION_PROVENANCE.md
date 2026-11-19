@@ -174,3 +174,18 @@ The dedicated aggregate workflow `.github/workflows/t0-sqlite-aggregate.yml` was
 - Evidence report: `docs/evidence/T0_SQLITE_FOUNDATION_EXPANSION_2026-11-19.md`, commit `6c2df8129e336231ad0e55b39e844b14663244d5`.
 
 Additional source-only files remain intentionally unported pending separate classification: legacy app health API tests, process/SIGKILL restart tests, T2 end-to-end/parity tests, explicit Binance connectivity probe, PostgreSQL/TimescaleDB assets/tests, Kraken-specific modules, and legacy static RED contract spec. No source repository changes or runtime/production actions occurred.
+
+
+## T0 navigation documentation adaptation — 2026-11-19
+
+The source T0 technical README and scope index were reviewed and adapted for the new application repository rather than copied verbatim because their original text contained legacy paths, requirements files, TimescaleDB workflow references and topology statements that are not verified/current in the target.
+
+- Source `market_data/README.md` blob: `d90f84f8135c8ab9da1b57863e145d86565bf179`.
+- Target `market_data/README.md` blob: `269c861b3c5f88fbd48c8c757a6ae587fa2486aa`.
+- Source `docs/T0_ACTIVE_SCOPE_INDEX.md` blob: `70c13603ec4f9d499273f2412c4106fcbc346af2`.
+- Target `docs/T0_ACTIVE_SCOPE_INDEX.md` blob: `9d33f36ada44e221b463e1114ed40c719aec699f`.
+- Target docs explicitly scope SQLite-first T0, describe the committed CPython 3.12/Linux x86_64 lock and the 191-test exact-SHA gate, and state that canonical data, production runtime, PostgreSQL, external connectivity and production readiness remain unverified or separately gated.
+- Target docs preserve the no-destructive-authority boundary: no automatic TTL/deletion-after-use/cleanup/compaction/vacuum/backup expiry without separate approval.
+- The README's initializer description warns that its tests used disposable temporary paths only; it does not instruct users to initialize a canonical DB as part of this migration.
+- Documentation commits: scope index `ef91391fc6a381981d8c0321dd5d196adadf006b`; README `bcca30363da1ac1de09d8e930bd336cec1b5afcd`.
+- This is documentation adaptation, not byte-parity migration. No production source, test, workflow, canonical data or runtime was changed.
