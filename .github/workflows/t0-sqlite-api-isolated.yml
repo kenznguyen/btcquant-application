@@ -141,15 +141,16 @@ jobs:
           } >> "$artifacts/runner_metadata.txt"
 
           {
-            echo "## T0 SQLite/API isolated test run"
-            echo
-            echo "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
-            echo "- Workflow commit: `$GITHUB_SHA`"
-            echo "- Test source SHA: `57b54116188167904e2a2a6020ab349588b42186`"
-            echo "- Python: `3.12.16`"
-            echo "- Docker network: `none` (network interface probe: loopback only)"
-            echo "- Discovered tests: `${test_count:-NOT_REPORTED}` (static inventory: 62)"
-            echo "- Test process exit code: `$test_status`"
+            printf '%s\n' \
+              '## T0 SQLite/API isolated test run' \
+              '' \
+              "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
+              "- Workflow commit: $GITHUB_SHA" \
+              "- Test source SHA: 57b54116188167904e2a2a6020ab349588b42186" \
+              '- Python: 3.12.16' \
+              '- Docker network: none (network interface probe: loopback only)' \
+              "- Discovered tests: ${test_count:-NOT_REPORTED} (static inventory: 62)" \
+              "- Test process exit code: $test_status"
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [[ "$test_status" -eq 0 && "$test_count" != "62" ]]; then
