@@ -97,3 +97,16 @@ Out of scope:
 ## Next step
 
 Preserve this evidence and handoff. Any F4-R2/R3 work, full-repository test expansion, runtime/database access, deployment, AI execution or live trading requires a separate bounded approval.
+
+
+## 2026-11-19 — Final call-site audit and CI evidence-gate hardening
+
+- Read-only review confirmed the current source remained unchanged after the 151-test implementation run; the three commits between source HEAD `12a2f53a21a0a9637d264d49f372e7dcf89fc730` and the prior docs-updated `main` changed only this evidence report and the project handoff. Current verified source files retain the exact blob SHAs listed above.
+- Audited every indexed `PaperLedger(` call site in the repository. The production API factory `pipeline.api.ledger()` provisions/verifies the shared account contract before constructing the strategy ledger. The local CLI is initialization/snapshot-only; it does not submit orders. The README instructs contract provisioning before any order submission. Test-only constructors without a contract are used for initialization, migration, or read-only setup; the order-admission path loads the persisted contract inside the transaction and unconditionally blocks increased exposure when the contract/required fields are absent (`RISK_LIMITS_UNCONFIGURED`).
+- The dual-strategy API RED specification file contains setup-only `PaperLedger` constructions and no direct `.submit(` calls; it was not added to the bounded R1 suite because it is outside the selected risk-contract admission regression set. F4-R2/R3 specifications remain outside this approval.
+- Corrected the R1 workflow's artifact metadata so the recorded test command includes all seven executed modules, including `paper_execution.test_dual_ledger_migration_red`. Added an explicit assertion that the expected test count is exactly 151, preventing a zero/partial discovery run from being accepted as successful. No application source or test fixture was changed in this follow-up.
+- Latest workflow blob: `.github/workflows/f4-r1-account-risk-contract.yml` `df7a70a2574dda9bf3e2334122538bc7979a95db`. Source HEAD used by the run: `12a2f53a21a0a9637d264d49f372e7dcf89fc730`; workflow commit/run HEAD: `4dd18e66d8236e6864e572516eb5f406cf56bd00`.
+- Latest authoritative isolated run [44484095453](https://github.com/kenznguyen/btcquant-application/actions/runs/44484095453), job `135423149350`: SUCCESS; `Ran 151 tests in 1.990s`; `OK`; 151/151 PASS. The workflow now records `expected_test_count=151` and enforces that count before success.
+- Latest artifact: `f4-r1-account-risk-contract-evidence`, ID `14508928592`, SHA-256 `53960f83ef40d4a287a236509a81f44aaa7775bd23935845400586717a4f5dbc`.
+- Current `main` after workflow update: `4dd18e66d8236e6864e572516eb5f406cf56bd00`. No application source changed in this commit; only the R1 workflow's metadata and test-count gate changed.
+- Status remains: F4-R1 PASS within bounded source and isolated regression scope. Full repository suite NOT VERIFIED. F4-R2/R3 OPEN / NOT VERIFIED. Runtime, deployment, VPS, canonical DB, exchange connectivity and production readiness NOT VERIFIED / NOT CERTIFIED.
