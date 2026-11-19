@@ -405,12 +405,15 @@ class FastApiCandleContractTest(unittest.TestCase):
 
     def test_all_non_get_methods_are_rejected_with_allow_header(self):
         with patch.dict(os.environ, self.env, clear=True):
-            for method in ("POST", "PUT", "PATCH", "DELETE", "OPTIONS"):
+            for method in ("POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE", "PURGE"):
                 with self.subTest(method=method):
                     response = self.client.request(method, "/v1/candles")
                     self.assertEqual(response.status_code, 405)
                     self.assertEqual(response.headers.get("allow"), "GET")
                     self.assertEqual(response.json(), {"error": "METHOD_NOT_ALLOWED"})
+            head = self.client.head("/v1/candles")
+            self.assertEqual(head.status_code, 405)
+            self.assertEqual(head.headers.get("allow"), "GET")
 
 
 if __name__ == "__main__":
