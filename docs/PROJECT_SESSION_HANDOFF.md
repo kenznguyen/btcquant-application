@@ -4079,3 +4079,20 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Historical DS-03 run `42975606884` at source SHA `6ef0d7456b2791fae73bfea8855ee30482774673` reported 237 focused + 300 full paper_execution tests PASS (artifact `13834194926`, SHA-256 `66403ab6b9c8079e2d9f3b04dcfc650709a64abd77e62554e6a54c2c101cd5c4`). Current audited source blobs differ; exact-current-SHA compile/tests/workflow/artifact are NOT VERIFIED. No tests/workflows were run for this audit.
 - No source, tests, workflows, dependencies, schema, data, runtime, VPS, exchange, or trading behavior changed. Documentation-only audit report and handoff update.
 - Next: prepare a separately approved bounded TDD scope for F4-R1/R2/R3 and explicit Core-First AI deny coverage; keep work on the existing legacy source branch. Do not migrate F4 into the official application or activate runtime until fixes and exact-SHA CI are verified.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F4 minimal dependency closure migrated
+
+- Owner approved option A: a minimal, provenance-controlled migration of the three modules identified by the read-only F4 dependency/import audit.
+- Target repository: `kenznguyen/btcquant-application`, existing branch `main`.
+- Source repository: `kenznguyen/btcusdt-telegram-signals2`, branch `feature/t0-centralized-data-feeder-p1-20261101`, exact source HEAD `5223cef02f0e296c4f58afc5d7992b9c641ab208`.
+- Migration commit: `aafdd95c9b2869f58c75e937ebe95db27af8939a`; parent `5fe6dd0a190205aa59d45be88f8769917332b5c0`.
+- Added only `futures_intelligence/import_collector.py`, `integrations/hummingbot_bridge.py`, and `market_data/test_support.py`. Source/target blob SHA matches exactly: `5effe6540b86edcb190456c95b6bb11456aec099`, `aa9db7522ffb7ce911c7fbbdc73a7f9b47401331`, and `64b99a858eb4ddc9d6275957cbb048a1cfc1843d`, respectively.
+- Evidence: `docs/evidence/F4_DEPENDENCY_IMPORT_CLOSURE_MIGRATION_2026-11-19.md`; report blob `cd2c8d2bb0601bfc20eb42c94007fd969aad0d6d`.
+- Static import-path presence: PASS for all three previously missing targets. This is not functional import/test evidence.
+- Tests, Python imports, compile/build, CI/workflows: NOT RUN / NOT VERIFIED. Third-party dependency closure and supported Python version: NOT VERIFIED. Runtime integration and Hummingbot connectivity: NOT VERIFIED.
+- F4-R1/R2/R3 remain open and uncorrected. Core-First remains controlling: Strategy Core only in current paper path; AI offline research only; no AI Ledger writes/orders; `AI_EXECUTION_ENABLED=false`.
+- No T0 canonical assets, source repository files, workflows, dependency manifests, database/data payloads, runtime configuration, VPS, database, exchange, or trading behavior were changed/accessed.
+- Paper execution: NOT AUTHORIZED. Live trading: PROHIBITED.
+- Status: minimal source migration PASS; static import paths present PASS; functional verification NOT VERIFIED.
+- Next: separately authorize a bounded isolated test/import-verification plan for the now-present Pipeline API/decision paths. Do not install dependencies, run CI, or access runtime until that gate is approved.
