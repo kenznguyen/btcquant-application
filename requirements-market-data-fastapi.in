@@ -1,0 +1,4 @@
+# FastAPI T0 read-only HTTP adapter and ASGI test client.
+# Transitive dependencies are resolved and SHA-256 locked by the dedicated CI gate.
+fastapi==0.165.0
+httpx==0.28.1
