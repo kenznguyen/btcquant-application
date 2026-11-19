@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Owner approved reconstructed Canonical coverage target
+
+- Decision: [T0 Reconstructed Canonical Coverage Decision](decisions/T0_RECONSTRUCTED_CANONICAL_COVERAGE_DECISION_2026-11-19.md).
+- Scope: Binance USD-M BTCUSDT M15 and H1; for each timeframe independently, start at the earliest candle actually available from Binance and end at the latest fully closed candle available at the recorded UTC retrieval cutoff.
+- Retrieve all history available through the selected Binance USD-M historical-data interface at retrieval time; document source/endpoint limits, exact first/last candle times, retrieval cutoff, counts and partial-boundary treatment.
+- Every missing expected interval must be reported with UTC boundaries/duration/count and evidence. No synthetic fill, interpolation, forward-fill or silent omission. Gap acceptability remains subject to validation and explicit owner disposition.
+- Lineage must be RECONSTRUCTED; this is not recovery of the historical original database.
+- Authorization remains Phase 1 DESIGN / DOCUMENTATION ONLY. No Binance access/download, reconstruction, SQLite initialization/write, Dropbox upload, snapshot, restore, VPS/runtime, feeder/writer or cutover is authorized.
+- Tests/workflows: NOT RUN; no run/job/artifact for this documentation-only update.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — Owner approved independent CI and VPS runtime validation tracks
 
 - Decision: `docs/decisions/T0_DUAL_TRACK_CI_RUNTIME_VALIDATION_DECISION_2026-11-19.md`.
