@@ -4,7 +4,7 @@ import sys
 import tempfile
 import unittest
 
-from market_data.store import CandleStore, INTERVAL_MS, read_window
+from market_data.store import Candle, CandleStore, INTERVAL_MS, read_window
 from market_data.feeder import LeaseStore
 from market_data.write_gateway import SQLiteWriteGateway
 from market_data.sync import sync_window
@@ -125,6 +125,44 @@ class CandleSyncTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     sync_window(exchange, self.store, "15m", START, START + STEP)
                 self.assertEqual(exchange.calls, [])
+
+    def test_second_page_write_conflict_rolls_back_page_without_removing_first_page(self):
+        # Seed a conflicting row at the end of page 2. The page starts with a
+        # new valid candle, so the gateway must roll that insert back when the
+        # following row conflicts; page 1 was committed by an earlier call.
+        conflict_time = START + 1001 * STEP
+        existing = Candle(
+            "15m", conflict_time, "200", "203", "199", "202", "1",
+            available_at_ms=conflict_time + STEP,
+        )
+        self.assertEqual(self.store.write_batch([existing]), 1)
+
+        first_page = [row(START + index * STEP) for index in range(1000)]
+        second_page = [
+            row(START + 1000 * STEP),
+            row(conflict_time),
+        ]
+        exchange = Exchange([first_page, second_page])
+        end = START + 1002 * STEP
+
+        with self.assertRaisesRegex(ValueError, "Conflicting closed candle"):
+            sync_window(
+                exchange, self.store, "15m", START, end,
+                now_ms=lambda: end + 1,
+            )
+
+        self.assertEqual(len(exchange.calls), 2)
+        data = read_window(self.path, "BTCUSDT", "15m", START, end)
+        timestamps = [candle["openTimeMs"] for candle in data["candles"]]
+
+        # All 1,000 rows from page 1 remain committed.
+        self.assertEqual(timestamps[:1000], [START + index * STEP for index in range(1000)])
+        # The first new row in failed page 2 was rolled back.
+        self.assertNotIn(START + 1000 * STEP, timestamps)
+        # The pre-existing conflicting row was not overwritten.
+        conflict = next(c for c in data["candles"] if c["openTimeMs"] == conflict_time)
+        self.assertEqual(conflict["open"], "200")
+        self.assertEqual(conflict["availableAtMs"], conflict_time + STEP)
 
     def test_bad_page_is_not_partially_committed_and_no_progress_fails(self):
         bad = row(START + STEP)
