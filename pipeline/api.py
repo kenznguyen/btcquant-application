@@ -77,6 +77,11 @@ def ledger(strategy_id="MANUAL", *, admitted_leverage=None):
     if not path:
         raise ValueError("Unconfigured store")
     limits = parse_limits(os.environ)
+    if limits is not None:
+        from paper_execution.risk_contract import provision_account_risk_contract
+        provision_account_risk_contract(
+            path, limits, source="PAPER_ENVIRONMENT_CONFIGURATION", recorded_at_ms=now_ms()
+        )
     if strategy_id in {"STRATEGY_CORE", "AI_FREQAI"}:
         from paper_execution.ledger import dual_ledger_ready
         if not dual_ledger_ready(path):
@@ -93,7 +98,7 @@ def ledger(strategy_id="MANUAL", *, admitted_leverage=None):
     return PaperLedger(path, max_position_base=os.environ.get("PAPER_MAX_POSITION_BASE", "0.01"),
                        fee_rate=os.environ.get("PAPER_FEE_RATE", "0.0005"),
                        max_spread_bps=os.environ.get("PAPER_MAX_SPREAD_BPS", "50"),
-                       risk_limits=limits, require_risk_limits=True,
+                       require_risk_limits=True,
                        leverage=configured_leverage,
                        strategy_id=strategy_id, apply_migrations=False)
 
@@ -252,8 +257,7 @@ def equity_snapshot(timestamp):
         mark["close"], mark["closeTimeMs"], timestamp, window["datasetVersion"],
         os.environ.get("PAPER_INITIAL_CAPITAL", "100"),
     )
-    from paper_execution.equity import parse_limits
-    limits = parse_limits(os.environ)
+    limits = paper_ledger.risk_limits
     result["initialCapital"] = os.environ.get("PAPER_INITIAL_CAPITAL", "100")
     result["riskLimits"] = {
         "configured": limits is not None,
@@ -318,9 +322,10 @@ def quality_snapshot(timestamp):
         prediction_ready = False
     streams.append({"name":"FreqAI prediction","status":"READY" if prediction_ready else "MISSING",
                     "availableAtMs":prediction.get("availableAtMs") if prediction else None})
-    from paper_execution.equity import parse_limits
     try:
-        risk_limits = parse_limits(os.environ)
+        from paper_execution.risk_contract import read_account_risk_contract
+        contract = read_account_risk_contract(os.environ.get("MARKET_DATA_DB", ""))
+        risk_limits = contract["limits"] if contract else None
         risk_ready = risk_limits is not None
         risk_stream = {"name":"Shared Risk Limits","status":"READY" if risk_ready else "DEGRADED",
                        "maxDrawdownPct":str(risk_limits["maxDrawdownPct"]) if risk_ready else None,
