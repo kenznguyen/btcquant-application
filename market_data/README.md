@@ -69,7 +69,7 @@ Contract properties:
 
 The current aggregate workflow is [T0 SQLite-only aggregate regression](https://github.com/kenznguyen/btcquant-application/actions/workflows/t0-sqlite-aggregate.yml).
 
-Latest exact-SHA run: [44507725020](https://github.com/kenznguyen/btcquant-application/actions/runs/44507725020), SHA `42c8172a4b4b0234fa50e64eb6172f970f45ab66`, **191/191 PASS**.
+Latest exact-SHA run: [44515824622](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824622), SHA `8f49439fafc95186a8c854fe482aad707525a658`, **196/196 PASS**. Dedicated API/Storage run: [44515824664](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824664), **21/21 PASS**.
 
 The isolated tests use temporary SQLite databases, fake/synthetic exchange collaborators and no external network. PostgreSQL-specific tests are excluded. Passing CI does not prove real Binance connectivity, canonical historical-data availability, production feeder/API startup, systemd/VPS operation or production readiness.
 

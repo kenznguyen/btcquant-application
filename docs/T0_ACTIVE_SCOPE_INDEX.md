@@ -120,3 +120,14 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Detailed evidence: [T0 source-to-target parity audit](evidence/T0_SOURCE_TARGET_PARITY_AUDIT_2026-11-19.md).
 - Review was static; no test or workflow was run. The 191/191 aggregate remains tied to exact tested SHA `42c8172a4b4b0234fa50e64eb6172f970f45ab66`.
 - Source-only parity review can close for the inspected SQLite test set. This does not certify production readiness or authorize separately gated work.
+
+
+## Availability and freshness contract update — 2026-11-19
+
+- Current target HEAD: `8f49439fafc95186a8c854fe482aad707525a658`.
+- Read-only Candle API contract version `1.1.0`; point-in-time replay uses `asOfMs` as the evaluation anchor, while live/current reads use `generatedAtMs`.
+- `timestampValid` validates all returned candle timestamps and first-observed availability; `fresh` requires the latest expected closed candle; `evaluable` additionally requires complete coverage.
+- Exact-SHA aggregate run [44515824622](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824622): **196/196 PASS**.
+- Dedicated API/Storage run [44515824664](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824664): **21/21 PASS**.
+- Detailed evidence: [T0 Availability & Freshness Contract Audit](evidence/T0_AVAILABILITY_FRESHNESS_CONTRACT_AUDIT_2026-11-19.md).
+- In-repository pipeline consumers remain on direct Storage reads with existing completeness/availability guards. External HTTP consumer compatibility is NOT VERIFIED. Production readiness remains NOT CERTIFIED.

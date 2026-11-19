@@ -189,3 +189,17 @@ The source T0 technical README and scope index were reviewed and adapted for the
 - The README's initializer description warns that its tests used disposable temporary paths only; it does not instruct users to initialize a canonical DB as part of this migration.
 - Documentation commits: scope index `ef91391fc6a381981d8c0321dd5d196adadf006b`; README `bcca30363da1ac1de09d8e930bd336cec1b5afcd`.
 - This is documentation adaptation, not byte-parity migration. No production source, test, workflow, canonical data or runtime was changed.
+
+
+## T0 availability and freshness contract update — 2026-11-19
+
+The target's read-only Candle API has an approved, tested target-specific contract update. The historical migration table above remains the original snapshot baseline; the following target blobs supersede the prior API/API-test blobs for current `main`:
+
+- Source `market_data/api.py` blob: `81733c9b6de811cbebb2f5d472d41f37f337990c`; current target blob: `4f923d400b8e133a602cec7239982fdf357e9e21`.
+- Source `market_data/test_api.py` blob: `49df7e0bec12908adae67f18a4aa19063e461093`; current target blob: `add00a2a91899d8e496df5b64c122442fc7c65c9`.
+- API contract version: `1.1.0`; schema version remains 1. Freshness is anchored to `asOfMs` for point-in-time replay or `generatedAtMs` otherwise; future `asOfMs` is rejected. `evaluable` requires complete coverage, valid timestamps and a fresh latest closed candle.
+- Exact final SHA: `8f49439fafc95186a8c854fe482aad707525a658`.
+- Aggregate run [44515824622](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824622): SUCCESS 196/196; artifact ID `14525622150`, SHA-256 `7437e8f5877d62f81066208cd031cebea40b4cd0138b7c791b380a824b300cba`.
+- Dedicated API/Storage run [44515824664](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824664): SUCCESS 21/21; artifact ID `14525821866`, SHA-256 `19d5d4e718d1310299667e7f11734437b1f23841129ebdc9a4f660cb4bea9468`.
+- Detailed contract, RED/GREEN history, consumer review and limitations: [T0 Availability & Freshness Contract Audit](evidence/T0_AVAILABILITY_FRESHNESS_CONTRACT_AUDIT_2026-11-19.md).
+- No writer, canonical data, storage schema, sync/recovery, feeder runtime, VPS, T1/T2 or trading behavior changed. External HTTP consumer compatibility and production readiness remain NOT VERIFIED / NOT CERTIFIED.

@@ -1,3 +1,22 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 Availability & Freshness Contract 1.1.0 PASS
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`.
+- Final exact HEAD / aggregate checkout SHA: `8f49439fafc95186a8c854fe482aad707525a658`.
+- Work item: `T0 Availability & Freshness Contract Audit`; approved bounded scope completed. No new branch or PR divergence.
+- API implementation commit: `c82530153c63b7c6eb17782f6e95def0817a7afb`; API blob `4f923d400b8e133a602cec7239982fdf357e9e21`.
+- Final regression fixture commit: `8f49439fafc95186a8c854fe482aad707525a658`; test blob `add00a2a91899d8e496df5b64c122442fc7c65c9`.
+- API contract version `1.1.0`; `timestampValid`, `fresh`, `evaluable`, `evaluationTimeMs` and `evaluationAnchor` are defined. Historical replay anchors to `asOfMs`; future `asOfMs` is rejected. `evaluable` requires complete coverage, valid timestamps and fresh latest closed candle.
+- TDD RED: run [44515506071](https://github.com/kenznguyen/btcquant-application/actions/runs/44515506071), exact SHA `0f0d14c69358dedeb770d3239691e9b92b0ee1eb`, 196 tests, 4 failures / 4 errors before implementation.
+- Final aggregate GREEN: run [44515824622](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824622), job `135531439684`, exact SHA `8f49439fafc95186a8c854fe482aad707525a658`, **196/196 PASS**. Artifact ID `14525622150`, SHA-256 `7437e8f5877d62f81066208cd031cebea40b4cd0138b7c791b380a824b300cba`.
+- Dedicated API/Storage GREEN: run [44515824664](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824664), job `135531440595`, **21/21 PASS**. Artifact ID `14525821866`, SHA-256 `19d5d4e718d1310299667e7f11734437b1f23841129ebdc9a4f660cb4bea9468`.
+- Evidence report: `docs/evidence/T0_AVAILABILITY_FRESHNESS_CONTRACT_AUDIT_2026-11-19.md`; provenance addendum recorded in `docs/T0_MIGRATION_PROVENANCE.md`.
+- Internal pipeline consumer review: PASS by static inspection; `pipeline/core_strategy.py` and `pipeline/api.py` use direct Storage reads and existing coverage/availability guards; not changed. External HTTP consumer compatibility: NOT VERIFIED.
+- No canonical SQLite DB/data, writer boundary, storage schema, sync/recovery, feeder runtime, VPS, deployment, T1/T2, strategy, paper/live order or trading path changed/accessed. No exchange connectivity or real orders.
+- Status: contract/regression PASS; external HTTP consumers NOT VERIFIED; production runtime NOT VERIFIED; T1/T2 NOT AUTHORIZED; production readiness NOT CERTIFIED.
+- Next bounded step: inspect and approve any external HTTP consumer compatibility separately before connecting it. No deployment/runtime activation is authorized.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 SQLite-first docs and scope index recorded
 
 - Repository: `kenznguyen/btcquant-application`, existing branch `main`; pre-handoff docs/provenance HEAD `b4431acdaa1909207e854cb9eaf3e66a8a1888c5`.
