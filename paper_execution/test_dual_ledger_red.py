@@ -11,9 +11,23 @@ from pathlib import Path
 from paper_execution import ledger
 from paper_execution.replay_reconciliation import reconcile_daily_equity_replay
 from paper_execution.ledger import PaperLedger
+from paper_execution.risk_contract import provision_account_risk_contract, read_account_risk_contract, update_account_risk_contract
 
 
 class DualLedgerRedTest(unittest.TestCase):
+
+    def set_exposure_limit(self, value):
+        contract = read_account_risk_contract(self.path)
+        limits = {key: str(amount) for key, amount in contract["limits"].items()}
+        limits["maxExposureUsdt"] = str(value)
+        update_account_risk_contract(
+            self.path, limits,
+            expected_contract_hash=contract["contractHash"],
+            source="DUAL_LEDGER_TEST_FIXTURE",
+            reason="Set the account-wide exposure ceiling for this regression case",
+            recorded_at_ms=self.now + 1,
+        )
+
     def fresh_account_db(self, filename, *, establish_cutover=True):
         path = Path(self.temp.name) / filename
         bootstrap = PaperLedger(path, max_position_base="1", fee_rate="0.001")
@@ -21,15 +35,18 @@ class DualLedgerRedTest(unittest.TestCase):
             "100", self.now - 60_000, self.now, "sha256:dual-ledger-seed", "100"
         )
         limits = {"maxDrawdownPct": "50", "maxDailyLossUsdt": "50", "maxExposureUsdt": "1000"}
+        provision_account_risk_contract(
+            path, limits, source="DUAL_LEDGER_TEST_FIXTURE", recorded_at_ms=self.now
+        )
         core = PaperLedger(
             path, max_position_base="1", fee_rate="0.001",
             strategy_id="STRATEGY_CORE", source_sha="a" * 40,
-            risk_limits=limits, require_risk_limits=True,
+            require_risk_limits=True,
         )
         ai = PaperLedger(
             path, max_position_base="1", fee_rate="0.001",
             strategy_id="AI_FREQAI", source_sha="a" * 40, leverage="3",
-            risk_limits=limits, require_risk_limits=True,
+            require_risk_limits=True,
         )
         with sqlite3.connect(path) as connection:
             day = self.now // 86_400_000 * 86_400_000
@@ -167,8 +184,7 @@ class DualLedgerRedTest(unittest.TestCase):
         self.assertEqual(repeated_dca["reason"], "DCA_ALREADY_USED")
 
     def test_opposite_positions_are_counted_as_gross_exposure_without_netting(self):
-        self.core.risk_limits["maxExposureUsdt"] = "15"
-        self.ai.risk_limits["maxExposureUsdt"] = "15"
+        self.set_exposure_limit("15")
         core = self.core.submit(
             self.intent("gross-core", "0.1", "100.1", "gross-core"),
             self.book(self.now), self.now,
@@ -241,8 +257,7 @@ class DualLedgerRedTest(unittest.TestCase):
         self.assertAlmostEqual(used, 0.105)
 
     def test_concurrent_core_ai_admissions_cannot_breach_gross_exposure(self):
-        self.core.risk_limits["maxExposureUsdt"] = "15"
-        self.ai.risk_limits["maxExposureUsdt"] = "15"
+        self.set_exposure_limit("15")
         def core_submit():
             return self.core.submit(
                 self.intent("concurrent-core", "0.1", "100.1", "concurrent-core"),
@@ -304,8 +319,7 @@ class DualLedgerRedTest(unittest.TestCase):
 
 
     def test_partial_reservation_survives_reopen_and_reduces_other_strategy_capacity(self):
-        self.core.risk_limits["maxExposureUsdt"] = "15"
-        self.ai.risk_limits["maxExposureUsdt"] = "15"
+        self.set_exposure_limit("15")
         partial = self.core.submit(
             self.intent("core-restart-pending", "0.12", "100.1", "core-restart-pending"),
             {**self.book(self.now), "asks": [{"price": "100.1", "quantity": "0.05"}]},
@@ -664,8 +678,7 @@ class DualLedgerRedTest(unittest.TestCase):
 
 
     def test_partial_reservation_expires_after_restart_and_releases_remaining_capacity(self):
-        self.core.risk_limits["maxExposureUsdt"] = "15"
-        self.ai.risk_limits["maxExposureUsdt"] = "15"
+        self.set_exposure_limit("15")
         partial = self.core.submit(
             self.intent("core-expiry-pending", "0.12", "100.1", "core-expiry-book"),
             {**self.book(self.now), "asks": [{"price": "100.1", "quantity": "0.05"}]},
@@ -674,7 +687,7 @@ class DualLedgerRedTest(unittest.TestCase):
         self.assertEqual(partial["status"], "PARTIALLY_FILLED", partial)
         reopened_core = PaperLedger(
             self.path, max_position_base="1", strategy_id="STRATEGY_CORE",
-            source_sha="a" * 40, risk_limits=self.core.risk_limits,
+            source_sha="a" * 40,
             require_risk_limits=True,
         )
         expiry_now = self.now + 30_001
@@ -723,7 +736,7 @@ class DualLedgerRedTest(unittest.TestCase):
             )
         reopened_core = PaperLedger(
             self.path, max_position_base="1", strategy_id="STRATEGY_CORE",
-            source_sha="a" * 40, risk_limits=self.core.risk_limits,
+            source_sha="a" * 40,
             require_risk_limits=True,
         )
         later = self.now + 30_001
