@@ -114,7 +114,7 @@ jobs:
             --mount "type=bind,src=$artifacts,dst=/artifacts,readonly" \
             --mount "type=bind,src=$RUNNER_TEMP/t0-fastapi-wheelhouse/test,dst=/wheelhouse,readonly" \
             --env HOME=/tmp --env TMPDIR=/tmp \
-            --env PYTHONDONTWRITEBYTECODE=1 --env PYTHONPATH=/workspace \
+            --env PYTHONDONTWRITEBYTECODE=1 --env PYTHONPATH=/tmp/site-packages:/workspace \
             --workdir /workspace "$PYTHON_IMAGE" bash -euc '
               python -m pip install --disable-pip-version-check --no-index \
                 --find-links=/wheelhouse --require-hashes \
