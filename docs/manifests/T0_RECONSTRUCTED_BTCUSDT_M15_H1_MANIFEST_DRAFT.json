@@ -59,7 +59,7 @@
       "observed_rows": 241440,
       "expected_rows_within_observed_bounds": 241440,
       "missing_rows_within_observed_bounds": 0,
-      "coverage_ratio_within_observed_bounds": 1.0,
+      "coverage_ratio_within_observed_bounds": 1,
       "continuity_status_within_observed_bounds": "PASS",
       "earliest_available_history": "NOT_VERIFIED",
       "post_archive_tail": "NOT_VERIFIED_CLOSED_BY_OWNER_DECISION"
@@ -73,7 +73,7 @@
       "observed_rows": 60360,
       "expected_rows_within_observed_bounds": 60360,
       "missing_rows_within_observed_bounds": 0,
-      "coverage_ratio_within_observed_bounds": 1.0,
+      "coverage_ratio_within_observed_bounds": 1,
       "continuity_status_within_observed_bounds": "PASS",
       "earliest_available_history": "NOT_VERIFIED",
       "post_archive_tail": "NOT_VERIFIED_CLOSED_BY_OWNER_DECISION"
@@ -115,11 +115,19 @@
       "owner_tail_closure": "600bb812236e8445286b6a6cbb036b4afd6b20b8"
     },
     "per_object_inventory": {
-      "status": "REFERENCE_ONLY_MACHINE_READABLE_EXPORT_PENDING",
-      "expected_zip_entries": 202,
-      "expected_sidecar_entries": 202,
-      "authoritative_reference": "archive_validation_evidence",
-      "note": "The final runtime manifest must include one immutable record per ZIP and checksum sidecar with object key, byte size, SHA-256, row count, timeframe, period and validation result. Do not treat this draft as complete until that inventory is materialized and verified."
+      "status": "IDENTITY_COMPLETE_METADATA_PARTIAL",
+      "inventory_path": "docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json",
+      "inventory_commit": "dc8fc0e2ba019bda2dba6a15e4b8d6fb99669c17",
+      "expected_total_entries": 404,
+      "zip_entries": 202,
+      "sidecar_entries": 202,
+      "zip_metadata_complete": 202,
+      "zip_sha256_sidecar_matches": 202,
+      "sidecar_object_keys": "DERIVED_AS_PAIRED_ZIP_KEY_PLUS_CHECKSUM",
+      "sidecar_individual_byte_size": "NOT_VERIFIED_NOT_RETAINED_IN_EXISTING_EVIDENCE",
+      "sidecar_individual_sha256": "NOT_VERIFIED_NOT_RETAINED_IN_EXISTING_EVIDENCE",
+      "build_readiness": "BLOCKED_PENDING_SIDECAR_METADATA_POLICY_AND_RAW_MATERIALIZATION_APPROVAL",
+      "note": "All 404 object identities are represented. ZIP records include key, byte size, SHA-256, timeframe, period, row count and validation. Sidecar records include paired key and expected ZIP digest, but their own object byte size and payload SHA-256 are not present in source evidence and remain NOT_VERIFIED. Do not substitute ZIP SHA-256 for sidecar SHA-256."
     }
   },
   "candle_contract": {
@@ -189,5 +197,5 @@
       "evidence": "docs/PROJECT_SESSION_HANDOFF.md"
     }
   ],
-  "next_gate": "Separate owner approval required for raw archive materialization/retrieval into approved staging, then separate approval for SQLite initialization and writes. This draft itself authorizes neither."
+  "next_gate": "Separate bounded approval for raw ZIP/sidecar materialization into an isolated local staging path; SQLite creation and writes require a distinct later approval."
 }
