@@ -19,7 +19,7 @@ jobs:
       - name: Checkout exact approved test source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f
+          ref: 57b54116188167904e2a2a6020ab349588b42186
           fetch-depth: 1
           persist-credentials: false
 
@@ -27,7 +27,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected="32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f"
+          expected="57b54116188167904e2a2a6020ab349588b42186"
           actual="$(git rev-parse HEAD)"
           test "$actual" = "$expected"
 
@@ -53,7 +53,7 @@ jobs:
             echo "runner_arch=$RUNNER_ARCH"
             echo "runner_image=ubuntu-24.04"
             echo "test_modules=6"
-            echo "static_expected_test_methods=61"
+            echo "static_expected_test_methods=62"
             echo "network_mode=none (Docker test container)"
             echo "credentials=none passed to test container"
             echo "canonical_database_mount=none"
@@ -145,15 +145,15 @@ jobs:
             echo
             echo "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
             echo "- Workflow commit: `$GITHUB_SHA`"
-            echo "- Test source SHA: `32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f`"
+            echo "- Test source SHA: `57b54116188167904e2a2a6020ab349588b42186`"
             echo "- Python: `3.12.16`"
             echo "- Docker network: `none` (network interface probe: loopback only)"
-            echo "- Discovered tests: `${test_count:-NOT_REPORTED}` (static inventory: 61)"
+            echo "- Discovered tests: `${test_count:-NOT_REPORTED}` (static inventory: 62)"
             echo "- Test process exit code: `$test_status`"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          if [[ "$test_status" -eq 0 && "$test_count" != "61" ]]; then
-            echo "Expected 61 tests from static inventory; observed ${test_count:-no test summary}." >&2
+          if [[ "$test_status" -eq 0 && "$test_count" != "62" ]]; then
+            echo "Expected 62 tests from static inventory; observed ${test_count:-no test summary}." >&2
             exit 1
           fi
           exit "$test_status"
