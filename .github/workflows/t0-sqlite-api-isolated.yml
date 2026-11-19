@@ -68,20 +68,36 @@ jobs:
           docker version
           docker info --format 'docker_server_version={{.ServerVersion}}'
           docker pull --platform linux/amd64 "$PYTHON_IMAGE"
-          docker image inspect --format 'image_id={{.Id}}{{println}}{{range .RepoDigests}}repo_digest={{.}}{{println}}{{end}}' "$PYTHON_IMAGE" \
+          docker image inspect --format '{{.Id}} {{json .RepoDigests}}' "$PYTHON_IMAGE" \
             | tee "$RUNNER_TEMP/t0-test-artifacts/container_image.txt"
           echo "python_image=$PYTHON_IMAGE" >> "$RUNNER_TEMP/t0-test-artifacts/runner_metadata.txt"
 
-      - name: Run approved suite in network-isolated container
-        id: run-tests
+      - name: Verify container Python and network isolation
         shell: bash
         env:
           PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
         run: |
           set -euo pipefail
-          workspace="$GITHUB_WORKSPACE"
+          docker run --rm --platform linux/amd64 --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp:rw,nosuid,nodev,size=64m,mode=1777 \
+            "$PYTHON_IMAGE" python --version \
+            | tee "$RUNNER_TEMP/t0-test-artifacts/python_version.txt"
+          docker run --rm --platform linux/amd64 --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp:rw,nosuid,nodev,size=64m,mode=1777 \
+            "$PYTHON_IMAGE" python -c 'from pathlib import Path; interfaces = {line.split(":", 1)[0].strip() for line in Path("/proc/net/dev").read_text().splitlines()[2:]}; assert interfaces == {"lo"}, f"unexpected network interfaces: {sorted(interfaces)}"; print("network_isolation_probe=PASS (loopback only)")' \
+            | tee "$RUNNER_TEMP/t0-test-artifacts/network_isolation.txt"
+          grep -qx 'Python 3.12.16' "$RUNNER_TEMP/t0-test-artifacts/python_version.txt"
+
+      - name: Run approved suite in network-isolated container
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
           artifacts="$RUNNER_TEMP/t0-test-artifacts"
-          log="$artifacts/unittest.log"
+          log="$RUNNER_TEMP/t0-test-artifacts/unittest.log"
 
           if docker run --rm \
             --platform linux/amd64 \
@@ -94,7 +110,7 @@ jobs:
             --cpus 2 \
             --user 65534:65534 \
             --tmpfs /tmp:rw,nosuid,nodev,size=256m,mode=1777 \
-            --mount "type=bind,src=$workspace,dst=/workspace,readonly" \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
             --mount "type=bind,src=$artifacts,dst=/artifacts" \
             --env HOME=/tmp \
             --env TMPDIR=/tmp \
@@ -102,38 +118,20 @@ jobs:
             --env PYTHONPATH=/workspace \
             --workdir /workspace \
             "$PYTHON_IMAGE" \
-            sh -c '
-              set -eu
-              python --version
-              python -c "import sys; assert sys.version_info[:3] == (3, 12, 16), sys.version"
-              python - <<'"'"'PY'"'"'
-          from pathlib import Path
-          interfaces = {
-              line.split(":", 1)[0].strip()
-              for line in Path("/proc/net/dev").read_text().splitlines()[2:]
-          }
-          if interfaces != {"lo"}:
-              raise SystemExit(f"unexpected network interfaces: {sorted(interfaces)}")
-          print("network_isolation_probe=PASS (loopback only; Docker --network none)")
-          PY
-              set +e
-              python -m unittest -v \
-                market_data.test_feeder_recovery \
-                market_data.test_feeder_lease \
-                market_data.test_write_gateway \
-                market_data.test_storage \
-                market_data.test_sync \
-                market_data.test_api \
-                > /artifacts/unittest.log 2>&1
-              test_status=$?
-              cat /artifacts/unittest.log
-              exit "$test_status"
-            '; then
+            python -m unittest -v \
+              market_data.test_feeder_recovery \
+              market_data.test_feeder_lease \
+              market_data.test_write_gateway \
+              market_data.test_storage \
+              market_data.test_sync \
+              market_data.test_api \
+            > "$log" 2>&1; then
             test_status=0
           else
             test_status=$?
           fi
 
+          cat "$log"
           test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
           {
             echo "python_version=3.12.16"
@@ -149,7 +147,7 @@ jobs:
             echo "- Workflow commit: `$GITHUB_SHA`"
             echo "- Test source SHA: `32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f`"
             echo "- Python: `3.12.16`"
-            echo "- Docker network: `none` (container interface probe requires loopback only)"
+            echo "- Docker network: `none` (network interface probe: loopback only)"
             echo "- Discovered tests: `${test_count:-NOT_REPORTED}` (static inventory: 61)"
             echo "- Test process exit code: `$test_status`"
           } >> "$GITHUB_STEP_SUMMARY"
