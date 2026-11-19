@@ -4187,3 +4187,16 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Status: Core-First AI paper denial enforcement PASS; offline AI research regression PASS; exact-SHA isolated API/decision suite PASS. F4-R1/R2/R3, full repository suite, T0/T1/T2 integration, runtime/deployment, canonical DB, exchange connectivity and production readiness remain NOT VERIFIED / OUT OF SCOPE.
 - Core-First remains controlling: Strategy Core only in current paper path; AI offline research only; no AI Ledger writes/orders; `AI_EXECUTION_ENABLED=false`. No dependencies, canonical T0 assets, DB, runtime, VPS, exchange, deployment or real-order path changed/accessed. Live trading prohibited.
 - Next: preserve evidence; any broader F4 risk/ledger/Kill Switch or runtime work requires separate bounded approval.
+
+
+## 2026-11-19 — F4 Core-First verification final evidence correction
+
+- Final review identified that the first passing run `44462689960` captured the SQLite baseline after the AI research request; that run is retained but superseded as proof of no request-side mutation.
+- Corrected `pipeline/test_api.py` to capture table names before `GET /v1/decision`, then assert WAIT/no intent, unchanged SQLite table set and absence of `paper_orders`. Test blob: `4fb30360d49d4d6645cfc0ff55792769aaa697c3`.
+- Updated workflow blob: `f2bceb682dea2cfaeaa8d85b6e2826f193327f11`. Source/test commit: `dacb488869d000346de0b51ec96a0efa027c04a0`; API blob remains `57b9c1ee3f09eef2691d3967ec5fb06665c2712f`.
+- Authoritative GitHub Actions run [44462955773](https://github.com/kenznguyen/btcquant-application/actions/runs/44462955773), job `135353879032`, exact source/workflow SHA `dacb488869d000346de0b51ec96a0efa027c04a0`: SUCCESS. Python 3.12.16; imports PASS; network isolation PASS; 41 tests PASS (41/41, 0 failures).
+- Artifact `f4-pipeline-api-decision-evidence`, ID `14500971316`, SHA-256 `219cd239ea34cac795a5ead12b794fce5a27e64fbbd99cbee0f2893badeb6764`, expires `2026-12-03T05:07:38Z`.
+- Final evidence report `docs/evidence/F4_PIPELINE_API_DECISION_CORE_FIRST_FIX_2026-11-19.md` supersedes its earlier draft and identifies run `44462955773` as authoritative.
+- Status: Core-First AI paper rejection ordering PASS; offline AI research no-SQLite-side-effect regression PASS; exact-SHA isolated API/decision suite PASS. F4-R1/R2/R3, full repository suite, T0/T1/T2 integration, runtime/deployment, canonical DB, exchange connectivity and production readiness remain NOT VERIFIED / OUT OF SCOPE.
+- No dependencies, canonical T0 assets, DB, runtime, VPS, exchange, deployment or real-order path changed/accessed. Strategy Core paper path unchanged; AI offline research only; `AI_EXECUTION_ENABLED=false`; live trading prohibited.
+- Next: preserve this final evidence. Any broader F4 risk/ledger/Kill Switch or runtime work requires separate bounded approval.
