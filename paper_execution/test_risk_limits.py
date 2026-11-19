@@ -73,8 +73,11 @@ class SharedRiskLimitTest(unittest.TestCase):
 
     def test_missing_limits_fail_closed(self):
         missing_path = Path(self.temp.name) / "missing.sqlite3"
-        with self.assertRaisesRegex(sqlite3.DatabaseError, "ACCOUNT_RISK_CONTRACT_UNAVAILABLE"):
-            PaperLedger(missing_path, max_position_base="1", require_risk_limits=True)
+        ledger = PaperLedger(missing_path, max_position_base="1", require_risk_limits=True)
+        ledger.record_equity("100", self.now, self.now, "sha256:"+"c"*64)
+        result = ledger.submit(self.intent("unconfigured"), self.book(self.now), self.now)
+        self.assertEqual(result["reason"], "RISK_LIMITS_UNCONFIGURED")
+        self.assertEqual(result["status"], "REJECTED")
 
 
 if __name__=="__main__":
