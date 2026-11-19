@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - market_data/test_fastapi_api.py
+      - market_data/test_fastapi_parity.py
       - market_data/fastapi_app.py
       - market_data/api_contract.py
       - market_data/storage.py
@@ -63,7 +64,7 @@ jobs:
             echo "workflow_commit=$GITHUB_SHA"
             echo "checked_out_source_sha=$actual"
             echo "python_target=3.12.16"
-            echo "test_scope=FastAPI contract tests, offline"
+            echo "test_scope=FastAPI and WSGI-ASGI differential contract tests, offline"
             echo "dependency_download_network=bridge"
             echo "test_container_network=none"
             echo "canonical_database=not mounted"
@@ -125,7 +126,7 @@ jobs:
               python -m pip install --disable-pip-version-check --no-index \
                 --find-links=/wheelhouse --require-hashes \
                 -r /artifacts/requirements-market-data-fastapi-test.lock
-              python -m unittest -v market_data.test_fastapi_api
+              python -m unittest -v market_data.test_fastapi_api market_data.test_fastapi_parity
             ' > "$log" 2>&1; then
             test_status=0
           else
