@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Binance USD-M archive metadata inspection PASS
+
+- Evidence: `docs/evidence/T0_BINANCE_UM_BTCUSDT_ARCHIVE_METADATA_INSPECTION_2026-11-20.md`, commit `0b37e158e30824e7e6cfd80ff9d8a457ee715ec9`.
+- Owner-approved scope executed: read-only S3-compatible ListObjectsV2 metadata inspection for Binance Public Data `data/futures/um` BTCUSDT M15/H1 daily and monthly prefixes only.
+- Monthly per timeframe: 82 ZIP + 82 `.CHECKSUM` keys; continuous 2020-01 through 2026-10; listing complete.
+- Daily per timeframe: 2,515 ZIP + 2,515 `.CHECKSUM` keys across six pages; continuous filename dates 2019-12-31 through 2026-11-18; no duplicate or missing calendar filename dates.
+- Latest daily archive object date 2026-11-18, LastModified 2026-11-19T08:16:17Z. Latest monthly object October 2026, LastModified 2026-11-11T10:50:21Z.
+- Daily and monthly object coverage overlaps for 2020-01 through 2026-10. Proposed partition (NOT OWNER-APPROVED): monthly bulk for 2020-01–2026-10, daily for 2019-12-31 and 2026-11-01–18, with daily fallback for payload-level gaps and REST tail considered separately.
+- Important: listing PASS is object-key coverage only. ZIP/checksum bodies not fetched; SHA-256 not validated; first/last candle timestamps, candle counts, intra-file gaps, closed state and earliest REST history remain NOT VERIFIED.
+- No REST API, ZIP/checksum body download, raw staging, SQLite, Dropbox, VPS/runtime, writer/feeder or cutover. Tests/workflows NOT RUN; no run/job/artifact.
+- Next: owner decision on proposed source partition, then separate bounded approval for archive payload retrieval/validation and any REST probe. No reconstruction/database creation authorized.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — T0 historical source selection review recorded
 
 - Review: `docs/reviews/T0_RECONSTRUCTED_CANONICAL_SOURCE_SELECTION_REVIEW_2026-11-20.md`, commit `70f6c26b9f205c7d0198c5e58f46308642f5f48f`.
