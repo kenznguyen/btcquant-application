@@ -55,6 +55,7 @@ class FastApiCandleContractTest(unittest.TestCase):
         with patch.dict(os.environ, self.env, clear=True):
             response = self.client.request(method, f"{path}?{query}", headers=headers)
         self.assertEqual(response.headers.get("cache-control"), "no-store")
+        self.assertEqual(response.headers.get("content-type"), "application/json; charset=utf-8")
         return response.status_code, response.json()
 
     def test_health_is_public_and_has_stable_payload(self):
