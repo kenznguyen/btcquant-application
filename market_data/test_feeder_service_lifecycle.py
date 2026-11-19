@@ -1,5 +1,6 @@
 """P1.2 contract tests: graceful shutdown and restart recovery."""
 from contextlib import closing
+import sqlite3
 import threading
 import unittest
 from unittest.mock import Mock
@@ -8,6 +9,18 @@ from market_data.feeder import FeederConfig, FeederRuntime, FeederScheduler
 from market_data.feeder_service import RecoveryAdapter, build_runtime
 
 NOW = 1_800_000_000_000
+
+
+def provision_feeder_leases_schema(database_path):
+    """Provision the exact F1 lease schema in a disposable lifecycle-test DB."""
+    with closing(sqlite3.connect(database_path)) as connection:
+        with connection:
+            connection.execute("""CREATE TABLE feeder_leases (
+                lease_name TEXT PRIMARY KEY,
+                owner TEXT,
+                generation INTEGER NOT NULL CHECK(generation >= 0),
+                expires_at_ms INTEGER NOT NULL CHECK(expires_at_ms >= 0)
+            )""")
 
 
 class RuntimeLifecycleTest(unittest.TestCase):
@@ -569,6 +582,7 @@ class RuntimeIntegrationContractTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             db_path = Path(directory) / "canonical.sqlite3"
             SQLiteCandleStore(db_path).initialize()
+            provision_feeder_leases_schema(db_path)
             exchange, store, leases = Mock(), Mock(), Mock()
             store.path = db_path
             store.insert_fenced = Mock()
@@ -607,6 +621,7 @@ class RuntimeIntegrationContractTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             db_path = Path(directory) / "canonical.sqlite3"
             SQLiteCandleStore(db_path).initialize()
+            provision_feeder_leases_schema(db_path)
             exchange, store, leases = Mock(), Mock(), Mock()
             store.path = db_path
             store.insert_fenced = Mock()
@@ -713,6 +728,7 @@ class RuntimeIntegrationContractTest(unittest.TestCase):
             db_path = Path(directory) / "isolated-build-runtime.sqlite3"
             store = SQLiteCandleStore(db_path)
             store.initialize()  # Explicitly provision this disposable test database.
+            provision_feeder_leases_schema(db_path)
             leases = LeaseStore(str(db_path))
             config = FeederConfig(
                 timeframes=("15m",),
@@ -895,6 +911,7 @@ class RuntimeIntegrationContractTest(unittest.TestCase):
             db_path = Path(directory) / "isolated-incomplete.sqlite3"
             store = SQLiteCandleStore(db_path)
             store.initialize()  # Explicitly provision this disposable test database.
+            provision_feeder_leases_schema(db_path)
             leases = LeaseStore(str(db_path))
             config = FeederConfig(
                 timeframes=("15m",), close_grace_seconds=5,
@@ -982,6 +999,7 @@ class RuntimeIntegrationContractTest(unittest.TestCase):
             db_path = Path(directory) / "isolated-lease-loss.sqlite3"
             store = SQLiteCandleStore(db_path)
             store.initialize()
+            provision_feeder_leases_schema(db_path)
             leases = LeaseStore(str(db_path))
             with closing(sqlite3.connect(db_path)) as connection:
                 with connection:
