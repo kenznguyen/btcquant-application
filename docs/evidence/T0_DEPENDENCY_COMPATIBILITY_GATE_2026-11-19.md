@@ -75,3 +75,43 @@ The four failed attempts are preserved as iteration history and are not acceptan
 The generated lock is retained inside the run artifact rather than committed as a repository lock file in this increment. The artifact has a 14-day retention window; preserving a permanent source-controlled lock remains a separate follow-up if required.
 
 No T0 production source, canonical data, runtime, VPS, deployment, T1/T2 or trading path was changed or accessed. No live orders were submitted.
+
+
+---
+
+## Follow-up — committed lock file and revalidation (2026-11-19)
+
+The prior status above is superseded on the lock-file retention point by this follow-up.
+
+### Repository changes
+
+- Added `requirements-market-data.lock` on existing branch `main`.
+- Lock-file commit: `6dbd5ac180626b3d80512feabcbf52b172a184c6`.
+- Lock-file blob: `0a78b53d6d142d2ddc526a31e368adf4562bcb22`.
+- Lock-file SHA-256: `d90c0b25ee62a10d53292cf5b4bf6b40b567af89647607f55b548d05e2126a7f`.
+- The committed lock pins all 25 resolved packages to exact versions and the SHA-256 of the exact wheel selected in the previously verified Python 3.12.16/Linux x86_64 wheelhouse. This is a compact platform-specific lock, not the original multi-platform pip-compile output. Its declared target is CPython 3.12 on Linux x86_64; other Python/platform targets require a separately generated and tested lock.
+- Updated `.github/workflows/t0-dependency-compatibility.yml` to consume the committed lock rather than regenerate a new lock on every run. The resolver/download phase enforces the committed hashes and creates a wheelhouse; the fresh-install phase remains network-disabled and installs only from that wheelhouse.
+- Workflow update commit / exact checkout SHA: `215cf14c621a63b5e000198fb3a0caf70f1bc081`.
+- Updated workflow blob: `5f6570cb5c45a8cf60a0e09ffd5d7b647be88298`.
+
+### Revalidation against committed lock
+
+- GitHub Actions run [44504927709](https://github.com/kenznguyen/btcquant-application/actions/runs/44504927709), job `135493925822`: **SUCCESS**.
+- Exact checked-out SHA: `215cf14c621a63b5e000198fb3a0caf70f1bc081`.
+- Resolver read `requirements-market-data.lock` from the checked-out repository and downloaded 25 wheels with `--require-hashes --only-binary=:all:`.
+- Fresh container installed from the wheelhouse with `--network none`, `--no-index`, `--require-hashes`.
+- `pip check`: `No broken requirements found.`
+- Exact CCXT/Gunicorn versions, imports, `ccxt.binanceusdm` adapter and Gunicorn version command all passed.
+- The workflow artifact's embedded lock SHA-256 is `d90c0b25ee62a10d53292cf5b4bf6b40b567af89647607f55b548d05e2126a7f`, matching the committed file byte-for-byte.
+- Artifact `t0-dependency-compatibility-evidence`, ID `14518967642`, size 21,541,582 bytes, SHA-256 `48ffeb8c4f72e68b690358489de95f4a51606ae6aa8585b4b16bafd5d456295c`, expires 2026-12-03T10:22:05Z. Downloaded ZIP digest and embedded lock checksum independently verified.
+
+### Updated status
+
+- **PASS** — committed lock exists on `main`.
+- **PASS** — exact committed lock was used by the compatibility workflow.
+- **PASS** — all 25 package hashes verified during download and again during offline install.
+- **PASS** — clean offline install and package/import checks.
+- **LIMITED SCOPE** — lock supports the tested CPython 3.12/Linux x86_64 environment only. It is not a universal cross-platform lock.
+- **NOT VERIFIED / NOT CERTIFIED** — other Python versions/platforms, runtime startup, Binance connectivity, feeder/API lifecycle, PostgreSQL/TimescaleDB, VPS/deployment and production readiness.
+
+No T0 production source, canonical DB/data, runtime, VPS, deployment, T1/T2 or trading path was changed or accessed. No live orders.
