@@ -1,5 +1,21 @@
 # CURRENT STATUS OVERRIDE — 2026-11-19
 
+## F3 SQLite multi-page atomicity regression — implementation committed; execution NOT VERIFIED
+
+- Owner approved prioritizing F3 before F2: prove first-page commit retention and no partial writes from a failing second page, SQLite only.
+- Test-only commit: `15d404cb970de14415b21bbadd843027cea7441d`; changed only `market_data/test_sync.py`; blob `7621c85a4c7eb2ad233de94da89e6fbb411ea534`.
+- Regression: `test_second_page_write_conflict_rolls_back_page_without_removing_first_page`. Page 1 commits 1,000 rows. Page 2 first attempts a new valid row, then encounters a conflicting pre-existing row; the test asserts transaction rollback removes the page-2 insert, preserves all page-1 rows, and does not overwrite the pre-existing row.
+- Isolated workflow updated to checkout exact test SHA above and expect 63 tests; workflow commit `f046cd445c21d84f7a9d3dacc3107a833fd820be`; workflow blob `c7bea616b38bc6fda8fcc319264686a1bd27eaf7`.
+- Evidence report: `docs/evidence/T0_SQLITE_F3_MULTIPAGE_ATOMICITY_2026-11-19.md`; report commit `88c044e6d0d2bf8d81ef990cb5437740aedae0e7`.
+- Static readback of test, workflow pin and 63-test expectation: PASS. Test execution: NOT RUN / NOT VERIFIED. Connected GitHub tools do not expose workflow dispatch; local checkout was blocked by DNS resolution failure for github.com. Do not claim test PASS until a fresh workflow run is inspected.
+- No Binance/exchange, canonical database, PostgreSQL/TimescaleDB, Scheduler, RetryPolicy, Runtime, VPS, T1/T2 or trading access/change.
+- Next: manually dispatch **T0 SQLite API isolated tests** from Actions on `main`; verify exact source SHA, 63/63 tests, zero failures/skips, and artifact integrity. Only after F3 execution evidence is complete should F2 Scheduler/RetryPolicy/Runtime test design begin.
+- Status: F3 implementation PASS (static); F3 execution NOT VERIFIED; F2 NOT STARTED; production/runtime/canonical database NOT CERTIFIED.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19
+
 ## SQLite isolated workflow rerun after Bash Step Summary fix — PASS
 - Workflow run [44445216380](https://github.com/kenznguyen/btcquant-application/actions/runs/44445216380), attempt 1, `workflow_dispatch`, branch `main`, overall SUCCESS.
 - Workflow/head SHA: `6f31776ab51aeb6b872d3031fda692b6f44d277f`.
