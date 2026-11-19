@@ -60,3 +60,14 @@
 - D1 **LOW / NOT VERIFIED**: standalone runtime-lock install smoke test not separately evidenced; recommend before runtime qualification.
 - This was performed by the same assistant and is explicitly **not an independent second-person review**. Independent review remains **PENDING**.
 - WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**. No source/tests/workflow/runtime/data changes and no tests/workflows run during this review.
+
+
+### C1 WSGI–FastAPI differential contract test — 2026-11-19
+
+- Added `market_data/test_fastapi_parity.py`, commit `78770e49c61075ff10da9ba94526b2d3aef0141d`, blob `2d951e924c99e5929dcc21c21ad144586658aabe`.
+- The test constructs one temporary SQLite fixture, invokes the retained WSGI callable and FastAPI ASGI app against that same database and deterministic clock, then compares HTTP status, complete response headers and exact response-body bytes (plus parsed JSON).
+- Cases: health, successful candle read, unauthorized, missing token configuration, malformed query, duplicate query parameter, unknown path, non-GET, missing SQLite store, and historical `asOfMs`.
+- Updated `.github/workflows/t0-fastapi-migration.yml` to trigger on the new test file and run it alongside the 25 FastAPI contract tests. Workflow commit: `62054b53119308eca9d2256dcd5aae5561da235b`.
+- Current source/test verification: **PENDING CI**. Do not claim C1 closed until the exact-SHA FastAPI workflow passes and its logs/artifact confirm the differential test ran. SQLite aggregate workflow is expected to trigger because its path filter includes the FastAPI workflow file; its result is also pending.
+- No API implementation, WSGI/Gunicorn lifecycle, dependencies, canonical SQLite data, feeder, T1/T2, PostgreSQL, runtime, endpoint, VPS, deployment, retention/deletion or trading behavior changed.
+- C1 remains **OPEN / NOT VERIFIED** pending CI. Independent second-person review remains **PENDING**. WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
