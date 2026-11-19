@@ -1,3 +1,17 @@
+### D1 runtime-lock-only clean install and ASGI smoke — CLOSED / PASS — 2026-11-19
+
+- Exact tested source SHA: `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
+- Added standard-library ASGI smoke harness `market_data/runtime_smoke.py`, commit `e50c5d83437d6db1b6eb15f8b75267575acde041`.
+- Added isolated `runtime-lock-smoke` CI job, commit `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
+- Runtime-only job: workflow [44536493461](https://github.com/kenznguyen/btcquant-application/actions/runs/44536493461), job `135603190576`: **success**. Installs only `requirements-market-data-fastapi.lock` into a fresh CPython 3.12.16 venv, offline from the SHA-256-verified runtime wheelhouse; does not install the test lock. `pip check`, ASGI import and in-process GET `/health` all PASS.
+- Runtime smoke artifact `14535727293`, SHA-256 `607771298cf289ab9af7f8bf7918d9738fff2d400be45e3e25bba388959042da`.
+- Same-SHA FastAPI/parity job `135603189986`: **26/26 PASS**, run [44536493461](https://github.com/kenznguyen/btcquant-application/actions/runs/44536493461), artifact `14536536165`, SHA-256 `dbdbcc79ecd8495d91d39e14160187dbda6b9618f08d501f96cf4a6111dd02cd`.
+- Same-SHA SQLite aggregate job `135603190883`: **196/196 PASS**, run [44536493268](https://github.com/kenznguyen/btcquant-application/actions/runs/44536493268), artifact `14536651799`, SHA-256 `fb0b74ec9276c7fc96c95e6c67b642079644d32d8329cb1efea9eb324462522a`.
+- Detailed evidence: `docs/evidence/T0_FASTAPI_RUNTIME_LOCK_SMOKE_2026-11-19.md`, commit `b5d03b14175fc54360630113ac41ec186929704a`.
+- D1: **CLOSED / PASS** for clean runtime-lock installation, dependency consistency, ASGI import and in-process health route. The smoke did not start a Uvicorn process or open a socket.
+- Independent second-person review remains **PENDING**. WSGI/Gunicorn retirement **NOT APPROVED**. Uvicorn process/socket, Nginx, VPS/systemd, endpoint/runtime qualification and deployment **NOT VERIFIED / NOT AUTHORIZED**. Production readiness **NOT CERTIFIED**.
+- Canonical SQLite, writer/lease/feeder/recovery, T1/T2, PostgreSQL, retention/deletion and trading were not changed or accessed.
+
 
 
 ### FastAPI follow-up self-review — 2026-11-19
