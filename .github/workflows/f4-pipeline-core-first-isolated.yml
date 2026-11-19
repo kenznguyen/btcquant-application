@@ -54,6 +54,8 @@ jobs:
             printf '%s %s\n' "$path" "$actual"
           }
 
+          mkdir -p "$RUNNER_TEMP/f4-test-artifacts"
+          chmod 0777 "$RUNNER_TEMP/f4-test-artifacts"
           {
             echo "workflow_run_id=$GITHUB_RUN_ID"
             echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
@@ -75,8 +77,6 @@ jobs:
           verify_blob market_data/test_support.py 64b99a858eb4ddc9d6275957cbb048a1cfc1843d
           verify_blob futures_intelligence/import_collector.py 5effe6540b86edcb190456c95b6bb11456aec099
           verify_blob integrations/hummingbot_bridge.py aa9db7522ffb7ce911c7fbbdc73a7f9b47401331
-          mkdir -p "$RUNNER_TEMP/f4-test-artifacts"
-          chmod 0777 "$RUNNER_TEMP/f4-test-artifacts"
           echo "source_blob_verification=PASS" >> "$RUNNER_TEMP/f4-test-artifacts/runner_metadata.txt"
 
       - name: Pull immutable Python image
