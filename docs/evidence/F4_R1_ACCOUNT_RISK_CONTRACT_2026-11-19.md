@@ -3,7 +3,7 @@
 Date: 2026-11-19  
 Repository: `kenznguyen/btcquant-application`  
 Branch: `main`  
-Verified source/workflow HEAD for R1: `a04faf10f96eb917a2e6bdf2ca7f4c632d78043a`
+Verified source/workflow HEAD for R1: `48dc689a6b52c8f732690f997b410b139261608e`
 
 ## Approval and scope
 
@@ -31,7 +31,7 @@ Out of scope:
 - `PaperLedger` no longer accepts caller-provided `risk_limits`; a non-null value raises `ACCOUNT_RISK_CONTRACT_CALLER_LIMITS_FORBIDDEN`.
 - Ledger instances expose a read-only mapping snapshot of contract limits. Order admission reloads the current contract inside the transaction so a stale per-strategy in-memory value cannot override the account contract.
 - Missing limits reject new exposure with `RISK_LIMITS_UNCONFIGURED`; malformed/tampered contract state raises `ACCOUNT_RISK_CONTRACT_INVALID`; conflicting provisioning raises `ACCOUNT_RISK_CONTRACT_CONFLICT`; stale revision hashes raise `ACCOUNT_RISK_CONTRACT_VERSION_CONFLICT`.
-- `pipeline.api.ledger()` provisions the initial contract from the shared environment configuration only after dual-ledger readiness checks. Repeated identical config is idempotent; environment drift against an existing contract is fail-closed. API quality reporting reads the persisted contract rather than independently parsing environment values.
+- `pipeline.api.ledger()` provisions the initial contract from the shared environment configuration only after dual-ledger readiness checks. Repeated identical config is idempotent; environment drift against an existing contract is fail-closed. API quality reporting reads the persisted contract rather than independently parsing environment values; malformed contract state is surfaced as an INVALID quality stream rather than an unhandled server error.
 - API tests now use the explicit versioned contract update operation when simulating a risk-policy change.
 
 ## Source identities at verified HEAD
@@ -40,15 +40,15 @@ Out of scope:
 |---|---|
 | `paper_execution/risk_contract.py` | `7ae74740568e3bcad78acd928896ee363cc62613` |
 | `paper_execution/ledger.py` | `5a04bbc27904dfab6ab139c6d5a47e538611405b` |
-| `pipeline/api.py` | `986424f2f3631de367e56b33e50d47f4c0a4f263` |
+| `pipeline/api.py` | `0c288741afe386cacaa8d2c7d3991274a00c43ef` |
 | `paper_execution/test_f4_r1_account_contract.py` | `a8b8be332e2b8e0ec9d2707b0c7cb7334ca0e851` |
 | `paper_execution/test_risk_limits.py` | `3dd3afb6e7b7d361829bae0355412c468cbbc313` |
 | `paper_execution/test_ledger.py` | `d352303e2088cbba0538ac4709f92ab74952a4e9` |
 | `paper_execution/test_dual_ledger_red.py` | `0cf05418940a07a8357ee9d6039325a1efcb16f2` |
-| `pipeline/test_api.py` | `5481c3072c79891161f992299783a9ba5879f955` |
+| `pipeline/test_api.py` | `f7bd8ff60b489ac309b20ea78f37b0708d7bba9a` |
 | `pipeline/test_decision.py` | `6781f26d66635f56662a627bdd3b4a63f26c1f28` |
-| `.github/workflows/f4-r1-account-risk-contract.yml` | `1dcb951be8a15785e199717e4415b95a206ca8cc` |
-| `.github/workflows/f4-pipeline-core-first-isolated.yml` | `62f60ea074784774855830ad4f85a04aed6d8de6` |
+| `.github/workflows/f4-r1-account-risk-contract.yml` | `bbac7930904fe6837c7452205da35d8bc0260568` |
+| `.github/workflows/f4-pipeline-core-first-isolated.yml` | `929ce3ca1030f5f5b5516812fb2590c562c9ab2f` |
 
 ## TDD and CI evidence
 
@@ -57,20 +57,20 @@ Out of scope:
 - Run [44466409033](https://github.com/kenznguyen/btcquant-application/actions/runs/44466409033), job `135365143505`, confirmed the contract implementation was absent and the new cases failed. This was an intentional RED run, not final verification.
 
 ### R1 GREEN — authoritative
-- Run [44468297408](https://github.com/kenznguyen/btcquant-application/actions/runs/44468297408), branch `main`, exact workflow/source HEAD `a04faf10f96eb917a2e6bdf2ca7f4c632d78043a`.
-- Job `135371303499`: SUCCESS.
+- Run [44468671840](https://github.com/kenznguyen/btcquant-application/actions/runs/44468297408), branch `main`, exact workflow/source HEAD `48dc689a6b52c8f732690f997b410b139261608e`.
+- Job `135372566774`: SUCCESS.
 - Python `3.12.16`; pinned image `python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`.
 - Command: `python -m unittest -v paper_execution.test_f4_r1_account_contract paper_execution.test_risk_limits paper_execution.test_ledger paper_execution.test_dual_ledger_red pipeline.test_api pipeline.test_decision`.
-- Result: `Ran 143 tests in 1.891s`; `OK`; 143/143 passed, 0 failures.
-- Artifact: `f4-r1-account-risk-contract-evidence`, ID `14502489155`, SHA-256 `587649aafbe745b2fdad1485e2f7c6bfac3a382fdb3ba5987131e772e22ffbaa`.
+- Result: `Ran 144 tests in 2.928s`; `OK`; 144/144 passed, 0 failures.
+- Artifact: `f4-r1-account-risk-contract-evidence`, ID `14503760398`, SHA-256 `aa6c8e834b91d9be285f0e9fe07d1736a7540ab80c5e90f7e3750d6d4c493dd3`.
 - Workflow verified the exact test/source blob SHAs above. The test container ran with `--network none`, read-only source mount, non-root user, no credentials and no canonical database mount.
 
 ### API / Decision regression
-- Run [44468155810](https://github.com/kenznguyen/btcquant-application/actions/runs/44468155810), exact workflow/source HEAD `7039524bd21c3320d8670be6177fd917be00bbdb`.
-- Job `135370846697`: SUCCESS.
-- Result: `Ran 41 tests in 0.176s`; 41/41 passed, 0 failures.
-- Artifact: `f4-pipeline-api-decision-evidence`, ID `14502719378`, SHA-256 `75adca9397018fea9b970c8673334f120b348c14c1faed3ed655a9f07cfa0e02`.
-- The API workflow checked out the exact source, verified source blobs, confirmed Python 3.12.16 and a loopback-only network probe, then ran the API/decision modules in a network-disabled Docker container.
+- Run [44468781493](https://github.com/kenznguyen/btcquant-application/actions/runs/44468155810), exact workflow/source HEAD `ff0c644a6143400735f271b8073253d545ba3606`.
+- Job `135372900876`: SUCCESS.
+- Result: `Ran 42 tests in 0.191s`; 42/42 passed, 0 failures.
+- Artifact: `f4-pipeline-api-decision-evidence`, ID `14502974074`, SHA-256 `19d0b652584f3717104a97b13b929505eeb69d70c487e9f068ea872da8a11289`.
+- The API workflow checked out the exact source, verified source blobs, confirmed Python 3.12.16 and a loopback-only network probe, then ran the API/decision modules in a network-disabled Docker container. Added coverage verifies a tampered contract produces an INVALID quality stream without crashing the API.
 
 ## Review and limitations
 
