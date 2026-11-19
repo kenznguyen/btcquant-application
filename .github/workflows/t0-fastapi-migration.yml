@@ -81,7 +81,7 @@ jobs:
                 -r /artifacts/runtime-full.lock -d /wheelhouse/runtime
               python -m pip download --only-binary=:all: --require-hashes \
                 -r /artifacts/test-full.lock -d /wheelhouse/test
-              python - <<'PY'
+              python - <<PY
           from hashlib import sha256
           from pathlib import Path
           from packaging.utils import canonicalize_name, parse_wheel_filename
