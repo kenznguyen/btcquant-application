@@ -9,6 +9,9 @@ on:
       - market_data/fastapi_app.py
       - requirements-market-data-fastapi.in
       - requirements-market-data-fastapi-test.in
+      - requirements-market-data-fastapi.lock
+      - requirements-market-data-fastapi-test.lock
+      - requirements-market-data-fastapi.sha256
       - .github/workflows/t0-fastapi-migration.yml
       - .github/workflows/t0-sqlite-aggregate.yml
   workflow_dispatch:
@@ -42,6 +45,9 @@ jobs:
           test -f market_data/test_fastapi_api.py
           test -f requirements-market-data-fastapi.in
           test -f requirements-market-data-fastapi-test.in
+          test -f requirements-market-data-fastapi.lock
+          test -f requirements-market-data-fastapi-test.lock
+          test -f requirements-market-data-fastapi.sha256
           mkdir -p "$RUNNER_TEMP/t0-fastapi-red-artifacts"
           chmod 0777 "$RUNNER_TEMP/t0-fastapi-red-artifacts"
           {
@@ -56,7 +62,7 @@ jobs:
             echo "credentials=none"
           } > "$RUNNER_TEMP/t0-fastapi-red-artifacts/runner_metadata.txt"
 
-      - name: Resolve target wheel locks and prepare offline wheelhouse
+      - name: Verify committed lock hashes and prepare offline wheelhouse
         shell: bash
         env:
           PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
@@ -65,6 +71,7 @@ jobs:
           artifacts="$RUNNER_TEMP/t0-fastapi-red-artifacts"
           wheelhouse="$RUNNER_TEMP/t0-fastapi-wheelhouse"
           mkdir -p "$wheelhouse/runtime" "$wheelhouse/test"
+          sha256sum -c requirements-market-data-fastapi.sha256
           docker pull --platform linux/amd64 "$PYTHON_IMAGE"
           docker run --rm --platform linux/amd64 \
             --network bridge --memory 1g --cpus 2 \
@@ -72,45 +79,20 @@ jobs:
             --mount "type=bind,src=$artifacts,dst=/artifacts" \
             --mount "type=bind,src=$wheelhouse,dst=/wheelhouse" \
             --workdir /workspace "$PYTHON_IMAGE" bash -euc '
-              python -m pip install --disable-pip-version-check pip-tools==7.5.2
-              pip-compile --resolver=backtracking --generate-hashes \
-                --output-file=/artifacts/runtime-full.lock requirements-market-data-fastapi.in
-              pip-compile --resolver=backtracking --generate-hashes \
-                --output-file=/artifacts/test-full.lock requirements-market-data-fastapi-test.in
               python -m pip download --only-binary=:all: --require-hashes \
-                -r /artifacts/runtime-full.lock -d /wheelhouse/runtime
+                -r /workspace/requirements-market-data-fastapi.lock -d /wheelhouse/runtime
               python -m pip download --only-binary=:all: --require-hashes \
-                -r /artifacts/test-full.lock -d /wheelhouse/test
-              python - <<PY
-          from hashlib import sha256
-          from pathlib import Path
-          from packaging.utils import canonicalize_name, parse_wheel_filename
-          
-          for source, target in (
-              (Path("/wheelhouse/runtime"), Path("/artifacts/requirements-market-data-fastapi.lock")),
-              (Path("/wheelhouse/test"), Path("/artifacts/requirements-market-data-fastapi-test.lock")),
-          ):
-              entries = []
-              for wheel in sorted(source.glob("*.whl")):
-                  name, version, _, _ = parse_wheel_filename(wheel.name)
-                  digest = sha256(wheel.read_bytes()).hexdigest()
-                  entries.append(f"{canonicalize_name(name)}=={version} --hash=sha256:{digest}")
-              if not entries:
-                  raise SystemExit(f"No target wheels downloaded for {source}")
-              target.write_text("\n".join(entries) + "\n", encoding="utf-8")
-          PY
+                -r /workspace/requirements-market-data-fastapi-test.lock -d /wheelhouse/test
               python -m pip install --disable-pip-version-check --no-index \
                 --find-links=/wheelhouse/test --require-hashes \
-                -r /artifacts/requirements-market-data-fastapi-test.lock
+                -r /workspace/requirements-market-data-fastapi-test.lock
               python --version > /artifacts/python-version.txt
               python -m pip freeze > /artifacts/installed-packages.txt
             '
-          sha256sum "$artifacts/requirements-market-data-fastapi.lock" \
-            "$artifacts/requirements-market-data-fastapi-test.lock" \
-            | tee "$artifacts/dependency-locks.sha256"
-          cp requirements-market-data-fastapi.in "$artifacts/"
-          cp requirements-market-data-fastapi-test.in "$artifacts/"
-          echo "dependency_install=offline wheelhouse, hashes enforced" >> "$artifacts/runner_metadata.txt"
+          cp requirements-market-data-fastapi.in requirements-market-data-fastapi.lock \
+            requirements-market-data-fastapi-test.in requirements-market-data-fastapi-test.lock \
+            requirements-market-data-fastapi.sha256 "$artifacts/"
+          echo "dependency_install=committed SHA-256 locks, offline wheelhouse" >> "$artifacts/runner_metadata.txt"
 
       - name: Execute FastAPI contract tests
         shell: bash
