@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 FastAPI initial adapter CI PASS
+
+- Latest paired source SHA: `f72cff4d78bbfe7beb1a3b3fe1dd6e03fe26a4f5`, repository `kenznguyen/btcquant-application`, branch `main`.
+- FastAPI adapter: `market_data/fastapi_app.py`; focused ASGI contract tests: `market_data/test_fastapi_api.py`.
+- FastAPI run [44525016702](https://github.com/kenznguyen/btcquant-application/actions/runs/44525016702), exact SHA above, **10/10 PASS**, artifact ID `14529288115`, artifact SHA-256 `6ca6bf9531af536d2cd140e7609934e3b876105c8bfcc4fb6ac74e7a49b4054b`.
+- SQLite-only aggregate run [44525016662](https://github.com/kenznguyen/btcquant-application/actions/runs/44525016662), same exact SHA, **196/196 PASS**, artifact ID `14529039136`, artifact SHA-256 `e4fe7e0bece4353b438c6a22cd7b2c36f27c88b2152fd2d9849b84a88388d09e`.
+- Runtime/test dependency locks generated and installed with SHA-256 under CPython 3.12.16. Runtime lock SHA-256 `ed5d71e2796303e45266637dc0bffd980e9f869d9c1f25dc61abed8fffa2ee54`; test lock SHA-256 `fe4b7109fb211671e90c26a8158b29d7b7d5be6cb0d8be3f9f4c150767bfd7ea`. Locks are preserved in artifact `14529288115`, not yet committed to repository.
+- Detailed report: `docs/evidence/T0_FASTAPI_INITIAL_ADAPTER_REGRESSION_2026-11-19.md`, commit `0122ea21d870236230c30f2c5361598fe2e0fa3c`. Decision update commit `7fe3b55f8531da24b9fbcc832f30623f9cc1409b`; active scope index update commit `e92724b77594594a0e6fc5560f79df450490353e`.
+- Migration status **PARTIAL**: the old WSGI `application` remains in `market_data/api.py`; existing `market_data/test_api.py` still tests it. Full Candle Contract 1.1.0 parity is not yet demonstrated by the 10 new ASGI tests.
+- Next bounded steps: commit the exact dependency locks; port all existing API 1.1.0 tests to ASGI; run focused ASGI plus 196-test aggregate on the same SHA; remove WSGI/Gunicorn only after full parity and independent review; then separately request runtime qualification approval.
+- Runtime endpoint probes, Nginx/VPS/systemd/deployment, T1/T2 connections, PostgreSQL, canonical data changes, retention/deletion changes and trading remain outside authorization. Production readiness **NOT CERTIFIED**.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 HTTP consumer migration scope review
 
 - Review report: `docs/evidence/T0_HTTP_CONSUMER_MIGRATION_SCOPE_REVIEW_2026-11-19.md`, commit `8e1248ff1351d3a399185d8b5cac89b2dba3f395`.
