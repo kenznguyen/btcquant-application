@@ -47,7 +47,17 @@
       "daily_monthly_overlap_payload_comparison": "NOT_APPLICABLE_SELECTED_PARTITIONS_ARE_DISJOINT"
     },
     "retrieval_cutoff_utc": null,
-    "note": "The recorded archive evidence is a bounded validation result. Do not invent a unified current retrieval cutoff; archive last-modified metadata is not a candle retrieval cutoff."
+    "note": "The recorded archive evidence is a bounded validation result. Do not invent a unified current retrieval cutoff; archive last-modified metadata is not a candle retrieval cutoff.",
+    "per_object_byte_reconciliation": {
+      "status": "BLOCKED_MISMATCH_11277_BYTES",
+      "zip_bytes_sum_from_202_inventory_rows": 14910840,
+      "zip_bytes_declared_in_validation_evidence": 14922117,
+      "zip_byte_difference": 11277,
+      "sidecar_bytes_declared_in_validation_evidence": 6916,
+      "recomputed_total_using_inventory_zip_sum_and_declared_sidecars": 14917756,
+      "total_bytes_declared_in_validation_evidence": 14929033,
+      "note": "Keep source summary and per-object sum distinct. Do not overwrite either value. Re-measure all object bytes during any newly approved materialization and reconcile before accepting the run."
+    }
   },
   "timeframes": {
     "15m": {
@@ -127,7 +137,8 @@
       "sidecar_individual_byte_size": "NOT_VERIFIED_NOT_RETAINED_IN_EXISTING_EVIDENCE",
       "sidecar_individual_sha256": "NOT_VERIFIED_NOT_RETAINED_IN_EXISTING_EVIDENCE",
       "build_readiness": "BLOCKED_PENDING_SIDECAR_METADATA_POLICY_AND_RAW_MATERIALIZATION_APPROVAL",
-      "note": "All 404 object identities are represented. ZIP records include key, byte size, SHA-256, timeframe, period, row count and validation. Sidecar records include paired key and expected ZIP digest, but their own object byte size and payload SHA-256 are not present in source evidence and remain NOT_VERIFIED. Do not substitute ZIP SHA-256 for sidecar SHA-256."
+      "note": "All 404 object identities are represented. ZIP records include key, byte size, SHA-256, timeframe, period, row count and validation. Sidecar records include paired key and expected ZIP digest, but their own object byte size and payload SHA-256 are not present in source evidence and remain NOT_VERIFIED. Do not substitute ZIP SHA-256 for sidecar SHA-256.",
+      "aggregate_reconciliation": "BLOCKED_MISMATCH_11277_BYTES"
     }
   },
   "candle_contract": {
