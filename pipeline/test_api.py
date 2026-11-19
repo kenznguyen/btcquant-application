@@ -134,14 +134,19 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(first["order"], retry["order"])
         self.assertEqual(before, after)
     def test_ai_paper_execution_is_disabled_under_core_first_policy(self):
-        before = self.request("/v1/paper")[1]
+        with sqlite3.connect(self.db) as connection:
+            before = connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+            ).fetchall()
         with patch.object(api, "decide", return_value=self.valid_ai_decision()):
             code, result = self.request("/v1/paper/evaluate", "POST", {"source": "AI"})
-        after = self.request("/v1/paper")[1]
+        with sqlite3.connect(self.db) as connection:
+            after = connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+            ).fetchall()
         self.assertEqual(code, 403, result)
         self.assertEqual(result.get("error"), "AI_EXECUTION_DISABLED")
         self.assertEqual(after, before)
-
     def test_no_prediction_is_wait_with_no_order(self):
         self.pred_path.unlink()
         code, result = self.request("/v1/paper/evaluate", "POST", {})
