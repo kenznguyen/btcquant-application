@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Final hardened FastAPI 25/25 + SQLite 196/196 PASS
+
+- Repository `kenznguyen/btcquant-application`, branch `main`; latest paired source SHA `0a4432d8d101381e8b07c88a1a65bbf1ee3a787f`.
+- FastAPI ASGI contract run [44527300856](https://github.com/kenznguyen/btcquant-application/actions/runs/44527300856), job `135571152796`: **25/25 PASS**, artifact `14532510818`, SHA-256 `563e4841b1139c16f55198407a890f6ea60400564c8c2b2cc1641576267ad49c`.
+- SQLite aggregate run [44527300813](https://github.com/kenznguyen/btcquant-application/actions/runs/44527300813), job `135571149659`, same exact SHA: **196/196 PASS**, artifact `14533320216`, SHA-256 `6ef67fb1512cb06a62a35d74a5c34e333814cf33c865f58c4200ea5f206f7f23`.
+- Committed target wheel locks: runtime SHA-256 `fb4cf8f63131cb36636b3c3230378a49bfb2d3a56b8750778ed5b3b5dac8d786`; test SHA-256 `2916098771a482a21637b94fff1f79afc0ddeb37a2a01fdae05032509a889cb6`. CI validates both, downloads target wheels, and installs offline.
+- FastAPI tests run as non-root with read-only root filesystem, dropped capabilities, no-new-privileges, resource bounds and `--network none`; only bounded /tmp is writable/executable for test DBs/native extensions.
+- Detailed evidence: `docs/evidence/T0_FASTAPI_LOCKED_OFFLINE_CI_AND_REVIEW_2026-11-19.md`, follow-up commit `c2c575dad69c7e4eda2c86df13a324485bd0ee14`. Decision update `db1f552b0398e4a5665f24d7a3d41888e1ff474c`; scope index update `89ab47e6a94507d1f57c0c27fbdacf2cf34ea832`.
+- Internal code review PASS for the bounded adapter/CI scope; independent second-reviewer sign-off remains **PENDING**.
+- WSGI `application` remains in `market_data/api.py`; WSGI tests remain in `market_data/test_api.py`. Migration **PARTIAL**. Do not remove WSGI/Gunicorn before independent review accepts the migration diff.
+- Next: obtain independent code review; after acceptance, make a bounded WSGI/Gunicorn removal and rerun both suites on one exact SHA.
+- Runtime endpoint probe, Nginx/VPS/systemd/deployment, T1/T2, PostgreSQL, canonical data/schema, retention/deletion and trading remain outside authorization. Production readiness **NOT CERTIFIED**.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — FastAPI 25/25 + SQLite 196/196 PASS, committed offline locks
 
 - Repository `kenznguyen/btcquant-application`, branch `main`; latest paired exact source SHA `6558141e7de20c30447cdb9705583e05a7d80592`.
