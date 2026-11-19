@@ -1,0 +1,175 @@
+name: F4 Pipeline API and Decision isolated tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/f4-pipeline-core-first-isolated.yml"
+      - "pipeline/api.py"
+      - "pipeline/test_api.py"
+      - "pipeline/test_decision.py"
+      - "pipeline/values.py"
+      - "market_data/store.py"
+      - "market_data/test_support.py"
+      - "futures_intelligence/import_collector.py"
+      - "integrations/hummingbot_bridge.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: f4-pipeline-core-first-isolated
+  cancel-in-progress: false
+
+jobs:
+  f4-isolated-tests:
+    name: F4 API and decision — Python 3.12.16 isolated
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact approved source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 290bbefb3bfe98f6a13c053ec181ec3d556f27c0
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify immutable source and blob identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_commit="290bbefb3bfe98f6a13c053ec181ec3d556f27c0"
+          actual_commit="$(git rev-parse HEAD)"
+          test "$actual_commit" = "$expected_commit"
+
+          verify_blob() {
+            local path="$1"
+            local expected="$2"
+            local actual
+            test -f "$path"
+            actual="$(git hash-object "$path")"
+            test "$actual" = "$expected"
+            printf '%s %s\n' "$path" "$actual"
+          }
+
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_head_sha=$GITHUB_SHA"
+            echo "checked_out_source_sha=$actual_commit"
+            echo "runner_image=ubuntu-24.04"
+            echo "python_image=python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df"
+            echo "test_modules=pipeline.test_api,pipeline.test_decision"
+            echo "expected_test_count=41"
+            echo "network_mode=none (Docker test container)"
+            echo "credentials=none"
+            echo "canonical_database_mount=none"
+          } > "$RUNNER_TEMP/f4-test-artifacts/runner_metadata.txt"
+          verify_blob pipeline/api.py 0301bbec82f99253b8a4c69e09db53ad108df686
+          verify_blob pipeline/test_api.py 30dd11a50c63f27680f7c65c4339ad955e586476
+          verify_blob pipeline/test_decision.py 6781f26d66635f56662a627bdd3b4a63f26c1f28
+          verify_blob pipeline/values.py 5576376454af129b944919fb588e26c0657a781e
+          verify_blob market_data/store.py 4e1b0c54bd56455abe5be0e5c7d0807e63e0bc78
+          verify_blob market_data/test_support.py 64b99a858eb4ddc9d6275957cbb048a1cfc1843d
+          verify_blob futures_intelligence/import_collector.py 5effe6540b86edcb190456c95b6bb11456aec099
+          verify_blob integrations/hummingbot_bridge.py aa9db7522ffb7ce911c7fbbdc73a7f9b47401331
+          mkdir -p "$RUNNER_TEMP/f4-test-artifacts"
+          chmod 0777 "$RUNNER_TEMP/f4-test-artifacts"
+          echo "source_blob_verification=PASS" >> "$RUNNER_TEMP/f4-test-artifacts/runner_metadata.txt"
+
+      - name: Pull immutable Python image
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          docker version
+          docker pull --platform linux/amd64 "$PYTHON_IMAGE"
+          docker image inspect --format '{{.Id}} {{json .RepoDigests}}' "$PYTHON_IMAGE" | tee "$RUNNER_TEMP/f4-test-artifacts/container_image.txt"
+
+      - name: Verify Python and isolated network
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          docker run --rm --platform linux/amd64 --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp:rw,nosuid,nodev,size=64m,mode=1777 \
+            "$PYTHON_IMAGE" python --version | tee "$RUNNER_TEMP/f4-test-artifacts/python_version.txt"
+          docker run --rm --platform linux/amd64 --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp:rw,nosuid,nodev,size=64m,mode=1777 \
+            "$PYTHON_IMAGE" python -c 'from pathlib import Path; interfaces = {line.split(":", 1)[0].strip() for line in Path("/proc/net/dev").read_text().splitlines()[2:]}; assert interfaces == {"lo"}, f"unexpected network interfaces: {sorted(interfaces)}"; print("network_isolation_probe=PASS (loopback only)")' \
+            | tee "$RUNNER_TEMP/f4-test-artifacts/network_isolation.txt"
+          grep -qx 'Python 3.12.16' "$RUNNER_TEMP/f4-test-artifacts/python_version.txt"
+
+      - name: Run import verification and 41 regression tests
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/f4-test-artifacts"
+          log="$artifacts/unittest.log"
+          if docker run --rm \
+            --platform linux/amd64 \
+            --network none \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --pids-limit 128 \
+            --memory 2g \
+            --cpus 2 \
+            --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=256m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$artifacts,dst=/artifacts" \
+            --env HOME=/tmp \
+            --env TMPDIR=/tmp \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace \
+            --workdir /workspace \
+            "$PYTHON_IMAGE" \
+            sh -c 'python -c "import pipeline.api, pipeline.test_api, pipeline.test_decision; print(\"import_verification=PASS\")" && python -m unittest -v pipeline.test_api pipeline.test_decision' \
+            > "$log" 2>&1; then
+            test_status=0
+          else
+            test_status=$?
+          fi
+          cat "$log"
+          test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
+          {
+            echo "python_version=3.12.16"
+            echo "test_command=python -m unittest -v pipeline.test_api pipeline.test_decision"
+            echo "test_count=${test_count:-NOT_REPORTED}"
+            echo "test_exit_code=$test_status"
+          } >> "$artifacts/runner_metadata.txt"
+          {
+            printf '%s\n' \
+              '## F4 Pipeline API / decision isolated test run' \
+              '' \
+              "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
+              "- Workflow HEAD SHA: $GITHUB_SHA" \
+              '- Checked-out source SHA: 290bbefb3bfe98f6a13c053ec181ec3d556f27c0' \
+              '- Python: 3.12.16' \
+              '- Network: none inside test container' \
+              "- Tests discovered: ${test_count:-NOT_REPORTED} (expected 41)" \
+              "- Test process exit code: $test_status"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$test_status" -eq 0 && "$test_count" != "41" ]]; then
+            echo "Expected 41 tests; observed ${test_count:-no test summary}." >&2
+            exit 1
+          fi
+          exit "$test_status"
+
+      - name: Upload F4 test evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: f4-pipeline-api-decision-evidence
+          path: ${{ runner.temp }}/f4-test-artifacts/
+          if-no-files-found: error
+          retention-days: 14
