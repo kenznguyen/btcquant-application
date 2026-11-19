@@ -4415,8 +4415,8 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Exact-SHA run [44496561587](https://github.com/kenznguyen/btcquant-application/actions/runs/44496561587), job `135465125699`, SUCCESS; checkout SHA `dc7190e392de1b0bb940ba4acf9a1df0f44eb130`; `Ran 16 tests in 0.025s`; OK.
 - Artifact `t0-sqlite-api-storage-evidence`, ID `14514253952`, size 1,470 bytes, digest `sha256:bd75b0a6053b4ea4a1558f85947cf28ba2b10667eb51fa64d710d9eed4a49870`, expires `2026-12-03T09:27:39Z`.
 - Environment: immutable Python 3.12.16 container, Docker network none, read-only source mount, non-root, no credentials, no canonical DB mount.
-- Evidence: `docs/evidence/T0_SQLITE_API_STORAGE_ISOLATED_GATE_2026-11-19.md`, initial commit `9879c8671342e948f7bd0317451c28fc283c0a40`, exact blob correction commit pending below.
-- Provenance addendum commit pending below.
+- Evidence: `docs/evidence/T0_SQLITE_API_STORAGE_ISOLATED_GATE_2026-11-19.md`, initial commit `9879c8671342e948f7bd0317451c28fc283c0a40`, exact blob correction commit: `1c570c6a7d2287ac085056da201d83a1da24221d`.
+- Provenance addendum commit: `323166845f7a5788f06c693557bc4cffa8687106`.
 - Status: SQLite API 12/12 PASS; SQLite Storage 4/4 PASS; isolated gate 16/16 PASS. PostgreSQL/TimescaleDB, lifecycle, runtime, canonical data/recovery and production readiness remain NOT TESTED / OUT OF SCOPE / NOT CERTIFIED.
 - Scope guard: no source repo, application production/test source, PostgreSQL, canonical DB/data, VPS, runtime, T1/T2, paper/live trading or execution changed/accessed.
 - Next: read-only review of remaining T0 API/Storage integration dependencies and contract boundaries. Do not broaden test scope without separate approval.
