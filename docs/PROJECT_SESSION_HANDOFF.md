@@ -4663,3 +4663,15 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Baseline evidence only: aggregate run `44515824622`, exact tested SHA `8f49439fafc95186a8c854fe482aad707525a658`, 196/196 PASS; API/Storage run `44515824664`, 21/21 PASS. Neither run tests FastAPI.
 - Architecture decision: **APPROVED**. Migration plan: **RECORDED**. Source implementation and dependency/test/CI changes: **NOT STARTED / REQUIRE SEPARATE APPROVAL**. FastAPI tests/workflows: **NOT RUN**. Endpoint/runtime/deployment: **NOT AUTHORIZED / NOT VERIFIED**. Production readiness: **NOT CERTIFIED**.
 - Next gate: owner must separately authorize TDD/source implementation. Once authorized, first perform dependency compatibility and contract RED tests; do not connect or deploy the service without a further separate runtime approval.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 FastAPI implementation approved; execution blocked
+
+- Owner separately approved TDD/source implementation of the T0 FastAPI migration. This is implementation authorization within the previously approved HTTP-adapter-only scope; it does not authorize runtime/deployment.
+- Decision record updated in commit `0be75e990337bc079dca6a4291e53e104359b6d6`. T0 Active Scope Index updated in commit `0b2e6e0dd57e6b1f86d871383d1d78a698bc1372`, blob `c7497cb1106c4f842dec7ac21198ce065586d2c3`.
+- Execution is **BLOCKED** before source changes: local checkout failed because the execution container could not resolve `github.com`; available GitHub tools provide read/write but no workflow-dispatch operation. Local environment is Python 3.13.5 / FastAPI 0.128.2, not the pinned CPython 3.12.16 target.
+- No TDD RED contract test has been run. No source, tests, dependency manifest/lock or workflow changes have been made. Do not implement without RED evidence and target dependency compatibility.
+- Resume prerequisites: repository-connected checkout; CPython 3.12.16/Linux x86_64; create exact-version SHA-256 wheel lock; add and run API 1.1.0 contract RED tests; implement minimal FastAPI adapter; run focused tests, 196-test SQLite aggregate plus new tests; independent review; record exact SHA/workflow/artifacts.
+- Preserve all boundaries: T0 SQLite canonical and writer/lease/feeder/recovery untouched; Nginx remains gateway; PostgreSQL PARKED; no T1/T2 connection; no VPS/systemd/deployment; no data deletion/retention changes; no trading/live orders. Production readiness remains **NOT CERTIFIED**.
