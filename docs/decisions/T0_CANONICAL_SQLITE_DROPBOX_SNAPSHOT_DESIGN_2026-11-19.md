@@ -105,3 +105,46 @@ No database or data payload is created, downloaded, copied, exported, modified, 
 - Later data, Dropbox, restore and runtime phases each require separate approval.
 
 **Phase 1 disposition:** DESIGN RECORDED; static implementation checks and independent validation **NOT YET PERFORMED**; no data/runtime action authorized.
+
+
+## Static review clarifications — 2026-11-19
+
+Static review: [T0 Canonical SQLite + Dropbox Snapshot Static Review](../reviews/T0_CANONICAL_SQLITE_DROPBOX_SNAPSHOT_STATIC_REVIEW_2026-11-19.md), commit `c08d5e225140d02235206d4dabc4e24349370f3f`.
+
+### Dropbox object publication
+
+- Publish with Dropbox create-only/no-overwrite semantics. If the version path already exists, fail closed; do not overwrite or silently autorename.
+- Record Dropbox file ID, revision, canonical path, server-reported size and modification metadata in the manifest/evidence.
+- Read back the exact uploaded revision and independently verify byte size and local SHA-256. A successful upload or Dropbox content hash alone is insufficient.
+
+### Mandatory manifest and state transitions
+
+The manifest is mandatory for every snapshot eligible for restore or acceptance. It must bind exact snapshot filename, byte size and SHA-256, and include format version, snapshot/dataset IDs, lineage, UTC timestamps, SQLite schema version/user_version, source/retrieval provenance, M15/H1 interval/count/min/max/gaps, semantic validation results, and Dropbox file ID/revision. Never include credentials or tokens.
+
+Suggested status transitions:
+- `STAGED` → `VALIDATED_LOCAL` → `UPLOADED_NOT_RESTORE_VERIFIED` → `RESTORE_VERIFIED` → `OFFICIAL` (only after owner acceptance).
+- Any validation failure, ambiguous Dropbox object, missing/malformed manifest or digest mismatch → `QUARANTINED`.
+- Upload success alone does not imply restore verification or official acceptance.
+
+### SQLite snapshot and restore filesystem rules
+
+- Use Python SQLite `Connection.backup` to create a consistent staging snapshot from the operational primary.
+- Never copy live `.sqlite3`, `-wal` or `-shm` files independently into Dropbox.
+- Close the staging snapshot before validation and hashing.
+- Restore only into a new empty destination path/directory without pre-existing DB or stale WAL/SHM sidecars. Verify downloaded bytes before opening; validate read-only.
+- No writer startup, primary replacement, lease transfer or cutover is implied.
+
+### Coverage gate remains owner-defined
+
+The exact accepted M15/H1 UTC start/end boundaries and gap policy are not yet approved. They must be explicitly set before reconstruction or official Canonical acceptance. Until then, no snapshot can be marked `OFFICIAL / VERIFIED`. The validator must also report first/last timestamps and partial-boundary treatment.
+
+### Static review findings
+
+- R1 Dropbox no-overwrite/object revision: required specification clarification recorded.
+- R2 numeric M15/H1 coverage target: blocked pending owner decision.
+- R3 mandatory external provenance manifest: required specification clarification recorded.
+- R4 safe SQLite backup/restore filesystem handling: required specification clarification recorded.
+- R5 manifest integrity/status transitions: required specification clarification recorded.
+- R6 `PRAGMA user_version` validation: informational requirement recorded.
+
+The current implementation has no snapshot publisher, Dropbox adapter, manifest validator or restore verifier. This design is not implementation evidence.
