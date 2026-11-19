@@ -1,3 +1,14 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Runner recheck BLOCKED; no tests executed
+
+- Continued from verified main HEAD `d7636fe1bb8f619cf61f69b60464903c740091c9`, after re-reading this handoff.
+- Environment recheck: `uv python list --only-installed` reports only CPython 3.13.5; no Python 3.12.16 interpreter available.
+- Retried read-only `git ls-remote https://github.com/kenznguyen/btcquant-application.git refs/heads/main`; DNS failed with `Could not resolve host: github.com`.
+- No interpreter/package installation, clone, checkout, import, test, compile/build or CI/workflow execution performed.
+- Status unchanged: Core-First API enforcement PASS (static); test alignment PASS (static); runtime import and 41 regression tests NOT VERIFIED / BLOCKED.
+- Next required: provide an exact Python 3.12.16 runner and repository checkout, or separately authorize an alternate-version validation / CI route. Do not silently substitute Python 3.13.5 for the pinned test baseline.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — Core-First API enforcement committed; tests NOT RUN
 
 - Owner approved the production API correction after approving test-only alignment.

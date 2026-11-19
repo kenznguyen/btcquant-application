@@ -65,3 +65,11 @@
 
 ## Next step
 Provision or make available an exact repository checkout with Python 3.12.16 and standard library only, network disabled. Then run the two isolated unittest modules and capture exact command/output. Do not install packages or run CI without separate approval.
+
+
+## Runner availability recheck — 2026-11-19
+- Re-read `docs/PROJECT_SESSION_HANDOFF.md` before continuing; current starting HEAD was `d7636fe1bb8f619cf61f69b60464903c740091c9`.
+- Checked installed Python interpreters with `uv python list --only-installed`: only CPython 3.13.5 is present (`/usr/bin/python3.13`, `/usr/bin/python`). Python 3.12.16 is not installed or cached as an installed interpreter.
+- Retried read-only Git remote discovery using `git ls-remote https://github.com/kenznguyen/btcquant-application.git refs/heads/main`; failed with `Could not resolve host: github.com`.
+- No interpreter was installed/downloaded; no package was installed; no repository clone or checkout was created; no source or tests were executed. No CI/workflow was started.
+- Result: exact Python 3.12.16 checkout/runner remains BLOCKED by unavailable interpreter and DNS/network resolution. The prior source-only static PASS remains unchanged; import and 41 regression tests remain NOT RUN.
