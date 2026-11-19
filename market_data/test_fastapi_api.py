@@ -52,7 +52,9 @@ class FastApiCandleContractTest(unittest.TestCase):
         )
         headers = {"Authorization": f"Bearer {token}"} if token is not None else {}
         with patch.dict(os.environ, self.env, clear=True):
-            return self.client.request(method, path, params=query, headers=headers)
+            response = self.client.request(method, f"{path}?{query}", headers=headers)
+        self.assertEqual(response.headers.get("cache-control"), "no-store")
+        return response.status_code, response.json()
 
     def test_health_is_public_and_has_stable_payload(self):
         with patch.dict(os.environ, {}, clear=True):
@@ -166,6 +168,226 @@ class FastApiCandleContractTest(unittest.TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json(), {"error": "STORE_UNAVAILABLE"})
         self.assertTrue(self.db.is_file())
+
+
+    def test_reads_persisted_decimal_candles_and_reports_gap(self):
+        code, body = self.request()
+        self.assertEqual(code, 200)
+        self.assertEqual(body["exchange"], "binance")
+        self.assertEqual(body["marketType"], "USDT_PERPETUAL")
+        self.assertEqual(body["candles"][0]["open"], "100.01")
+        self.assertTrue(body["candles"][0]["isClosed"])
+        self.assertEqual(body["coverage"]["expected"], 2)
+        self.assertEqual(body["coverage"]["returned"], 1)
+        self.assertFalse(body["coverage"]["complete"])
+        self.assertEqual(body["coverage"]["gaps"], [
+            {"startMs": self.start + self.interval, "endMs": self.start + 2*self.interval}
+        ])
+
+    def test_as_of_does_not_backdate_imported_history(self):
+        query = (
+            f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
+            f"&endMs={self.start+self.interval}&asOfMs={self.start+self.interval}"
+        )
+        generated_at = self.start + self.interval + 100
+        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+            code, body = self.request(query)
+        self.assertEqual(code, 200)
+        self.assertEqual(body["candles"], [])
+        self.assertFalse(body["coverage"]["complete"])
+
+    def test_corrupt_stored_prices_are_not_served_as_validated(self):
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE candles SET high='0'")
+        code, body = self.request()
+        self.assertEqual(code, 503)
+        self.assertEqual(body, {"error": "STORE_UNAVAILABLE"})
+
+    def test_sync_to_reopened_api_preserves_gaps_and_observation_time(self):
+        start, step = self.start, self.interval
+
+        class Exchange:
+            id = "binanceusdm"
+
+            def load_markets(self):
+                market = dict(
+                    symbol="BTC/USDT:USDT", id="BTCUSDT", base="BTC", quote="USDT",
+                    settle="USDT", active=True, swap=True, linear=True, spot=False,
+                )
+                return {market["symbol"]: market}
+
+            def fetch_time(self):
+                return start + step
+
+            def fetch_ohlcv(self, *args, **kwargs):
+                return [
+                    [start, 100, 101, 99, 100.5, 2.5],
+                    [start + step, 100, 102, 99, 101, 3],
+                ]
+
+        path = Path(self.temp.name) / "pipeline.sqlite3"
+        store = CandleStore(path)
+        leases = LeaseStore(str(path))
+        lease = leases.acquire("api-pipeline-test", start, ttl_seconds=60)
+        gateway = SQLiteWriteGateway(
+            store=store,
+            lease_store=leases,
+            owner_id="api-pipeline-test",
+            generation_provider=lambda: lease.generation,
+            clock=lambda: start + 1,
+        )
+        inserted = sync_window(
+            Exchange(), gateway, "15m", start, start + 2*step,
+            now_ms=lambda: start + 3*step,
+        )
+        self.assertEqual(inserted, 1)
+        self.env["MARKET_DATA_DB"] = str(path)
+        code, result = self.request()
+        self.assertEqual(code, 200)
+        self.assertEqual(result["coverage"]["returned"], 1)
+        self.assertFalse(result["coverage"]["complete"])
+        self.assertEqual(result["candles"][0]["availableAtMs"], start + 3*step)
+        self.assertEqual(result["candles"][0]["availabilityKind"], "FIRST_OBSERVED")
+
+    def test_missing_sqlite_path_preserves_unconfigured_response(self):
+        env = dict(self.env)
+        env.pop("MARKET_DATA_DB")
+        with patch.dict(os.environ, env, clear=True):
+            response = self.client.get("/v1/candles")
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json(), {"error": "UNCONFIGURED"})
+
+    def test_contract_v1_response_has_explicit_version_and_market_identity(self):
+        generated_at = self.start + 2*self.interval + 1_000
+        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+            code, body = self.request()
+        self.assertEqual(code, 200)
+        self.assertEqual(body["contractVersion"], "1.1.0")
+        self.assertEqual(body["schemaVersion"], 1)
+        self.assertEqual(body["exchange"], "binance")
+        self.assertEqual(body["marketType"], "USDT_PERPETUAL")
+        self.assertEqual(body["symbol"], "BTCUSDT")
+        self.assertEqual(body["timeframe"], "15m")
+        self.assertEqual(body["volumeUnit"], "BTC_BASE_ASSET")
+        self.assertEqual(body["source"], "ccxt.binanceusdm")
+        self.assertEqual(body["startMs"], self.start)
+        self.assertEqual(body["endMs"], self.start + 2*self.interval)
+        self.assertIsNone(body["asOfMs"])
+        self.assertRegex(body["datasetVersion"], r"^sha256:[0-9a-f]{64}$")
+
+    def test_contract_v1_freshness_requires_complete_coverage(self):
+        evaluation_time = self.start + self.interval + 1_000
+        with patch("market_data.fastapi_app.time.time_ns", return_value=evaluation_time * 1_000_000):
+            code, body = self.request()
+        self.assertEqual(code, 200)
+        self.assertFalse(body["coverage"]["complete"])
+        self.assertEqual(body["freshness"], {
+            "latestExpectedOpenTimeMs": self.start,
+            "latestReturnedOpenTimeMs": self.start,
+            "latestCloseTimeMs": self.start + self.interval,
+            "latestAvailableAtMs": self.start + self.interval + 7,
+            "evaluationTimeMs": evaluation_time,
+            "evaluationAnchor": "GENERATED_AT",
+            "observationAgeMs": evaluation_time - (self.start + self.interval + 7),
+            "closeLagMs": evaluation_time - (self.start + self.interval),
+            "timestampValid": True,
+            "fresh": True,
+            "evaluable": False,
+        })
+
+    def test_contract_v1_complete_current_window_is_evaluable(self):
+        evaluation_time = self.start + self.interval + 1_000
+        query = (
+            f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
+            f"&endMs={self.start+self.interval}"
+        )
+        with patch("market_data.fastapi_app.time.time_ns", return_value=evaluation_time * 1_000_000):
+            code, body = self.request(query)
+        self.assertEqual(code, 200)
+        self.assertTrue(body["coverage"]["complete"])
+        self.assertTrue(body["freshness"]["timestampValid"])
+        self.assertTrue(body["freshness"]["fresh"])
+        self.assertTrue(body["freshness"]["evaluable"])
+
+    def test_contract_v1_stale_latest_candle_is_not_fresh_or_evaluable(self):
+        evaluation_time = self.start + 2*self.interval + 1_000
+        with patch("market_data.fastapi_app.time.time_ns", return_value=evaluation_time * 1_000_000):
+            code, body = self.request()
+        self.assertEqual(code, 200)
+        self.assertFalse(body["freshness"]["fresh"])
+        self.assertFalse(body["freshness"]["evaluable"])
+
+    def test_contract_v1_historical_as_of_anchors_freshness_to_replay_time(self):
+        evaluation_time = self.start + self.interval + 1_000
+        generated_at = self.start + 10*self.interval
+        query = (
+            f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
+            f"&endMs={self.start+self.interval}&asOfMs={evaluation_time}"
+        )
+        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+            code, body = self.request(query)
+        self.assertEqual(code, 200)
+        self.assertEqual(body["generatedAtMs"], generated_at)
+        self.assertEqual(body["asOfMs"], evaluation_time)
+        self.assertEqual(body["freshness"]["evaluationTimeMs"], evaluation_time)
+        self.assertEqual(body["freshness"]["evaluationAnchor"], "AS_OF")
+        self.assertTrue(body["freshness"]["fresh"])
+        self.assertTrue(body["freshness"]["evaluable"])
+
+    def test_contract_v1_future_availability_timestamp_is_invalid(self):
+        evaluation_time = self.start + self.interval + 1_000
+        with sqlite3.connect(self.db) as connection:
+            connection.execute(
+                "UPDATE candles SET available_at_ms=?",
+                (evaluation_time + 1,),
+            )
+        query = (
+            f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
+            f"&endMs={self.start+self.interval}"
+        )
+        with patch("market_data.fastapi_app.time.time_ns", return_value=evaluation_time * 1_000_000):
+            code, body = self.request(query)
+        self.assertEqual(code, 200)
+        self.assertFalse(body["freshness"]["timestampValid"])
+        self.assertFalse(body["freshness"]["fresh"])
+        self.assertFalse(body["freshness"]["evaluable"])
+
+    def test_contract_v1_empty_as_of_window_has_null_freshness_and_is_not_evaluable(self):
+        generated_at = self.start + 2*self.interval + 1_000
+        query = (
+            f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
+            f"&endMs={self.start+self.interval}&asOfMs={self.start+self.interval}"
+        )
+        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+            code, body = self.request(query)
+        self.assertEqual(code, 200)
+        self.assertEqual(body["candles"], [])
+        self.assertEqual(body["freshness"], {
+            "latestExpectedOpenTimeMs": self.start,
+            "latestReturnedOpenTimeMs": None,
+            "latestCloseTimeMs": None,
+            "latestAvailableAtMs": None,
+            "evaluationTimeMs": self.start + self.interval,
+            "evaluationAnchor": "AS_OF",
+            "observationAgeMs": None,
+            "closeLagMs": None,
+            "timestampValid": False,
+            "fresh": False,
+            "evaluable": False,
+        })
+
+    def test_contract_v1_candle_has_explicit_exclusive_close_and_quality_provenance(self):
+        generated_at = self.start + 2*self.interval + 1_000
+        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+            code, body = self.request()
+        self.assertEqual(code, 200)
+        candle = body["candles"][0]
+        self.assertEqual(candle["openTimeMs"], self.start)
+        self.assertEqual(candle["closeTimeMs"], self.start + self.interval)
+        self.assertEqual(candle["availabilityKind"], "FIRST_OBSERVED")
+        self.assertEqual(candle["quality"], "VALIDATED")
+        self.assertEqual(candle["source"], "ccxt.binanceusdm")
+        self.assertEqual(candle["volume"], "2.5")
 
 
 if __name__ == "__main__":
