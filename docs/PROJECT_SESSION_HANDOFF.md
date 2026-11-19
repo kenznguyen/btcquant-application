@@ -1,5 +1,24 @@
 # CURRENT STATUS OVERRIDE — 2026-11-19
 
+## SQLite isolated workflow rerun after Bash Step Summary fix — PASS
+- Workflow run [44445216380](https://github.com/kenznguyen/btcquant-application/actions/runs/44445216380), attempt 1, `workflow_dispatch`, branch `main`, overall SUCCESS.
+- Workflow/head SHA: `6f31776ab51aeb6b872d3031fda692b6f44d277f`.
+- Job `Six-module SQLite/API suite`, ID `135295597442`, SUCCESS; all substantive steps succeeded.
+- Fixed Step Summary block executed via `printf '%s\\n'`; job log has zero `command not found` occurrences. Summary generation and job completed successfully.
+- Exact checked-out test source SHA: `57b54116188167904e2a2a6020ab349588b42186`.
+- Six modules: 62/62 PASS, 0 failures, 0 skipped; `Ran 62 tests in 0.793s`; exit code 0. F1 missing `feeder_leases` regression explicitly PASS.
+- Runner: Ubuntu 24.04.5 / ubuntu-24.04 x64, Docker 28.0.4, Python 3.12.16; pinned Python image digest `sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`.
+- Docker test container `--network none`; loopback-only network probe PASS. No credentials passed to test container; no canonical DB mount; source mounted read-only.
+- Artifact `t0-sqlite-api-test-evidence`, ID `14492143534`, 3,184 bytes; GitHub digest and independently computed downloaded ZIP SHA-256 both `c44d2b9915a8a2d7b1d198c6e254ce973e3ea8717157149be447ae9166425468`; payload inspection PASS.
+- Evidence report: `docs/evidence/T0_SQLITE_STEP_SUMMARY_RUN_44445216380_2026-11-19.md`; report commit `b9fb14db5e254551c1198886910b37ce69533cff`.
+- Status: Step Summary fix execution PASS; exact source checkout PASS; isolated suite PASS (62/62); F1 PASS; network probe PASS; artifact/hash verification PASS. F2/F3/F4 remain NOT VERIFIED; production/live runtime/canonical DB NOT CERTIFIED.
+- Scope unchanged: no PostgreSQL/TimescaleDB, runtime/Feeder, canonical DB/data, exchange/VPS, T1/T2, strategy/risk/trading changes or access.
+- Next: retain this evidence; any wider lifecycle/page-commit/HTTP-server tests require separate bounded review/approval.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19
+
 ## SQLite workflow Step Summary Bash fix
 - Owner approved fixing the Bash Step Summary error and rerunning the isolated SQLite workflow.
 - Workflow-only fix committed on existing `main`: `0a00bc548deec507491cdbb8f143272cd1f53838`; workflow blob `5abef4127e5c7b68e13f0720f0ca88c9b9bccad3`.
