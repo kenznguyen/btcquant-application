@@ -140,3 +140,11 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Core Bundle provider, Common API gateway and FreqAI research context are confirmed T0 HTTP consumers. Android Five-Layer and Core dashboard consume the Common API indirectly.
 - Strict version/freshness validation, `asOfMs` anchor mismatch and multi-page `evaluable` handling make active Core First compatibility **BLOCKED**.
 - No endpoint connection, source/test/workflow change, CI dispatch, deployment or runtime activation was performed. Production readiness remains NOT CERTIFIED.
+
+
+## T0 HTTP consumer migration scope — 2026-11-19
+
+- TDD migration scope approved for preparation: [T0 HTTP Consumer Migration TDD Scope](evidence/T0_HTTP_CONSUMER_MIGRATION_TDD_SCOPE_2026-11-19.md).
+- Official T0 contract 1.1.0 remains authoritative; active Core First HTTP client and Core Bundle normalization remain BLOCKED pending migration.
+- Approval covers scope preparation only. No source implementation, tests, CI, endpoint probe, runtime connection, deployment or trading is authorized.
+- Source implementation NOT STARTED; tests/workflows NOT RUN; endpoint/runtime NOT VERIFIED. Separate authorization is required before implementation and again before any endpoint/runtime connection.
