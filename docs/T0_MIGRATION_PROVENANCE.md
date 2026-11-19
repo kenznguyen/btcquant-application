@@ -63,3 +63,32 @@ The selected-file snapshot above remains the historical migration baseline. This
 The pre-existing `.github/workflows/t0-sqlite-api-isolated.yml` also ran due its broad main-push trigger (run `44494340918`). It checked out fixed older source SHA `2668dd538a99d6021921432b3485f4ed84198364`, passed 91 tests, and is recorded only as incidental evidence—not as validation of the current target HEAD or F1 parity. That workflow was not modified.
 
 F1 target status: PASS within the isolated write-gateway regression scope. Full T0/API/storage parity remains PARTIAL / NOT VERIFIED. Runtime, canonical data/recovery, PostgreSQL/TimescaleDB and production readiness remain OUT OF SCOPE / NOT VERIFIED / NOT CERTIFIED.
+
+
+
+## Read-only SQLite API/Storage parity inventory — 2026-11-19
+
+This is a read-only parity record, not a new source-to-target copy or a runtime acceptance claim.
+
+- Source repo/branch: `kenznguyen/btcusdt-telegram-signals2` / `feature/t0-centralized-data-feeder-p1-20261101`.
+- Source HEAD inspected: `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9`.
+- Target repo/branch: `kenznguyen/btcquant-application` / `main`.
+- Target HEAD inspected: `c80aa8e31481d237cb8d17ab547d65e7e790976a`.
+
+| Target path | Source blob SHA-1 | Target blob SHA-1 | Result |
+|---|---|---|---|
+| `market_data/api.py` | `81733c9b6de811cbebb2f5d472d41f37f337990c` | same | byte-identical |
+| `market_data/storage.py` | `13fe1ae01ebb5318b69e69eef3e512d207f74c49` | same | byte-identical |
+| `market_data/test_api.py` | `49df7e0bec12908adae67f18a4aa19063e461093` | same | byte-identical; 13 test methods |
+| `market_data/test_storage.py` | `b2635f575323187f936360d033b4fc630d8138e0` | same | byte-identical; 7 test methods |
+| `market_data/store.py` | `4e1b0c54bd56455abe5be0e5c7d0807e63e0bc78` | same | byte-identical |
+| `market_data/feeder.py` | `299a9b5a8b1ebd581eb620d5ee860d9f9ff5dc5c` | same | byte-identical |
+| `market_data/sync.py` | `e7ad4e6f2074225957b01f74abb0befe37675ea2` | same | byte-identical |
+| `market_data/postgres.py` | `2fe27fe2d066dda0c192a381b72d27404487b800` | same | byte-identical; no PG behavior tested |
+| `market_data/write_gateway.py` | `585caf5250c7382f8e391533882f08c8ec97efaa` | `0a77df443ae1a817ea74946fac5dc0f3809ddd83` | byte-different |
+
+The API and Storage implementation/test files are byte-identical at the inspected source and target refs. The only byte divergence among the inspected dependency set is the write gateway. Source and target use different implementation shapes for exact `feeder_leases` schema inspection; target F1 behavior was separately covered by the malformed-schema regression and 14-test exact-SHA gate. No production file was changed in this inventory.
+
+Static contract notes and limitations are in `docs/evidence/T0_SQLITE_API_STORAGE_READONLY_PARITY_2026-11-19.md`, created by commit `73376e93e7edf4e5eecb09ba50b2ae696ff10c52`.
+
+Status: direct API, Storage and their test specifications PASS byte-parity; inspected shared dependencies PASS except the documented write-gateway byte divergence. No API/Storage test was run. Runtime behavior, full T0 parity, canonical data/recovery, PostgreSQL runtime, lifecycle and production readiness remain NOT VERIFIED / NOT CERTIFIED.
