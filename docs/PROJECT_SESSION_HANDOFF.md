@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F4 Pipeline Core-First test alignment committed; execution NOT VERIFIED
+
+- Owner approved test-only adjustment of `pipeline/test_api.py` to align with Core-First. No production source change was authorized.
+- Test-only commits on existing `main`: `9223d3ce72669b4916f717ca1e43f3b80e8c996c` and `4d4a43427b587ff16e8a890c5d75a43678b1e1e6`. Current source baseline: `4d4a43427b587ff16e8a890c5d75a43678b1e1e6`.
+- `pipeline/test_api.py` blob `5cc04ccebf16a04a3289fc9fb4ecc3138b876c83`, 26 tests. Six AI-to-Ledger API tests were converted to Core strategy tests; AI missing-calibration coverage now uses offline `/v1/decision`; added a regression asserting AI paper execution returns 403/`AI_EXECUTION_DISABLED` and leaves SQLite tables unchanged.
+- `pipeline/test_decision.py` remains unchanged at blob `6781f26d66635f56662a627bdd3b4a63f26c1f28`, 15 tests.
+- Evidence: `docs/evidence/F4_PIPELINE_API_DECISION_TEST_PREFLIGHT_2026-11-19.md`.
+- Static review found the unchanged `pipeline/api.py` can construct the default ledger for AI when dual-ledger migrations are not active; the existing 409 guard only applies when dual ledger is active. The new AI-denial test is expected to expose this source mismatch if executed; this is a static finding, not a test result. Production correction needs separate approval.
+- Environment remains Python 3.12.16 + standard library only for SQLite fixtures. Local container has Python 3.13.5 and no exact local checkout; prior clone failed due DNS. No imports/tests/compile/build/CI ran; no packages installed.
+- Status: test-only Core-First alignment PASS; AI denial assertion ADDED / NOT VERIFIED; production API enforcement BLOCKED; runtime imports/regression NOT VERIFIED. No production source, dependency, workflow, T0, runtime, DB, VPS or exchange changed/accessed.
+- Next: obtain exact isolated Python 3.12.16 checkout; separately approve production API enforcement before running the two regression modules. No CI/package install without separate approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — F4 Pipeline import/regression preflight BLOCKED
 
 - Owner authorized isolated import and regression verification for `pipeline/test_api.py` and `pipeline/test_decision.py`, after dependency/environment review; no automatic package installation or CI.
