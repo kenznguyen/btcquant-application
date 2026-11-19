@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Reconstructed Canonical workflow design recorded
+
+- Workflow/validation contract: docs/decisions/T0_RECONSTRUCTED_CANONICAL_SQLITE_RECONSTRUCTION_WORKFLOW_2026-11-19.md.
+- Status: DESIGN DRAFT / NOT IMPLEMENTED / NOT EXECUTED. Covers source-selection gate, immutable raw chunks, resumable pagination/checkpoints, normalization, M15/H1 expected-grid gap detection, semantic validation, staged SQLite gates, mandatory provenance manifest, fail-closed states, Dropbox snapshot and isolated restore gates.
+- Owner-approved target remains all Binance USD-M BTCUSDT M15/H1 history available at retrieval time, each timeframe from its independently evidenced earliest candle through the latest fully closed candle at the recorded UTC cutoff. Lineage RECONSTRUCTED.
+- All gaps must be enumerated; no synthetic candles, interpolation, forward-fill or silent omission. Gap disposition remains pending evidence and explicit owner decision.
+- Open before implementation: source family selection; request/chunk/resource budgets; raw staging destination; exact Candle Contract/SQLite schema compatibility; gap disposition evidence; retention policy.
+- Authorization remains Phase 1 documentation/static only. No Binance access/download, raw data staging, SQLite initialization/write, Dropbox upload, snapshot, restore, VPS/runtime, writer/feeder or cutover.
+- Tests/workflows: NOT RUN; no run/job/artifact for this documentation-only change.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — Owner approved reconstructed Canonical coverage target
 
 - Decision: docs/decisions/T0_RECONSTRUCTED_CANONICAL_COVERAGE_DECISION_2026-11-19.md.
