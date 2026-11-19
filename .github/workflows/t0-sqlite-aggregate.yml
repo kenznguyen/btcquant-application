@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - market_data/api.py
+      - market_data/fastapi_app.py
       - market_data/initialize_sqlite.py
       - market_data/feeder.py
       - market_data/feeder_service.py
