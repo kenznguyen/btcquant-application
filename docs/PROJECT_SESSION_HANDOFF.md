@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — FastAPI 25/25 + SQLite 196/196 PASS, committed offline locks
+
+- Repository `kenznguyen/btcquant-application`, branch `main`; latest paired exact source SHA `6558141e7de20c30447cdb9705583e05a7d80592`.
+- FastAPI ASGI contract run [44526822603](https://github.com/kenznguyen/btcquant-application/actions/runs/44526822603), job `135569565169`: **25/25 PASS**, artifact `14533180068`, SHA-256 `43b551482bc7952dd92063067413e0464b3bc5680102e1084282bd28a44e6be5`.
+- SQLite-only aggregate run [44526822322](https://github.com/kenznguyen/btcquant-application/actions/runs/44526822322), job `135569525255`, same SHA: **196/196 PASS**, artifact `14532985102`, SHA-256 `3a7d5b948d32c08ec53e527cbeac6c214009f01dba4a4df301bce1ee49f9d3d4`.
+- Committed runtime lock `requirements-market-data-fastapi.lock`, SHA-256 `fb4cf8f63131cb36636b3c3230378a49bfb2d3a56b8750778ed5b3b5dac8d786`; committed test lock `requirements-market-data-fastapi-test.lock`, SHA-256 `2916098771a482a21637b94fff1f79afc0ddeb37a2a01fdae05032509a889cb6`. CI verified both, downloaded exact target wheels, then ran ASGI tests with network disabled.
+- FastAPI source: `market_data/fastapi_app.py`; shared Candle Contract helpers: `market_data/api_contract.py`; ASGI tests: `market_data/test_fastapi_api.py`.
+- Detailed report: `docs/evidence/T0_FASTAPI_LOCKED_OFFLINE_CI_AND_REVIEW_2026-11-19.md`, commit `2d130f5e0ddb3d7137febc403f53d9709f6d9d78`. Decision update `5f49ca7059bccc3c42c7c650cacb87537cd99ea3`; scope index update `da6bf427df5839f10c1a4660954d5c258c56ec72`.
+- Internal five-axis review PASS for current bounded source/CI scope. Independent second-reviewer sign-off remains **PENDING**.
+- WSGI `application` in `market_data/api.py` and its tests in `market_data/test_api.py` remain. Migration **PARTIAL**. Do not remove WSGI/Gunicorn before independent review accepts the migration diff.
+- Next: obtain independent code review; then a bounded WSGI/Gunicorn removal and ASGI-only regression on one exact SHA.
+- Runtime endpoint probe, Nginx/VPS/systemd/deployment, T1/T2, PostgreSQL, canonical data/schema, retention/deletion and trading remain outside authorization. Production readiness **NOT CERTIFIED**.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 FastAPI 25/25 + SQLite 196/196 PASS
 
 - Repository `kenznguyen/btcquant-application`, branch `main`; latest paired source SHA `a03637372e3090595bf6e48c9426e7e076cf3bdc`.
