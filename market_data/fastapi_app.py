@@ -20,8 +20,12 @@ app = FastAPI(
     openapi_url=None,
 )
 
+
 def _reply(status_code, body, headers=None):
-    response_headers = {"Cache-Control": "no-store"}
+    response_headers = {
+        "Cache-Control": "no-store",
+        "Content-Type": "application/json; charset=utf-8",
+    }
     if headers:
         response_headers.update(headers)
     return JSONResponse(status_code=status_code, content=body, headers=response_headers)
