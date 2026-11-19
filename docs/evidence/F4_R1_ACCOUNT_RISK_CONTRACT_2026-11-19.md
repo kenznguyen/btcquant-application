@@ -66,7 +66,7 @@ Out of scope:
 - Workflow verified the exact test/source blob SHAs above. The test container ran with `--network none`, read-only source mount, non-root user, no credentials and no canonical database mount.
 
 ### API / Decision regression
-- Run [44468781493](https://github.com/kenznguyen/btcquant-application/actions/runs/44468155810), exact workflow/source HEAD `ff0c644a6143400735f271b8073253d545ba3606`.
+- Run [44468781493](https://github.com/kenznguyen/btcquant-application/actions/runs/44468781493), exact workflow/source HEAD `ff0c644a6143400735f271b8073253d545ba3606`.
 - Job `135372900876`: SUCCESS.
 - Result: `Ran 42 tests in 0.191s`; 42/42 passed, 0 failures.
 - Artifact: `f4-pipeline-api-decision-evidence`, ID `14502974074`, SHA-256 `19d0b652584f3717104a97b13b929505eeb69d70c487e9f068ea872da8a11289`.
@@ -78,7 +78,7 @@ Out of scope:
 - Architecture: account contract is persisted once and consumed by both strategy ledgers; policy updates require an explicit expected hash and reason. No per-strategy risk-limit source remains in the paper API path.
 - Security: SQL uses parameterized statements; contract content is canonicalized and hash-checked; read-only lookup opens SQLite in read-only URI mode; tests run without network/secrets/canonical DB.
 - Performance: one small contract read is performed inside each order-admission transaction. No external dependency was added.
-- Full repository test suite: NOT VERIFIED. The 143-test result is the bounded impacted-module suite, not the full repository suite.
+- Full repository test suite: NOT VERIFIED. The 144-test result is the bounded impacted-module suite, not the full repository suite.
 - F4-R2 and F4-R3: remain OPEN / NOT VERIFIED; their separate RED specifications were not included in the R1 suite.
 - Runtime/deployment/VPS/canonical DB/exchange/trading: NOT ACCESSED / NOT VERIFIED. No real orders were placed.
 - Paper path policy unchanged: Core-First only; AI offline research only; live trading prohibited.
@@ -86,7 +86,7 @@ Out of scope:
 ## Status
 
 - F4-R1 account risk contract: **PASS** within the bounded source and isolated regression scope.
-- API/Decision regression: **PASS** (41/41).
+- API/Decision regression: **PASS** (42/42).
 - Full repository suite: **NOT VERIFIED**.
 - F4-R2/R3: **OPEN / NOT VERIFIED**.
 - Runtime, deployment and production readiness: **NOT VERIFIED / NOT CERTIFIED**.
