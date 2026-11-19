@@ -1,3 +1,13 @@
+### FastAPI independent review package refreshed after D1 closure — 2026-11-19
+
+- Updated `docs/reviews/T0_FASTAPI_INDEPENDENT_REVIEW_PACKAGE_2026-11-19.md`, commit `8a50de8b23566a57cc56f62755dda0f3b504b682`.
+- Exact review snapshot before the package refresh: `4651bf1b26132ca028e6bb428ee0869963432bc0`.
+- Exact tested implementation/workflow SHA: `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
+- Package now includes D1 runtime-only installation and ASGI health evidence, exact workflow/job IDs, artifact IDs/digests, smoke harness path and remaining runtime limitations.
+- D1: **CLOSED / PASS**. C1: **CLOSED / VERIFIED** for ten cases. FastAPI/parity: **26/26 PASS**. SQLite aggregate: **196/196 PASS**.
+- Independent second-person review remains **PENDING**; reviewer not yet assigned. WSGI/Gunicorn retirement **NOT APPROVED**. Runtime endpoint, Uvicorn process/socket, Nginx, VPS/systemd and deployment **NOT AUTHORIZED**. Production readiness **NOT CERTIFIED**.
+- Next step: assign the updated package to a reviewer who did not author the implementation or self-reviews. No runtime or deployment work is authorized by this package refresh.
+
 ### D1 runtime-lock-only clean install and ASGI smoke — CLOSED / PASS — 2026-11-19
 
 - Exact tested source SHA: `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
