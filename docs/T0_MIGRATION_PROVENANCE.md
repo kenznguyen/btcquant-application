@@ -106,3 +106,21 @@ Status: direct API, Storage and their test specifications PASS byte-parity; insp
 - Docker uses immutable Python 3.12.16 image, `--network none`, read-only source, non-root, no credentials, no canonical DB mount.
 - Evidence report: `docs/evidence/T0_SQLITE_API_STORAGE_ISOLATED_GATE_2026-11-19.md`, commit `9879c8671342e948f7bd0317451c28fc283c0a40` (subsequently corrected with exact workflow blob metadata).
 - Status: isolated SQLite API 12/12 PASS; SQLite Storage 4/4 PASS; combined 16/16 PASS. PostgreSQL, lifecycle, runtime, canonical data/recovery and production readiness remain NOT TESTED / OUT OF SCOPE / NOT CERTIFIED.
+
+
+## SQLite feeder/sync/recovery regression and scoped dependency manifest — 2026-11-19
+
+This addendum records a verified isolated CI run on the selected target repository. It does not change the historical source snapshot or imply full T0/runtime parity.
+
+- Target repo/branch: `kenznguyen/btcquant-application` / `main`.
+- Workflow: `.github/workflows/t0-sqlite-feeder-sync-recovery.yml`; workflow blob `71d7c0564918f1da2f31dd5853442fc6352d7444`.
+- Exact-SHA workflow commit/checkout: `78e67b7bec139452d2cf6e6a6976dfcc96f69a1a`.
+- Run [44500564066](https://github.com/kenznguyen/btcquant-application/actions/runs/44500564066), job `135478919064`: SUCCESS. Job checked out exactly the workflow commit SHA.
+- Test command: `python -m unittest -v market_data.test_sync market_data.test_feeder_lease market_data.test_feeder_recovery`; actual output `Ran 31 tests in 0.458s`, `OK`, exit code 0. Breakdown: sync 11/11, lease/fencing 10/10, recovery planner/coordinator 10/10.
+- Artifact `t0-sqlite-feeder-sync-recovery-evidence`, ID `14516972397`, 1,994 bytes; SHA-256 `b5e8f4ac1e5b2084d288daf8e167d47df2b6ca55255457b34ea080d4ae8a43a5`. Downloaded ZIP independently hashed to the same value and all three payload files inspected.
+- Isolation: Python 3.12.16 immutable image digest `935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`; Docker `--network none`, read-only source, non-root, no credentials, no canonical DB mount. PostgreSQL and feeder service runtime excluded.
+- Added `requirements-market-data.txt`, commit `78299c2357f5ef4d9bb27766a1c99646fed04efa`, blob `107b1bad04982506a8023cd784d5d0dafae3e41a`. It declares `ccxt==4.5.92` for Binance USD-M collection and `gunicorn==23.0.0` for WSGI serving. These direct pins are a starting baseline based on the previously recorded T0 environment, not a fresh-install compatibility claim.
+- The isolated 31-test suite uses Python standard library only; it does not require either package. Flask is not included because the API is a direct WSGI application. `psycopg` and all PostgreSQL migration/runtime assets remain excluded pending separate approval.
+- Evidence report: `docs/evidence/T0_FEEDER_SYNC_RECOVERY_AND_DEPENDENCIES_2026-11-19.md`, commit `59a442294657809957e2df02a8eba53480cdbb70`.
+- Status: exact-SHA workflow PASS; selected SQLite regression PASS 31/31; artifact/digest/payload PASS; manifest content/blob readback PASS. Dependency resolver, installation, transitive lock, fresh-environment compatibility, runtime startup and minimum supported runtime Python remain NOT VERIFIED. PostgreSQL/TimescaleDB, canonical DB/recovery, feeder service runtime, VPS/deployment, T1/T2, trading and production readiness remain NOT TESTED / OUT OF SCOPE / NOT CERTIFIED.
+- No source repository, T0 production source/tests, canonical data/database, PostgreSQL assets, runtime, VPS, T1/T2 or trading behavior changed/accessed. No package installation occurred.
