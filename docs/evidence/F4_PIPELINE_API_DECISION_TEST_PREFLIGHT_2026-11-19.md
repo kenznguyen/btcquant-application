@@ -73,3 +73,18 @@ Provision or make available an exact repository checkout with Python 3.12.16 and
 - Retried read-only Git remote discovery using `git ls-remote https://github.com/kenznguyen/btcquant-application.git refs/heads/main`; failed with `Could not resolve host: github.com`.
 - No interpreter was installed/downloaded; no package was installed; no repository clone or checkout was created; no source or tests were executed. No CI/workflow was started.
 - Result: exact Python 3.12.16 checkout/runner remains BLOCKED by unavailable interpreter and DNS/network resolution. The prior source-only static PASS remains unchanged; import and 41 regression tests remain NOT RUN.
+
+
+## GitHub Actions isolated runner provisioned — 2026-11-19
+
+- Owner requested use of GitHub Actions to replace the unavailable local Python 3.12.16 interpreter and blocked local GitHub DNS route.
+- Added dedicated workflow `.github/workflows/f4-pipeline-core-first-isolated.yml` on existing branch `main`; initial workflow commit `556e3ae43f76a51318d9117ed84935f252323ec3`.
+- Corrected evidence-directory initialization ordering in workflow commit `a0c19943bcd8329f3e388b2dae94df905085188`. Final workflow blob SHA: `40e404784e78a0030debccac4846f2dbcd70e094`.
+- Workflow uses GitHub-hosted `ubuntu-24.04`, immutable Python image `python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`, Docker `--network none`, read-only source mount, non-root test user, no secrets and no canonical database mount.
+- Checkout is pinned to exact source commit `290bbefb3bfe98f6a13c053ec181ec3d556f27c0`. Workflow verifies exact blob SHAs for API source, both test modules and five dependency/import-closure files before execution.
+- Intended commands: import verification for `pipeline.api`, `pipeline.test_api`, `pipeline.test_decision`; then `python -m unittest -v pipeline.test_api pipeline.test_decision`; expected count 41.
+- Workflow trigger: push to `main` only when one of the explicitly listed F4 source/test/dependency/workflow paths changes, plus manual `workflow_dispatch`. No deployment, runtime, exchange or trading job.
+- The GitHub Actions connector available in this session exposes job/run inspection only when a run ID is already known and does not expose listing recent push-triggered workflow runs or dispatching a new run. Combined commit status read for `a0c19943bcd8329f3e388b2dae94df905085188` returned no status entries. Therefore no run ID, job conclusion, test output or artifact can yet be independently verified from this session.
+- Status: workflow source provisioned and read-back verified PASS; workflow execution NOT VERIFIED; import and 41 regression tests NOT RUN / NOT VERIFIED until run details are retrieved.
+- No Python/dependency installation, application/test source edits, T0 changes, DB/schema/canonical data access, runtime/VPS/exchange access or trading actions.
+- Next: inspect GitHub Actions for workflow `F4 Pipeline API and Decision isolated tests` on `main`, then capture run ID, workflow/head SHA, job logs, exact test output and artifact SHA-256. Do not infer PASS from workflow creation or trigger configuration.
