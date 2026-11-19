@@ -1568,8 +1568,6 @@ class PaperLedger:
                     raise sqlite3.DatabaseError("DUAL_LEDGER_MIGRATION_NOT_READY")
                 contract = load_account_risk_contract(connection)
                 self.risk_limits = MappingProxyType(contract["limits"]) if contract else None
-                if self.require_risk_limits and contract is None:
-                    raise sqlite3.DatabaseError("ACCOUNT_RISK_CONTRACT_UNAVAILABLE")
                 return
             connection.execute("PRAGMA journal_mode=WAL")
             initialized = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='paper_state'").fetchone()
@@ -1604,8 +1602,6 @@ class PaperLedger:
             equity_history.ensure(connection)
             contract = load_account_risk_contract(connection)
             self.risk_limits = MappingProxyType(contract["limits"]) if contract else None
-            if self.require_risk_limits and contract is None:
-                raise sqlite3.DatabaseError("ACCOUNT_RISK_CONTRACT_UNAVAILABLE")
             if self.strategy_id in DUAL_STRATEGIES:
                 if apply_migrations:
                     migrate_dual_ledger(connection, self.source_sha)
