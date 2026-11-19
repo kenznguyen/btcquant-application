@@ -50,3 +50,13 @@
 - Independent reviewer: **NOT YET ASSIGNED / REVIEW PENDING**. This package is not itself a review approval.
 - WSGI/Gunicorn retirement: **NOT APPROVED**. Runtime/deployment: **NOT AUTHORIZED**. Production readiness: **NOT CERTIFIED**.
 - No source, tests, workflow, runtime, canonical data, T1/T2, PostgreSQL or trading changes; no tests or workflows run during package preparation.
+
+
+### FastAPI adversarial follow-up self-review — 2026-11-19
+
+- Review record: [T0 FastAPI Adversarial Self-Review](evidence/T0_FASTAPI_ADVERSARIAL_SELF_REVIEW_2026-11-19.md), commit `b2a075ace4c99227a3701f6183061f5dc3b59354`.
+- Verdict: **PASS WITH VERIFICATION GAPS** in bounded static review; no blocking source defect identified.
+- C1 **MEDIUM / NOT VERIFIED**: no automated WSGI-vs-FastAPI same-fixture differential test. Required before WSGI/Gunicorn retirement.
+- D1 **LOW / NOT VERIFIED**: standalone runtime-lock install smoke test not separately evidenced; recommend before runtime qualification.
+- This was performed by the same assistant and is explicitly **not an independent second-person review**. Independent review remains **PENDING**.
+- WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**. No source/tests/workflow/runtime/data changes and no tests/workflows run during this review.
