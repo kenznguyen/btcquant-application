@@ -77,3 +77,14 @@ This is an internal review, not an independent second-reviewer sign-off. Indepen
 5. Request separate approval before endpoint probes, Nginx routing, process startup, VPS or deployment.
 
 No canonical SQLite data/schema, writer/lease/feeder/recovery, retention/deletion, T1/T2, PostgreSQL or trading behavior changed.
+
+
+## 7. Final hardened test-container verification — 2026-11-19
+
+- Latest paired source SHA: `0a4432d8d101381e8b07c88a1a65bbf1ee3a787f`.
+- FastAPI run [44527300856](https://github.com/kenznguyen/btcquant-application/actions/runs/44527300856), job `135571152796`: **25/25 PASS**, artifact `14532510818`, SHA-256 `563e4841b1139c16f55198407a890f6ea60400564c8c2b2cc1641576267ad49c`.
+- SQLite aggregate run [44527300813](https://github.com/kenznguyen/btcquant-application/actions/runs/44527300813), job `135571149659`, same exact SHA: **196/196 PASS**, artifact `14533320216`, SHA-256 `6ef67fb1512cb06a62a35d74a5c34e333814cf33c865f58c4200ea5f206f7f23`.
+- Both committed lock files were verified by `sha256sum -c` in the FastAPI run.
+- Test container hardening: non-root UID 65534, read-only root filesystem, all Linux capabilities dropped, `no-new-privileges`, bounded PIDs/CPU/memory, `--network none`, source/artifact/wheelhouse mounted read-only, and a dedicated executable temporary filesystem for SQLite temp files and native Python extensions.
+- The first non-root attempt failed because the temporary filesystem did not allow native shared-library mapping; the next commit added the narrowly scoped `exec` flag to the temporary filesystem, and the final 25-test run passed. The failed run is retained as evidence, not hidden.
+- This final checkpoint supersedes the earlier paired run SHA `6558141e7de20c30447cdb9705583e05a7d80592` for current adapter/CI status. Independent code review remains pending; WSGI entrypoint remains present.
