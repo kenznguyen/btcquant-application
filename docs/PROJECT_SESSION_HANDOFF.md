@@ -4358,3 +4358,21 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Status: F1 schema guard behavioral parity PASS; dedicated write-gateway suite PASS 14/14. Full SQLite/API/storage parity PARTIAL / NOT VERIFIED. Runtime/lifecycle and canonical recovery/data OUT OF SCOPE / NOT VERIFIED; PostgreSQL/TimescaleDB OUT OF SCOPE; production NOT CERTIFIED.
 - No dependency manifest, package installation, PostgreSQL asset, canonical DB/data, runtime, VPS, deployment, exchange, T1/T2 or trading behavior changed/accessed. No merge, rebase, cherry-pick, reset or force-push.
 - Next permitted work: separately review the pre-existing broad-trigger/pinned-SHA T0 workflow before any further target-wide regression run. Continue read-only SQLite API/storage/initialization parity inventory; no PostgreSQL or runtime expansion without separate approval.
+
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 legacy SQLite/API workflow trigger isolation
+
+- Owner authorized CI trigger isolation before further SQLite API/Storage parity work.
+- Existing `main`; workflow-only implementation commit: `91f89424da0e8c00ca56397b72364dab678eb32d`.
+- `.github/workflows/t0-sqlite-api-isolated.yml` blob before: `9d38afd7f1e686dda07a41465a2f4287526e9347`; after: `b3816e2b8dfa77e39cc5b1dbc7d4fb4e8baaf391`.
+- Removed automatic `push: branches: [main]`; workflow is now `workflow_dispatch` only. This prevents routine SQLite commits from automatically invoking the legacy seven-module suite, including feeder lifecycle tests.
+- Replaced hard-coded checkout SHA `2668dd538a99d6021921432b3485f4ed84198364` with `${{ github.sha }}`; preflight compares checked-out `HEAD` to `GITHUB_SHA`. Removed fixed 91-test count assertion; retained requirement for a unittest count summary.
+- Preserved all seven modules, including `market_data.test_feeder_lifecycle`, and existing pinned Python 3.12.16, Docker `--network none`, read-only source, non-root, no credentials and no canonical DB mount. Lifecycle suite remains available only through explicit manual dispatch.
+- Static verification after commit: dispatch-only trigger PASS; no push trigger PASS; dynamic exact-SHA checkout PASS; preflight identity check PASS; old SHA absent PASS; lifecycle module preserved PASS; Docker network isolation/Python pin preserved PASS.
+- No workflow dispatch was run for this increment; revised workflow runtime behavior is NOT VERIFIED. No workflow run ID or artifact was produced. Historical incidental run `44494340918` remains tied to old workflow configuration and old checkout SHA, not evidence for this change.
+- Evidence report: `docs/evidence/T0_LEGACY_SQLITE_API_WORKFLOW_ISOLATION_2026-11-19.md`, commit `6f323b3652e00f38b9edd8e4c4f685cc32fc9ccf`.
+- Scope guard: no source repo, application production/test code, PostgreSQL/TimescaleDB, canonical DB/data, VPS, runtime, T1/T2, paper/live trading or execution changed/accessed.
+- Status: CI trigger isolation PASS (static); runtime execution NOT VERIFIED. Continue with read-only SQLite API/Storage parity inventory; no runtime or PostgreSQL expansion.
