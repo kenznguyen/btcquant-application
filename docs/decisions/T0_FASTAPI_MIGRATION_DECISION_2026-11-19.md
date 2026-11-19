@@ -128,3 +128,14 @@ FastAPI's default validation response (commonly 422) must not silently replace t
 - Detailed evidence: [T0 FastAPI Initial Adapter Regression](../evidence/T0_FASTAPI_INITIAL_ADAPTER_REGRESSION_2026-11-19.md), report commit `0122ea21d870236230c30f2c5361598fe2e0fa3c`.
 - Implementation is **PARTIAL**, not a completed WSGI migration: `market_data/api.py` still contains the WSGI entrypoint and `market_data/test_api.py` still exercises it. Full 1.1.0 parity, committed dependency locks, WSGI removal and independent review remain pending.
 - Runtime, endpoint probe, Nginx/VPS/systemd/deployment, T1/T2 connection and trading remain **NOT AUTHORIZED**. PostgreSQL remains PARKED. Production readiness remains **NOT CERTIFIED**.
+
+
+## 11. Full ASGI contract regression — 2026-11-19
+
+- Expanded ASGI suite to 25 tests, including duplicate query rejection, all non-GET methods, imported-history as-of handling, gap/freshness/evaluability, corrupt data, sync/reopen, and no-fallback behavior.
+- FastAPI run [44525859272](https://github.com/kenznguyen/btcquant-application/actions/runs/44525859272), job `135566117694`, exact SHA `a03637372e3090595bf6e48c9426e7e076cf3bdc`: **25/25 PASS**. Artifact `14528454863`, SHA-256 `e6cafec6024a69cfa8fb2fbdfdb30eebfbd32214107455cee28934731b6d9196`.
+- SQLite aggregate run [44525859257](https://github.com/kenznguyen/btcquant-application/actions/runs/44525859257), job `135566117671`, same exact SHA: **196/196 PASS**. Artifact `14531695273`, SHA-256 `5aefa96fd860f02a12a71f05f5db7a51c938676d7eff5d20cc3999405b169a6c`.
+- Full evidence: [T0 FastAPI Full Contract Regression](../evidence/T0_FASTAPI_FULL_CONTRACT_REGRESSION_2026-11-19.md), report commit `43253b5b797a973fe71350bfe15dfc7bf58f2510`.
+- These are source-level tests only. WSGI `application` remains in `market_data/api.py`; existing WSGI tests remain in `market_data/test_api.py`. The WSGI-to-ASGI migration is still **PARTIAL**.
+- Exact hashed runtime/test locks remain in the CI artifact and are **not yet committed**. Independent code review remains **PENDING**.
+- Runtime/endpoint/deployment and T1/T2 remain **NOT AUTHORIZED**; PostgreSQL remains PARKED; production readiness remains **NOT CERTIFIED**.
