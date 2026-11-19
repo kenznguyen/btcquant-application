@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — REST tail validation BLOCKED by HTTP 451
+
+- Owner approved a bounded, read-only public Binance USD-M REST tail check for BTCUSDT M15/H1 from 2026-11-19 00:00 UTC, maximum 500 rows/timeframe and 5 MiB isolated staging; only fully closed candles were eligible.
+- Evidence report: `docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_VALIDATION_2026-11-20.md`, commit `782d4a46f6a75dfc2aa4977e6a33b14e86ede268`.
+- The approved `GET https://fapi.binance.com/fapi/v1/klines` request for M15 returned HTTP 451 from the isolated execution environment before any kline payload was received. H1 was not attempted after the M15 block. No payload or raw staging file was created.
+- Status: endpoint reachability **BLOCKED — HTTP 451**; M15 payload **NOT RETRIEVED**; H1 **NOT ATTEMPTED**; tail candle validation **NOT VERIFIED**. Do not bypass with alternate domains, proxies or geo-routing.
+- Previously validated archive coverage remains PASS through M15 2026-11-18 23:45 UTC and H1 2026-11-18 23:00 UTC. Tail from 2026-11-19 00:00 UTC remains NOT VERIFIED.
+- No source/test/workflow/dependency/schema/canonical data changes; no GitHub Actions run/job/artifact. No SQLite, Dropbox, VPS/runtime, feeder/writer, deployment, restore or cutover.
+- Next gate: owner decides whether to leave the tail unresolved or separately authorize a compliant attempt from an owner-approved, legally available execution environment. SQLite/Dropbox/runtime/feeder/writer/cutover remain separately gated.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Owner approved T0 archive source partition
 
 - Decision: `docs/decisions/T0_RECONSTRUCTED_CANONICAL_SOURCE_PARTITION_APPROVAL_2026-11-20.md`, commit `ce42ae530d5b11a46e46c4e79e573bd4b5d0f3d2`.
