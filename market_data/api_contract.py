@@ -74,6 +74,7 @@ def _freshness(candles, timeframe, evaluation_time_ms, coverage_complete, evalua
     base["evaluable"] = bool(coverage_complete is True and timestamp_valid and fresh)
     return base
 
+
 def candle_query(query):
     if len(query) > 2048:
         raise ValueError("Query too long")
