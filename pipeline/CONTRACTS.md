@@ -57,7 +57,7 @@ Identity stable for the same strategy/model/candle/dataset/target intent, not at
 
 ## Paper execution
 
-`PaperLedger(db_path, *, max_position_base='0.01', fee_rate='0.0005')`.
+`PaperLedger(db_path, *, max_position_base='0.01', fee_rate='0.0005', require_risk_limits=True)`. Non-null caller-supplied `risk_limits` is rejected; disabling the required account contract is rejected. The Ledger reads the validated account-level contract from SQLite and reloads it during each order-admission transaction. Provision through `provision_account_risk_contract`; revise only with `update_account_risk_contract` using the expected current hash, source and reason. Missing or invalid contract state blocks new exposure.
 Methods: `submit(intent,book,now_ms)->order`, `snapshot()->dict`,
 `set_paused(paused:bool,now_ms)->dict`, `cancel(order_id,now_ms)->order`.
 Public `read_snapshot(db_path)` uses read-only SQLite and never initializes state.
