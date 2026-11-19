@@ -1,3 +1,18 @@
+### T0 WSGI/Gunicorn retirement — completed — 2026-11-19
+
+- Owner approval and human-review waiver: [T0 WSGI/Gunicorn Retirement Approval](decisions/T0_WSGI_GUNICORN_RETIREMENT_APPROVAL_2026-11-19.md).
+- Evidence: [T0 WSGI/Gunicorn Retirement Report](evidence/T0_WSGI_GUNICORN_RETIREMENT_2026-11-19.md).
+- Implementation commit: `7bc8fab6b6c6f49ed70b7370a113958d7981cd20`; corrected test/workflow exact SHA: `c77ab92b621b2e79167d6b8eb910be015b428f62`.
+- Removed WSGI module and Gunicorn dependency; migrated API/acceptance tests to ASGI; removed WSGI parity test after preserving C1 evidence; updated FastAPI, SQLite and dependency workflows.
+- FastAPI + migrated tests + retirement guards: **50/50 PASS**, run `44546084887`.
+- SQLite aggregate: **174/174 PASS**, run `44546084972`.
+- F1 write-gateway regression: **14/14 PASS**, run `44546084937`.
+- Runtime-lock ASGI import/in-process health: **PASS**, run `44546084887`.
+- Dependency compatibility after Gunicorn removal: **PASS**, run `44545799691`, dependency-change SHA `7bc8fab6b6c6f49ed70b7370a113958d7981cd20`.
+- WSGI/Gunicorn retirement: **PASS**. Human independent review prerequisite: **WAIVED BY OWNER**. Gemini review remains **BLOCKED / NOT VERIFIED**.
+- Uvicorn socket/process, Nginx, VPS/systemd, endpoint runtime and deployment remain **NOT AUTHORIZED / NOT VERIFIED**. Production readiness **NOT CERTIFIED**.
+- T0 canonical SQLite/writer/lease/feeder/recovery, T1/T2, PostgreSQL, retention/deletion and trading unchanged.
+
 ### Owner approval — T0 WSGI/Gunicorn retirement — 2026-11-19
 
 - Decision: [T0 WSGI/Gunicorn Retirement Approval](decisions/T0_WSGI_GUNICORN_RETIREMENT_APPROVAL_2026-11-19.md).
