@@ -72,6 +72,12 @@ class AccountRiskContractTest(unittest.TestCase):
                 require_risk_limits=True,
             )
 
+    def test_caller_cannot_disable_the_required_account_contract(self):
+        with self.assertRaisesRegex(ValueError, "ACCOUNT_RISK_CONTRACT_REQUIRED"):
+            PaperLedger(
+                self.path, max_position_base="1", require_risk_limits=False
+            )
+
     def test_required_account_contract_missing_fails_closed(self):
         ledger = PaperLedger(
             self.path, max_position_base="1", require_risk_limits=True
