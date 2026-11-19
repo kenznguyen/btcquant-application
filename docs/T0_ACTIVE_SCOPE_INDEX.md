@@ -233,3 +233,16 @@
 - C1 remains **CLOSED / VERIFIED** for ten cases. Independent second-person review **PENDING**.
 - No source/test/workflow/dependency/runtime/data changes; no tests or workflows run.
 - WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+
+
+### Canonical SQLite read-only inventory — 2026-11-19
+
+- Evidence: [T0 Canonical SQLite Read-only Inventory](evidence/T0_CANONICAL_SQLITE_READONLY_INVENTORY_2026-11-19.md), commit `9fe5cf641081391ad23e79975d54a151a0414f69`.
+- Target snapshot inspected: `e62ef2d52c30e9245a1499c52d15aeb002b37892`; source selected-file snapshot: `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9`; earlier source audit: `eb91528bab2b994f283dbe34cd7b0bcbfe406cb5`.
+- Migration manifest confirms canonical SQLite/data payload was not copied. Target `.data/market-data.sqlite3` is only a default path; empty-only initializer refuses existing paths and creates only an empty DB.
+- Static schema: `candles` + `feeder_leases`; candle rows persist `available_at_ms`; scheduler completion watermarks are in-memory; recovery gaps are derived from candle coverage. No dedicated persisted provenance/manifest, scheduler cursor or recovery-checkpoint table was found in the inspected SQLite schema.
+- Historical VPS path `/home/ubuntu/t0/app/.data/market-data.sqlite3` belonged to `btcquant-t0-t1-test-01`, deleted 2026-11-11. Historical observations (622,592 bytes, integrity `ok`, M15 2,045, H1 2,011) do not prove current existence or recoverability.
+- Historical 2026-11-09 coverage PASS is limited to one M15 window (3/3) and one H1 window (3/3); full history and scheduler completion remain NOT VERIFIED.
+- Disposition: repository/schema inventory PASS (static only); current canonical DB existence/access, current integrity, full M15/H1 coverage, provenance completeness, recovery continuity and backup/restore **BLOCKED / NOT VERIFIED**.
+- No database/runtime/VPS access, copy/export/restore, source/test/workflow/dependency changes, tests or workflow runs. Documentation-only commit.
+- Next: identify an owner-held canonical SQLite file or immutable backup and its approved read-only access location. No initializer, writer, restore, or migration action is authorized.
