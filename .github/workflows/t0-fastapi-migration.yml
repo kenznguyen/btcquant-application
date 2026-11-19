@@ -10,6 +10,7 @@ on:
       - requirements-market-data-fastapi.in
       - requirements-market-data-fastapi-test.in
       - .github/workflows/t0-fastapi-migration.yml
+      - .github/workflows/t0-sqlite-aggregate.yml
   workflow_dispatch:
 
 permissions:
