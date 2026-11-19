@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — D1 runtime-lock-only smoke PASS
+
+- Repository `kenznguyen/btcquant-application`, branch `main`.
+- Exact tested source SHA: `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
+- Added `market_data/runtime_smoke.py`, commit `e50c5d83437d6db1b6eb15f8b75267575acde041`, and an isolated runtime-only CI job, commit `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
+- D1 runtime-only clean CPython 3.12.16 venv install, offline hash-verified wheelhouse, `pip check`, ASGI import and in-process `GET /health`: **PASS**. Test lock was not installed. The smoke used no socket, canonical database, credentials, exchange or external service.
+- Runtime smoke: workflow [44536493461](https://github.com/kenznguyen/btcquant-application/actions/runs/44536493461), job `135603190576`, artifact `14535727293`, SHA-256 `607771298cf289ab9af7f8bf7918d9738fff2d400be45e3e25bba388959042da`.
+- FastAPI contract/parity: same run, job `135603189986`, **26/26 PASS**, artifact `14536536165`, SHA-256 `dbdbcc79ecd8495d91d39e14160187dbda6b9618f08d501f96cf4a6111dd02cd`.
+- SQLite aggregate: run [44536493268](https://github.com/kenznguyen/btcquant-application/actions/runs/44536493268), job `135603190883`, **196/196 PASS**, artifact `14536651799`, SHA-256 `fb0b74ec9276c7fc96c95e6c67b642079644d32d8329cb1efea9eb324462522a`.
+- Evidence report: `docs/evidence/T0_FASTAPI_RUNTIME_LOCK_SMOKE_2026-11-19.md`, commit `b5d03b14175fc54360630113ac41ec186929704a`. Active scope index updated in the immediately following documentation commit.
+- D1: **CLOSED / PASS** for the exact checks above. This does not establish Uvicorn process/socket startup, Nginx behavior, VPS runtime, endpoint availability or production readiness.
+- Independent second-person review remains **PENDING**. WSGI/Gunicorn retirement **NOT APPROVED**. Runtime endpoint, Nginx, VPS/systemd and deployment remain **NOT AUTHORIZED**. Production readiness **NOT CERTIFIED**.
+- No canonical SQLite, writer/lease/feeder/recovery, T1/T2, PostgreSQL, retention/deletion or trading changes/access.
+- Next step: obtain actual second-person review against the refreshed package. Preserve all runtime/deployment and trading approval gates.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — FastAPI adversarial self-review completed
 
 - Review record: `docs/evidence/T0_FASTAPI_ADVERSARIAL_SELF_REVIEW_2026-11-19.md`, commit `b2a075ace4c99227a3701f6183061f5dc3b59354`.
