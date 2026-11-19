@@ -2355,6 +2355,8 @@ class PaperLedger:
             if account.get("riskReady") is not True:
                 raise ValueError("ACCOUNT_RISK_NOT_READY")
 
+            # Validate the persisted latch itself before changing it.
+            risk_control.snapshot(connection)
             risk_control.reset_kill(connection, acknowledge, True, now)
             self.audit(connection, now, "KILL_SWITCH_RESET", {
                 "acknowledge": acknowledge,
