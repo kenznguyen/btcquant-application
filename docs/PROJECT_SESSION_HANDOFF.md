@@ -398,7 +398,6 @@
 - Status: F3 implementation PASS (static); F3 execution NOT VERIFIED; F2 NOT STARTED; production/runtime/canonical database NOT CERTIFIED.
 
 ---
-
 # CURRENT STATUS OVERRIDE — 2026-11-19
 
 ## SQLite isolated workflow rerun after Bash Step Summary fix — PASS
@@ -797,8 +796,7 @@ Build the exact-path/ref GitHub repository-file inventory for the matrix, decisi
 - Inventory includes the matrix, current register/plan, six owner decisions, historical audit/review records, lifecycle records P1.8.142–152 (selected relevant chain), the non-substitution assessment and source-basis documents, the T0 components-outside-L4 scope audit, personal-use content audit, and the new scope reconciliation report. Exact path, Git blob SHA-1, file size and SHA-256 are recorded for each object.
 - Scope reconciliation report: `docs/evidence/T0_L4_REPOSITORY_FILE_INVENTORY_SCOPE_RECONCILIATION_2026-11-11.md`, blob `2f93102a78baf40edfcd6f58fc1c1ac8e4ca62e0`. It records why three additional source records were included and why T0 deployment/API/DR, T1/T2 runtime and mutable handoff references are excluded from the L4 evidence-source set. Basename-only citations in the historical T0 components audit remain unresolved and are not guessed. Reference reconciliation is **PARTIAL PASS**, not a claim of complete repository-wide evidence discovery.
 - The prior 36-file run [42914049188](https://github.com/kenznguyen/btcusdt-telegram-signals2/actions/runs/42914049188) also passed; this final run confirms the updated Automation Plan and matching inventory-config blob at the exact current commit.
-- The four-artifact GitHub Actions inventory/manifest pilot remains a separate inventory class. Its source allowlist has not been silently expanded by the repository-file inventory. The latest Actions artifact-manifest output ID `13808956100` (3,037 bytes, upload digest `73aac8f5688dc7ce362cd0932df1950920b38be0612adde9df80aeebcd60f889`) and lineage output ID `13807869163` (1,152 bytes, upload digest `a85b42d823e962e8bfce994044cbc22006a16ec6605a5e5996531e3f0f3f6772`) have not been independently downloaded/re-hashed in this increment.
-- Aggregate L4-Minimum remains **BLOCKED / NOT VERIFIED**. The 36-file source inventory and partial reference reconciliation do not prove completeness of all L4 evidence, VPS custody/readback, signer separation, authenticated latest-head freshness, offline verification, trust lifecycle, tamper-evident history or L4M-10 owner disposition. No control is promoted by CI.
+- The four-artifact GitHub Actions inventory/manifest pilot remains a separate inventory class. Its source allowlist has not been silently expanded by the repository-file inventory. The latest Actions artifact-manifest output ID `13808956100` (3,037 bytes, upload digest `73aac8f5688dc7ce362cd0932df1950920b38be0612adde9df80aeebcd60f889`) and lineage output ID `13807869163` (1,152 bytes, upload digest `a85b42d823e962e8bfce994044cbc22006a16ec6605a5e5996531e3f0f3f6772`) have not been independently downloaded/re-hashed in this increment.- Aggregate L4-Minimum remains **BLOCKED / NOT VERIFIED**. The 36-file source inventory and partial reference reconciliation do not prove completeness of all L4 evidence, VPS custody/readback, signer separation, authenticated latest-head freshness, offline verification, trust lifecycle, tamper-evident history or L4M-10 owner disposition. No control is promoted by CI.
 
 ### Next permitted step
 Continue cross-reconciling the 36-file inventory against any remaining exact source objects that the current matrix/register/decisions/lifecycle chain actually relies on. Resolve basename-only references only when their exact repository paths and relevance are verified; do not guess or expand scope for unrelated T0/T1/T2 engineering. Separately reconcile the four-artifact Actions allowlist against authoritative workflow/run/artifact metadata and retention, keeping output artifacts distinct from source evidence. After both inventories are stable, prepare the exact-object signature/negative-verification contract; do not generate or use keys. Network-disabled offline verification remains downstream. No VPS/SQLite access, signer/trust-root operations, artifact deletion or destructive lifecycle actions. Option C remains ACTIVE; aggregate L4 remains BLOCKED / NOT VERIFIED.
@@ -1197,8 +1195,7 @@ Reconcile the four-artifact Actions allowlist with all eligible source artifacts
   - **A2.1-R2-02 HIGH:** Path B lacks a fully specified independently verifiable owner/operator provisioning trust model. The ceremony record is not self-authenticating, but the verifier channel, operator authorization/authentication, and pre-existing verifier trust boundary are not fully defined.
   - **A2.1-R2-03 HIGH:** §12.3 verdict/reason mapping is ambiguous across Path A and Path B; signature-specific rules do not directly fit unsigned Path B ceremony evidence, and BLOCKED vs UNKNOWN precedence is unclear.
   - **A2.1-R2-04 HIGH:** A2.1-NV-01..09 do not consistently meet inherited §5.1 deterministic fixture assertions; NV-06 combines multiple independent mismatches and should be split.
-  - **A2.1-R2-05 MEDIUM:** “A2.1 profile” lacks an exact machine-readable profile ID/version bound consistently to signed descriptor, Signature Statement, Trust Policy and verifier request.
-- A2-SR-01 purpose rejection is substantially addressed. A2-SR-02 remains only partially addressed: Path A is unavailable pending a separate contract; Path B needs its trust boundary/owner authorization contract made explicit.
+  - **A2.1-R2-05 MEDIUM:** “A2.1 profile” lacks an exact machine-readable profile ID/version bound consistently to signed descriptor, Signature Statement, Trust Policy and verifier request.- A2-SR-01 purpose rejection is substantially addressed. A2-SR-02 remains only partially addressed: Path A is unavailable pending a separate contract; Path B needs its trust boundary/owner authorization contract made explicit.
 - Historical A2/A1/Checkpoint Contract/crosswalk source blobs remain unchanged. No A2.1 correction was made in this review; only the review report and this Handoff were added.
 - Status: A2.1 **REQUEST CHANGES**; independent review **NOT PERFORMED / NOT VERIFIED**; implementation **BLOCKED**; CI/workflow **NOT RUN**.
 - Next step, if approved: prepare a new A2.2 documentation-only candidate addressing R2-01..R2-05, then run a fresh adversarial self-review. Do not implement or instantiate trust/bootstrap/anchor until independent review and separate explicit implementation approval.
@@ -1597,8 +1594,7 @@ This is the current disposition and supersedes the earlier historical NOT RUN / 
   - DS-01: API `ledger()` constructs `PaperLedger` as MANUAL, then evaluate route submits with a strategy_id override. After dual-ledger migration, MANUAL writer rejects writes with `DUAL_LEDGER_MIGRATION_ACTIVE_MANUAL_WRITE_BLOCKED`; API route is not wired to the scoped writer.
   - DS-02: `core_decide()` reads `read_snapshot(db_path)` without `strategy_id="STRATEGY_CORE"`, so it reads legacy aggregate state rather than Core's own ledger.
   - DS-03: Core producer defaults to fixed `LEVERAGE=13` and `ENTRY_MARGIN_PCT=0.50`, conflicting with the current 1%-of-account-equity margin cap per new ENTRY/DCA and current leverage policy. Resolve sizing without changing RSI/ADX/Smart-DCA signal rules.
-  - DS-04: Dual Ledger contract/migration docs have stale/inconsistent status statements relative to later implementation addenda and current code.
-- Next permitted work: contract-level correction plan and test mapping for DS-01/DS-02; reconcile sizing for DS-03; append-only documentation status reconciliation for DS-04. Then request a bounded implementation approval. No code fix, workflow dispatch, VPS/runtime action, schema migration, T0 mutation, T1 activation or live trading was performed/authorized by this assessment.
+  - DS-04: Dual Ledger contract/migration docs have stale/inconsistent status statements relative to later implementation addenda and current code.- Next permitted work: contract-level correction plan and test mapping for DS-01/DS-02; reconcile sizing for DS-03; append-only documentation status reconciliation for DS-04. Then request a bounded implementation approval. No code fix, workflow dispatch, VPS/runtime action, schema migration, T0 mutation, T1 activation or live trading was performed/authorized by this assessment.
 - Branch continuity preserved; report and handoff only. No tests or workflow runs are claimed for this documentation increment.
 
 
@@ -1998,7 +1994,6 @@ Owner approval recorded in the GREEN-0 evidence report and implementation plan:
 - G0-06: AI DCA is disabled in v1. AI Strategy is limited to independent LONG/SHORT ENTRY intents; any DCA capability requires a separately approved trigger/eligibility contract.
 - G0-01/G0-02/G0-03/G0-05: AI trade admission remains BLOCKED pending trusted calibration registry/digest, provenance compatibility, evidence-based thresholds and authoritative versioned BTCUSDT instrument rules.
 - G0-07: reservation snapshot design deferred; no schema/migration authorized.
-
 This approval is design/documentation only. GREEN-1 through GREEN-5 remain NOT AUTHORIZED. No code, tests, schema, DB, migration, calibration, backtest, feature activation, runtime, VPS, deployment, exchange or live-trading action is authorized. Paper-only and `AI_EXECUTION_ENABLED=false` remain unchanged.
 
 
@@ -2397,8 +2392,7 @@ Next: if owner wants to proceed beyond planning, first approve a bounded provisi
 - Important trust limitation: evaluator consumes `identity_verified`, `producer_provenance_verified`, dependency/hold/process/rebuildability/material-use facts as supplied assertions; it does not authenticate them. Digest format/length are checked but digest is not recomputed against payload bytes. Review dispositions are not deletion/archive authorization.
 - Repository-wide tests NOT RUN. GitHub Actions NOT DISPATCHED; no run/artifact. TEST-01–07 harness NOT IMPLEMENTED/NOT VERIFIED; 0/87 vectors executed; TEST-08 NOT GRANTED. Runtime/VPS NOT VERIFIED.
 - No workflow/fixture/schema/API/registry/adapter/runner/oracle/scheduler/service/permission/credential/database/storage/VPS/data/model/ledger/runtime changes; no production inventory, provider/network/database access, archive, quarantine, cleanup, expiry, compaction, vacuum or deletion.
-- Branch remains `feature/t0-centralized-data-feeder-p1-20261101`; final source HEAD before evidence/handoff append: `8751c4505c600267559e402801ef37c689781824`.
-- Next step: code-level review and contract-gap assessment against G0.10/G0.12. Independent fact authentication, payload digest verification, Stage C TEST-01–07 harness, CI workflow, production inventory and destructive executor require separate bounded approvals.
+- Branch remains `feature/t0-centralized-data-feeder-p1-20261101`; final source HEAD before evidence/handoff append: `8751c4505c600267559e402801ef37c689781824`.- Next step: code-level review and contract-gap assessment against G0.10/G0.12. Independent fact authentication, payload digest verification, Stage C TEST-01–07 harness, CI workflow, production inventory and destructive executor require separate bounded approvals.
 
 
 
@@ -2798,7 +2792,6 @@ Next: if owner wants to proceed beyond planning, first approve a bounded provisi
 - T0 remains independent/protected; CORE_LEDGER and AI_LEDGER remain separate; paper-only and `AI_EXECUTION_ENABLED=false` unchanged.
 
 ## G0.38 — G0.37-A Failure Analysis and Corrected Harness Design (2026-11-11)
-
 - Baseline HEAD: `b3fc29d44622f4b4ce7bce00f26ea41c8dd9c547`; baseline handoff blob: `ec6a9d210b7b6c6bee54db2eafe49b43db630158`.
 - Report: `docs/evidence/G0_38_G0_37A_FAILURE_ANALYSIS_AND_HARNESS_REDSEIGN_2026-11-11.md`.
 - Report creation commit: `575d41e2413ddcda09f0e36866429503e20fcdcf`.
@@ -3199,7 +3192,6 @@ Next: if owner wants to proceed beyond planning, first approve a bounded provisi
 - Tests/compile/CI: NOT RUN (docs-only). Runtime/VPS/database/provider/key operations: NOT PERFORMED. Independent reviewer sign-off remains waived as a mandatory gate; no independent assurance claim.
 - No S2 implementation or operational/destructive action is authorized.
 
-
 ## G0.53 — S2 Synthetic Verifier Contract Owner Decision Package (2026-11-11)
 
 - Baseline HEAD: `d9baed38bad73c0d39c88f233b0f254a669a07a2`; controlling handoff blob read before work: `6e029acbcd8f833b224c2bb981b332eefdaa7c5f`.
@@ -3597,8 +3589,7 @@ Critical limits:
 - T2 `canonical_context` accepts `timeframe="15m"|"1h"`; CLI exposes `--timeframe`. T0 API, storage, feeder, lease/writer and canonical data were not changed.
 - Independent fixture coverage: M15/H1 pagination, timeframe identity, coverage, freshness thresholds, aggregate hash, unsupported timeframe, oversized windows and fail-closed page errors. Isolated SQLite + loopback T0 API + T2 integration now exercises complete and gapped M15 and H1 paths using synthetic exchange rows only.
 - T0 manual validation run [43082340629](https://github.com/kenznguyen/btcusdt-telegram-signals2/actions/runs/43082340629), exact checkout/source SHA `625441535a7fcf76cfcb47ebd48eef87240cee41`, overall SUCCESS:
-  - SQLite lease/fencing: 55/55 PASS; artifact `13884362952`, ZIP SHA-256 `f9abdfe9d946304bd75f0f950f8af48b14093aa08a2b8764a05d77b933ea1a4a`.
-  - SQLite recovery: 64/64 PASS; artifact `13884233076`, ZIP SHA-256 `a9818675a5085050e3e92387bda19ec3604eb0557ac2ecddd2afdfda8ab3fab2`.
+  - SQLite lease/fencing: 55/55 PASS; artifact `13884362952`, ZIP SHA-256 `f9abdfe9d946304bd75f0f950f8af48b14093aa08a2b8764a05d77b933ea1a4a`.  - SQLite recovery: 64/64 PASS; artifact `13884233076`, ZIP SHA-256 `a9818675a5085050e3e92387bda19ec3604eb0557ac2ecddd2afdfda8ab3fab2`.
   - Isolated T0 → T2 data flow: 87/87 PASS, verdict `SQLITE_T0_TO_T2_DATA_FLOW=PASS`; artifact `13884602890`, ZIP SHA-256 `71d6e5f349807f760f627e5c0d05411e827225540526afc672b1ecfe69bab966`.
   - Manual runtime acceptance and G4 probe jobs were skipped; this is fixture/loopback CI evidence, not VPS or canonical-runtime acceptance.
 - T2 HTTP consumer workflow [43081968562](https://github.com/kenznguyen/btcusdt-telegram-signals2/actions/runs/43081968562), source SHA `6697ad6d5f081e62ffd7e877a8d3ff6805e714f0`: adapter 45/45, context/migration 11/11, exporter 6/6 PASS; artifact `13883923321`, ZIP SHA-256 `ab3e7a051602d6a2013249fb9afd18cbb101d175d3c63c19d07da694e83f9917`. Freqtrade 2026.9 strategy-load smoke [43082340809](https://github.com/kenznguyen/btcusdt-telegram-signals2/actions/runs/43082340809) also PASS at final tested source SHA.
@@ -3997,8 +3988,7 @@ Boundaries unchanged: T0 and T1 remain independent (no T1→T0); T0 unchanged; n
   - `4396b6eae3bcd58ae7fc222d7bf62355e8c50a70` — StatsExporter returns owned task handle.
   - `d9870a0247be0d74124ab01979332f7edef26f92` — main retains and joins stats/discovery tasks.
 - Exact-head CI:
-  - Push [43160512168](https://github.com/kenznguyen/binance-futures-collector/actions/runs/43160512168) — QUEUED.
-  - PR [43160506604](https://github.com/kenznguyen/binance-futures-collector/actions/runs/43160506604) — QUEUED.
+  - Push [43160512168](https://github.com/kenznguyen/binance-futures-collector/actions/runs/43160512168) — QUEUED.  - PR [43160506604](https://github.com/kenznguyen/binance-futures-collector/actions/runs/43160506604) — QUEUED.
   - Current exact-source CI **NOT VERIFIED**.
 - This is still an implementation-level shutdown barrier, not a claim of proven quiescence. Exact CI, focused cancellation/join tests, and source-wide audit of every `tokio::spawn`/spawn_blocking path remain required. In particular, inspect whether any task can spawn nested work not owned by the top-level task group and whether cancellation during in-flight async file/network operations leaves writes in progress.
 - No immutable batch or manifest publisher work has started. Producer conformance remains **NOT VERIFIED**. Schema v1.0.0 unchanged.
@@ -4397,8 +4387,7 @@ These findings make the current stop condition explicit: completing Trusted Admi
 
 - Official application repository: `kenznguyen/btcquant-application`, branch `main`; starting HEAD `556f0e0749549da141993cc9edcc474de4265928`.
 - F4 source was not found in the inspected official application tree. Read-only source audit therefore used legacy repository `kenznguyen/btcusdt-telegram-signals2`, branch `feature/t0-centralized-data-feeder-p1-20261101`, audit HEAD `8623d1076d6b821091ff9da0d84033f48fd8ba7a`.
-- Report: `docs/evidence/F4_READ_ONLY_AUDIT_2026-11-19.md`; report blob `0a4f9b098ca76c2b1d7e34e78021f7dd7e941f4a`; report commit `8d78f51924b255740e5f652f8687e22528816dc5`.
-- Static inventory: F4.1 risk engine, F4.2 dual ledger/position management, F4.3 risk protection and related tests inspected. F4.1 BLOCKED (risk limits not sourced exclusively from validated Account/Risk Contract; missing risk-control table defaults to unlatched). F4.2 CONDITIONAL PASS (ledger/atomic reservation/cancel controls present; legacy AI fallback conflicts with Core-First). F4.3 BLOCKED (Kill Switch reset trusts caller readiness and readiness check is outside reset transaction; legacy path promotes accountRiskReady=true).
+- Report: `docs/evidence/F4_READ_ONLY_AUDIT_2026-11-19.md`; report blob `0a4f9b098ca76c2b1d7e34e78021f7dd7e941f4a`; report commit `8d78f51924b255740e5f652f8687e22528816dc5`.- Static inventory: F4.1 risk engine, F4.2 dual ledger/position management, F4.3 risk protection and related tests inspected. F4.1 BLOCKED (risk limits not sourced exclusively from validated Account/Risk Contract; missing risk-control table defaults to unlatched). F4.2 CONDITIONAL PASS (ledger/atomic reservation/cancel controls present; legacy AI fallback conflicts with Core-First). F4.3 BLOCKED (Kill Switch reset trusts caller readiness and readiness check is outside reset transaction; legacy path promotes accountRiskReady=true).
 - Core-First decision remains in force: Core only in paper path; AI offline research only; `AI_EXECUTION_ENABLED=false`. Do not connect AI or create AI orders.
 - Historical DS-03 run `42975606884` at source SHA `6ef0d7456b2791fae73bfea8855ee30482774673` reported 237 focused + 300 full paper_execution tests PASS (artifact `13834194926`, SHA-256 `66403ab6b9c8079e2d9f3b04dcfc650709a64abd77e62554e6a54c2c101cd5c4`). Current audited source blobs differ; exact-current-SHA compile/tests/workflow/artifact are NOT VERIFIED. No tests/workflows were run for this audit.
 - No source, tests, workflows, dependencies, schema, data, runtime, VPS, exchange, or trading behavior changed. Documentation-only audit report and handoff update.
@@ -4661,3 +4650,16 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - No application source or test code changed. No RED/GREEN tests, CI workflows, endpoint probes, runtime/network/database/credential access, deployment, data mutation or trading occurred.
 - Status: migration scope preparation updated; implementation NOT STARTED and NOT AUTHORIZED; tests/CI NOT RUN; endpoint/runtime NOT VERIFIED and NOT AUTHORIZED; production readiness NOT CERTIFIED.
 - Next gate: present this amended scope for separate owner approval before any RED test or source edit. Endpoint/runtime remains a separate approval gate after source GREEN and independent review.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 FastAPI target architecture approved
+
+- Owner approved FastAPI as the target HTTP API framework for the Five-Layer System and approved migrating the T0 read-only WSGI Candle API now, before further cross-layer HTTP integration.
+- Decision document: `docs/decisions/T0_FASTAPI_MIGRATION_DECISION_2026-11-19.md`, commit `8e97c398d9f2e948bbcdc8b22df694ad2fa63178`.
+- T0 active scope index updated in commit `5eccc2168f3b3729620dbdb6037a3645ed3bb43e`, blob `4dde33a74437100343f032d0c2c57d765ac81ead`.
+- Approved scope: HTTP adapter migration only; preserve authoritative Candle API 1.1.0, `GET /health`, `GET /v1/candles`, auth, bounded queries, response types, freshness/evaluability, error/status semantics and read-only behavior.
+- Nginx remains the gateway. SQLite canonical ownership, writer fencing, lease, feeder, scheduler, recovery and ingestion are unchanged. PostgreSQL remains PARKED. No T1/T2 connection, runtime, VPS, systemd, deployment, data mutation or trading is included.
+- Baseline evidence only: aggregate run `44515824622`, exact tested SHA `8f49439fafc95186a8c854fe482aad707525a658`, 196/196 PASS; API/Storage run `44515824664`, 21/21 PASS. Neither run tests FastAPI.
+- Architecture decision: **APPROVED**. Migration plan: **RECORDED**. Source implementation and dependency/test/CI changes: **NOT STARTED / REQUIRE SEPARATE APPROVAL**. FastAPI tests/workflows: **NOT RUN**. Endpoint/runtime/deployment: **NOT AUTHORIZED / NOT VERIFIED**. Production readiness: **NOT CERTIFIED**.
+- Next gate: owner must separately authorize TDD/source implementation. Once authorized, first perform dependency compatibility and contract RED tests; do not connect or deploy the service without a further separate runtime approval.
