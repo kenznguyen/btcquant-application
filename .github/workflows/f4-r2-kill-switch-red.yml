@@ -34,8 +34,9 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           source_blob="$(git hash-object paper_execution/risk_control.py)"
-          test "$source_blob" = "3c76e462b0d4b924c2418842d95ed74285e2315d"
           test_blob="$(git hash-object paper_execution/test_f4_risk_red.py)"
+          printf 'HEAD=%s\\nSOURCE_BLOB=%s\\nTEST_BLOB=%s\\n' "$(git rev-parse HEAD)" "$source_blob" "$test_blob"
+          test "$source_blob" = "3c76e462b0d4b924c2418842d95ed74285e2315d"
           test "$test_blob" = "7e03122ee72cb88cd039d99ca4a9ed6acfe1f656"
           mkdir -p "$RUNNER_TEMP/f4-r2-evidence"
           {
