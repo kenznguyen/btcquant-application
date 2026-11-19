@@ -1,5 +1,22 @@
 # TARGET REPOSITORY OVERRIDE — 2026-11-19
 
+## GitHub Actions test execution environment — 2026-11-19
+
+- Owner selected **GitHub Actions** as the intended execution environment for the approved six-module SQLite/API test suite (61 statically inventoried test methods).
+- Decision/evidence report: `docs/evidence/GITHUB_ACTIONS_TEST_EXECUTION_ENVIRONMENT_2026-11-19.md`; report commit `b1abee860188f50f26b6f8afd57a6132dad7239b`.
+- This is a documentation/environment selection only. At the inspected prior target HEAD `7d927ed2dd6b35f5eaad59ee306e2f6e04269a6a`, `.github/workflows/` does not exist; GitHub Actions is NOT CONFIGURED.
+- No workflow was created, edited or dispatched. Workflow creation/dispatch still requires separate approval.
+- Future workflow must use GitHub-hosted ephemeral runner (not self-hosted/VPS), checkout exact immutable approved SHA, run only the six SQLite/API unittest modules, use Python >=3.10 pinned to an owner-reviewed supported version, and avoid inherited DB/DSN/token/exchange/trading credentials.
+- Network isolation must be enforced at runner level; if GitHub-hosted runner limitations prevent this, report that limitation and do not claim fully isolated execution. Tests must use test-owned temporary SQLite paths only.
+- Exclude PostgreSQL/TimescaleDB, exchange/network calls, Feeder/API service startup, canonical DB, VPS/runtime and all trading paths. No speculative dependency installation.
+- Required evidence: run URL/ID, exact source SHA, runner/OS, Python version, command, exit code, discovered/passed/failed/skipped counts and logs/artifacts.
+- Status: environment decision RECORDED/PASS; workflow NOT CONFIGURED; workflow creation/dispatch NOT AUTHORIZED by this decision; tests NOT RUN; runtime/canonical DB/exchange/VPS NOT ACCESSED.
+- Next gate: prepare a minimal workflow proposal for owner review; do not create or dispatch it until separately approved.
+
+---
+
+
+
 > This section controls the current work in this repository. The legacy handoff below is retained as historical context and must not be treated as the active repository/branch status where it conflicts with this override.
 
 ## Active repository
@@ -28,7 +45,7 @@
 - Personal research system; paper-only. No live trading, real orders, exchange execution, deployment or production claim.
 - Keep `AI_EXECUTION_ENABLED=false`.
 - T0 is an independent protected canonical data foundation. No canonical DB/data mutation, migration, restore or export without a separate bounded approval.
-- No package installation, test execution, workflow dispatch, runtime/VPS/service access or exchange connection is authorized by this documentation approval.
+- The six-module SQLite/API test execution was separately approved, but no execution has succeeded yet. No package installation, workflow creation/dispatch, runtime/VPS/service access or exchange connection is authorized by the documentation-only environment decision.
 - No PostgreSQL/TimescaleDB enablement or migration is authorized.
 - Preserve the selected migration scope and provenance; do not copy secrets, credentials, environment files, canonical market-data payloads, runtime/deployment configuration or retired legacy components into this public repository.
 
