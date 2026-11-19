@@ -40,7 +40,7 @@ jobs:
           echo "IDENTITY head=$head_sha github_sha=$GITHUB_SHA source=$source_blob test=$test_blob"
           [[ "$head_sha" == "$GITHUB_SHA" ]] || { echo "HEAD_MISMATCH"; exit 1; }
           echo "HEAD_CHECK=PASS"
-          [[ "$source_blob" == "3c76e462b0d4b924c2418842d95ed74285e2315d" ]] || { echo "SOURCE_BLOB_MISMATCH"; exit 1; }
+          [[ "$source_blob" == "3c76e462b0b4b924c2418842d95ed74285e2315d" ]] || { echo "SOURCE_BLOB_MISMATCH"; exit 1; }
           echo "SOURCE_BLOB_CHECK=PASS"
           [[ "$test_blob" == "7e03122ee72cb88cd039d99ca4a9ed6acfe1f656" ]] || { echo "TEST_BLOB_MISMATCH"; exit 1; }
           echo "TEST_BLOB_CHECK=PASS"
