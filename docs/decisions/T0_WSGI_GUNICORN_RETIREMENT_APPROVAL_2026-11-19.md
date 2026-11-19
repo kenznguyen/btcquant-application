@@ -71,3 +71,24 @@ These remain separately gated. Paper-first and `ai_execution_enabled=false` rest
 - Production readiness: **NOT CERTIFIED**.
 
 Next step: implement the bounded retirement on the existing `main` branch using the verification requirements above. Do not cross any excluded runtime, data, T1/T2, PostgreSQL or trading boundary.
+
+
+---
+
+## Implementation follow-up — 2026-11-19
+
+The approved retirement was implemented and verified.
+
+- Retirement implementation commit: `7bc8fab6b6c6f49ed70b7370a113958d7981cd20`.
+- Corrected test/workflow commit and exact tested source SHA: `c77ab92b621b2e79167d6b8eb910be015b428f62`.
+- Manual SQLite workflow cleanup commit: `d6c25716e07b9c8414e34bde11d31a6a62d33f43`.
+- Evidence report: `docs/evidence/T0_WSGI_GUNICORN_RETIREMENT_2026-11-19.md`.
+- FastAPI migrated suite: **50/50 PASS**, run `44546084887`.
+- SQLite aggregate: **174/174 PASS**, run `44546084972`.
+- F1 write-gateway regression: **14/14 PASS**, run `44546084937`.
+- Runtime-lock-only ASGI import/in-process health: **PASS**, run `44546084887`.
+- Dependency compatibility after Gunicorn removal: **PASS**, run `44545799691` on exact dependency-change SHA `7bc8fab6b6c6f49ed70b7370a113958d7981cd20`.
+- WSGI source and Gunicorn dependency retirement: **PASS**.
+- Uvicorn socket/process, Nginx, VPS/systemd, endpoint runtime and deployment remain **NOT AUTHORIZED / NOT VERIFIED**. Production readiness remains **NOT CERTIFIED**.
+
+The human independent-review prerequisite remains waived by the owner. Gemini's inaccessible-repository result remains BLOCKED / NOT VERIFIED and is not represented as technical approval.
