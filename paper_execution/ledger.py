@@ -6,9 +6,11 @@ import json
 import hashlib
 from pathlib import Path
 import sqlite3
+from types import MappingProxyType
 
 from pipeline.values import identity, number, stamp
 from paper_execution import risk_control, equity as equity_history
+from paper_execution.risk_contract import load_account_risk_contract
 from risk_policy import CORE_LEVERAGE, ORDER_MARGIN_BUDGET_PCT
 from paper_execution.account_history import (
     MIGRATION_VERSION as ACCOUNT_HISTORY_MIGRATION_VERSION,
@@ -1542,7 +1544,9 @@ class PaperLedger:
     def __init__(self, db_path, *, max_position_base="0.01", fee_rate="0.0005", max_spread_bps="50", risk_limits=None, require_risk_limits=False, leverage="13", strategy_id="MANUAL", source_sha=None, apply_migrations=True):
         self.path = Path(db_path)
         self.maximum, self.fee_rate, self.spread = number(max_position_base), number(fee_rate), number(max_spread_bps)
-        self.risk_limits, self.require_risk_limits = risk_limits, bool(require_risk_limits)
+        if risk_limits is not None:
+            raise ValueError("ACCOUNT_RISK_CONTRACT_CALLER_LIMITS_FORBIDDEN")
+        self.risk_limits, self.require_risk_limits = None, bool(require_risk_limits)
         self.leverage = number(leverage)
         if strategy_id not in {"MANUAL", *DUAL_STRATEGIES}:
             raise ValueError("Invalid paper ledger strategy scope")
@@ -1562,6 +1566,10 @@ class PaperLedger:
                 connection.execute("PRAGMA query_only=ON")
                 if not _dual_ledger_migrations_ready(connection):
                     raise sqlite3.DatabaseError("DUAL_LEDGER_MIGRATION_NOT_READY")
+                contract = load_account_risk_contract(connection)
+                self.risk_limits = MappingProxyType(contract["limits"]) if contract else None
+                if self.require_risk_limits and contract is None:
+                    raise sqlite3.DatabaseError("ACCOUNT_RISK_CONTRACT_UNAVAILABLE")
                 return
             connection.execute("PRAGMA journal_mode=WAL")
             initialized = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='paper_state'").fetchone()
@@ -1607,6 +1615,10 @@ class PaperLedger:
                     migrate_daily_baseline_audit(connection, self.source_sha)
                 elif not _dual_ledger_migrations_ready(connection):
                     raise sqlite3.DatabaseError("DUAL_LEDGER_MIGRATION_NOT_READY")
+            contract = load_account_risk_contract(connection)
+            self.risk_limits = MappingProxyType(contract["limits"]) if contract else None
+            if self.require_risk_limits and contract is None:
+                raise sqlite3.DatabaseError("ACCOUNT_RISK_CONTRACT_UNAVAILABLE")
 
     def connect(self):
         connection = sqlite3.connect(self.path, timeout=10)
@@ -1669,6 +1681,8 @@ class PaperLedger:
         with closing(self.connect()) as connection, connection, localcontext() as context:
             context.prec = 80
             connection.execute("BEGIN IMMEDIATE")
+            account_contract = load_account_risk_contract(connection)
+            risk_limits = account_contract["limits"] if account_contract else None
             self._expire_scoped_reservations(connection, now)
             row = connection.execute(
                 """SELECT position_base,average_entry_price,realized_pnl_quote,fees_quote,
@@ -1797,8 +1811,8 @@ class PaperLedger:
                     reason = "LEGACY_UNATTRIBUTED_STATE_CORRUPT"
                 if reason is None and legacy_quantity != 0:
                     reason = "LEGACY_UNATTRIBUTED_EXPOSURE"
-                if reason is None and (self.risk_limits is None or not all(
-                    key in self.risk_limits for key in
+                if reason is None and (risk_limits is None or not all(
+                    key in risk_limits for key in
                     ("maxDrawdownPct", "maxDailyLossUsdt", "maxExposureUsdt")
                 )):
                     reason = "RISK_LIMITS_UNCONFIGURED"
@@ -1856,10 +1870,10 @@ class PaperLedger:
                         else:
                             drawdown_pct = max(ZERO, hwm-equity) / hwm * Decimal(100)
                             daily_loss = max(ZERO, daily_baseline-equity)
-                            if drawdown_pct >= Decimal(str(self.risk_limits["maxDrawdownPct"])):
+                            if drawdown_pct >= Decimal(str(risk_limits["maxDrawdownPct"])):
                                 reason = "MAX_DRAWDOWN_LIMIT"
                                 risk_control.set_kill(connection, True, now, reason)
-                            elif daily_loss >= Decimal(str(self.risk_limits["maxDailyLossUsdt"])):
+                            elif daily_loss >= Decimal(str(risk_limits["maxDailyLossUsdt"])):
                                 reason = "DAILY_LOSS_LIMIT"
                                 risk_control.set_kill(connection, True, now, reason)
                             else:
@@ -1874,7 +1888,7 @@ class PaperLedger:
                                     projected_gross += abs(target)*mark
                                 else:
                                     projected_gross += increase_quantity*mark
-                                if projected_gross > Decimal(str(self.risk_limits["maxExposureUsdt"])):
+                                if projected_gross > Decimal(str(risk_limits["maxExposureUsdt"])):
                                     reason = "MAX_EXPOSURE_LIMIT"
                                 else:
                                     admission_margin = equity * ORDER_MARGIN_BUDGET_PCT
@@ -2168,8 +2182,10 @@ class PaperLedger:
             quantity, filled, quote, fee = abs(delta), ZERO, ZERO, ZERO
             pending = connection.execute("SELECT 1 FROM paper_orders WHERE status IN ('OPEN','PARTIALLY_FILLED') LIMIT 1").fetchone()
             risk_reducing = position != 0 and target * position >= 0 and abs(target) < abs(position)
+            account_contract = load_account_risk_contract(connection)
+            risk_limits = account_contract["limits"] if account_contract else None
             risk_reason, auto_kill = equity_history.block_reason(connection, target_position=target,
-                current_position=position, limit_price=limit, limits=self.risk_limits,
+                current_position=position, limit_price=limit, limits=risk_limits,
                 require_limits=self.require_risk_limits, now_ms=now)
             if auto_kill:
                 risk_control.set_kill(connection, True, now, auto_kill)
