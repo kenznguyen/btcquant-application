@@ -101,8 +101,18 @@ FastAPI's default validation response (commonly 422) must not silently replace t
 
 - Architecture decision: **APPROVED**.
 - Migration plan: **RECORDED**.
-- Source implementation: **NOT STARTED / REQUIRES SEPARATE APPROVAL**.
+- Source implementation: **AUTHORIZED BY OWNER; EXECUTION BLOCKED**.
 - New dependencies and lock: **NOT CHANGED / NOT VERIFIED**.
 - Tests and workflows: **NOT RUN for FastAPI**.
 - Endpoint/runtime/deployment: **NOT AUTHORIZED / NOT VERIFIED**.
 - Production readiness: **NOT CERTIFIED**.
+
+
+## 9. Implementation authorization and execution checkpoint — 2026-11-19
+
+- Owner separately approved TDD/source implementation of the T0 FastAPI migration. Implementation is therefore **AUTHORIZED**, within the scope and exclusions above.
+- Execution checkpoint: **BLOCKED — no source/test/dependency changes made**. The available GitHub integration in this session exposes repository read/write operations but no workflow-dispatch operation. A local checkout was attempted and failed because the execution container could not resolve `github.com` (DNS/network unavailable).
+- Local Python inspection found Python 3.13.5 with FastAPI 0.128.2, not the certified CPython 3.12.16 target; this environment cannot establish the required target dependency compatibility or replace the pinned CI evidence.
+- TDD RED has not been run. No code was written ahead of the failing contract tests. No dependency manifest/lock, workflow, source, canonical data or runtime was changed.
+- Next execution prerequisite: run in an environment with repository checkout and GitHub Actions execution capability, first establish the CPython 3.12.16 dependency lock with exact wheel hashes, then add/run contract RED tests before implementing the FastAPI adapter. Do not bypass the dependency gate or claim PASS from the local Python 3.13 environment.
+- Current statuses: architecture **APPROVED**; implementation authorization **APPROVED**; execution **BLOCKED**; FastAPI tests **NOT RUN**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
