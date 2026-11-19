@@ -5023,3 +5023,21 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - C1 remains **CLOSED / VERIFIED** for ten differential cases. WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
 - No source/test/workflow/dependency/runtime/canonical data changes; no tests or workflows run during this review.
 - Next bounded step: close D1 through an isolated runtime-lock-only install/import smoke test in CI, then obtain a genuine second-person review. Do not retire WSGI/Gunicorn or qualify runtime before separate approvals.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Canonical SQLite read-only inventory
+
+- Owner approval: **Preserve & Migrate Canonical Data**; current authorized phase is read-only inventory only.
+- Evidence report: `docs/evidence/T0_CANONICAL_SQLITE_READONLY_INVENTORY_2026-11-19.md`, commit `9fe5cf641081391ad23e79975d54a151a0414f69`.
+- Active scope index update: commit `458927c0b0dffde526a4b7a3ce5cc0d5608f328e`.
+- Target repository: `kenznguyen/btcquant-application`, branch `main`; target source snapshot inspected: `e62ef2d52c30e9245a1499c52d15aeb002b37892`.
+- Source repository: `kenznguyen/btcusdt-telegram-signals2`, branch `feature/t0-centralized-data-feeder-p1-20261101`; selected-file source snapshot: `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9`; earlier T0 progress audit: `eb91528bab2b994f283dbe34cd7b0bcbfe406cb5`.
+- Migration provenance explicitly confirms canonical SQLite/data payload was not copied. Target default path `.data/market-data.sqlite3` is not proof of a populated database. The target initializer is empty-only and refuses an existing path.
+- Static SQLite schema inspection: `candles` and `feeder_leases`; `available_at_ms` is persisted; scheduler completion watermarks are in-memory; recovery gaps are derived from candle coverage. No dedicated persisted provenance/manifest, scheduler cursor or recovery-checkpoint table was found in the inspected SQLite schema.
+- Former canonical path: `/home/ubuntu/t0/app/.data/market-data.sqlite3` on Scaleway `btcquant-t0-t1-test-01`; former VPS deleted 2026-11-11. Historical observations (622,592 bytes, integrity `ok`, M15 2,045, H1 2,011) are not evidence of current existence or recoverability.
+- Historical 2026-11-09 coverage PASS is limited to one M15 window (3/3) and one H1 window (3/3). Full history and scheduler completion were NOT VERIFIED.
+- Status: repository/schema inventory **PASS — STATIC ONLY**; current canonical DB existence/access, current integrity, full historical M15/H1 coverage, complete provenance, recovery continuity and backup/restore **BLOCKED / NOT VERIFIED**.
+- This increment was documentation-only. No database/VPS/runtime/API access; no copy/export/restore; no source/test/workflow/dependency changes; no tests or workflows run. No workflow run, job or artifact exists for this inventory.
+- Next required input: identify an owner-held canonical SQLite file or immutable backup and its approved read-only access location. Do not create an empty replacement, run the initializer against a candidate path, start a writer, restore/copy data, or activate runtime without separate approval.
