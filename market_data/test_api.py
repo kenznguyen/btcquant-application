@@ -158,7 +158,7 @@ class CandleApiTest(unittest.TestCase):
             code, body = self.request()
 
         self.assertEqual(code, 200)
-        self.assertEqual(body["contractVersion"], "1.0.0")
+        self.assertEqual(body["contractVersion"], "1.1.0")
         self.assertEqual(body["schemaVersion"], 1)
         self.assertEqual(body["exchange"], "binance")
         self.assertEqual(body["marketType"], "USDT_PERPETUAL")
@@ -171,21 +171,106 @@ class CandleApiTest(unittest.TestCase):
         self.assertIsNone(body["asOfMs"])
         self.assertRegex(body["datasetVersion"], r"^sha256:[0-9a-f]{64}$")
 
-    def test_contract_v1_freshness_reports_exact_observation_and_close_lag(self):
-        generated_at = self.start + 2*self.interval + 1_000
-        with patch("market_data.api.time.time_ns", return_value=generated_at * 1_000_000):
+    def test_contract_v1_freshness_requires_complete_coverage(self):
+        evaluation_time = self.start + self.interval + 1_000
+        with patch("market_data.api.time.time_ns", return_value=evaluation_time * 1_000_000):
             code, body = self.request()
 
         self.assertEqual(code, 200)
+        self.assertFalse(body["coverage"]["complete"])
         self.assertEqual(body["freshness"], {
-            "latestExpectedOpenTimeMs": self.start + self.interval,
+            "latestExpectedOpenTimeMs": self.start,
             "latestReturnedOpenTimeMs": self.start,
             "latestCloseTimeMs": self.start + self.interval,
             "latestAvailableAtMs": self.start + self.interval + 7,
-            "observationAgeMs": generated_at - (self.start + self.interval + 7),
-            "closeLagMs": generated_at - (self.start + self.interval),
-            "evaluable": True,
+            "evaluationTimeMs": evaluation_time,
+            "evaluationAnchor": "GENERATED_AT",
+            "observationAgeMs": evaluation_time - (self.start + self.interval + 7),
+            "closeLagMs": evaluation_time - (self.start + self.interval),
+            "timestampValid": True,
+            "fresh": True,
+            "evaluable": False,
         })
+
+
+    def test_contract_v1_complete_current_window_is_evaluable(self):
+        evaluation_time = self.start + self.interval + 1_000
+        query = (
+            f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
+            f"&endMs={self.start+self.interval}"
+        )
+        with patch("market_data.api.time.time_ns", return_value=evaluation_time * 1_000_000):
+            code, body = self.request(query)
+
+        self.assertEqual(code, 200)
+        self.assertTrue(body["coverage"]["complete"])
+        self.assertTrue(body["freshness"]["timestampValid"])
+        self.assertTrue(body["freshness"]["fresh"])
+        self.assertTrue(body["freshness"]["evaluable"])
+
+
+    def test_contract_v1_stale_latest_candle_is_not_fresh_or_evaluable(self):
+        evaluation_time = self.start + 2*self.interval + 1_000
+        with patch("market_data.api.time.time_ns", return_value=evaluation_time * 1_000_000):
+            code, body = self.request()
+
+        self.assertEqual(code, 200)
+        self.assertFalse(body["freshness"]["fresh"])
+        self.assertFalse(body["freshness"]["evaluable"])
+
+
+    def test_contract_v1_historical_as_of_anchors_freshness_to_replay_time(self):
+        evaluation_time = self.start + self.interval + 1_000
+        generated_at = self.start + 10*self.interval
+        query = (
+            f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
+            f"&endMs={self.start+self.interval}&asOfMs={evaluation_time}"
+        )
+        with patch("market_data.api.time.time_ns", return_value=generated_at * 1_000_000):
+            code, body = self.request(query)
+
+        self.assertEqual(code, 200)
+        self.assertEqual(body["generatedAtMs"], generated_at)
+        self.assertEqual(body["asOfMs"], evaluation_time)
+        self.assertEqual(body["freshness"]["evaluationTimeMs"], evaluation_time)
+        self.assertEqual(body["freshness"]["evaluationAnchor"], "AS_OF")
+        self.assertTrue(body["freshness"]["fresh"])
+        self.assertTrue(body["freshness"]["evaluable"])
+
+
+    def test_contract_v1_future_as_of_is_rejected(self):
+        generated_at = self.start + 2*self.interval
+        query = (
+            f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
+            f"&endMs={self.start+self.interval}&asOfMs={generated_at+1}"
+        )
+        with patch("market_data.api.time.time_ns", return_value=generated_at * 1_000_000):
+            code, body = self.request(query)
+
+        self.assertEqual(code, 400)
+        self.assertEqual(body, {"error": "INVALID_QUERY"})
+
+
+    def test_contract_v1_future_availability_timestamp_is_invalid(self):
+        evaluation_time = self.start + self.interval + 1_000
+        with closing(sqlite3.connect(self.db)) as connection:
+            with connection:
+                connection.execute(
+                    "UPDATE candles SET available_at_ms=?",
+                    (evaluation_time + 1,),
+                )
+        query = (
+            f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
+            f"&endMs={self.start+self.interval}"
+        )
+        with patch("market_data.api.time.time_ns", return_value=evaluation_time * 1_000_000):
+            code, body = self.request(query)
+
+        self.assertEqual(code, 200)
+        self.assertFalse(body["freshness"]["timestampValid"])
+        self.assertFalse(body["freshness"]["fresh"])
+        self.assertFalse(body["freshness"]["evaluable"])
+
 
     def test_contract_v1_empty_as_of_window_has_null_freshness_and_is_not_evaluable(self):
         generated_at = self.start + 2*self.interval + 1_000
@@ -199,12 +284,16 @@ class CandleApiTest(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(body["candles"], [])
         self.assertEqual(body["freshness"], {
-            "latestExpectedOpenTimeMs": self.start + self.interval,
+            "latestExpectedOpenTimeMs": self.start,
             "latestReturnedOpenTimeMs": None,
             "latestCloseTimeMs": None,
             "latestAvailableAtMs": None,
+            "evaluationTimeMs": self.start + self.interval,
+            "evaluationAnchor": "AS_OF",
             "observationAgeMs": None,
             "closeLagMs": None,
+            "timestampValid": False,
+            "fresh": False,
             "evaluable": False,
         })
 
