@@ -1,3 +1,23 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 dependency resolver/fresh-environment gate PASS
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`; no branch/PR split.
+- Workflow: `.github/workflows/t0-dependency-compatibility.yml`, final blob `a020aaaf8be8cce3d89e89369872f2c1f79fd66c`.
+- Workflow/source commit and exact checked-out SHA: `3a4435939e1e369c9dae82f8195d3d3de466900e`.
+- Authoritative GitHub Actions run [44503844968](https://github.com/kenznguyen/btcquant-application/actions/runs/44503844968), job `135490200282`: **SUCCESS**; exact checkout, resolver, hash-locked wheelhouse, offline fresh install and checks all passed.
+- Scope: only `ccxt==4.5.92` and `gunicorn==23.0.0` from `requirements-market-data.txt`; Python 3.12.16. No other Python version tested.
+- Immutable image: `python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`; actual image ID `sha256:313cf8f190a1abab00472c1f0c950c10486c22114bcd8aef2a8198fb587a6d18`.
+- Resolver toolchain: pip 25.0.1; pip-tools 7.4.1 (build-time only).
+- Generated lock: `requirements-market-data.lock`, SHA-256 `31ae8c26b418fcd21978f13fa2bf93ff14f71146c8f17ec47c685dd1df1e79b6`; wheelhouse contains 25 wheels and has a per-wheel SHA-256 manifest.
+- Fresh container used `--network none`, installed only from the hash-locked wheelhouse, and reported `pip check: No broken requirements found`. Exact versions/imports passed; `ccxt.binanceusdm` exists; Gunicorn CLI reports 23.0.0.
+- Artifact `t0-dependency-compatibility-evidence`, ID `14518521692`, size 21,633,527 bytes, SHA-256 `888e942658985567b5af0b2b053fd88c269d1132634cf493038dede8ca8eaf1f`, expires 2026-12-03T10:15:28Z. Artifact ZIP, lock checksum and wheelhouse checksums independently verified.
+- Four initial runs failed due to CI harness issues (pip-tools entrypoint permissions, heredoc indentation, shell quoting, and native extension mapping from a noexec temp filesystem). Each was corrected; only final run `44503844968` is acceptance evidence. Details are in `docs/evidence/T0_DEPENDENCY_COMPATIBILITY_GATE_2026-11-19.md`.
+- Evidence report commit: `7cc585fafeb67f8d136af79d482ae361a8cd6b39`.
+- Status: resolver/fresh-install compatibility **PASS** for Python 3.12.16 and the two declared packages. Runtime startup, Binance connectivity, feeder/API lifecycle, other Python versions, PostgreSQL/TimescaleDB, VPS/deployment and production readiness remain **NOT VERIFIED / NOT CERTIFIED**.
+- Important limitation: generated lock is retained in the 14-day workflow artifact, not committed as a permanent source-controlled lock in this increment. A permanent lock-file commit is a separate follow-up.
+- No T0 production source, canonical DB/data, runtime, VPS, deployment, T1/T2 or trading path was changed/accessed. No live orders.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 feeder/sync/recovery gate PASS; scoped dependency manifest recorded
 
 - Repository: `kenznguyen/btcquant-application`, existing branch `main`. No branch/PR divergence created.
