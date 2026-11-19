@@ -148,3 +148,12 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Official T0 contract 1.1.0 remains authoritative; active Core First HTTP client and Core Bundle normalization remain BLOCKED pending migration.
 - Approval covers scope preparation only. No source implementation, tests, CI, endpoint probe, runtime connection, deployment or trading is authorized.
 - Source implementation NOT STARTED; tests/workflows NOT RUN; endpoint/runtime NOT VERIFIED. Separate authorization is required before implementation and again before any endpoint/runtime connection.
+
+
+## T0 HTTP consumer migration scope review — 2026-11-19
+
+- Read-only review: [T0 HTTP Consumer Migration Scope Review](evidence/T0_HTTP_CONSUMER_MIGRATION_SCOPE_REVIEW_2026-11-19.md).
+- Verdict: PASS WITH DESIGN AMENDMENTS. Before implementation, separate raw T0 1.1.0 page envelopes from the client-synthesized multi-page assembled-window schema.
+- Existing paginated `fetch()` currently emits a synthetic 1.0.0 envelope and hardcodes `evaluable=true`; a simple version bump is not acceptable.
+- Require page-aware validation, common evaluation-anchor aggregation and strict Core Bundle readiness for direct 100-candle M15/H1 requests.
+- Implementation remains NOT STARTED; tests/CI NOT RUN; endpoint/runtime NOT AUTHORIZED.
