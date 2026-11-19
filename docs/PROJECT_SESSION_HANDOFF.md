@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 HTTP consumer migration scope review
+
+- Review report: `docs/evidence/T0_HTTP_CONSUMER_MIGRATION_SCOPE_REVIEW_2026-11-19.md`, commit `8e1248ff1351d3a399185d8b5cac89b2dba3f395`.
+- Active Core First source branch `kenznguyen/btcusdt-telegram-signals2:feature/core-operational-proof-20261112` was compared against inspected SHA `e6606e28a696374f31cd6db1ec0a1372d942d64d`; GitHub compare result identical (0 ahead / 0 behind).
+- Read-only scope review verdict: PASS WITH DESIGN AMENDMENTS. Critical clarification: distinguish raw T0 1.1.0 page envelopes from the client-synthesized multi-page assembled window. Existing `fetch()` currently labels its synthesized output 1.0.0, calculates freshness from generatedAtMs and sets evaluable=true; a simple version bump would be unsafe.
+- Required design: validate each page's 1.1.0 schema, coverage and timestamp validity independently; evaluate the assembled window at the common evaluation anchor; never fabricate `evaluable=true`. Preserve stricter Core Bundle readiness for direct 100-candle M15/H1 pages.
+- The migration TDD scope needs the amendments in the review report before implementation.
+- No source/test edits, tests, CI, endpoint probes, runtime connections, deployment, data access/mutation or trading occurred.
+- Status: implementation NOT STARTED; tests/CI NOT RUN; endpoint/runtime NOT VERIFIED and NOT AUTHORIZED; production readiness NOT CERTIFIED.
+- Next gate: incorporate the design amendments into the scope, then request separate owner authorization for source implementation. Endpoint/runtime requires another separate approval after source GREEN and independent review.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 HTTP consumer migration TDD scope approved
 
 - Repository: `kenznguyen/btcquant-application`, existing branch `main`.
