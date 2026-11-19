@@ -54,13 +54,13 @@ jobs:
             echo "network_mode=none"
             echo "canonical_database_mount=none"
             echo "credentials=none"
-            verify_blob paper_execution/test_f4_r1_account_contract.py b20e70fdb2568c343b3bf9dd1737d9f2738de551
+            verify_blob paper_execution/test_f4_r1_account_contract.py a8b8be332e2b8e0ec9d2707b0c7cb7334ca0e851
             verify_blob paper_execution/test_risk_limits.py 3dd3afb6e7b7d361829bae0355412c468cbbc313
             verify_blob paper_execution/test_ledger.py d352303e2088cbba0538ac4709f92ab74952a4e9
             verify_blob paper_execution/test_dual_ledger_red.py 0cf05418940a07a8357ee9d6039325a1efcb16f2
             verify_blob paper_execution/ledger.py 5a04bbc27904dfab6ab139c6d5a47e538611405b
             verify_blob paper_execution/risk_contract.py 7ae74740568e3bcad78acd928896ee363cc62613
-            verify_blob pipeline/api.py 26d0082d4254fce6d2a95a9f8fc6ec803344404d
+            verify_blob pipeline/api.py 986424f2f3631de367e56b33e50d47f4c0a4f263
             verify_blob pipeline/test_api.py 5481c3072c79891161f992299783a9ba5879f955
             verify_blob pipeline/test_decision.py 6781f26d66635f56662a627bdd3b4a63f26c1f28
           } > "$RUNNER_TEMP/f4-r1-evidence/metadata.txt"
