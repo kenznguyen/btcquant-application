@@ -59,7 +59,7 @@ jobs:
             verify_blob paper_execution/test_ledger.py 71c7719d3e84be41bb7ca200b50fe6b5ee0f68e9
             verify_blob paper_execution/test_dual_ledger_red.py 0cf05418940a07a8357ee9d6039325a1efcb16f2
             verify_blob paper_execution/test_dual_ledger_migration_red.py 09320d363c8cb52806280c1de366895e09af3eeb
-            verify_blob paper_execution/ledger.py afbfba8a0721e3d3dd9caefa4799a180358779f4
+            verify_blob paper_execution/ledger.py 9cc03db8b7506543f9eef2835eb5cb7cda701d6c
             verify_blob paper_execution/risk_contract.py 7ae74740568e3bcad78acd928896ee363cc62613
             verify_blob pipeline/api.py e60e9800e4735902ec46b3fe927d6108cac5b6c2
             verify_blob pipeline/test_api.py 3ddb51d763eb9bef836c5cf85a1ddc471bae0875
