@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - market_data/api.py
+      - market_data/initialize_sqlite.py
       - market_data/feeder.py
       - market_data/feeder_service.py
       - market_data/store.py
@@ -13,6 +14,14 @@ on:
       - market_data/sync.py
       - market_data/write_gateway.py
       - market_data/test_api.py
+      - market_data/test_initialize_sqlite.py
+      - market_data/test_store.py
+      - market_data/test_fenced_store.py
+      - market_data/test_feeder_health.py
+      - market_data/test_feeder_retry.py
+      - market_data/test_feeder_scheduler.py
+      - market_data/test_controlled_ingestion_acceptance.py
+      - market_data/test_t0_controlled_ingestion_acceptance.py
       - market_data/test_storage.py
       - market_data/test_write_gateway.py
       - market_data/test_sync.py
@@ -50,9 +59,16 @@ jobs:
           actual="$(git rev-parse HEAD)"
           test "$actual" = "$GITHUB_SHA"
           for file in \
-            market_data/api.py market_data/feeder.py market_data/feeder_service.py \
+            market_data/api.py market_data/initialize_sqlite.py \
+            market_data/feeder.py market_data/feeder_service.py \
             market_data/store.py market_data/storage.py market_data/sync.py \
-            market_data/write_gateway.py market_data/test_api.py market_data/test_storage.py \
+            market_data/write_gateway.py market_data/test_api.py \
+            market_data/test_initialize_sqlite.py market_data/test_store.py \
+            market_data/test_fenced_store.py market_data/test_feeder_health.py \
+            market_data/test_feeder_retry.py market_data/test_feeder_scheduler.py \
+            market_data/test_controlled_ingestion_acceptance.py \
+            market_data/test_t0_controlled_ingestion_acceptance.py \
+            market_data/test_storage.py \
             market_data/test_write_gateway.py market_data/test_sync.py \
             market_data/test_feeder_lease.py market_data/test_feeder_recovery.py \
             market_data/test_feeder_lifecycle.py market_data/test_feeder_service_lifecycle.py; do
@@ -65,8 +81,8 @@ jobs:
             echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo "workflow_commit=$GITHUB_SHA"
             echo "checked_out_source_sha=$actual"
-            echo "expected_tests=123"
-            echo "test_scope=SQLite-only API, storage, write gateway, sync, lease, recovery and deterministic lifecycle"
+            echo "expected_tests=191"
+            echo "test_scope=SQLite initializer/store/fencing, API/storage, write gateway, sync, lease, recovery, health, retry, scheduler, controlled ingestion and deterministic lifecycle"
             echo "postgresql_tests=excluded"
             echo "canonical_database=not mounted"
             echo "production_runtime=excluded"
@@ -113,6 +129,14 @@ jobs:
             --workdir /workspace \
             "$PYTHON_IMAGE" \
             python -m unittest -v \
+              market_data.test_initialize_sqlite \
+              market_data.test_store \
+              market_data.test_fenced_store \
+              market_data.test_feeder_health \
+              market_data.test_feeder_retry \
+              market_data.test_feeder_scheduler \
+              market_data.test_controlled_ingestion_acceptance \
+              market_data.test_t0_controlled_ingestion_acceptance \
               market_data.test_write_gateway \
               market_data.test_sync \
               market_data.test_feeder_lease \
@@ -151,12 +175,12 @@ jobs:
             echo
             echo "- Run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
             echo "- Exact source SHA: $GITHUB_SHA"
-            echo "- Observed tests: ${test_count:-NOT_REPORTED} (expected 123)"
+            echo "- Observed tests: ${test_count:-NOT_REPORTED} (expected 191)"
             echo "- PostgreSQL-specific API/Storage tests excluded"
             echo "- No canonical DB, production runtime, exchange, network or credentials"
           } >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$test_status" -eq 0 && "$test_count" != "123" ]]; then
-            echo "Expected 123 tests; observed ${test_count:-no test summary}." >&2
+          if [[ "$test_status" -eq 0 && "$test_count" != "191" ]]; then
+            echo "Expected 191 tests; observed ${test_count:-no test summary}." >&2
             exit 1
           fi
           exit "$test_status"
