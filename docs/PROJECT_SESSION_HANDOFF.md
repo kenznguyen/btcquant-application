@@ -1,5 +1,22 @@
 # TARGET REPOSITORY OVERRIDE — 2026-11-19
 
+## GitHub Actions workflow implementation — 2026-11-19
+
+- Owner approved the review proposal; the minimal workflow was committed on the existing `main` branch.
+- Workflow: `.github/workflows/t0-sqlite-api-isolated.yml`.
+- Workflow commit: `d4e8b039b9eeb436667d69e642664f7462825dc3`; workflow blob: `53411a017a977108f4ef4710647701f38147f8fe`.
+- Implementation evidence: `docs/evidence/GITHUB_ACTIONS_WORKFLOW_IMPLEMENTATION_2026-11-19.md`; report commit `2476360f0ec8da836bb00a58d63e8f6f543732d1`.
+- Test checkout remains exact previously approved source SHA `32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f`, not the newer docs/workflow main HEAD.
+- Runner: GitHub-hosted `ubuntu-24.04`; manual `workflow_dispatch` only; contents:read; no secrets.
+- Python image pinned to `python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`; Docker `--network none`; read-only source/root, non-root UID, resource limits; runtime interface probe checks loopback only.
+- Action pins: checkout v7.0.1 `3d3c42e5aac5ba805825da76410c181273ba90b1`; upload-artifact v7.0.2 `cf430e030ddbb5b0abf93d22962f4752f3646cd9`.
+- Exactly six approved test modules; static inventory 61 methods. No dependencies installed; no PostgreSQL/TimescaleDB, exchange, canonical DB, VPS, runtime or trading path.
+- Workflow file was fetched back and static readback checks passed. The connected GitHub tools in this session do not expose workflow dispatch, so no run was started. Runner/Docker/network preflight and tests remain NOT RUN; run URL/ID and artifact NOT AVAILABLE.
+- Status: workflow implementation PASS; workflow execution NOT RUN; tests NOT RUN; production NOT CERTIFIED.
+- Next: manually start `T0 SQLite API isolated tests` from the repository Actions tab on `main`; then inspect run and artifact. Do not change the source SHA or widen test scope.
+
+---
+
 ## GitHub Actions SQLite/API workflow proposal — 2026-11-19
 
 - Prepared review-only proposal: `docs/evidence/GITHUB_ACTIONS_SQLITE_API_WORKFLOW_PROPOSAL_2026-11-19.md`.
