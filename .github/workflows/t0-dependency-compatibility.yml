@@ -88,8 +88,8 @@ jobs:
               python --version
               python -m pip --version
               python -m pip install --user "pip-tools==7.4.1"
-              pip-compile --version
-              pip-compile --resolver=backtracking --generate-hashes --strip-extras \
+              python /tmp/userbase/bin/pip-compile --version
+              python /tmp/userbase/bin/pip-compile --resolver=backtracking --generate-hashes --strip-extras \
                 --no-emit-index-url --output-file=/artifacts/requirements-market-data.lock \
                 /workspace/requirements-market-data.txt
               python -m pip download --require-hashes --only-binary=:all: \
@@ -102,7 +102,7 @@ jobs:
               {
                 echo "resolver_python=$(python --version 2>&1)"
                 echo "resolver_pip=$(python -m pip --version)"
-                echo "pip_tools=$(pip-compile --version)"
+                echo "pip_tools=$(python /tmp/userbase/bin/pip-compile --version)"
                 echo "lock_file=requirements-market-data.lock"
                 echo "lock_sha256=$(cut -d " " -f 1 /artifacts/lock.sha256)"
                 echo "wheel_count=$(find /artifacts/wheelhouse -maxdepth 1 -type f | wc -l)"
