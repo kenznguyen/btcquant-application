@@ -136,7 +136,7 @@ jobs:
               python -m pip install --no-index --find-links=/artifacts/wheelhouse \
                 --require-hashes -r /artifacts/requirements-market-data.lock
               python -m pip check
-              python -c "import importlib.metadata as m, ccxt, gunicorn; assert m.version('ccxt') == '4.5.92'; assert m.version('gunicorn') == '23.0.0'; assert hasattr(ccxt, 'binanceusdm'); print('python=3.12.16'); print('ccxt=' + m.version('ccxt')); print('gunicorn=' + m.version('gunicorn')); print('ccxt_binanceusdm_adapter=available'); print('gunicorn_import=available')"
+              python -c "import importlib.metadata as m, ccxt, gunicorn; assert m.version(\"ccxt\") == \"4.5.92\"; assert m.version(\"gunicorn\") == \"23.0.0\"; assert hasattr(ccxt, \"binanceusdm\"); print(\"python=3.12.16\"); print(\"ccxt=\" + m.version(\"ccxt\")); print(\"gunicorn=\" + m.version(\"gunicorn\")); print(\"ccxt_binanceusdm_adapter=available\"); print(\"gunicorn_import=available\")"
               python -m gunicorn --version
               python -m pip list --format=freeze
             ' > "$artifacts/fresh-install.log" 2>&1; then
