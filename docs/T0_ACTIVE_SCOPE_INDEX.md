@@ -196,3 +196,12 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Detailed evidence: [T0 FastAPI Full Contract Regression](evidence/T0_FASTAPI_FULL_CONTRACT_REGRESSION_2026-11-19.md), commit `43253b5b797a973fe71350bfe15dfc7bf58f2510`.
 - ASGI contract coverage is expanded, but WSGI entrypoint/tests remain; migration status **PARTIAL**. Dependency locks remain in CI artifact, not committed. Independent review pending.
 - Runtime/deployment, T1/T2, PostgreSQL, canonical data changes, retention/deletion and trading remain outside authorization.
+
+
+### FastAPI committed locks and offline CI — 2026-11-19
+
+- Paired exact SHA `6558141e7de20c30447cdb9705583e05a7d80592`: FastAPI **25/25 PASS** run [44526822603](https://github.com/kenznguyen/btcquant-application/actions/runs/44526822603); SQLite aggregate **196/196 PASS** run [44526822322](https://github.com/kenznguyen/btcquant-application/actions/runs/44526822322).
+- Runtime/test wheel locks are committed and SHA-256 validated. The FastAPI test container runs with network disabled after wheels are downloaded to a temporary wheelhouse.
+- Shared contract helpers moved to `market_data/api_contract.py`; FastAPI no longer imports the WSGI module. Legacy JSON Content-Type and non-GET behavior are covered.
+- Detailed report: [T0 FastAPI Locked Offline CI and Review](evidence/T0_FASTAPI_LOCKED_OFFLINE_CI_AND_REVIEW_2026-11-19.md), commit `2d130f5e0ddb3d7137febc403f53d9709f6d9d78`.
+- Internal review PASS for this bounded scope; independent second review pending. WSGI application/tests remain, so migration status **PARTIAL**. Runtime/deployment remains NOT AUTHORIZED.
