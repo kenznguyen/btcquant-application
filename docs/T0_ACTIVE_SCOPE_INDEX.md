@@ -157,3 +157,13 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Existing paginated `fetch()` currently emits a synthetic 1.0.0 envelope and hardcodes `evaluable=true`; a simple version bump is not acceptable.
 - Require page-aware validation, common evaluation-anchor aggregation and strict Core Bundle readiness for direct 100-candle M15/H1 requests.
 - Implementation remains NOT STARTED; tests/CI NOT RUN; endpoint/runtime NOT AUTHORIZED.
+
+
+## FastAPI target architecture decision — 2026-11-19
+
+- Owner approved FastAPI as the target HTTP API framework for the Five-Layer System and approved migrating T0's read-only WSGI Candle API now, before expanding cross-layer HTTP integration.
+- Decision and migration plan: [T0 FastAPI Migration Decision](decisions/T0_FASTAPI_MIGRATION_DECISION_2026-11-19.md), commit `8e97c398d9f2e948bbcdc8b22df694ad2fa63178`.
+- Scope is HTTP adapter migration only. Preserve authoritative Candle API contract 1.1.0, routes, auth, status/error semantics, response JSON types, bounded query, freshness/evaluability and read-only SQLite behavior.
+- Nginx remains the gateway. T0 SQLite, writer fencing, leases, feeder, scheduler, recovery and ingestion remain unchanged. No PostgreSQL, T1/T2 connection, runtime, VPS, systemd, deployment or trading expansion.
+- Existing 196/196 aggregate run [44515824622](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824622), exact SHA `8f49439fafc95186a8c854fe482aad707525a658`, and API/Storage run [44515824664](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824664) are pre-migration baseline evidence only.
+- Architecture decision: **APPROVED**. Migration plan: **RECORDED**. Source implementation, dependency changes, test edits/execution and CI dispatch: **NOT AUTHORIZED / NOT STARTED** pending separate approval. Endpoint/runtime/deployment: **NOT AUTHORIZED**. Production readiness: **NOT CERTIFIED**.
