@@ -509,12 +509,14 @@ class FeederRuntimeLifecycleTest(unittest.TestCase):
             lease_store=leases,
             retry_policy=retry,
         )
+        self.assertTrue(runtime.start())
 
         with self.assertRaisesRegex(PermissionError, "lease is not current"):
             scheduler.sync_callback("15m", BASE, BASE + M15)
 
         self.assertEqual(original_sync.call_count, 1)
         self.assertEqual(runtime.state, "LEASE_LOST")
+        self.assertTrue(runtime.stop(timeout=2))
 
 
 if __name__ == "__main__":
