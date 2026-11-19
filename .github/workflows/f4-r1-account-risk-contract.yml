@@ -1,0 +1,99 @@
+name: F4 R1 Account Risk Contract isolated tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/f4-r1-account-risk-contract.yml"
+      - "paper_execution/test_f4_r1_account_contract.py"
+      - "paper_execution/risk_contract.py"
+      - "paper_execution/ledger.py"
+      - "paper_execution/equity.py"
+      - "pipeline/api.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: f4-r1-account-risk-contract
+  cancel-in-progress: false
+
+jobs:
+  f4-r1-isolated:
+    name: F4 R1 — Python 3.12.16 isolated
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify source and test blob
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          actual="$(git hash-object paper_execution/test_f4_r1_account_contract.py)"
+          test "$actual" = "cd6cbd880f4e3ede1403f1b6c189fe83010a8180"
+          mkdir -p "$RUNNER_TEMP/f4-r1-evidence"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_head_sha=$GITHUB_SHA"
+            echo "test_blob_sha=$actual"
+            echo "python_image=python:3.12.16-slim-bookworm"
+            echo "network_mode=none"
+            echo "canonical_database_mount=none"
+            echo "credentials=none"
+          } > "$RUNNER_TEMP/f4-r1-evidence/metadata.txt"
+
+      - name: Run focused R1 regression tests in isolated container
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/f4-r1-evidence"
+          log="$artifacts/unittest.log"
+          if docker run --rm \
+            --network none \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --pids-limit 128 \
+            --memory 1g \
+            --cpus 2 \
+            --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$artifacts,dst=/artifacts" \
+            --env HOME=/tmp \
+            --env TMPDIR=/tmp \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace \
+            --workdir /workspace \
+            python:3.12.16-slim-bookworm \
+            python -m unittest -v paper_execution.test_f4_r1_account_contract \
+            > "$log" 2>&1; then
+            status=0
+          else
+            status=$?
+          fi
+          cat "$log"
+          {
+            echo "test_command=python -m unittest -v paper_execution.test_f4_r1_account_contract"
+            echo "test_exit_code=$status"
+            echo "test_count=$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || echo NOT_REPORTED)"
+          } >> "$artifacts/metadata.txt"
+          exit "$status"
+
+      - name: Upload R1 test evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: f4-r1-account-risk-contract-evidence
+          path: ${{ runner.temp }}/f4-r1-evidence/
+          if-no-files-found: error
+          retention-days: 14
