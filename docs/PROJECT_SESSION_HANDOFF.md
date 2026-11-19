@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Core-First API enforcement committed; tests NOT RUN
+
+- Owner approved the production API correction after approving test-only alignment.
+- Commits on existing `main`: `9223d3ce72669b4916f717ca1e43f3b80e8c996c`, `4d4a43427b587ff16e8a890c5d75a43678b1e1e6`, `0c6c063b272fe34dd6072022b89f757ee2fb7804`, `191b8edb310335d7e242f701bd3e57ce6916f7ba`.
+- Current HEAD: `191b8edb310335d7e242f701bd3e57ce6916f7ba`; tree: `0f6b8015d4de04c3b9567aa6a8a073265ded43f3`.
+- `pipeline/api.py` blob `0301bbec82f99253b8a4c69e09db53ad108df686`: paper evaluation defaults to Strategy Core; explicit AI source is rejected with 403/`AI_EXECUTION_DISABLED` before dual-ledger check, Ledger initialization, AI evaluation or order submission. AI research remains on offline `GET /v1/decision`. The paper-evaluation path is now Core-only.
+- `pipeline/test_api.py` blob `30dd11a50c63f27680f7c65c4339ad955e586476`, 26 tests; `pipeline/test_decision.py` unchanged blob `6781f26d66635f56662a627bdd3b4a63f26c1f28`, 15 tests. Missing prediction/calibration and corrupt-model tests use offline decision endpoint. Added AI 403/no-SQLite-table-change assertion.
+- Evidence: `docs/evidence/F4_PIPELINE_API_DECISION_TEST_PREFLIGHT_2026-11-19.md`.
+- Static verification confirms AI guard precedes Ledger setup and AI candidate path was removed. This is not runtime proof.
+- Environment remains Python 3.12.16 + standard library only for SQLite fixtures. Local runner has Python 3.13.5 and no exact checkout; prior clone failed DNS. Runtime imports, 41 tests and compile/build NOT RUN; no package install and no CI.
+- Status: API enforcement PASS (static only); test alignment PASS (static only); runtime import/regression NOT VERIFIED/BLOCKED. Paper-only; AI paper execution disabled; live trading prohibited.
+- Next: exact isolated checkout + Python 3.12.16 runner; run two unittest modules and preserve exact outputs. No package installation or CI without separate approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — F4 Pipeline Core-First test alignment committed; execution NOT VERIFIED
 
 - Owner approved test-only adjustment of `pipeline/test_api.py` to align with Core-First. No production source change was authorized.

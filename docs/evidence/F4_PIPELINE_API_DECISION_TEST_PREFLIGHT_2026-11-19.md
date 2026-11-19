@@ -1,59 +1,67 @@
-# F4 Pipeline API and decision Core-First test alignment — 2026-11-19
+# F4 Pipeline API and decision Core-First test / enforcement — 2026-11-19
 
-## Scope and approval
-Owner approved a test-only adjustment so API regression expectations conform to Core-First. Production source must remain untouched. Objective remains isolated import/regression verification for `pipeline/test_api.py` and `pipeline/test_decision.py`. No automatic package installation and no CI/workflow execution.
+## Scope and approvals
+- Original task: isolated import and regression verification for `pipeline/test_api.py` and `pipeline/test_decision.py`; do not automatically install packages or run CI.
+- Owner approved test-only alignment with Core-First, then separately approved the production API correction that enforces AI offline-only behavior.
+- Scope is limited to the API paper-evaluation boundary and corresponding API regression tests. No T0, DB schema, dependency, workflow, deployment, runtime, exchange or live-trading changes.
 
-## Exact source baseline and test-only commits
+## Exact Git evidence
 - Repository: `kenznguyen/btcquant-application`
 - Branch: `main`
-- Test alignment commit: `9223d3ce72669b4916f717ca1e43f3b80e8c996c`
-- Follow-up assertion-isolation commit: `4d4a43427b587ff16e8a890c5d75a43678b1e1e6`
-- Current HEAD at report preparation: `4d4a43427b587ff16e8a890c5d75a43678b1e1e6`
-- `pipeline/test_api.py` final blob: `5cc04ccebf16a04a3289fc9fb4ecc3138b876c83` (26 test methods).
+- Prior test alignment commit: `9223d3ce72669b4916f717ca1e43f3b80e8c996c`
+- Test isolation follow-up: `4d4a43427b587ff16e8a890c5d75a43678b1e1e6`
+- Test/initial enforcement commit: `0c6c063b272fe34dd6072022b89f757ee2fb7804`
+- Core-only cleanup commit: `191b8edb310335d7e242f701bd3e57ce6916f7ba`
+- Current HEAD at evidence preparation: `191b8edb310335d7e242f701bd3e57ce6916f7ba`
+- Current tree: `0f6b8015d4de04c3b9567aa6a8a073265ded43f3`
+- `pipeline/api.py` final blob: `0301bbec82f99253b8a4c69e09db53ad108df686`
+- `pipeline/test_api.py` final blob: `30dd11a50c63f27680f7c65c4339ad955e586476` (26 test methods).
 - `pipeline/test_decision.py` unchanged blob: `6781f26d66635f56662a627bdd3b4a63f26c1f28` (15 test methods).
-- `pipeline/api.py` remains unchanged at blob `d0217944bbfa9b864b0f259e0091daf9a989d180`.
 
-## Test-only changes
-- Converted six API test cases that previously injected AI candidates into paper evaluation and asserted ledger/risk/kill-switch/order outcomes to use Strategy Core intents. This retains regression coverage for Core idempotency, pause, risk limits and kill-switch behavior.
-- Recast the missing-calibration test as an offline AI research decision test using `/v1/decision`; it no longer routes AI through paper execution.
-- Added `test_ai_paper_execution_is_disabled_under_core_first_policy`. It submits an AI candidate to the paper evaluation endpoint and asserts HTTP 403 / `AI_EXECUTION_DISABLED`, while verifying that the SQLite table set is unchanged.
-- `pipeline/test_decision.py` remains unchanged because it tests offline AI decision/candidate logic and does not write to the Paper Ledger.
-- No production source, dependency, workflow, runtime configuration, T0 asset or database payload was changed.
+## Production API correction
+- `POST /v1/paper/evaluate` now defaults an omitted source to Strategy Core.
+- An explicit `{"source":"AI"}` receives HTTP 403 / `AI_EXECUTION_DISABLED` before dual-ledger readiness checks, Ledger construction, AI candidate evaluation, mark writes or order submission.
+- AI research remains available through the offline `GET /v1/decision` endpoint.
+- Paper evaluation path now constructs only the Strategy Core decision and Core ledger path; unreachable AI evaluation/ledger submission branches were removed.
+- Unknown sources remain rejected by the existing payload validation.
+- No AI Ledger write or AI order is authorized by this change.
 
-## Static Core-First conflict — implementation blocker
-The unchanged `pipeline/api.py` currently:
-1. Reads `dual_ledger_ready`.
-2. When the dual ledger is not active, constructs the default `ledger()` even for `source == "AI"`.
-3. Rejects an AI intent with `AI_ADMISSION_NOT_ESTABLISHED` only when the dual ledger is active.
-4. Otherwise continues to the shared intent submission path.
+## Test changes
+- Six API tests that previously routed AI candidates into paper Ledger/risk/kill-switch paths now exercise Strategy Core.
+- Missing calibration, missing prediction and corrupt/stale model cases use the offline `/v1/decision` route.
+- Added `test_ai_paper_execution_is_disabled_under_core_first_policy`: explicit AI source must receive 403/`AI_EXECUTION_DISABLED` and the SQLite table set must remain unchanged.
+- `pipeline/test_decision.py` unchanged; it remains offline AI decision/candidate coverage.
 
-The isolated test fixture creates a SQLite candle database without dual-ledger migrations, so the static branch appears to permit the AI request to reach ledger setup/submission rather than return the newly specified Core-First 403. This is a **static source finding, not a test execution result**. The new test intentionally guards the Core-First contract; it is expected to expose this source-path mismatch if executed against the current source. Production correction is outside this test-only approval and requires separate approval.
+## Static verification
+- GitHub read-back confirmed exact current API/test blobs and current branch HEAD.
+- Static source review confirms explicit AI rejection precedes `dual_ledger_ready` and any Ledger initialization.
+- Static source review confirms omitted source defaults to Core and the paper-evaluation branch no longer contains AI candidate evaluation.
+- Static test inventory: 26 API tests + 15 decision tests.
+- These are static/source checks only; they are not runtime import or regression test results.
 
-## Minimum dependency/environment decision
-- Test framework and direct test imports: Python standard-library `unittest`; SQLite fixture uses standard-library `sqlite3`.
-- Minimum target: Python 3.12.16, standard library only; no third-party packages required for the SQLite fixture path.
-- Do not install `psycopg`, `ccxt`, pytest or Hummingbot dependencies. PostgreSQL, network, exchange credentials and Hummingbot service remain excluded.
-- Use temporary test databases only, no canonical DB mount, credentials or network.
+## Dependency and environment
+- SQLite fixture path requires Python standard-library `unittest` and `sqlite3`; selected target remains Python 3.12.16, standard library only.
+- Do not install `psycopg`, `ccxt`, pytest or Hummingbot dependencies. PostgreSQL, network, exchange credentials and Hummingbot services remain excluded.
+- Local environment previously inspected: Python 3.13.5 only; exact local checkout unavailable. A read-only shallow clone attempt failed due DNS resolution for github.com.
+- No package installation performed.
 
-## Execution status and evidence
-- Static test-file review: PASS — 26 API tests and 15 decision tests; AI-to-Ledger expectations were removed from the six Core paper-control tests.
-- Core-First AI-denial regression assertion: ADDED; runtime result NOT VERIFIED. Static source inspection indicates current API source does not yet enforce the expected denial on the non-dual-ledger branch.
-- Direct runtime imports: NOT RUN.
-- `pipeline/test_api.py` execution: NOT RUN.
-- `pipeline/test_decision.py` execution: NOT RUN.
-- Local container has Python 3.13.5, not the selected Python 3.12.16. Exact source checkout is unavailable locally; read-only clone previously failed due DNS resolution failure for github.com.
-- No package installed; no CI/workflow run; no compile/build/test/import command run.
-- No runtime, production database, VPS, exchange or trading path accessed.
+## Execution status
+- Core-First API source correction: COMMITTED; static verification PASS.
+- API test alignment: COMMITTED; static inventory PASS.
+- Runtime imports: NOT RUN.
+- `pipeline/test_api.py`: NOT RUN.
+- `pipeline/test_decision.py`: NOT RUN.
+- Compile/build: NOT RUN.
+- CI/workflow: NOT RUN.
+- No source/test execution was claimed. Exact Python 3.12.16 isolated runner and local checkout remain unavailable.
+- No runtime, canonical database, VPS, exchange or trading path accessed.
 
-## Status
-- Test-only Core-First alignment: PASS (source diff/structure reviewed).
-- Test API expected Core-First rejection: ADDED / NOT VERIFIED; static source mismatch BLOCKED.
-- Minimum dependency decision: PASS (static).
-- Runtime imports and regression execution: NOT VERIFIED / BLOCKED by local environment and checkout availability.
-- Production Core-First API enforcement: BLOCKED pending separate authorization; no source edit made.
-- Paper execution remains NOT AUTHORIZED; live trading PROHIBITED.
+## Final status
+- Core-First API enforcement: PASS — static inspection only; runtime behavior NOT VERIFIED.
+- Test alignment: PASS — static inspection only.
+- Import and 41 regression tests: NOT VERIFIED / BLOCKED by runner/checkout availability.
+- Package installation and CI: NOT RUN, as requested.
+- Paper trading remains paper-only; AI paper execution disabled; live trading PROHIBITED.
 
-## Next gate
-1. Provide an exact repository checkout and Python 3.12.16 isolated runner, network disabled.
-2. Obtain separate approval before any production API change to enforce AI offline-only behavior in the non-dual-ledger path.
-3. After that source contract is resolved, run the approved import checks and the two isolated unittest modules, capture exact output and update this evidence. Do not install packages or run CI without separate approval.
+## Next step
+Provision or make available an exact repository checkout with Python 3.12.16 and standard library only, network disabled. Then run the two isolated unittest modules and capture exact command/output. Do not install packages or run CI without separate approval.
