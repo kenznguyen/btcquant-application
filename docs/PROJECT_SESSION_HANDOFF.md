@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — FastAPI adversarial self-review C2 finding
+
+- Review report: `docs/evidence/T0_FASTAPI_ADVERSARIAL_SELF_REVIEW_FOLLOWUP_2026-11-19.md`, commit `2815e6f4917f74679c19e88026c433e6258538fc`.
+- Review HEAD before evidence commit: `7878e2d3b5cd9522ea6ed85b1c6083f8726a2816`; exact tested implementation/workflow SHA: `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
+- Same-assistant adversarial static review verdict: **REQUEST CHANGES — C2 MEDIUM**. `.github/workflows/t0-fastapi-migration.yml` runs the WSGI-vs-FastAPI differential test but omits `market_data/api.py` from `on.push.paths`; changes to the WSGI reference adapter alone will not trigger parity CI.
+- Required next action: separately approve a bounded workflow-only correction adding `market_data/api.py` to the push path filter, then verify an exact-SHA run. No correction was made in this review.
+- C1 ten-case differential test: **CLOSED / VERIFIED**. D1 runtime-lock-only install/import/in-process health smoke: **CLOSED / PASS**. FastAPI/parity 26/26 and SQLite aggregate 196/196 remain PASS on exact tested SHA `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
+- This is **NOT an independent second-person review**. Independent review remains **PENDING**. WSGI/Gunicorn retirement **NOT APPROVED**; Uvicorn socket, Nginx, VPS/systemd, endpoint runtime and deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+- No source/test/workflow/dependency/runtime/canonical data/T1/T2/PostgreSQL/retention/trading changes; no tests or workflows run or dispatched.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — D1 closed; review package refreshed
 
 - D1 runtime-lock-only clean install and in-process ASGI health smoke: **CLOSED / PASS** on exact tested SHA `fe5f99d31aac832f85c1aab9ca007bd70386d9fe`.
