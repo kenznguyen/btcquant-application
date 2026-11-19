@@ -7,6 +7,7 @@ on:
     paths:
       - market_data/test_fastapi_api.py
       - requirements-market-data-fastapi.in
+      - requirements-market-data-fastapi-test.in
       - .github/workflows/t0-fastapi-migration.yml
   workflow_dispatch:
 
@@ -38,6 +39,7 @@ jobs:
           test "$actual" = "$GITHUB_SHA"
           test -f market_data/test_fastapi_api.py
           test -f requirements-market-data-fastapi.in
+          test -f requirements-market-data-fastapi-test.in
           mkdir -p "$RUNNER_TEMP/t0-fastapi-red-artifacts"
           chmod 0777 "$RUNNER_TEMP/t0-fastapi-red-artifacts"
           {
@@ -52,7 +54,7 @@ jobs:
             echo "credentials=none"
           } > "$RUNNER_TEMP/t0-fastapi-red-artifacts/runner_metadata.txt"
 
-      - name: Resolve exact dependency versions and SHA-256 hashes
+      - name: Resolve separate runtime and test locks with SHA-256 hashes
         shell: bash
         env:
           PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
@@ -69,13 +71,17 @@ jobs:
               pip-compile --resolver=backtracking --generate-hashes \
                 --output-file=/artifacts/requirements-market-data-fastapi.lock \
                 requirements-market-data-fastapi.in
+              pip-compile --resolver=backtracking --generate-hashes \
+                --output-file=/artifacts/requirements-market-data-fastapi-test.lock \
+                requirements-market-data-fastapi-test.in
               python -m pip install --disable-pip-version-check --require-hashes \
-                -r /artifacts/requirements-market-data-fastapi.lock
+                -r /artifacts/requirements-market-data-fastapi-test.lock
               python --version > /artifacts/python-version.txt
               python -m pip freeze > /artifacts/installed-packages.txt
             '
           sha256sum "$artifacts/requirements-market-data-fastapi.lock" \
-            | tee "$artifacts/dependency-lock.sha256"
+            "$artifacts/requirements-market-data-fastapi-test.lock" \
+            | tee "$artifacts/dependency-locks.sha256"
 
       - name: Execute FastAPI contract tests and require the expected RED
         shell: bash
@@ -91,7 +97,7 @@ jobs:
             --mount "type=bind,src=$artifacts,dst=/artifacts,readonly" \
             --workdir /workspace "$PYTHON_IMAGE" bash -euc '
               python -m pip install --disable-pip-version-check --require-hashes \
-                -r /artifacts/requirements-market-data-fastapi.lock
+                -r /artifacts/requirements-market-data-fastapi-test.lock
               python -m unittest -v market_data.test_fastapi_api
             ' > "$log" 2>&1 && test_status=0 || test_status=$?
           cat "$log"
@@ -105,7 +111,7 @@ jobs:
               echo "- Exact source SHA: $GITHUB_SHA"
               echo "- Python: CPython 3.12.16"
               echo "- Result: expected RED — ASGI adapter does not exist yet"
-              echo "- Dependency lock: SHA-256 recorded in artifact"
+              echo "- Runtime and test dependency locks: SHA-256 recorded in artifact"
               echo "- Canonical SQLite/runtime/exchange: not accessed"
             } >> "$GITHUB_STEP_SUMMARY"
           else
