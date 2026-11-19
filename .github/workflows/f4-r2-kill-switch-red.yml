@@ -32,14 +32,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/f4-r2-evidence"
+          : > "$RUNNER_TEMP/f4-r2-evidence/metadata.txt"
           head_sha="$(git rev-parse HEAD)"
           source_blob="$(git hash-object paper_execution/risk_control.py)"
           test_blob="$(git hash-object paper_execution/test_f4_risk_red.py)"
-          printf 'HEAD=%s GITHUB_SHA=%s\\nSOURCE_BLOB=%s\\nTEST_BLOB=%s\\n' "$head_sha" "$GITHUB_SHA" "$source_blob" "$test_blob"
-          test "$head_sha" = "$GITHUB_SHA"
-          test "$source_blob" = "3c76e462b0d4b924c2418842d95ed74285e2315d"
-          test "$test_blob" = "7e03122ee72cb88cd039d99ca4a9ed6acfe1f656"
-          mkdir -p "$RUNNER_TEMP/f4-r2-evidence"
+          echo "IDENTITY head=$head_sha github_sha=$GITHUB_SHA source=$source_blob test=$test_blob"
+          [[ "$head_sha" == "$GITHUB_SHA" ]] || { echo "HEAD_MISMATCH"; exit 1; }
+          echo "HEAD_CHECK=PASS"
+          [[ "$source_blob" == "3c76e462b0d4b924c2418842d95ed74285e2315d" ]] || { echo "SOURCE_BLOB_MISMATCH"; exit 1; }
+          echo "SOURCE_BLOB_CHECK=PASS"
+          [[ "$test_blob" == "7e03122ee72cb88cd039d99ca4a9ed6acfe1f656" ]] || { echo "TEST_BLOB_MISMATCH"; exit 1; }
+          echo "TEST_BLOB_CHECK=PASS"
           {
             echo "workflow_run_id=$GITHUB_RUN_ID"
             echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
@@ -51,6 +55,7 @@ jobs:
             echo "canonical_database_mount=none"
             echo "credentials=none"
           } > "$RUNNER_TEMP/f4-r2-evidence/metadata.txt"
+          echo "METADATA_WRITE=PASS"
 
       - name: Run Kill Switch RED specification in isolated container
         shell: bash
