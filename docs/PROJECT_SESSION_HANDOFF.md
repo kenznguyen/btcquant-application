@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Owner approved T0 WSGI/Gunicorn retirement
+
+- Decision: `docs/decisions/T0_WSGI_GUNICORN_RETIREMENT_APPROVAL_2026-11-19.md`.
+- Owner explicitly waived the human independent second-person review prerequisite and approved the bounded retirement of the legacy WSGI/Gunicorn serving path.
+- Gemini external AI review remains **BLOCKED / NOT VERIFIED** because it could not access the repository/SHA; it is not an approval or code-level review.
+- ChatGPT supplementary static review remains non-independent; no confirmed blocking defect was identified in its inspected scope.
+- Baseline main HEAD at approval: `7fdf4e3eedaf0b568c7219ee8b140684ff066718`; last tested implementation/workflow SHA: `a92cca39a3c23c3325191922c80e73b81384d9ce`.
+- Approved bounded work: remove `market_data/api.py` WSGI entrypoint and Gunicorn dependency/lock entry; migrate remaining WSGI-dependent tests and offline acceptance fixtures to FastAPI ASGI; retire the WSGI parity test after preserving its C1 evidence; update CI triggers, file checks and test lists; rerun focused FastAPI, SQLite aggregate and dependency compatibility workflows on one exact SHA.
+- Preserve Candle Contract 1.1.0 and all HTTP semantics. T0 SQLite canonical ownership, writer fencing, lease, feeder, scheduler, recovery, schema and data remain untouched.
+- Retirement implementation: **AUTHORIZED / NOT STARTED**. Post-change tests/CI: **NOT RUN**.
+- Uvicorn process/socket, endpoint probe, Nginx, VPS/systemd/autostart, runtime activation and deployment remain **NOT AUTHORIZED / NOT VERIFIED**. Production readiness **NOT CERTIFIED**.
+- PostgreSQL, T1/T2, retention/deletion, strategy/risk/trading and real orders remain outside scope. `ai_execution_enabled=false` and paper-first restrictions remain unchanged.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — ChatGPT supplementary review completed
 
 - Review report: `docs/reviews/T0_FASTAPI_CHATGPT_SUPPLEMENTARY_REVIEW_2026-11-19.md`, commit `cd1dd1c3e55f635d9cc542ab3f9bb665d614f922`.
