@@ -1,0 +1,109 @@
+name: F4 R2 Kill Switch expected RED
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/f4-r2-kill-switch-red.yml"
+      - "paper_execution/test_f4_risk_red.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: f4-r2-kill-switch-red
+  cancel-in-progress: false
+
+jobs:
+  f4-r2-red:
+    name: F4 R2 — Kill Switch fail-closed RED — Python 3.12.16 isolated
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source and test baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          source_blob="$(git hash-object paper_execution/risk_control.py)"
+          test "$source_blob" = "3c76e462b0d4b924c2418842d95ed74285e2315d"
+          test_blob="$(git hash-object paper_execution/test_f4_risk_red.py)"
+          test "$test_blob" = "7e03122ee72cb88cd039d99ca4a9ed6acfe1f656"
+          mkdir -p "$RUNNER_TEMP/f4-r2-evidence"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_head_sha=$GITHUB_SHA"
+            echo "risk_control_blob=$source_blob"
+            echo "test_blob=$test_blob"
+            echo "python_image=python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df"
+            echo "network_mode=none"
+            echo "canonical_database_mount=none"
+            echo "credentials=none"
+          } > "$RUNNER_TEMP/f4-r2-evidence/metadata.txt"
+
+      - name: Run Kill Switch RED specification in isolated container
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/f4-r2-evidence"
+          log="$artifacts/unittest.log"
+          if docker run --rm \
+            --network none \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --pids-limit 64 \
+            --memory 512m \
+            --cpus 1 \
+            --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=64m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$artifacts,dst=/artifacts" \
+            --env HOME=/tmp \
+            --env TMPDIR=/tmp \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace \
+            --workdir /workspace \
+            python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df \
+            python -m unittest -v paper_execution.test_f4_risk_red.F4KillSwitchFailClosedRedTest \
+            > "$log" 2>&1; then
+            status=0
+          else
+            status=$?
+          fi
+          cat "$log"
+          test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
+          failure_count="$(sed -nE 's/^FAILED \(failures=([0-9]+)(, errors=[0-9]+)?\)$/\1/p' "$log" | tail -n 1)"
+          error_count="$(sed -nE 's/^FAILED \(failures=[0-9]+, errors=([0-9]+)\)$/\1/p' "$log" | tail -n 1)"
+          {
+            echo "test_command=python -m unittest -v paper_execution.test_f4_risk_red.F4KillSwitchFailClosedRedTest"
+            echo "expected_test_count=7"
+            echo "expected_red_failures=7"
+            echo "test_exit_code=$status"
+            echo "test_count=${test_count:-NOT_REPORTED}"
+            echo "failure_count=${failure_count:-NOT_REPORTED}"
+            echo "error_count=${error_count:-0}"
+          } >> "$artifacts/metadata.txt"
+          if [[ "$status" -ne 1 || "$test_count" != "7" || "$failure_count" != "7" || -n "$error_count" ]]; then
+            echo "Expected exactly 7 assertion failures and 0 errors; observed exit=$status tests=${test_count:-none} failures=${failure_count:-none} errors=${error_count:-0}." >&2
+            exit 1
+          fi
+          echo "EXPECTED RED CONFIRMED: 7/7 Kill Switch specifications fail against unchanged production source."
+
+      - name: Upload F4 R2 RED evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: f4-r2-kill-switch-red-evidence
+          path: ${{ runner.temp }}/f4-r2-evidence/
+          if-no-files-found: error
+          retention-days: 14
