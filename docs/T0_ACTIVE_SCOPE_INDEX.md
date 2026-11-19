@@ -1,3 +1,15 @@
+### Owner approval — T0 WSGI/Gunicorn retirement — 2026-11-19
+
+- Decision: [T0 WSGI/Gunicorn Retirement Approval](decisions/T0_WSGI_GUNICORN_RETIREMENT_APPROVAL_2026-11-19.md).
+- Owner explicitly waived the human independent second-person review prerequisite and approved the bounded retirement.
+- Gemini external AI review is **BLOCKED / NOT VERIFIED** (repository and exact SHA inaccessible); no independent code-level approval is claimed. ChatGPT supplementary review remains non-independent.
+- Baseline main HEAD at approval: `7fdf4e3eedaf0b568c7219ee8b140684ff066718`; tested implementation/workflow SHA: `a92cca39a3c23c3325191922c80e73b81384d9ce`.
+- Authorized implementation scope: remove WSGI entrypoint and Gunicorn dependency/lock; migrate WSGI-dependent tests and acceptance fixtures to ASGI; retire the parity test after preserving its C1 evidence; update workflows and docs; rerun FastAPI, SQLite aggregate and dependency compatibility CI on one exact SHA.
+- Preserve Candle Contract 1.1.0 and T0 canonical SQLite/writer/lease/feeder/recovery boundaries.
+- Owner approval: **APPROVED**. Retirement implementation: **AUTHORIZED / NOT STARTED**. Post-change tests/CI: **NOT RUN**.
+- Uvicorn socket, endpoint, Nginx, VPS/systemd, runtime/deployment: **NOT AUTHORIZED / NOT VERIFIED**. Production readiness: **NOT CERTIFIED**.
+- PostgreSQL, T1/T2, data retention/deletion and trading remain excluded.
+
 ### ChatGPT supplementary adversarial review — completed, not independent sign-off — 2026-11-19
 
 - Report: `docs/reviews/T0_FASTAPI_CHATGPT_SUPPLEMENTARY_REVIEW_2026-11-19.md`, commit `cd1dd1c3e55f635d9cc542ab3f9bb665d614f922`.
