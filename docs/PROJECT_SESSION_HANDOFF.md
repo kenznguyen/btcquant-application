@@ -1,5 +1,21 @@
 # CURRENT STATUS OVERRIDE — 2026-11-19
 
+## F1 SQLite regression verification — PASS
+- GitHub Actions run [44444758997](https://github.com/kenznguyen/btcquant-application/actions/runs/44444758997), attempt 1, workflow_dispatch, overall SUCCESS; job `Six-module SQLite/API suite` ID `135294109828`, SUCCESS.
+- Exact test source SHA `57b54116188167904e2a2a6020ab349588b42186`; workflow/head SHA `688586adef2cb4f7380d3c06064483841522452e`.
+- Six modules, 62/62 PASS, zero failures; F1 regression test explicitly PASS.
+- Network isolation PASS (loopback only; container network=none); no credentials and no canonical database mount.
+- Artifact ID `14491718707`; digest `sha256:84bc5e5588ec1925c963089ea1e6128d5dcc93a7b1b805ec97e7e8aba1a6c4e5`; downloaded ZIP SHA-256 independently matched.
+- Non-blocking workflow issue: six `command not found` shell messages while constructing step summary because Markdown backticks were interpreted as command substitution. Job and test step still succeeded; artifact metadata contains correct evidence. Fix summary generation separately with safe printf/escaped backticks.
+- F1 source/test and isolated suite: **PASS**. Broader F2/F3/F4 coverage remains partial/not verified. Production **NOT CERTIFIED**.
+- No PostgreSQL/TimescaleDB, runtime, Feeder, canonical DB/data, exchange, VPS, T1/T2 or trading changes/access.
+- Detailed evidence: `docs/evidence/T0_SQLITE_F1_RUN_44444758997_2026-11-19.md`.
+- Next: optionally make the narrowly scoped workflow-summary escaping fix, then preserve a fresh workflow run if the summary itself is needed as evidence. Do not widen beyond SQLite tests.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19
+
 ## F1 SQLite schema preflight fix
 - Owner approved bounded F1 fix + regression test; SQLite only. PostgreSQL/TimescaleDB and runtime remain excluded.
 - Source/test commit: `57b54116188167904e2a2a6020ab349588b42186`.
