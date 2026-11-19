@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 feeder/sync/recovery gate PASS; scoped dependency manifest recorded
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`. No branch/PR divergence created.
+- Workflow: `.github/workflows/t0-sqlite-feeder-sync-recovery.yml`, blob `71d7c0564918f1da2f31dd5853442fc6352d7444`; workflow commit and exact checked-out source SHA: `78e67b7bec139452d2cf6e6a6976dfcc96f69a1a`.
+- Exact-SHA Actions run [44500564066](https://github.com/kenznguyen/btcquant-application/actions/runs/44500564066), job `135478919064`: SUCCESS. Job log confirms `HEAD == GITHUB_SHA`.
+- Actual command: `python -m unittest -v market_data.test_sync market_data.test_feeder_lease market_data.test_feeder_recovery`; result `Ran 31 tests in 0.458s`, `OK`, exit code 0. Breakdown: sync 11/11, lease/fencing 10/10, recovery planner/coordinator 10/10.
+- Artifact `t0-sqlite-feeder-sync-recovery-evidence`, ID `14516972397`, size 1,994 bytes, SHA-256 `b5e8f4ac1e5b2084d288daf8e167d47df2b6ca55255457b34ea080d4ae8a43a5`. ZIP downloaded, independently hashed and inspected; contains container image identity, runner metadata and full unittest log. Expires 2026-12-03T09:53:45Z.
+- Isolation: Python 3.12.16 immutable image digest `935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`; Docker network none, read-only source mount, non-root, no credentials, no canonical DB mount. PostgreSQL and feeder service runtime excluded.
+- Added `requirements-market-data.txt`: commit `78299c2357f5ef4d9bb27766a1c99646fed04efa`, blob `107b1bad04982506a8023cd784d5d0dafae3e41a`; direct pins `ccxt==4.5.92`, `gunicorn==23.0.0`. CCXT is for Binance USD-M collection; Gunicorn is for WSGI serving. The pins reflect the previously recorded T0 environment baseline and are not fresh-install or runtime compatibility proof.
+- The 31-test suite requires Python standard library only. Flask is omitted because the API is direct WSGI. `psycopg` is deliberately excluded because PostgreSQL/TimescaleDB is outside scope.
+- Evidence report: `docs/evidence/T0_FEEDER_SYNC_RECOVERY_AND_DEPENDENCIES_2026-11-19.md`, commit `59a442294657809957e2df02a8eba53480cdbb70`.
+- Provenance addendum: `docs/T0_MIGRATION_PROVENANCE.md`, commit `f8b41461a7970628ae129077e8c412aa692852ef`, blob `bd4f8e01f394c5b22079b89ccc57026f54b73666`.
+- Status: isolated feeder/sync/recovery regression **PASS 31/31**; exact-SHA checkout **PASS**; artifact/digest/payload **PASS**; manifest readback **PASS**. Dependency resolver, installation, transitive lock, fresh-environment compatibility, runtime startup and minimum supported runtime Python **NOT VERIFIED**.
+- Limits: no T0 source/test changes, source repository changes, PostgreSQL/migrations, canonical DB/data, runtime, VPS, deployment, T1/T2 or trading access. No packages installed. Production readiness remains **NOT CERTIFIED**.
+- Next bounded step: if continuing dependency work, separately authorize a resolver/fresh-environment compatibility gate for the two declared direct dependencies. Do not install packages in the production/runtime environment or infer runtime readiness from the 31-test standard-library gate.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — F4-R3 phase B production correction GREEN; runtime still prohibited
 
 - Owner explicitly approved F4-R3 phase B. Implementation is complete on the existing `main` branch; no PR/branch split was created.
