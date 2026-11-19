@@ -1,16 +1,7 @@
 name: F4 R3 Kill Reset Readiness RED
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/f4-r3-kill-reset-red.yml"
-      - "paper_execution/test_f4_r3_reset_red.py"
-      - "paper_execution/ledger.py"
-      - "paper_execution/risk_control.py"
-      - "paper_execution/risk_contract.py"
-      - "pipeline/api.py"
+  workflow_dispatch:
 
 permissions:
   contents: read
