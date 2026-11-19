@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F2 isolated feeder lifecycle suite PASS
+
+- Owner approved F2 test-only on the existing `main`: add `market_data/test_feeder_lifecycle.py`, update the isolated SQLite/API workflow, run CI, preserve evidence and handoff. No production source behavior was authorized or changed.
+- Final test source commit: `2668dd538a99d6021921432b3485f4ed84198364`; test file blob: `f10de15b11ca00f6a4946c3877062cfb5dbd1442`. Source commit changed only `market_data/test_feeder_lifecycle.py`.
+- Added 28 deterministic test cases: RetryPolicy 6, FeederScheduler 10, FeederRuntime 12. Coverage includes retry classification/backoff/jitter/Retry-After; close-grace and independent M15/H1 watermarks; scheduler failure/gap/stop/background thread/in-flight drain; runtime startup/recovery, lease/heartbeat/loss, write re-authorization, health readiness, shutdown drain and fencing-generation safety.
+- Workflow commit: `44ed95bf55903cc4055849e5d263d514dfa66ef0`; workflow blob: `9d38afd7f1e686dda07a41465a2f4287526e9347`. Workflow checks out exact test source SHA above, runs seven explicit modules, expects 91 tests, and retains the existing GitHub-hosted Ubuntu/Docker `--network none` test isolation.
+- Final CI run [44447104778](https://github.com/kenznguyen/btcquant-application/actions/runs/44447104778), attempt 1, push/main, overall SUCCESS. Job `Seven-module SQLite/API and feeder lifecycle suite`, ID `135301901223`, SUCCESS.
+- Exact checked-out test source SHA: `2668dd538a99d6021921432b3485f4ed84198364`. Result **91/91 PASS**, 0 failures, 0 skipped; `Ran 91 tests in 1.609s`; exit 0. Runner Ubuntu 24.04.5, Python 3.12.16, Docker 28.0.4, pinned Python image digest `sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`.
+- Isolation PASS: Docker test container `network_mode=none`, network probe loopback-only; no credentials passed; no canonical database mount.
+- Artifact `t0-sqlite-api-test-evidence`, ID `14493447610`, size 4,019 bytes. GitHub digest and independently computed downloaded ZIP SHA-256 both `f5fceef0b15c831c7fe050d4a563529d9a306c9f005624840af4fbc5f068eda0`; payload inspected.
+- Evidence report: `docs/evidence/T0_F2_FEEDER_LIFECYCLE_TESTS_2026-11-19.md` (committed with this handoff update).
+- Iteration record: runs `44446709035` and `44446734889` exposed five scheduler fixture failures caused by the test clock/watermark setup; the fixture was corrected without changing production source. Intermediate runs `44446757387` (87/87) and `44446901653` (90/90) passed; final exact source is run `44447104778` (91/91).
+- Scope limits: tests use fakes and isolated test-owned state. No PostgreSQL/TimescaleDB, Binance/exchange, canonical DB, VPS/systemd/deployment, T1/T2, production runtime, HTTP server/proxy, or trading path was accessed or changed. Production/runtime remains NOT CERTIFIED.
+- Current status: F1 PASS; F2 PASS within approved test-only scope; F3 PASS; F4 NOT VERIFIED; production/runtime/canonical database NOT CERTIFIED.
+- Next: F4 requires a separate bounded review/approval. Do not widen this F2 change into HTTP server/proxy, PostgreSQL, runtime or deployment work.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — F3 automatic CI first run PASS
 
 - User approved automatic workflow execution on every push to `main`; workflow trigger is committed in `bd0b885f97627955ac02b72d89ad86db6e722b70`, blob `cc772e6595cbe8b7ecda583039ddefbda98b3176`.
