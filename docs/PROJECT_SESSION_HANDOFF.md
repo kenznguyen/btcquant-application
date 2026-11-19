@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Hummingbot temporarily deferred
+
+- Owner confirmed Hummingbot is not to be integrated into the current system for now, to reduce complexity; the target architecture retains the option for future integration.
+- Keep `integrations/hummingbot_bridge.py` as a dormant, provenance-preserved adapter from the F4 snapshot. Its presence does not mean runtime integration, dependency installation, connectivity or operational support.
+- Do not add Hummingbot dependencies, configuration, endpoints, workflows, runtime wiring or connectivity checks. Do not remove/rewrite the adapter under this decision. Future activation/removal requires separate explicit approval.
+- Decision evidence: `docs/evidence/HUMMINGBOT_INTEGRATION_DEFERRAL_2026-11-19.md`.
+- This is documentation-only. No application source, tests, dependencies, workflows, runtime, database, T0 asset, VPS, exchange or trading behavior changed/accessed. Tests/import/build/CI NOT RUN; runtime integration/connectivity NOT VERIFIED.
+- Status: temporary deferral DECIDED; future architecture option retained DECIDED; adapter provenance retained PASS; runtime/connectivity NOT VERIFIED; Hummingbot activation NOT AUTHORIZED.
+- Core-First remains controlling: Strategy Core only in current paper path; AI offline research only; `AI_EXECUTION_ENABLED=false`. Paper execution NOT AUTHORIZED; live trading PROHIBITED.
+- Next: continue approved work without Hummingbot activation. Revisit only after a separate explicit approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — F4 snapshot migrated, NOT VERIFIED
 
 - Owner approved a provenance-controlled F4 snapshot transfer to the official application repository. This explicitly supersedes the earlier audit's recommendation to defer migration; it does not approve execution.
