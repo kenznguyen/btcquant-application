@@ -4,7 +4,7 @@ Repository: `kenznguyen/btcquant-application`
 Branch: `main`
 Implementation commit / exact CI checkout SHA: `dc7190e392de1b0bb940ba4acf9a1df0f44eb130`
 Workflow: `.github/workflows/t0-sqlite-api-storage.yml`
-Workflow blob: `b1c0f... ` (see exact blob in GitHub file metadata; implementation commit above is authoritative)
+Workflow blob: `48f06ecc27bba90fcd4d6d05ff7ed3158a0b7014`
 
 ## Approved scope
 
