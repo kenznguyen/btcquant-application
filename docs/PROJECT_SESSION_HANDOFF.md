@@ -4806,3 +4806,18 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - WSGI/Gunicorn removal: **NOT APPROVED** pending independent review and owner approval.
 - Runtime/deployment/VPS/systemd: **NOT AUTHORIZED**. Production readiness: **NOT CERTIFIED**.
 - Next step: wait for independent reviewer to inspect FastAPI adapter, shared contract, tests, lock/hash files, workflow and paired CI evidence. Do not retire WSGI/Gunicorn or alter runtime before accepted independent review and explicit owner approval.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — C1 differential parity test added; CI pending
+
+- Repository: `kenznguyen/btcquant-application`, existing branch `main`.
+- Added `market_data/test_fastapi_parity.py`, commit `78770e49c61075ff10da9ba94526b2d3aef0141d`, blob `2d951e924c99e5929dcc21c21ad144586658aabe`.
+- The test uses one temporary SQLite fixture and a deterministic clock for both retained WSGI and FastAPI ASGI adapters. It compares status code, all response headers and exact body bytes for ten cases: health, successful candle read, unauthorized, missing token configuration, malformed query, duplicate query parameter, unknown path, non-GET, unavailable store, and historical `asOfMs`.
+- Updated `.github/workflows/t0-fastapi-migration.yml` to include the parity test in path triggers and execute it with the existing FastAPI contract suite. Workflow commit: `62054b53119308eca9d2256dcd5aae5561da235b`.
+- Workflow CI result and test logs/artifact: **PENDING / NOT YET VERIFIED**. Do not mark C1 closed until the exact-SHA run proves the parity test executed and passed. SQLite aggregate is also expected to trigger through its workflow-file path filter; result pending.
+- Active scope index updated in commit `80ce1a0d10fe35b50c491ccd9f905f6648068b5d`.
+- No FastAPI/WSGI implementation behavior, dependency locks, canonical SQLite, writer/lease/feeder/recovery, T1/T2, PostgreSQL, runtime, endpoint, VPS, systemd, deployment, retention/deletion or trading changed or accessed.
+- Current status: differential test **ADDED**; C1 **OPEN / NOT VERIFIED**; independent second-person review **PENDING**; WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+- Next step: inspect exact-SHA GitHub Actions runs, job logs and artifacts; correct only any demonstrated test/CI issue, then record final C1 disposition with exact run IDs, artifact IDs and digests.
