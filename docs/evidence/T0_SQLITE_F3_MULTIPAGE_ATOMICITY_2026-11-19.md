@@ -50,3 +50,18 @@ Manually dispatch **T0 SQLite API isolated tests** from the Actions tab on `main
 - The test checkout remains deliberately pinned to F3 source SHA `15d404cb970de14415b21bbadd843027cea7441d` and the suite expects 63 tests. Thus every main push re-runs the same reproducible F3-approved source snapshot; it does not automatically test arbitrary later main source changes.
 - No application runtime or deployment is triggered. The job remains a read-only, isolated SQLite test container with network disabled and no canonical DB mount.
 - First automatic push-triggered run has not yet been observed at the time of this report update. Execution remains NOT VERIFIED until the run and artifact are inspected.
+
+
+## First automatic push-triggered F3 verification — PASS
+- Workflow run: [44445881770](https://github.com/kenznguyen/btcquant-application/actions/runs/44445881770), attempt 1, event `push`, branch `main`.
+- Workflow/head SHA: `bd0b885f97627955ac02b72d89ad86db6e722b70`.
+- Overall conclusion: SUCCESS.
+- Job: `Six-module SQLite/API suite`, job ID `135297771597`, SUCCESS; all substantive steps completed successfully.
+- Exact checked-out test source SHA from artifact metadata: `15d404cb970de14415b21bbadd843027cea7441d`.
+- Test result: **63 passed, 0 failed, 0 skipped**; `Ran 63 tests in 0.720s`; `OK`; test exit code 0.
+- F3 regression explicitly appears in `unittest.log` and passed: `test_second_page_write_conflict_rolls_back_page_without_removing_first_page ... ok`.
+- Isolation metadata: Docker `network_mode=none`; network probe `PASS (loopback only)`; no credentials passed; no canonical database mount. Python 3.12.16; immutable image `python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`.
+- Artifact: `t0-sqlite-api-test-evidence`, ID `14493172181`, size 3,212 bytes, expiry `2026-12-03T02:39:27Z`.
+- GitHub artifact digest: `sha256:4682dea8c447fe6ce201d30ed11b2ed9af110df7e4c264db036ba8c51cb09ff8`; downloaded ZIP SHA-256 independently computed and matched exactly.
+- Artifact payload inspected: `runner_metadata.txt`, `unittest.log`, `network_isolation.txt`, `container_image.txt`, `python_version.txt`; all metadata consistent with the run.
+- Status: F3 isolated execution **PASS**. This certifies the isolated SQLite regression test only; it does not certify canonical DB, production runtime, exchange connectivity or trading.
