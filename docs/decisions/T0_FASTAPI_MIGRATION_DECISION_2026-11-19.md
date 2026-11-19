@@ -139,3 +139,15 @@ FastAPI's default validation response (commonly 422) must not silently replace t
 - These are source-level tests only. WSGI `application` remains in `market_data/api.py`; existing WSGI tests remain in `market_data/test_api.py`. The WSGI-to-ASGI migration is still **PARTIAL**.
 - Exact hashed runtime/test locks remain in the CI artifact and are **not yet committed**. Independent code review remains **PENDING**.
 - Runtime/endpoint/deployment and T1/T2 remain **NOT AUTHORIZED**; PostgreSQL remains PARKED; production readiness remains **NOT CERTIFIED**.
+
+
+## 12. Committed wheel locks, offline test isolation and internal review — 2026-11-19
+
+- Exact paired source SHA: `6558141e7de20c30447cdb9705583e05a7d80592`.
+- FastAPI run [44526822603](https://github.com/kenznguyen/btcquant-application/actions/runs/44526822603), job `135569565169`: **25/25 PASS**, artifact `14533180068`, SHA-256 `43b551482bc7952dd92063067413e0464b3bc5680102e1084282bd28a44e6be5`.
+- SQLite aggregate run [44526822322](https://github.com/kenznguyen/btcquant-application/actions/runs/44526822322), job `135569525255`, same SHA: **196/196 PASS**, artifact `14532985102`, SHA-256 `3a7d5b948d32c08ec53e527cbeac6c214009f01dba4a4df301bce1ee49f9d3d4`.
+- Committed target-specific wheel locks: runtime SHA-256 `fb4cf8f63131cb36636b3c3230378a49bfb2d3a56b8750778ed5b3b5dac8d786`; test SHA-256 `2916098771a482a21637b94fff1f79afc0ddeb37a2a01fdae05032509a889cb6`. The CI verified both with `sha256sum -c`, downloaded wheels, then installed the test environment offline in a `--network none` container.
+- Shared contract helpers were extracted to `market_data/api_contract.py`; FastAPI no longer imports the WSGI module. Non-GET middleware and legacy JSON content-type were added and tested.
+- Internal five-axis code review: **PASS for current source/test/CI scope**. Independent second-reviewer sign-off remains **PENDING**; do not remove WSGI/Gunicorn until independent review accepts the migration diff.
+- Detailed report: [T0 FastAPI Locked Offline CI and Review](../evidence/T0_FASTAPI_LOCKED_OFFLINE_CI_AND_REVIEW_2026-11-19.md), commit `2d130f5e0ddb3d7137febc403f53d9709f6d9d78`.
+- WSGI entrypoint and `market_data/test_api.py` remain. Migration is **PARTIAL**; runtime/endpoint/deployment remains **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
