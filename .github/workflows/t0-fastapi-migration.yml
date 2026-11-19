@@ -106,10 +106,15 @@ jobs:
           artifacts="$RUNNER_TEMP/t0-fastapi-red-artifacts"
           log="$artifacts/fastapi-contract-tests.log"
           if docker run --rm --platform linux/amd64 \
-            --network none --memory 1g --cpus 2 \
+            --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --pids-limit 128 \
+            --memory 1g --cpus 2 --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m,mode=1777 \
             --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
             --mount "type=bind,src=$artifacts,dst=/artifacts,readonly" \
             --mount "type=bind,src=$RUNNER_TEMP/t0-fastapi-wheelhouse/test,dst=/wheelhouse,readonly" \
+            --env HOME=/tmp --env TMPDIR=/tmp \
+            --env PYTHONDONTWRITEBYTECODE=1 --env PYTHONPATH=/workspace \
             --workdir /workspace "$PYTHON_IMAGE" bash -euc '
               python -m pip install --disable-pip-version-check --no-index \
                 --find-links=/wheelhouse --require-hashes \
