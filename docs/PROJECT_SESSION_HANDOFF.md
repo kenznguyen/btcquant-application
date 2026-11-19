@@ -3759,3 +3759,14 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Status: source-to-target inventory PASS; classification PASS; missing-file SHA identification PASS; dependency closure NOT VERIFIED; SQLite test parity PARTIAL; PostgreSQL migration completeness BLOCKED; tests/workflows NOT RUN; runtime/canonical database NOT VERIFIED; production NOT CERTIFIED.
 - No missing files copied, packages installed, tests/workflows run, source/application behavior changed, or runtime/database/canonical data accessed. Source repository unchanged.
 - Next proposed gate: separately approve copying only `market_data/test_sync.py` and `market_data/test_api.py`, after import/isolation review. PostgreSQL assets remain excluded pending an explicit PostgreSQL decision and disposable test target.
+
+
+## 2026-11-19 — Approved SQLite/API test transfer
+
+- Owner approved copying only `market_data/test_sync.py` and `market_data/test_api.py` from source branch `feature/t0-centralized-data-feeder-p1-20261101` into target repository `kenznguyen/btcquant-application`, existing branch `main`.
+- `market_data/test_sync.py`: source blob `319e084d9c0a9c5b0319e9bb7d1f93a930564dc8`; target commit `3aa983c1d71e8fa054ffc61dcea2ec889d504b48`.
+- `market_data/test_api.py`: source blob `49df7e0bec12908adae67f18a4aa19063e461093`; target commit `7f5cf81eebdc53aae76adbba98c980219aefa15a`.
+- Static isolation review: both modules use temporary local SQLite databases and cleanup; sync tests use a mocked exchange; API tests invoke WSGI directly and patch environment. The explicit PostgreSQL test checks fail-closed behavior without connecting to PostgreSQL.
+- Updated reconciliation evidence: `docs/evidence/T0_MISSING_FILE_RECONCILIATION_2026-11-19.md`, update commit `d5b4d9dec349a43eee115d44c1fbded9995e5954`.
+- No tests/workflows were run. Test behavior remains NOT VERIFIED pending a separately approved test gate. No dependencies installed, source behavior modified, PostgreSQL assets copied, or runtime/canonical database accessed.
+- Next: verify exact target blob equality by readback; then request separate approval before test execution or dependency changes.
