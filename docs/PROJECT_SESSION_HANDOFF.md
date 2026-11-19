@@ -4648,3 +4648,16 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Current migration status: design amendments from the read-only review still need to be incorporated into the TDD scope; implementation NOT STARTED; tests/CI NOT RUN; endpoint/runtime NOT VERIFIED and NOT AUTHORIZED; production readiness NOT CERTIFIED.
 - Next bounded step: update the TDD migration scope and provenance plan in this repository to reflect the single-repository boundary and the page-aware 1.1.0 design amendments. Then present the amended scope for separate approval before writing RED tests.
 - Decision recorded against prior main HEAD `4081f9128ddf9b50bdd6641b4f5df49635f2e326`. No source or test files changed and no workflows were run for this decision.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 HTTP migration scope amended to official repository boundary
+
+- Owner-confirmed repository boundary is recorded above: `btcquant-application` is the sole development repository; `btcusdt-telegram-signals2` is read-only/reference-only.
+- Amended `docs/evidence/T0_HTTP_CONSUMER_MIGRATION_TDD_SCOPE_2026-11-19.md` on existing `main`; commit `98039e6f964dc475fb0e5b34aaad17f8cf76c759`; new file blob `51c3ea1f9d0cae3ed54a93029e5d587f5e690553`.
+- The scope now requires source-to-target file/blob provenance mapping, all implementation and tests in the official repository, and the page-aware 1.1.0 design amendment: validate raw pages independently, distinguish historical page structural validity from final-window evaluability, use one common evaluation anchor, never fabricate evaluability, and keep ingestion max-lag independent.
+- The earlier repository-boundary decision was recorded in handoff commit `48e7887e44208ccdfaa3778299213d6a58c09120`. This follow-up scope amendment is documentation-only.
+- No application source or test code changed. No RED/GREEN tests, CI workflows, endpoint probes, runtime/network/database/credential access, deployment, data mutation or trading occurred.
+- Status: migration scope preparation updated; implementation NOT STARTED and NOT AUTHORIZED; tests/CI NOT RUN; endpoint/runtime NOT VERIFIED and NOT AUTHORIZED; production readiness NOT CERTIFIED.
+- Next gate: present this amended scope for separate owner approval before any RED test or source edit. Endpoint/runtime remains a separate approval gate after source GREEN and independent review.
