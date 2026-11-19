@@ -13,6 +13,7 @@ from market_data.fastapi_app import app
 from market_data.store import Candle, CandleStore, INTERVAL_MS
 from market_data.feeder import LeaseStore
 from market_data.write_gateway import SQLiteWriteGateway
+from market_data.sync import sync_window
 
 
 class FastApiCandleContractTest(unittest.TestCase):
@@ -66,9 +67,8 @@ class FastApiCandleContractTest(unittest.TestCase):
     def test_candle_response_preserves_contract_110_and_decimal_strings(self):
         evaluation = self.start + self.interval + 1_000
         with patch("market_data.fastapi_app.time.time_ns", return_value=evaluation * 1_000_000):
-            response = self.request()
-        self.assertEqual(response.status_code, 200)
-        body = response.json()
+            code, body = self.request()
+        self.assertEqual(code, 200)
         self.assertEqual(body["contractVersion"], "1.1.0")
         self.assertEqual(body["candles"][0]["open"], "100.01")
         self.assertEqual(body["candles"][0]["volume"], "2.5")
@@ -77,8 +77,8 @@ class FastApiCandleContractTest(unittest.TestCase):
         self.assertEqual(response.headers.get("cache-control"), "no-store")
 
     def test_missing_or_wrong_bearer_token_is_unauthorized(self):
-        self.assertEqual(self.request(token="wrong").status_code, 401)
-        self.assertEqual(self.request(token=None).status_code, 401)
+        self.assertEqual(self.request(token="wrong")[0], 401)
+        self.assertEqual(self.request(token=None)[0], 401)
 
     def test_missing_token_configuration_fails_closed(self):
         env = dict(self.env)
@@ -112,15 +112,16 @@ class FastApiCandleContractTest(unittest.TestCase):
                     self.assertEqual(response.json(), {"error": "INVALID_QUERY"})
 
     def test_post_is_405_and_allow_header_is_get(self):
-        response = self.request(method="POST")
+        with patch.dict(os.environ, self.env, clear=True):
+            response = self.client.post("/v1/candles")
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response.headers.get("allow"), "GET")
         self.assertEqual(response.json(), {"error": "METHOD_NOT_ALLOWED"})
 
     def test_unknown_path_is_404_with_contract_error(self):
-        response = self.request(path="/v1/orders")
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json(), {"error": "NOT_FOUND"})
+        code, body = self.request(path="/v1/orders")
+        self.assertEqual(code, 404)
+        self.assertEqual(body, {"error": "NOT_FOUND"})
 
     def test_missing_sqlite_database_returns_503_without_creating_file(self):
         missing = Path(self.temp.name) / "missing.sqlite3"
