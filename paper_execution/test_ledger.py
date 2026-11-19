@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 from paper_execution.ledger import PaperLedger
-from paper_execution.risk_contract import provision_account_risk_contract
+from paper_execution.risk_contract import provision_account_risk_contract, read_account_risk_contract, update_account_risk_contract
 
 
 class PaperLedgerTest(unittest.TestCase):
@@ -16,8 +16,14 @@ class PaperLedgerTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name) / "shared.sqlite3"
-        self.ledger = PaperLedger(self.path, max_position_base="1", fee_rate="0.001")
         self.now = 1_800_000_000_000
+        provision_account_risk_contract(
+            self.path,
+            {"maxDrawdownPct": "99", "maxDailyLossUsdt": "1000000", "maxExposureUsdt": "1000000"},
+            source="PAPER_LEDGER_TEST_FIXTURE",
+            recorded_at_ms=self.now,
+        )
+        self.ledger = PaperLedger(self.path, max_position_base="1", fee_rate="0.001")
 
     def intent(self, identifier="intent-1", target="0.1", limit="100.1"):
         return dict(intentId=identifier, symbol="BTCUSDT", exchange="binance", marketType="USDT_PERPETUAL",
@@ -253,8 +259,11 @@ class PaperLedgerTest(unittest.TestCase):
         self.ledger.record_equity("70",1800000000000,self.now+1,"sha256:"+"b"*64,"100")
         limits={"maxDrawdownPct":Decimal("1"),"maxDailyLossUsdt":Decimal("1"),
                 "maxExposureUsdt":Decimal("1000")}
-        provision_account_risk_contract(
-            self.path, limits, source="PAPER_LEDGER_TEST_FIXTURE",
+        contract = read_account_risk_contract(self.path)
+        update_account_risk_contract(
+            self.path, limits, expected_contract_hash=contract["contractHash"],
+            source="PAPER_LEDGER_TEST_FIXTURE",
+            reason="Set strict limits for risk-latch regression",
             recorded_at_ms=self.now + 2,
         )
         guarded=PaperLedger(self.path,max_position_base="1",require_risk_limits=True)
