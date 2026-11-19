@@ -1602,6 +1602,10 @@ class PaperLedger:
                     connection.execute("INSERT INTO paper_strategy_state VALUES (1,?,?,?)",
                                        ("LEGACY" if legacy_position else None, 0, "0"))
             equity_history.ensure(connection)
+            contract = load_account_risk_contract(connection)
+            self.risk_limits = MappingProxyType(contract["limits"]) if contract else None
+            if self.require_risk_limits and contract is None:
+                raise sqlite3.DatabaseError("ACCOUNT_RISK_CONTRACT_UNAVAILABLE")
             if self.strategy_id in DUAL_STRATEGIES:
                 if apply_migrations:
                     migrate_dual_ledger(connection, self.source_sha)
@@ -1615,11 +1619,6 @@ class PaperLedger:
                     migrate_daily_baseline_audit(connection, self.source_sha)
                 elif not _dual_ledger_migrations_ready(connection):
                     raise sqlite3.DatabaseError("DUAL_LEDGER_MIGRATION_NOT_READY")
-            contract = load_account_risk_contract(connection)
-            self.risk_limits = MappingProxyType(contract["limits"]) if contract else None
-            if self.require_risk_limits and contract is None:
-                raise sqlite3.DatabaseError("ACCOUNT_RISK_CONTRACT_UNAVAILABLE")
-
     def connect(self):
         connection = sqlite3.connect(self.path, timeout=10)
         connection.execute("PRAGMA foreign_keys=ON")
@@ -2068,8 +2067,8 @@ class PaperLedger:
                     reservation_status = "CONSUMED"
                     reservation_kind = "BOOK_DEPTH"
                 config_version = identity("risk-config:", {
-                    "limits": {key: str(value) for key, value in self.risk_limits.items()}
-                    if self.risk_limits else None,
+                    "limits": {key: str(value) for key, value in risk_limits.items()}
+                    if risk_limits else None,
                     "leverage": text(self.leverage),
                     "orderMarginBudgetPct": str(ORDER_MARGIN_BUDGET_PCT),
                     "policyVersion": "shared-order-margin-v1",
