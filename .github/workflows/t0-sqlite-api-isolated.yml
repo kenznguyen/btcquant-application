@@ -1,6 +1,9 @@
 name: T0 SQLite API isolated tests
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
