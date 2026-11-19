@@ -368,6 +368,18 @@ class FiveLayerApiTest(unittest.TestCase):
             with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
                 _, result = self.request("/v1/paper/evaluate","POST",{"source":"CORE"})
         self.assertEqual(result["order"]["reason"],"RISK_LIMITS_UNCONFIGURED")
+    def test_quality_reports_tampered_account_risk_contract_as_invalid(self):
+        self.request("/v1/equity")
+        with sqlite3.connect(self.db) as connection:
+            connection.execute(
+                "UPDATE paper_account_risk_contract SET limits_json='{}' WHERE account_id=1"
+            )
+        code, quality = self.request("/v1/quality")
+        self.assertEqual(code, 200)
+        risk = next(row for row in quality["streams"] if row["name"] == "Shared Risk Limits")
+        self.assertEqual(risk["status"], "INVALID")
+        self.assertEqual(risk["reason"], "RISK_LIMITS_INVALID")
+
     def test_core_producer_waits_on_incomplete_history_without_suppressing_ai(self):
         _, signals = self.request("/v1/signals")
         self.assertEqual(signals["strategyCore"]["action"], "WAIT")
