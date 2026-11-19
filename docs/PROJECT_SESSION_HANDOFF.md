@@ -4854,3 +4854,18 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - This package refresh is documentation-only. No source/test/workflow/dependency/runtime/data changes; no tests or workflows run.
 - Next: assign/send the updated package to an actual independent reviewer and record their findings/verdict against the exact review snapshot. D1 remains a separate evidence gap.
 - WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment/VPS/systemd **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — FastAPI adversarial self-review follow-up
+
+- Review report: `docs/evidence/T0_FASTAPI_ADVERSARIAL_SELF_REVIEW_FOLLOWUP_2026-11-19.md`, commit `17ab5aa4cc246f5eafb618fbe9eaddc963399bee`.
+- Reviewed snapshot: `440379b243d0b63e80f22b032fa8499bc2e1a6f4`; tested implementation/workflow SHA: `62054b53119308eca9d2256dcd5aae5561da235b`.
+- Performed same-assistant adversarial static review of FastAPI/WSGI adapters, shared contract, ASGI/differential tests, storage selection, dependency locks and workflow. No additional blocking source defect identified in this bounded review.
+- D1 remains **OPEN / NOT VERIFIED**: CI downloads runtime-lock wheels but only installs the test lock; no separate clean runtime-only install/import smoke test is evidenced.
+- Dependency advisory/CVE research, dynamic security test, Nginx validation, Uvicorn/VPS runtime, load and latency testing remain NOT PERFORMED.
+- Verdict: **PASS WITH VERIFICATION GAPS — SELF-REVIEW ONLY**. This assistant participated in implementation and prior reviews; this does **not** count as independent second-person review. Independent review remains **PENDING**.
+- C1 remains **CLOSED / VERIFIED** for ten differential cases. WSGI/Gunicorn retirement **NOT APPROVED**; runtime/deployment **NOT AUTHORIZED**; production readiness **NOT CERTIFIED**.
+- No source/test/workflow/dependency/runtime/canonical data changes; no tests or workflows run during this review.
+- Next bounded step: close D1 through an isolated runtime-lock-only install/import smoke test in CI, then obtain a genuine second-person review. Do not retire WSGI/Gunicorn or qualify runtime before separate approvals.
