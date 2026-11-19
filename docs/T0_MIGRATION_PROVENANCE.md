@@ -124,3 +124,23 @@ This addendum records a verified isolated CI run on the selected target reposito
 - Evidence report: `docs/evidence/T0_FEEDER_SYNC_RECOVERY_AND_DEPENDENCIES_2026-11-19.md`, commit `59a442294657809957e2df02a8eba53480cdbb70`.
 - Status: exact-SHA workflow PASS; selected SQLite regression PASS 31/31; artifact/digest/payload PASS; manifest content/blob readback PASS. Dependency resolver, installation, transitive lock, fresh-environment compatibility, runtime startup and minimum supported runtime Python remain NOT VERIFIED. PostgreSQL/TimescaleDB, canonical DB/recovery, feeder service runtime, VPS/deployment, T1/T2, trading and production readiness remain NOT TESTED / OUT OF SCOPE / NOT CERTIFIED.
 - No source repository, T0 production source/tests, canonical data/database, PostgreSQL assets, runtime, VPS, T1/T2 or trading behavior changed/accessed. No package installation occurred.
+
+
+## Deterministic feeder lifecycle contract test parity — 2026-11-19
+
+This addendum preserves the source feeder/service lifecycle contracts without overwriting the target repository's existing lifecycle test module.
+
+- Source repository/branch: `kenznguyen/btcusdt-telegram-signals2` / `feature/t0-centralized-data-feeder-p1-20261101`.
+- Exact source HEAD inspected: `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9`.
+- Source `market_data/test_feeder_lifecycle.py` blob: `5797d51e3165721863ceacb1fac76f44055f18a7` (34 test methods).
+- Existing target `market_data/test_feeder_lifecycle.py` remains unchanged at blob `f10de15b11ca00f6a4946c3877062cfb5dbd1442` (28 different test methods).
+- New target path: `market_data/test_feeder_service_lifecycle.py`; final blob `590c29a0fbf553d19582912a113a92bb74da083f`. It preserves all 34 source test methods and adds a fixture helper to provision the exact F1 `feeder_leases` schema in disposable test DBs. This is test-only adaptation; production behavior is unchanged.
+- Production `market_data/feeder.py` source/target blob: `299a9b5a8b1ebd581eb620d5ee860d9f9ff5dc5c` (byte-identical).
+- Production `market_data/feeder_service.py` source/target blob: `6d238a01f35003b943e2b22c8e05f05090ccb518` (byte-identical).
+- Dedicated workflow `.github/workflows/t0-feeder-lifecycle-unit.yml`: commit `6e921720d5e97727033516c386bce213e6930cf8`, blob `4f4b3e9a08caeaa3ee5b0ef1006697a19477d89c`. It runs the 28 existing target lifecycle tests plus 34 preserved source lifecycle/service contract tests (62 total) on exact `github.sha`.
+- Authoritative run [44506249466](https://github.com/kenznguyen/btcquant-application/actions/runs/44506249466), job `135498576940`, exact checkout `9938b01b2b14b651dc7b65f70bef5a446d28594a`: SUCCESS, 62/62, 0 failures/errors.
+- Artifact `t0-feeder-lifecycle-evidence`, ID `14519797216`, size 2,755 bytes, SHA-256 `80c29fbca88ade5ffc2cbb650f8fdbb64f03a689461a6ee223aacec073ed1cef`; downloaded ZIP independently hashed and payload inspected.
+- Test container used immutable Python 3.12.16 image, Docker `--network none`, read-only source/root, non-root, no credentials and no canonical DB mount. Temporary SQLite databases and fake/synthetic exchange collaborators only; no systemd manager, production service, real exchange or network was invoked.
+- Initial fixture attempts exposed six then one missing-F1-schema setup errors. The test-only fixture helper was corrected; the authoritative run passed. No production source was modified.
+- Evidence report: `docs/evidence/T0_FEEDER_LIFECYCLE_CONTRACTS_2026-11-19.md`, commit `f8b10455018f248cc97019e00be28466683e7f80`.
+- Status: deterministic lifecycle/scheduler/retry and feeder-service composition contracts PASS 62/62. Production feeder startup, systemd service operation, canonical DB/data, VPS/runtime, Binance connectivity, PostgreSQL and production readiness remain NOT VERIFIED / NOT AUTHORIZED.
