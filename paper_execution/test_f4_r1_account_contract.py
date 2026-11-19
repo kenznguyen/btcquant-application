@@ -28,6 +28,10 @@ class AccountRiskContractTest(unittest.TestCase):
         )
 
     def test_core_and_ai_ledgers_read_the_same_persisted_account_contract(self):
+        bootstrap = PaperLedger(self.path, max_position_base="1")
+        bootstrap.record_equity(
+            "100", self.now - 60_000, self.now, "sha256:r1-account-seed", "100"
+        )
         self.provision()
         core = PaperLedger(
             self.path, strategy_id="STRATEGY_CORE",
@@ -63,7 +67,10 @@ class AccountRiskContractTest(unittest.TestCase):
             )
 
     def test_required_account_contract_missing_fails_closed(self):
-        PaperLedger(self.path, max_position_base="1")
+        bootstrap = PaperLedger(self.path, max_position_base="1")
+        bootstrap.record_equity(
+            "100", self.now - 60_000, self.now, "sha256:r1-account-seed", "100"
+        )
         with self.assertRaisesRegex(
             sqlite3.DatabaseError, "ACCOUNT_RISK_CONTRACT_UNAVAILABLE"
         ):
@@ -73,6 +80,10 @@ class AccountRiskContractTest(unittest.TestCase):
             )
 
     def test_existing_account_contract_cannot_be_silently_replaced(self):
+        bootstrap = PaperLedger(self.path, max_position_base="1")
+        bootstrap.record_equity(
+            "100", self.now - 60_000, self.now, "sha256:r1-account-seed", "100"
+        )
         self.provision()
         conflicting = {
             "maxDrawdownPct": "30",
