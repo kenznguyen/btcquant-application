@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from paper_execution.ledger import PaperLedger
+from paper_execution.risk_contract import provision_account_risk_contract
 from paper_execution import risk_control
 
 
@@ -26,9 +27,14 @@ class F4RiskContractRedTest(unittest.TestCase):
             "maxDailyLossUsdt": "15",
             "maxExposureUsdt": "1200",
         }
+        PaperLedger(self.path, max_position_base="1")
+        provision_account_risk_contract(
+            self.path, core_limits, source="F4_R1_REGRESSION_FIXTURE",
+            recorded_at_ms=self.now,
+        )
         PaperLedger(
             self.path, strategy_id="STRATEGY_CORE", source_sha="a" * 40,
-            risk_limits=core_limits, require_risk_limits=True,
+            require_risk_limits=True,
         )
         with self.assertRaisesRegex(
             (ValueError, sqlite3.DatabaseError), "ACCOUNT_RISK_CONTRACT"
