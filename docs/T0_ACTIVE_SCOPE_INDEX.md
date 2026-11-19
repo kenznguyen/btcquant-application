@@ -131,3 +131,12 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Dedicated API/Storage run [44515824664](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824664): **21/21 PASS**.
 - Detailed evidence: [T0 Availability & Freshness Contract Audit](evidence/T0_AVAILABILITY_FRESHNESS_CONTRACT_AUDIT_2026-11-19.md).
 - In-repository pipeline consumers remain on direct Storage reads with existing completeness/availability guards. External HTTP consumer compatibility is NOT VERIFIED. Production readiness remains NOT CERTIFIED.
+
+
+## External HTTP consumer compatibility audit — 2026-11-19
+
+- Read-only report: [T0 external HTTP consumer compatibility audit](evidence/T0_EXTERNAL_HTTP_CONSUMER_COMPATIBILITY_AUDIT_2026-11-19.md).
+- Official target T0 API is contract 1.1.0. Active Core First source branch `feature/core-operational-proof-20261112` at `e6606e28a696374f31cd6db1ec0a1372d942d64d` still has T0 API 1.0.0, a strict 1.0.0 HTTP client and 1.0.0 Core Bundle normalization.
+- Core Bundle provider, Common API gateway and FreqAI research context are confirmed T0 HTTP consumers. Android Five-Layer and Core dashboard consume the Common API indirectly.
+- Strict version/freshness validation, `asOfMs` anchor mismatch and multi-page `evaluable` handling make active Core First compatibility **BLOCKED**.
+- No endpoint connection, source/test/workflow change, CI dispatch, deployment or runtime activation was performed. Production readiness remains NOT CERTIFIED.

@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 External HTTP Consumer Audit
+
+- Official application repository: `kenznguyen/btcquant-application`, branch `main`.
+- Audit base HEAD: `53e14e57f3b1ede5f3fbe34368621bf42f14fe01`.
+- Work item: read-only inventory and compatibility review of all identified T0 HTTP consumers before any connection. No source/test/workflow changes; no runtime/network/endpoint/database/credential access; no CI dispatch.
+- Official T0 target contract is `1.1.0`: `market_data/api.py` blob `4f923d400b8e133a602cec7239982fdf357e9e21`; test blob `add00a2a91899d8e496df5b64c122442fc7c65c9`.
+- Active Core First source branch is `kenznguyen/btcusdt-telegram-signals2:feature/core-operational-proof-20261112`, exact inspected HEAD `e6606e28a696374f31cd6db1ec0a1372d942d64d`. Its T0 API copy is still 1.0.0 (blob `81733c9b6de811cbebb2f5d472d41f37f337990c`); client `freqai_bridge/http_candles.py` blob `1f430c6d3a762deab9342e42072824661df3bf96` strictly requires 1.0.0 and the old freshness field set. Core Bundle normalizer blob `f78ebde30413a3329063a2c68c457fe862a50c5e` also requires 1.0.0.
+- Confirmed consumer call paths: Core Runtime `CoreBundleProvider.fetch_one_page()`; Common API `pipeline.api.market_window()/GET /v1/candles`; FreqAI research context `canonical_context()/fetch()`. Android Five-Layer and Core dashboard consume the Common API indirectly.
+- Key blockers: strict 1.0.0 version guard; exact old freshness-field set; old client computes ages/lags from `generatedAtMs` instead of 1.1's `evaluationTimeMs` anchor; bundle normalizer rejects 1.1.0; multi-page fetch requires every historical page to have `evaluable=true`, which conflicts with 1.1 semantics.
+- Android Five-Layer parser tolerates additive fields but ignores `timestampValid/fresh/evaluable`; dashboard JSON client is permissive but its 96-bar request traverses the incompatible paged gateway.
+- Older T0 branch `feature/t0-centralized-data-feeder-p1-20261101` at `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9` contains a separate 1.0.0 client copy; do not assume it is synchronized with the active Core branch.
+- Other inspected paths: T1 collector dashboard uses its own `/api/*` contract; separate Chart-Pro Android calls Binance directly; Telegram bot calls OKX directly. These are not T0 Candle HTTP consumers in inspected source paths.
+- Detailed evidence: `docs/evidence/T0_EXTERNAL_HTTP_CONSUMER_COMPATIBILITY_AUDIT_2026-11-19.md`.
+- Status: static inventory PASS; active Core First compatibility **BLOCKED**; Android/dashboard direct parser compatibility only structural and end-to-end blocked by gateway; no runtime state inferred.
+- Next bounded step: prepare a separate TDD consumer-migration scope for 1.1.0, page-aware freshness and Core Bundle validation. No endpoint probe, runtime connection, deployment, activation, T0/T1/T2 operation or trading is authorized.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — T0 Availability & Freshness Contract 1.1.0 PASS
 
 - Repository: `kenznguyen/btcquant-application`, existing branch `main`.

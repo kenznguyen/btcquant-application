@@ -203,3 +203,15 @@ The target's read-only Candle API has an approved, tested target-specific contra
 - Dedicated API/Storage run [44515824664](https://github.com/kenznguyen/btcquant-application/actions/runs/44515824664): SUCCESS 21/21; artifact ID `14525821866`, SHA-256 `19d5d4e718d1310299667e7f11734437b1f23841129ebdc9a4f660cb4bea9468`.
 - Detailed contract, RED/GREEN history, consumer review and limitations: [T0 Availability & Freshness Contract Audit](evidence/T0_AVAILABILITY_FRESHNESS_CONTRACT_AUDIT_2026-11-19.md).
 - No writer, canonical data, storage schema, sync/recovery, feeder runtime, VPS, T1/T2 or trading behavior changed. External HTTP consumer compatibility and production readiness remain NOT VERIFIED / NOT CERTIFIED.
+
+
+## External HTTP consumer compatibility audit — 2026-11-19
+
+- Read-only audit report: `docs/evidence/T0_EXTERNAL_HTTP_CONSUMER_COMPATIBILITY_AUDIT_2026-11-19.md`.
+- Official target T0 API is contract 1.1.0 at `btcquant-application/main` base HEAD `53e14e57f3b1ede5f3fbe34368621bf42f14fe01`; API blob `4f923d400b8e133a602cec7239982fdf357e9e21`.
+- Active Core First source branch `feature/core-operational-proof-20261112` at `e6606e28a696374f31cd6db1ec0a1372d942d64d` still carries T0 API 1.0.0, strict 1.0.0 Candle HTTP client and 1.0.0 Core Bundle normalization.
+- Confirmed direct consumers: Core Bundle provider, Common API `market_window`, and FreqAI research context. Android Five-Layer and Core dashboard consume the Common API indirectly.
+- Compatibility verdict: **BLOCKED**. Strict version/freshness checks reject 1.1.0; generated-time calculations conflict with as-of anchored freshness; paged requests require every page to be evaluable; Core Bundle normalizer rejects 1.1.0.
+- Older T0 branch `feature/t0-centralized-data-feeder-p1-20261101` at `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9` has a separate 1.0.0 client copy.
+- Audit was static only: no source, tests, workflows, endpoints, network, database, credentials, runtime, VPS, T0/T1/T2 or trading paths changed or accessed. Tests and workflows were not run.
+- Do not connect until a separate TDD migration and exact-SHA CI/review close these compatibility gaps.
