@@ -5153,3 +5153,14 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Exact M15/H1 UTC coverage boundaries and accepted-gap policy remain **BLOCKED pending owner decision**. No snapshot may be marked OFFICIAL / VERIFIED before those values are approved and validated.
 - No source/test/workflow/dependency/schema/data changes. No SQLite database opened; no Binance, Dropbox, VPS or runtime action; no snapshot/upload/restore/cutover. No tests/workflows run; no run/job/artifact exists.
 - Phase 1 remains **DESIGN / STATIC ONLY**. Next: owner review of the clarified specification and decision on M15/H1 coverage boundaries and gap policy. Any implementation, reconstruction, Dropbox operation, restore drill or cutover requires separate approval.
+
+
+## Latest T0 archive payload validation (2026-11-20)
+
+- Owner-approved bounded retrieval completed from Binance USD-M public archive.
+- Evidence: `docs/evidence/T0_BINANCE_UM_BTCUSDT_ARCHIVE_PAYLOAD_VALIDATION_2026-11-20.md`.
+- 202 ZIP + 202 paired `.CHECKSUM` objects, total 14,929,033 bytes, staged under isolated `/tmp/t0-archive-validation` in Firecrawl execution environment (approved 100 MiB cap).
+- 202/202 SHA-256, ZIP CRC, single-CSV/12-column structure PASS; 241,440 M15 and 60,360 H1 rows.
+- M15/H1 each continuous from 2019-12-31 00:00 UTC through 2026-11-18 (last open 23:45 / 23:00), no gaps, duplicates, ordering errors or OHLC anomalies in the retrieved payload.
+- Status: archive payload validation PASS; full historical completeness and REST tail NOT VERIFIED. No SQLite, Dropbox, VPS/runtime, feeder/writer, deployment or cutover.
+- No GitHub Actions workflow/test run. Continue only after a separate approval for any subsequent REST tail or SQLite build.
