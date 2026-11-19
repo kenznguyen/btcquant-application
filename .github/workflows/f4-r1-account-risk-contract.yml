@@ -97,11 +97,17 @@ jobs:
             status=$?
           fi
           cat "$log"
+          test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
           {
-            echo "test_command=python -m unittest -v paper_execution.test_f4_r1_account_contract paper_execution.test_risk_limits paper_execution.test_ledger paper_execution.test_dual_ledger_red pipeline.test_api pipeline.test_decision"
+            echo "test_command=python -m unittest -v paper_execution.test_f4_r1_account_contract paper_execution.test_risk_limits paper_execution.test_ledger paper_execution.test_dual_ledger_red paper_execution.test_dual_ledger_migration_red pipeline.test_api pipeline.test_decision"
+            echo "expected_test_count=151"
             echo "test_exit_code=$status"
-            echo "test_count=$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || echo NOT_REPORTED)"
+            echo "test_count=${test_count:-NOT_REPORTED}"
           } >> "$artifacts/metadata.txt"
+          if [[ "$status" -eq 0 && "$test_count" != "151" ]]; then
+            echo "Expected 151 tests; observed ${test_count:-no test summary}." >&2
+            status=1
+          fi
           exit "$status"
 
       - name: Upload R1 test evidence
