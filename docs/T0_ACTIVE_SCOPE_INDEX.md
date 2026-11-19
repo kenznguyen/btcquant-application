@@ -101,3 +101,14 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - [Feeder lifecycle contracts evidence](evidence/T0_FEEDER_LIFECYCLE_CONTRACTS_2026-11-19.md)
 - [Dependency compatibility evidence](evidence/T0_DEPENDENCY_COMPATIBILITY_GATE_2026-11-19.md)
 
+
+
+## Source-to-target parity audit — 2026-11-19
+
+- Read-only audit report: [T0 source-to-target parity audit](evidence/T0_SOURCE_TARGET_PARITY_AUDIT_2026-11-19.md).
+- Audit report commit: `dacf11023869320a773930fb06aceaa289293bb3`.
+- Selected SQLite test files were classified as byte-identical, intentionally adapted, target-specific, or separately gated. No additional source files were copied.
+- Test parity: PASS for presence and identified blob parity/adaptation; semantic parity of byte-different `test_sync.py` remains PARTIAL pending a concrete contract-gap review.
+- Documentation: target README and scope index are adapted for SQLite-first scope; historical source handoff and operational documentation were not copied wholesale.
+- Audit was read-only; no tests were rerun, no workflow dispatched, and no source/runtime/data changed. The existing 191/191 evidence applies only to exact tested SHA `42c8172a4b4b0234fa50e64eb6172f970f45ab66`.
+- Overall T0 parity remains **PARTIAL**; production readiness remains **NOT CERTIFIED**.
