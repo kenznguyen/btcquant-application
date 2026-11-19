@@ -7,6 +7,7 @@ on:
     paths:
       - market_data/test_fastapi_api.py
       - market_data/test_fastapi_parity.py
+      - market_data/runtime_smoke.py
       - market_data/fastapi_app.py
       - market_data/api_contract.py
       - market_data/storage.py
@@ -157,5 +158,116 @@ jobs:
         with:
           name: t0-fastapi-contract-evidence
           path: ${{ runner.temp }}/t0-fastapi-red-artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+  runtime-lock-smoke:
+    name: Runtime-lock-only install and in-process ASGI smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source and runtime lock hash
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
+          sha256sum -c requirements-market-data-fastapi.sha256
+          test -f market_data/runtime_smoke.py
+          mkdir -p "$RUNNER_TEMP/t0-fastapi-runtime-artifacts" "$RUNNER_TEMP/t0-fastapi-runtime-wheelhouse"
+          chmod 0777 "$RUNNER_TEMP/t0-fastapi-runtime-artifacts"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_commit=$GITHUB_SHA"
+            echo "checked_out_source_sha=$actual"
+            echo "python_target=3.12.16"
+            echo "installed_lock=requirements-market-data-fastapi.lock only"
+            echo "test_lock=not installed"
+            echo "dependency_download_network=bridge"
+            echo "runtime_smoke_container_network=none"
+            echo "canonical_database=not mounted or accessed"
+            echo "credentials=none"
+            echo "exchange_or_external_service=not accessed"
+          } > "$RUNNER_TEMP/t0-fastapi-runtime-artifacts/runner_metadata.txt"
+
+      - name: Download runtime-lock wheels only
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          docker pull --platform linux/amd64 "$PYTHON_IMAGE"
+          docker run --rm --platform linux/amd64 \
+            --network bridge --memory 1g --cpus 2 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$RUNNER_TEMP/t0-fastapi-runtime-wheelhouse,dst=/wheelhouse" \
+            --workdir /workspace "$PYTHON_IMAGE" bash -euc '
+              python -m pip download --only-binary=:all: --require-hashes \
+                -r /workspace/requirements-market-data-fastapi.lock -d /wheelhouse
+            '
+          cp requirements-market-data-fastapi.lock "$RUNNER_TEMP/t0-fastapi-runtime-artifacts/"
+          echo "runtime_wheel_download=PASS" >> "$RUNNER_TEMP/t0-fastapi-runtime-artifacts/runner_metadata.txt"
+
+      - name: Install runtime lock in a clean offline environment and smoke ASGI
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/t0-fastapi-runtime-artifacts"
+          log="$artifacts/runtime-lock-smoke.log"
+          if docker run --rm --platform linux/amd64 \
+            --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --pids-limit 64 \
+            --memory 1g --cpus 2 --user 65534:65534 \
+            --tmpfs /tmp:rw,exec,nosuid,nodev,size=256m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$RUNNER_TEMP/t0-fastapi-runtime-wheelhouse,dst=/wheelhouse,readonly" \
+            --env HOME=/tmp --env TMPDIR=/tmp --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace --workdir /workspace "$PYTHON_IMAGE" bash -euc '
+              python -m venv /tmp/runtime-venv
+              /tmp/runtime-venv/bin/python -m pip install --disable-pip-version-check \
+                --no-index --find-links=/wheelhouse --require-hashes \
+                -r /workspace/requirements-market-data-fastapi.lock
+              /tmp/runtime-venv/bin/python -m pip check
+              /tmp/runtime-venv/bin/python -m pip freeze
+              /tmp/runtime-venv/bin/python /workspace/market_data/runtime_smoke.py
+            ' > "$log" 2>&1; then
+            smoke_status=0
+          else
+            smoke_status=$?
+          fi
+          cat "$log"
+          {
+            echo "runtime_lock_smoke_exit_code=$smoke_status"
+            echo "runtime_lock_smoke_status=$([ "$smoke_status" -eq 0 ] && echo PASS || echo FAIL)"
+          } >> "$artifacts/runner_metadata.txt"
+          {
+            echo "## T0 FastAPI runtime-lock-only smoke"
+            echo
+            echo "- Exact source SHA: $GITHUB_SHA"
+            echo "- Runtime lock SHA-256: verified"
+            echo "- Environment: clean CPython 3.12.16 venv, runtime lock only"
+            echo "- Install: offline from hash-verified wheelhouse"
+            echo "- Container: network disabled, read-only root, non-root, bounded resources"
+            echo "- ASGI health: in-process; no socket"
+            echo "- Canonical SQLite, credentials, exchange, external services: not accessed"
+            echo "- Exit code: $smoke_status"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$smoke_status"
+
+      - name: Upload runtime-only smoke evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t0-fastapi-runtime-lock-smoke
+          path: ${{ runner.temp }}/t0-fastapi-runtime-artifacts/
           if-no-files-found: error
           retention-days: 14
