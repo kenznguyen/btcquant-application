@@ -134,9 +134,19 @@ Suggested status transitions:
 - Restore only into a new empty destination path/directory without pre-existing DB or stale WAL/SHM sidecars. Verify downloaded bytes before opening; validate read-only.
 - No writer startup, primary replacement, lease transfer or cutover is implied.
 
-### Coverage gate remains owner-defined
+### Owner-approved reconstruction coverage target — 2026-11-19
 
-The exact accepted M15/H1 UTC start/end boundaries and gap policy are not yet approved. They must be explicitly set before reconstruction or official Canonical acceptance. Until then, no snapshot can be marked `OFFICIAL / VERIFIED`. The validator must also report first/last timestamps and partial-boundary treatment.
+Owner decision: [T0 Reconstructed Canonical Coverage Decision](T0_RECONSTRUCTED_CANONICAL_COVERAGE_DECISION_2026-11-19.md).
+
+- Market/timeframes: Binance USD-M BTCUSDT, M15 and H1.
+- Start independently for each timeframe at the earliest candle open time actually available from Binance when retrieval is performed. Determine it from source evidence; do not hard-code or assume a date in advance.
+- End independently for each timeframe at the latest fully closed candle available at the recorded UTC retrieval cutoff.
+- Target all history available through the selected Binance USD-M historical-data interface at retrieval time, subject to documented source/endpoint limits and availability.
+- Record exact UTC retrieval cutoff, first/last candle open times, row counts, expected intervals and partial-boundary treatment for each timeframe.
+- Record every missing expected interval with UTC boundaries, duration/count and retrieval evidence. Do not synthesize, interpolate, forward-fill or silently omit candles.
+- The coverage target is OWNER APPROVED. This does not waive gap review: every detected gap must be reported and dispositioned under validation/owner acceptance. Gap acceptability and OFFICIAL / VERIFIED status remain pending actual retrieval/validation evidence and explicit owner disposition.
+
+This resolves the R2 target definition for design purposes. It does not authorize Binance access, reconstruction, database creation, or any later phase.
 
 ### Static review findings
 
