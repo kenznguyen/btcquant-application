@@ -44,6 +44,23 @@ The remainder of this file is preserved from the previous handoff blob `30cbfe30
 
 ---
 
+## SQLite/API test readiness — 2026-11-19
+
+- Owner approved a bounded read-only readiness review on target repository `kenznguyen/btcquant-application`, branch `main`.
+- Inspected source HEAD: `358aaf47367a721d2db4f51bd1ffc5e152440f30`.
+- Evidence report: `docs/evidence/SQLITE_API_TEST_READINESS_2026-11-19.md`; report commit `ba4a99fdb22f414b58d2fd3f94829eb0707dc62b`.
+- Static Python compatibility finding: `market_data/feeder.py` uses `str | None`, implying Python >=3.10. No authoritative Python version declaration or interpreter compatibility run exists.
+- Target has no dependency manifest. The six scoped SQLite/API test modules and reviewed direct dependencies use Python standard-library imports; CCXT and Psycopg are lazy and not required by the reviewed test paths. This is static only; no packages installed or imports executed.
+- Six test modules declare 61 test methods in total: feeder recovery 10, feeder lease 10, write gateway 11, storage 7, sync 10, API 13. All use `unittest.TestCase`.
+- Candidate discovery command (NOT RUN): `python -m unittest discover -s market_data -p 'test_*.py' -v`, from repository root.
+- Static isolation review: tests use temporary SQLite paths, mocked exchange objects, direct WSGI invocation and bounded child-process checks. No reviewed test intentionally accesses canonical T0 data, a shared DB, Binance, deployed HTTP service or live order path. Runtime network isolation is NOT VERIFIED.
+- Target root has no `.github/workflows/`; target CI workflow is unavailable. Source-repository workflow results are not transferable evidence.
+- Status: Python minimum CONDITIONAL PASS (static inference only); scoped dependencies CONDITIONAL PASS (static only); unittest inventory PASS (static, 61 methods); discovery NOT VERIFIED; isolation PARTIAL PASS (static); target CI BLOCKED/NOT AVAILABLE; tests NOT RUN; runtime/canonical data NOT ACCESSED; production NOT CERTIFIED.
+- No source, test, dependency manifest, workflow, schema or runtime setting changed. No package installed, test executed, workflow dispatched, or runtime/database/exchange accessed.
+- Next: obtain separate owner approval for an isolated test execution in a disposable Python >=3.10 environment with network disabled and clean DB/credential environment. Do not install packages unless a concrete missing dependency is demonstrated and separately approved. PostgreSQL/TimescaleDB remains excluded.
+
+---
+
 # Five-Layer System — Session Handoff
 
 Updated: 2026-11-11 (Asia/Ho_Chi_Minh)
