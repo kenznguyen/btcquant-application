@@ -40,3 +40,13 @@ Manually dispatch **T0 SQLite API isolated tests** from the Actions tab on `main
 - F3 execution: **NOT VERIFIED**.
 - F2 Scheduler/RetryPolicy/Runtime design: **NOT STARTED**, intentionally deferred until F3 execution evidence is complete.
 - Production/runtime/canonical database: **NOT CERTIFIED**.
+
+
+## Automatic trigger approval — 2026-11-19
+- User approved enabling automatic execution on every push to `main`.
+- Workflow commit adding trigger: `bd0b885f97627955ac02b72d89ad86db6e722b70`.
+- Workflow blob: `cc772e6595cbe8b7ecda583039ddefbda98b3176`.
+- Trigger configuration now includes both `push: branches: [main]` and `workflow_dispatch`.
+- The test checkout remains deliberately pinned to F3 source SHA `15d404cb970de14415b21bbadd843027cea7441d` and the suite expects 63 tests. Thus every main push re-runs the same reproducible F3-approved source snapshot; it does not automatically test arbitrary later main source changes.
+- No application runtime or deployment is triggered. The job remains a read-only, isolated SQLite test container with network disabled and no canonical DB mount.
+- First automatic push-triggered run has not yet been observed at the time of this report update. Execution remains NOT VERIFIED until the run and artifact are inspected.
