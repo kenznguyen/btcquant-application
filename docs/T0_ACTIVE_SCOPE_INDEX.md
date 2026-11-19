@@ -112,3 +112,11 @@ No live orders. `AI_EXECUTION_ENABLED=false` remains unchanged.
 - Documentation: target README and scope index are adapted for SQLite-first scope; historical source handoff and operational documentation were not copied wholesale.
 - Audit was read-only; no tests were rerun, no workflow dispatched, and no source/runtime/data changed. The existing 191/191 evidence applies only to exact tested SHA `42c8172a4b4b0234fa50e64eb6172f970f45ab66`.
 - Overall T0 parity remains **PARTIAL**; production readiness remains **NOT CERTIFIED**.
+
+
+### Sync-test semantic review — 2026-11-19
+- `market_data/test_sync.py` semantic review: **PASS**. Target retains the reviewed source cases and adds a page-2 transaction-atomicity regression; source and target `market_data/sync.py` are byte-identical.
+- Keep target test as-is; no source test overwrite or additional test migration is justified.
+- Detailed evidence: [T0 source-to-target parity audit](evidence/T0_SOURCE_TARGET_PARITY_AUDIT_2026-11-19.md).
+- Review was static; no test or workflow was run. The 191/191 aggregate remains tied to exact tested SHA `42c8172a4b4b0234fa50e64eb6172f970f45ab66`.
+- Source-only parity review can close for the inspected SQLite test set. This does not certify production readiness or authorize separately gated work.
