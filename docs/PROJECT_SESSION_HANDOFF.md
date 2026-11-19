@@ -4340,3 +4340,21 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Status: F4-R1 PASS within bounded source and isolated regression scope. Full repository suite NOT VERIFIED. F4-R2/R3 OPEN / NOT VERIFIED. T0/T1/T2 integration, runtime, deployment, VPS, canonical DB, exchange connectivity and production readiness NOT VERIFIED / NOT CERTIFIED.
 - Core-First remains controlling: Strategy Core only in current paper path; AI offline research only; no AI Ledger writes/orders; `AI_EXECUTION_ENABLED=false`. No runtime/database/VPS/exchange/deployment or real-order path accessed. Live trading prohibited.
 - Next: preserve this state. F4-R2/R3, full repository suite, runtime/database access, deployment, AI execution or live trading each require separate bounded approval.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — T0 F1 SQLite regression parity
+
+- Owner approved the bounded target-side F1 regression parity increment on existing `main`; no branch created.
+- Source repo/branch: `kenznguyen/btcusdt-telegram-signals2` / `feature/t0-centralized-data-feeder-p1-20261101`; exact source HEAD inspected: `c0f48b8910655fdb40d14214ad048b1d3cfa7fe9`.
+- Target test commit: `f2981271d42b7c3baee8cc4de1c670e8a54cdd85`; only `market_data/test_write_gateway.py` changed. Target test blob: `231f5e0184821c78cda0ca5d03625f71fd3a4b71`. Added malformed `feeder_leases` schema regression and Python `-S` SQLite dependency-closure regression. Existing target-only tests were preserved.
+- Target production `market_data/write_gateway.py` was not modified. Its blob remains `0a77df443ae1a817ea74946fac5dc0f3809ddd83`; latest source blob is `585caf5250c7382f8e391533882f08c8ec97efaa`. They are byte-different, but static comparison and the malformed-schema test verify equivalent F1 preflight rejection behavior.
+- Dedicated workflow added at `.github/workflows/t0-f1-regression-parity.yml`; blob `967e160d7edbf438db9a53a35e6f27c8cfc3f934`; workflow commit / exact tested HEAD `b2bb35400ea1bb4fd0c9a54737ebdab5b6b8a838`.
+- Authoritative exact-SHA run [44494341100](https://github.com/kenznguyen/btcquant-application/actions/runs/44494341100), job `135457600070`: SUCCESS; `python -m unittest -v market_data.test_write_gateway`; `Ran 14 tests in 0.338s`; 14/14 PASS. New malformed-schema and Python `-S` dependency-closure tests both PASS.
+- Artifact `t0-f1-regression-parity-evidence`, ID `14513793330`, digest `sha256:c778e6ab5f61de875c9ad585d05459c25fadb79bd344eee22841a55303e08876`.
+- Detailed evidence: `docs/evidence/T0_F1_SQLITE_REGRESSION_PARITY_2026-11-19.md`, commit `ec0896c6ebd28dff850f8860926ff7f25485daab`. Provenance addendum commit: `ea78a2f95c97ee27d73fdc33a2ff405638da096d`.
+- Side effect to record: the pre-existing `.github/workflows/t0-sqlite-api-isolated.yml` has an unrestricted push-to-main trigger and also ran [44494340918](https://github.com/kenznguyen/btcquant-application/actions/runs/44494340918). It checked out its hard-coded older SHA `2668dd538a99d6021921432b3485f4ed84198364`, not current HEAD; 91/91 tests passed, including lifecycle tests. Network isolation passed and no canonical DB was mounted. This is incidental, not F1 acceptance evidence, and does not verify current HEAD. The old workflow was not modified.
+- Status: F1 schema guard behavioral parity PASS; dedicated write-gateway suite PASS 14/14. Full SQLite/API/storage parity PARTIAL / NOT VERIFIED. Runtime/lifecycle and canonical recovery/data OUT OF SCOPE / NOT VERIFIED; PostgreSQL/TimescaleDB OUT OF SCOPE; production NOT CERTIFIED.
+- No dependency manifest, package installation, PostgreSQL asset, canonical DB/data, runtime, VPS, deployment, exchange, T1/T2 or trading behavior changed/accessed. No merge, rebase, cherry-pick, reset or force-push.
+- Next permitted work: separately review the pre-existing broad-trigger/pinned-SHA T0 workflow before any further target-wide regression run. Continue read-only SQLite API/storage/initialization parity inventory; no PostgreSQL or runtime expansion without separate approval.
