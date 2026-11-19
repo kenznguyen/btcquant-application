@@ -1,15 +1,15 @@
-# CURRENT STATUS OVERRIDE — 2026-11-20 — 404-object provenance inventory and materialization approval proposal prepared
+# CURRENT STATUS OVERRIDE — 2026-11-20 — 404-object provenance inventory; byte reconciliation blocker; materialization approval proposal
 
-- Inventory: `docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json`, commit `dc8fc0e2ba019bda2dba6a15e4b8d6fb99669c17`. Contains 404 identities: 202 ZIP + 202 paired checksum sidecars.
-- ZIP provenance: 202/202 records include key, timeframe, partition/period, bytes, SHA-256, CSV row count and PASS; 202/202 ZIP hashes matched paired sidecar digests in historical validation.
-- Sidecar limitation: all 202 keys are paired deterministically as ZIP key + `.CHECKSUM`; individual sidecar byte sizes and payload SHA-256 were not retained in historical evidence and remain NOT VERIFIED. Inventory status is IDENTITY COMPLETE / METADATA PARTIAL, not complete independent metadata for every sidecar.
-- Manifest cross-reference update: `docs/manifests/T0_RECONSTRUCTED_BTCUSDT_M15_H1_MANIFEST_DRAFT.json`, commit `624bcc4e09abe222b5f282e30ff4263bd243f7c7`. Remains DRAFT_NOT_FOR_DATABASE_BUILD; SQLite NOT_CREATED_NOT_AUTHORIZED.
-- Staging plan cross-check: `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md`, commit `efebc9fdb07d06047afa756e47c6a2cbdf076a7d`. Inventory count and ZIP metadata reconcile; sidecar metadata limitation is explicit.
-- Separate materialization approval proposal: `docs/plans/T0_RECONSTRUCTED_ARCHIVE_MATERIALIZATION_APPROVAL_REQUEST_2026-11-20.md`, commit `5072f312584b321238e07c794cccaeb6e08f3432`. Proposal only; exact 404 allowlist, official source, 100 MiB hard cap, owner-specified new local destination, per-sidecar hash/size measurement, preserve-until-review retention and explicit exclusions.
-- Current state: DOCUMENTATION / STATIC CROSS-CHECK PASS; raw materialization NOT AUTHORIZED / NOT RUN. The prior temporary Firecrawl staging is ephemeral and treated as unavailable; any future run is a fresh bounded retrieval requiring explicit approval.
-- No source archive was accessed, no raw bytes materialized, no SQLite created/opened/modified, no Dropbox/VPS/runtime/feeder/writer/lease/restore/deployment/cutover. No code/schema/dependency/tests/workflows changed or run; no Actions run/job/artifact.
-- REST tail remains NOT VERIFIED and closed by owner decision. No retry, alternate endpoint/domain, proxy or geo-routing.
-- Next gate: owner reviews and explicitly approves or rejects the materialization proposal, including exact local destination. SQLite creation/writes remain a separate later approval.
+- Inventory: `docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json`, latest update commit `023dd6150c69f412ce5dff71768a08eb1838e2d5`. Contains 404 identities: 202 ZIP + 202 paired checksum sidecars. ZIP keys, per-object byte sizes, SHA-256 and row counts are present; sidecar keys are paired, but sidecar own byte sizes/hashes remain NOT VERIFIED.
+- ZIP row totals reconcile: M15 241,440; H1 60,360. ZIP object count: 38 daily + 164 monthly = 202.
+- **BLOCKED — byte aggregate mismatch:** 202 ZIP table sizes sum to 14,910,840 bytes; evidence summary declares 14,922,117 ZIP bytes, difference 11,277. With declared 6,916 sidecar bytes, recomputed total is 14,917,756 vs declared 14,929,033. Both values are preserved; no silent correction.
+- Manifest latest update: `docs/manifests/T0_RECONSTRUCTED_BTCUSDT_M15_H1_MANIFEST_DRAFT.json`, commit `9a76d07df2c73c28a9107f70c1d50b7c03b9c4ec`. Remains DRAFT_NOT_FOR_DATABASE_BUILD; SQLite NOT_CREATED_NOT_AUTHORIZED.
+- Staging plan latest update: `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md`, commit `ab9fd93ec7501a7a1050e823748553c07a76eecb`. Records row-count reconciliation and byte mismatch.
+- Separate approval proposal latest update: `docs/plans/T0_RECONSTRUCTED_ARCHIVE_MATERIALIZATION_APPROVAL_REQUEST_2026-11-20.md`, commit `19923a3af263bea7f96293178ba6c66486050856`. Requires exact 404-key allowlist, owner-specified new local destination, 100 MiB hard cap, actual per-object sidecar metadata measurement, aggregate reconciliation, quarantine on mismatch, preserve-until-review retention and exclusions.
+- Status: DOCUMENTATION / INVENTORY IDENTITY / ROW COUNT CROSS-CHECK PASS; SIDECAR OWN METADATA NOT VERIFIED; AGGREGATE BYTE RECONCILIATION BLOCKED; RAW MATERIALIZATION NOT AUTHORIZED / NOT RUN.
+- No source archive accessed; no raw bytes materialized; no SQLite created/opened/modified; no Dropbox/VPS/runtime/feeder/writer/lease/restore/deployment/cutover. No code/schema/dependency/tests/workflows changed or run; no Actions run/job/artifact.
+- REST tail remains NOT VERIFIED and closed by owner decision; no retry or bypass.
+- Next gate: owner reviews/reconciles historical byte discrepancy and explicitly approves or rejects the materialization proposal, including exact local destination. SQLite creation/writes remain a separate later approval.
 
 ---
 
