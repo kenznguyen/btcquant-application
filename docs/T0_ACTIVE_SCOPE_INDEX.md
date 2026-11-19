@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-19 — Owner approved independent CI and VPS runtime validation tracks
+
+- Decision: `docs/decisions/T0_DUAL_TRACK_CI_RUNTIME_VALIDATION_DECISION_2026-11-19.md`.
+- Owner approval: **APPROVED**. The prior GitHub-only validation decision is superseded.
+- Track A — GitHub Actions isolated Uvicorn + Nginx integration: preserve **PASS — CI ONLY**, exact tested source/workflow SHA `65661cd4a2492f9552fe05186581c66d14fbe293`, FastAPI workflow run `44550458804`, job `135652465869`, integration artifact `14543536038`, SHA-256 `af07b99fa0a53ff315bad148c508533ea0e808d6365fc2c81faafa11ebe8c872`.
+- Track B — VPS/Scaleway runtime integration: **NOT VERIFIED / NOT RUN**. No VPS probe or runtime action is authorized by this decision. Any future runtime validation requires a separate explicit owner approval defining the exact scope.
+- CI and runtime statuses, evidence and acceptance criteria remain independent. Never merge into one PASS or infer VPS readiness from CI.
+- Documentation-only governance update. No code, tests, workflow, dependencies, runtime configuration or data changed. No CI or runtime validation was run as part of recording this decision.
+- Preserved restrictions: no canonical T0 SQLite/feeder/writer/lease/recovery access or changes; no T1/T2/PostgreSQL/retention/trading changes; no real orders; no systemd/autostart, persistent service, public ingress, DNS/TLS or production deployment authorization. Paper-first and `ai_execution_enabled=false` remain unchanged.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-19 — Uvicorn + Nginx isolated GitHub Actions integration PASS
 
 - Evidence report: `docs/evidence/T0_UVICORN_NGINX_ISOLATED_INTEGRATION_2026-11-19.md`, commit `15563d2a4d47b0ac860f82b37b3050c6ebba238a`.
