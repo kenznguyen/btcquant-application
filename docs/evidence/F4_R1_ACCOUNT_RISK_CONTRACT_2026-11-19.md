@@ -57,7 +57,7 @@ Out of scope:
 - Run [44466409033](https://github.com/kenznguyen/btcquant-application/actions/runs/44466409033), job `135365143505`, confirmed the contract implementation was absent and the new cases failed. This was an intentional RED run, not final verification.
 
 ### R1 GREEN — authoritative
-- Run [44469440356](https://github.com/kenznguyen/btcquant-application/actions/runs/44468671840), branch `main`, exact workflow/source HEAD `48dc689a6b52c8f732690f997b410b139261608e`.
+- Run [44469440356](https://github.com/kenznguyen/btcquant-application/actions/runs/44469440356), branch `main`, exact workflow/source HEAD `f9dc54c56c84b24b33d4332609ec57ec6e0d0a63`.
 - Job `135375130582`: SUCCESS.
 - Python `3.12.16`; pinned image `python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`.
 - Command: `python -m unittest -v paper_execution.test_f4_r1_account_contract paper_execution.test_risk_limits paper_execution.test_ledger paper_execution.test_dual_ledger_red paper_execution.test_dual_ledger_migration_red pipeline.test_api pipeline.test_decision`.
