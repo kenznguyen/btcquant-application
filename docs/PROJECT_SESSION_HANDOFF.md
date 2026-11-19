@@ -4253,3 +4253,19 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - Status: F4-R1 PASS within bounded source and isolated regression scope; API/Decision PASS. Full repository suite NOT VERIFIED. F4-R2/R3 OPEN / NOT VERIFIED. T0/T1/T2 integration, runtime, deployment, VPS, canonical DB, exchange connectivity and production readiness NOT VERIFIED / NOT CERTIFIED.
 - Core-First remains controlling: Strategy Core only in current paper path; AI offline research only; no AI Ledger writes/orders; `AI_EXECUTION_ENABLED=false`. No dependencies installed, runtime/database/VPS/exchange/deployment or real-order path accessed. Live trading prohibited.
 - Next: preserve this state. F4-R2/R3, full repository suite, runtime/database access, deployment, AI execution or live trading each require separate bounded approval.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-19 — F4-R1 call-site audit and CI evidence gate
+
+- This entry updates the previous final 151-test R1 handoff. Read-only call-site audit completed on the existing `main`; no application source or test fixture changed in this follow-up.
+- All indexed `PaperLedger(` call sites were categorized. Production API factory `pipeline.api.ledger()` provisions/verifies the shared Account/Risk Contract before constructing strategy ledgers. Local CLI is initialization/snapshot-only and does not submit orders. README instructs contract provisioning before order submission. Test-only construction without a contract is limited to initialization/migration/read-only setup; increased exposure is unconditionally blocked in the submit transaction when the persisted contract or required limits are absent (`RISK_LIMITS_UNCONFIGURED`).
+- The dual-strategy API RED spec file has setup-only Ledger construction and no direct submit calls; it remains outside the bounded R1 risk-contract admission suite. F4-R2/R3 test specifications remain outside this approval and OPEN.
+- Hardened `.github/workflows/f4-r1-account-risk-contract.yml`: artifact metadata now records the exact seven-module test command, including `paper_execution.test_dual_ledger_migration_red`; workflow enforces exactly 151 discovered tests. Workflow blob: `df7a70a2574dda9bf3e2334122538bc7979a95db`.
+- Latest authoritative isolated run [44484095453](https://github.com/kenznguyen/btcquant-application/actions/runs/44484095453), job `135423149350`, workflow commit `4dd18e66d8236e6864e572516eb5f406cf56bd00`, application source HEAD `12a2f53a21a0a9637d264d49f372e7dcf89fc730`: SUCCESS; Python 3.12.16; `Ran 151 tests in 1.990s`; `OK`; 151/151 PASS. The expected test count assertion passed.
+- Artifact `f4-r1-account-risk-contract-evidence`, ID `14508928592`, SHA-256 `53960f83ef40d4a287a236509a81f44aaa7775bd23935845400586717a4f5dbc`.
+- Evidence report updated: `docs/evidence/F4_R1_ACCOUNT_RISK_CONTRACT_2026-11-19.md`, blob `5f07a4599d185b3c759eb7772fba77ee2d65ff0d` (this is the evidence file blob after the audit append).
+- Status: F4-R1 PASS within bounded source and isolated regression scope. Full repository suite NOT VERIFIED. F4-R2/R3 OPEN / NOT VERIFIED. T0/T1/T2 integration, runtime, deployment, VPS, canonical DB, exchange connectivity and production readiness NOT VERIFIED / NOT CERTIFIED.
+- Core-First remains controlling: Strategy Core only in current paper path; AI offline research only; no AI Ledger writes/orders; `AI_EXECUTION_ENABLED=false`. No runtime/database/VPS/exchange/deployment or real-order path accessed. Live trading prohibited.
+- Next: preserve this state. F4-R2/R3, full repository suite, runtime/database access, deployment, AI execution or live trading each require separate bounded approval.
