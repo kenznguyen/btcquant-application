@@ -1,5 +1,21 @@
 # TARGET REPOSITORY OVERRIDE — 2026-11-19
 
+## GitHub Actions SQLite/API workflow proposal — 2026-11-19
+
+- Prepared review-only proposal: `docs/evidence/GITHUB_ACTIONS_SQLITE_API_WORKFLOW_PROPOSAL_2026-11-19.md`.
+- Proposal commit: `38361f4a9fd2c44b74d76391835f5e6ff9ff08fa`.
+- Repository HEAD inspected before proposal: `99aa7f8922168eb7c7a7f14416ef4ef6a8f1fa64`.
+- Exact previously approved test source SHA retained: `32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f`; do not silently substitute a later SHA.
+- Six explicit modules: `test_feeder_recovery`, `test_feeder_lease`, `test_write_gateway`, `test_storage`, `test_sync`, `test_api`; static inventory 61 methods, not yet runtime-discovered.
+- Proposed trigger is manual `workflow_dispatch` only, GitHub-hosted ephemeral `ubuntu-24.04`, read-only repository permission, no secrets, and test execution inside Docker `--network none` with read-only source mount and test-owned temporary filesystem.
+- The workflow skeleton is deliberately marked NOT READY TO INSTALL. Exact Python patch/image digest, immutable action commit pins, Docker runner preflight, shell pipefail and test summary handling remain to be resolved and reviewed.
+- The container test process is intended to be network-isolated; checkout/image pull and artifact upload occur outside the isolated test process. Do not claim the whole GitHub job has no network.
+- No workflow file was created, no workflow dispatched, no package installed, no test run, and no runtime/canonical DB/exchange/VPS/live trading accessed.
+- Status: proposal preparation PASS; workflow implementation NOT AUTHORIZED; dispatch NOT AUTHORIZED; tests NOT RUN; production NOT CERTIFIED.
+- Next gate: owner review and explicit approval of the exact workflow design and unresolved pins/preflight. Only after approval may a minimal workflow be added to existing `main`; no parallel branch/PR.
+
+---
+
 ## GitHub Actions test execution environment — 2026-11-19
 
 - Owner selected **GitHub Actions** as the intended execution environment for the approved six-module SQLite/API test suite (61 statically inventoried test methods).
