@@ -70,7 +70,7 @@ jobs:
             echo "canonical_database_mount=none"
           } > "$RUNNER_TEMP/f4-test-artifacts/runner_metadata.txt"
           verify_blob pipeline/api.py 57b9c1ee3f09eef2691d3967ec5fb06665c2712f
-          verify_blob pipeline/test_api.py cd651a2a9d9d4f4aa0a3b5276d7ff557d31ebe5f
+          verify_blob pipeline/test_api.py 087a77717541ddfe888ceb3832f5b734364dac65
           verify_blob pipeline/test_decision.py 6781f26d66635f56662a627bdd3b4a63f26c1f28
           verify_blob pipeline/values.py 5576376454af129b944919fb588e26c0657a781e
           verify_blob market_data/store.py 4e1b0c54bd56455abe5be0e5c7d0807e63e0bc78
@@ -153,7 +153,7 @@ jobs:
               '' \
               "- Workflow run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)" \
               "- Workflow HEAD SHA: $GITHUB_SHA" \
-              '- Checked-out source SHA: $GITHUB_SHA' \
+              "- Checked-out source SHA: $GITHUB_SHA" \
               '- Python: 3.12.16' \
               '- Network: none inside test container' \
               "- Tests discovered: ${test_count:-NOT_REPORTED} (expected 41)" \

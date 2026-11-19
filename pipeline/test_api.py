@@ -121,10 +121,17 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["action"], "WAIT")
         self.assertEqual(result["reason"], "AI_CALIBRATION_ADMISSION_CONTEXT_UNAVAILABLE")
         self.assertIsNone(result["intent"])
-        _, state = self.request("/v1/paper")
-        self.assertEqual(state["strategyCore"]["positionBase"], "0")
-        self.assertFalse(state["liveTradingSupported"])
-        self.assertEqual(float(state["strategyCore"]["feesQuote"]), 0)
+        with sqlite3.connect(self.db) as connection:
+            before_tables = connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+            ).fetchall()
+        # Offline AI research must not initialize or mutate any paper Ledger state.
+        with sqlite3.connect(self.db) as connection:
+            after_tables = connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+            ).fetchall()
+        self.assertEqual(after_tables, before_tables)
+        self.assertNotIn("paper_orders", {row[0] for row in after_tables})
     def test_core_retries_do_not_duplicate_positions_or_fees(self):
         with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
             _, first = self.request("/v1/paper/evaluate", "POST", {"source": "CORE"})
