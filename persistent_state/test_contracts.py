@@ -56,6 +56,10 @@ class SessionContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             session(last_committed_event_sequence=True)
 
+    def test_unknown_schema_version_fails_closed(self):
+        with self.assertRaises(ValueError):
+            session(schema_version=2)
+
 
 class EventContractTests(unittest.TestCase):
     def test_accepts_canonical_event_payload(self):
@@ -228,6 +232,13 @@ class IdempotencyContractTests(unittest.TestCase):
                 **self.dimensions(action_ordinal=-1),
             )
 
+    def test_claim_rejects_key_that_does_not_match_logical_dimensions(self):
+        with self.assertRaisesRegex(ValueError, "does not match"):
+            IdempotencyClaim(
+                idempotency_key="sha256:" + "a" * 64,
+                payload_hash="sha256:" + "b" * 64, **self.dimensions(),
+            )
+
 
 class CheckpointContractTests(unittest.TestCase):
     def checkpoint(self, **changes):
@@ -259,6 +270,10 @@ class CheckpointContractTests(unittest.TestCase):
     def test_rejects_negative_aggregate_version(self):
         with self.assertRaises(ValueError):
             self.checkpoint(aggregate_versions_json=canonical({"CORE": -1}))
+
+    def test_rejects_unknown_checkpoint_schema_version(self):
+        with self.assertRaises(ValueError):
+            self.checkpoint(schema_version=2)
 
 
 if __name__ == "__main__":
