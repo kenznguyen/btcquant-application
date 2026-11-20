@@ -449,6 +449,13 @@ class FiveLayerApiTest(unittest.TestCase):
             def read_window(self, symbol, timeframe, start_ms, end_ms, as_of_ms=None):
                 calls.append((symbol, timeframe, start_ms, end_ms, as_of_ms))
                 return {
+                    "exchange": "binance",
+                    "marketType": "USDT_PERPETUAL",
+                    "symbol": symbol,
+                    "timeframe": timeframe,
+                    "startMs": start_ms,
+                    "endMs": end_ms,
+                    "asOfMs": as_of_ms,
                     "candles": [],
                     "coverage": {"complete": False, "expected": 1, "returned": 0, "gaps": []},
                     "datasetVersion": "sha256:" + "e" * 64,
