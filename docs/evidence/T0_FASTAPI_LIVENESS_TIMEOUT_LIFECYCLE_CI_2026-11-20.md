@@ -48,3 +48,21 @@ The isolated harness now supplies:
 ## Next step
 
 Diagnose why Uvicorn exits with a nonzero signal return code in the isolated process harness. Preserve the failing assertion, add diagnostic capture, and rerun the same isolated GitHub Actions workflow on the resulting exact source SHA. Do not deploy or broaden scope.
+
+
+## Follow-up diagnosis and successful rerun (2026-11-20)
+
+- Diagnostic instrumentation commit: `bb454804c343497410c9b2022ce631e201996b88`; harness blob at that point `6cdb234cd959c89be9de1bb77a4eb254d9daf38a`.
+- Diagnostic run [44691495222](https://github.com/kenznguyen/btcquant-application/actions/runs/44691495222), run 42, exact SHA `bb454804c343497410c9b2022ce631e201996b88`, failed at the same old assertion but preserved process logs in CI output and artifact.
+- Root cause: Uvicorn did perform orderly shutdown. Captured logs show `Shutting down`, `Application shutdown complete.`, and `Finished server process`. Uvicorn then re-raises the captured SIGTERM after its graceful shutdown sequence; on POSIX, `subprocess.returncode` is therefore `-15`. The old test incorrectly required return code 0 and interpreted the expected signal exit as failure.
+- Corrected regression assertion commit / exact source SHA: `da56b34acf1ef503a6b84dc897fad3de15fdc279`; `market_data/uvicorn_nginx_smoke.py` blob `c12ebb24c7d78a166413b0ae89a6fae78aff7cac`.
+- Successful Actions run [44691581111](https://github.com/kenznguyen/btcquant-application/actions/runs/44691581111), run 43, event `push`, completed 2026-11-20 06:59:05Z, conclusion **SUCCESS**.
+- Jobs: FastAPI contract tests `136138398424` PASS; runtime-lock-only install + ASGI smoke `136138398656` PASS; isolated Uvicorn/Nginx integration `136138398892` PASS.
+- Integration assertions now require POSIX SIGTERM return code `-signal.SIGTERM` **and** both orderly-shutdown log markers (`Application shutdown complete.`, `Finished server process`). This validates graceful shutdown without mistaking Uvicorn's deliberate signal re-raise for a crash.
+- Integration evidence lines: Nginx timeout configuration PASS; Uvicorn health/proxy, authorization forwarding, missing bearer rejection, unknown route, non-GET rejection PASS; Uvicorn SIGTERM exit signal SIGTERM; application shutdown complete PASS; graceful exit PASS; upstream-down 502 PASS; Nginx SIGTERM clean exit PASS; bearer token absent from Nginx logs PASS.
+- Artifacts (expire 2026-12-04):
+  - `t0-fastapi-contract-evidence`: ID `14608133886`, SHA-256 `9ff5e9c29db7c1897710cce28365f1cb7f23727f79f6c96c994e5d628f038a10`.
+  - `t0-fastapi-runtime-lock-smoke`: ID `14608737662`, SHA-256 `c3b055411576b3b8a0c83fe3137c1c2daab2d998b1df331e3024bb7c670143f3`.
+  - `t0-uvicorn-nginx-socket-integration`: ID `14608638099`, SHA-256 `626b76acba1c5ae02ed611d9bd1a0964c1b8e3f84a60aed829e80c4139ef07bd`.
+- Scope remains isolated CI only: non-root container, read-only root, external network disabled, loopback listeners, temporary SQLite fixture. Canonical T0, VPS, credentials, exchange, T1/T2 and trading were not accessed.
+- Updated status: **isolated CI PASS** for this exact source SHA and listed test coverage. Production deployment/readiness, supervisor/systemd, persistent lifecycle, public ingress and actual VPS runtime remain **NOT VERIFIED / NOT AUTHORIZED**.
