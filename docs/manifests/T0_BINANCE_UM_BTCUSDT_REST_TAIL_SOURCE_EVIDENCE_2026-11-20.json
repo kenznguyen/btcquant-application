@@ -1,0 +1,91 @@
+{
+  "manifest_format": "T0_RECONSTRUCTED_SOURCE_EVIDENCE_MANIFEST",
+  "format_version": "1.0.0",
+  "status": "DOCUMENTATION_ONLY_DRAFT_NOT_FOR_DATABASE_BUILD",
+  "source_id": "binance-usdm-btcusdt-m15-h1-rest-tail-20261120-personal-host",
+  "lineage": "RECONSTRUCTED",
+  "source": {
+    "exchange": "BINANCE",
+    "market": "USD-M_PERPETUAL",
+    "symbol": "BTCUSDT",
+    "endpoint": "https://fapi.binance.com/fapi/v1/klines",
+    "api_key_used": false,
+    "request_window": {
+      "start_time_utc": "2026-11-19T00:00:00Z",
+      "end_time_exclusive_utc": "2026-11-20T08:02:15.852Z"
+    },
+    "fixed_validation_cutoff_utc": "2026-11-20T08:02:15.852Z",
+    "retrieval_environment": "User-owned Windows personal host; local script outside repository",
+    "retrieval_times_utc": {
+      "15m": "2026-11-20T08:16:35.864034Z",
+      "1h": "2026-11-20T08:16:36.131662Z"
+    }
+  },
+  "payloads": {
+    "15m": {
+      "local_path": "%USERPROFILE%/btcquant-rest-tail-20261120/m15.json",
+      "http_status": 200,
+      "content_type": "application/json",
+      "content_length_header": 18102,
+      "saved_bytes": 18102,
+      "request_id": "36cab00e-0a9b-49e3-9c6c-d26840d10b1e",
+      "cloudfront_pop": "SGN50-P3",
+      "sha256_reported_by_local_script": "b83d2a860af5fcb67dde7c51c004a2b307c91a4bd3a43c54216d83058c84b6e3",
+      "raw_rows": 129,
+      "closed_rows": 128,
+      "forming_rows_excluded": 1,
+      "first_closed_open_utc": "2026-11-19T00:00:00Z",
+      "last_closed_open_utc": "2026-11-20T07:45:00Z",
+      "validator_ok": true,
+      "errors": [],
+      "gaps": []
+    },
+    "1h": {
+      "local_path": "%USERPROFILE%/btcquant-rest-tail-20261120/h1.json",
+      "http_status": 200,
+      "content_type": "application/json",
+      "content_length_header": 4740,
+      "saved_bytes": 4740,
+      "request_id": "777005bd-6054-4386-9f98-50f00512317c",
+      "cloudfront_pop": "SGN50-P3",
+      "sha256_reported_by_local_script": "033bf0ae6b8b68cf6e2d488422e82031e2481cf1326bd0b254c76c1acedc2d6b",
+      "raw_rows": 33,
+      "closed_rows": 32,
+      "forming_rows_excluded": 1,
+      "first_closed_open_utc": "2026-11-19T00:00:00Z",
+      "last_closed_open_utc": "2026-11-20T07:00:00Z",
+      "validator_ok": true,
+      "errors": [],
+      "gaps": []
+    }
+  },
+  "validation": {
+    "validator_path": "market_data/rest_tail_validator.py",
+    "validator_blob_sha": "3437e7a9181611cfed77eab59afee27136472963",
+    "validator_source_head_reported_by_operator": "04a0a6275ff44da20f0a40e11ab541f9c112459f",
+    "regression_tests": "10/10 PASS on user's local Windows host",
+    "result": "PASS_FOR_BOUNDED_WINDOW_AND_IMPLEMENTED_CHECKS_ONLY",
+    "archive_boundary_continuity": {
+      "m15_archive_last_open_utc": "2026-11-18T23:45:00Z",
+      "m15_rest_first_open_utc": "2026-11-19T00:00:00Z",
+      "h1_archive_last_open_utc": "2026-11-18T23:00:00Z",
+      "h1_rest_first_open_utc": "2026-11-19T00:00:00Z",
+      "result": "CONTIGUOUS_AT_ARCHIVE_REST_BOUNDARY_FOR_BOTH_INTERVALS"
+    }
+  },
+  "integrity_notes": {
+    "payload_sha256": "Reported by the local retrieval script; not independently recomputed by repository tooling in this documentation-only task.",
+    "exact_response_bytes": "Script wrote response body bytes without JSON reserialization; this is supported by user-provided script output, not by direct inspection of local files.",
+    "payload_files_committed": false,
+    "metadata_file": "%USERPROFILE%/btcquant-rest-tail-20261120/metadata.json"
+  },
+  "restrictions": {
+    "further_rest_retrieval_authorized": false,
+    "archive_download_or_copy_authorized": false,
+    "sqlite_create_or_import_authorized": false,
+    "runtime_pc_or_vps_authorized": false,
+    "t1_t2_or_trading_authorized": false,
+    "source_payload_cleanup_authorized": false
+  },
+  "evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md"
+}
