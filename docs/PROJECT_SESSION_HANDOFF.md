@@ -1,3 +1,24 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T0 FastAPI isolated runtime CI PASS
+
+- Scope: owner authorized isolated GitHub Actions runtime testing for T0 FastAPI on `kenznguyen/btcquant-application`; T2 migration remains PAUSED.
+- Workflow: `.github/workflows/t0-fastapi-migration.yml`, workflow blob SHA `82b65cad3ea90d437d73998f33384f66b543431b`.
+- Exact tested source: branch `main`, SHA `a20c51281c2fbee92e3363109bbc35f767084be4`.
+- Actions run [44689777567](https://github.com/kenznguyen/btcquant-application/actions/runs/44689777567): **SUCCESS**, event `workflow_dispatch`, run number 40; created 2026-11-20 06:43:10Z, completed 06:43:43Z.
+- Jobs: FastAPI contract tests job `136132549651` **PASS — 50 tests**; runtime-lock-only install + in-process ASGI smoke job `136132549745` **PASS**; isolated Uvicorn process/socket + Nginx reverse-proxy job `136132549996` **PASS**.
+- Contract coverage includes auth fail-closed, read-only methods, invalid/duplicate/unbounded/unknown query parameters, freshness/coverage, stale/future timestamps, persisted decimal candles/gaps, SQLite missing-path behavior without DB creation, and explicit PostgreSQL fail-closed behavior.
+- Runtime lock smoke: CPython 3.12.16 clean venv, hash-verified offline wheelhouse, `pip check` clean; FastAPI/Uvicorn import and in-process ASGI health PASS; no network socket used.
+- Uvicorn/Nginx integration: real subprocesses and loopback socket; proxy health, authorization forwarding, missing bearer rejection, unknown route, non-GET rejection, upstream shutdown 502 and token absence from Nginx logs all PASS. Container ran non-root, read-only root, no external network, bounded resources; temporary SQLite fixture only.
+- Artifacts:
+  - `t0-fastapi-contract-evidence`: ID `14607339737`, SHA-256 `e6a81ef582329ac2480022018b48daad568731c924d921e77fddee600ddfe3f7`.
+  - `t0-fastapi-runtime-lock-smoke`: ID `14608650299`, SHA-256 `8d3c569084472adb4c23adf346d99d8b7bbcf881577e56d5226398f4fba558d4`.
+  - `t0-uvicorn-nginx-socket-integration`: ID `14608046967`, SHA-256 `343fd8bd1b94744f825d217316bc6f50033c6719985ce5e76cd49a13fbf80db9`.
+  - All artifacts retained until 2026-12-04 (GitHub-reported expiry).
+- Safety boundary: canonical T0 SQLite not mounted/accessed; VPS, credentials, exchange, T1/T2 runtime and trading not accessed. No source/runtime config changes.
+- Status: isolated CI contract/runtime smoke **PASS**. VPS deployment/runtime, canonical T0 data connection, T1/T2 integration, production readiness and trading remain **NOT VERIFIED / NOT AUTHORIZED**. This CI result does not establish production readiness.
+- Next: preserve CI-only status; any VPS/runtime activation, canonical DB connection, T1/T2 integration or execution behavior requires separate explicit approval. T2 migration remains paused.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — T1 repository ownership decision approved
 
 - Decision: `docs/decisions/T1_REPOSITORY_OWNERSHIP_AND_CONSUMER_BOUNDARY_2026-11-20.md`, commit `10313ef41b975343e5e09e24793be48258d1c46e`.
@@ -497,8 +518,7 @@
 - Active Core First source branch `kenznguyen/btcusdt-telegram-signals2:feature/core-operational-proof-20261112` was compared against inspected SHA `e6606e28a696374f31cd6db1ec0a1372d942d64d`; GitHub compare result identical (0 ahead / 0 behind).
 - Read-only scope review verdict: PASS WITH DESIGN AMENDMENTS. Critical clarification: distinguish raw T0 1.1.0 page envelopes from the client-synthesized multi-page assembled window. Existing `fetch()` currently labels its synthesized output 1.0.0, calculates freshness from generatedAtMs and sets evaluable=true; a simple version bump would be unsafe.
 - Required design: validate each page's 1.1.0 schema, coverage and timestamp validity independently; evaluate the assembled window at the common evaluation anchor; never fabricate `evaluable=true`. Preserve stricter Core Bundle readiness for direct 100-candle M15/H1 pages.
-- The migration TDD scope needs the amendments in the review report before implementation.
-- No source/test edits, tests, CI, endpoint probes, runtime connections, deployment, data access/mutation or trading occurred.
+- The migration TDD scope needs the amendments in the review report before implementation.- No source/test edits, tests, CI, endpoint probes, runtime connections, deployment, data access/mutation or trading occurred.
 - Status: implementation NOT STARTED; tests/CI NOT RUN; endpoint/runtime NOT VERIFIED and NOT AUTHORIZED; production readiness NOT CERTIFIED.
 - Next gate: incorporate the design amendments into the scope, then request separate owner authorization for source implementation. Endpoint/runtime requires another separate approval after source GREEN and independent review.
 
@@ -997,8 +1017,7 @@
 - Repository HEAD inspected before proposal: `99aa7f8922168eb7c7a7f14416ef4ef6a8f1fa64`.
 - Exact previously approved test source SHA retained: `32aaa78a6a8da2ef04c98c7f5ef4c7a4be2afb6f`; do not silently substitute a later SHA.
 - Six explicit modules: `test_feeder_recovery`, `test_feeder_lease`, `test_write_gateway`, `test_storage`, `test_sync`, `test_api`; static inventory 61 methods, not yet runtime-discovered.
-- Proposed trigger is manual `workflow_dispatch` only, GitHub-hosted ephemeral `ubuntu-24.04`, read-only repository permission, no secrets, and test execution inside Docker `--network none` with read-only source mount and test-owned temporary filesystem.
-- The workflow skeleton is deliberately marked NOT READY TO INSTALL. Exact Python patch/image digest, immutable action commit pins, Docker runner preflight, shell pipefail and test summary handling remain to be resolved and reviewed.
+- Proposed trigger is manual `workflow_dispatch` only, GitHub-hosted ephemeral `ubuntu-24.04`, read-only repository permission, no secrets, and test execution inside Docker `--network none` with read-only source mount and test-owned temporary filesystem.- The workflow skeleton is deliberately marked NOT READY TO INSTALL. Exact Python patch/image digest, immutable action commit pins, Docker runner preflight, shell pipefail and test summary handling remain to be resolved and reviewed.
 - The container test process is intended to be network-isolated; checkout/image pull and artifact upload occur outside the isolated test process. Do not claim the whole GitHub job has no network.
 - No workflow file was created, no workflow dispatched, no package installed, no test run, and no runtime/canonical DB/exchange/VPS/live trading accessed.
 - Status: proposal preparation PASS; workflow implementation NOT AUTHORIZED; dispatch NOT AUTHORIZED; tests NOT RUN; production NOT CERTIFIED.
@@ -1497,8 +1516,7 @@ Reconcile the four-artifact Actions allowlist with all eligible source artifacts
 - Updated the 40-path repository inventory config to exact current Git blob SHAs. Latest config blob: `88835e2763f7053b2f41b2115cdd1b93e56cd255`. Latest matrix blob: `7c413504db397877b308345b21c9f6f58271c89a`; latest Evidence Register blob: `7ee8b11b47bec4bbd983f35e8f4a4d0f012c03bc`. Lineage test constants and Automation Plan/supporting references were synchronized to those exact blobs.
 - Transient CI failures were not hidden:
   - Run `42936165865`, source SHA `c7a89bb64ac3ce731139e96771a98136fb89accf`: lineage 11/12 due stale matrix blob pin.
-  - Run `42936425181`, source SHA `444ac7dd7f52c33b6b6b0fada6ec96c022f40d3a`: lineage 11/12 due stale register blob pin; repository inventory also exposed stale P1.8.147 inventory blob.
-  - Corrected matrix/register pins and P1.8.147 inventory SHA; no test was removed or weakened.
+  - Run `42936425181`, source SHA `444ac7dd7f52c33b6b6b0fada6ec96c022f40d3a`: lineage 11/12 due stale register blob pin; repository inventory also exposed stale P1.8.147 inventory blob.  - Corrected matrix/register pins and P1.8.147 inventory SHA; no test was removed or weakened.
 - Final successful exact-source validation: run [42936903511](https://github.com/kenznguyen/btcusdt-telegram-signals2/actions/runs/42936903511), checkout/source SHA `2e66102ced45e7a59d8885026a29fa5e38dab01e`, all jobs SUCCESS:
   - Lineage: 12/12 PASS.
   - Artifact manifest: 19/19 PASS.
@@ -1997,8 +2015,7 @@ This is the current disposition and supersedes the earlier historical NOT RUN / 
 - Created A2.3 draft: `docs/architecture/T0_SIGNATURE_TRUST_POLICY_MONOTONIC_ANCHOR_AMENDMENT_A2_3_DRAFT_2026-11-11.md`.
   - Final current document blob: `41d6abfc9df20047af4668b80a6ce2edb7e07117`.
   - Initial creation commit: `d1faa3f952ccf6319d89f4de06ea09d6a498d954`; subsequent documentation-only refinements specify AEO body digest domain, AEO-specific statement/domain, field/descriptor mappings, purpose-specific profile IDs and Ed25519 bindings, fixed domain KAT, UUIDv4 descriptor identity and bounded parser/input limits.
-  - Explicitly supersedes A2.2 §3.1 provenance field placement and §3.3 E1 envelope-ID placement with B + E2. Preserves A2.2 §16–17 bootstrap disabled / NOT_ENABLED.
-  - Adds AEO issuer profile `T0-AUTHORIZATION-EVIDENCE-ISSUER-SIGNATURE-PROFILE-V1` and retains checkpoint profile `T0-CHECKPOINT-ISSUER-SIGNATURE-PROFILE-V2`; both use owner-approved Ed25519 PureEdDSA, strict SPKI DER and 64-byte raw signatures. Trust Policy must explicitly authorize exact profile/role/purpose/audience/scope.
+  - Explicitly supersedes A2.2 §3.1 provenance field placement and §3.3 E1 envelope-ID placement with B + E2. Preserves A2.2 §16–17 bootstrap disabled / NOT_ENABLED.  - Adds AEO issuer profile `T0-AUTHORIZATION-EVIDENCE-ISSUER-SIGNATURE-PROFILE-V1` and retains checkpoint profile `T0-CHECKPOINT-ISSUER-SIGNATURE-PROFILE-V2`; both use owner-approved Ed25519 PureEdDSA, strict SPKI DER and 64-byte raw signatures. Trust Policy must explicitly authorize exact profile/role/purpose/audience/scope.
   - Proposes a distinct AEO signature-statement domain. Fixed SHA-256 KAT: domain hex `54302d415554484f52495a4154494f4e2d45564944454e43452d5349474e41545552452d53544154454d454e542d563100`, domain length 49; payload `A2.3-AEO-domain-KAT-v1`, length 22, U64BE `0000000000000016`; digest `64172accdaf1f2add08b201b25c8ea26b52e2c90e68674126bbef465f4e7acde`.
   - Proposes limits: statement/AEO/dependency body <=1 MiB, preimage <=1 MiB+64 octets, SPKI <=4096 octets, signature exactly 64 octets, <=64 dependencies, <=16 MiB total frozen input set, descriptor <=64 KiB, bounded JSON nesting/member/array/string limits. These are proposed, not frozen.
 - A2.3 self-review: `docs/evidence/T0_SIGNATURE_A2_3_SELF_REVIEW_2026-11-11.md`; current blob `70a76561bc20747de45fd0956ba09b22dbc48bcf`; review is same-session author self-review only, **PARTIAL PASS WITH BLOCKERS**, not independent review/G3.
@@ -2499,7 +2516,6 @@ At source HEAD `723570f845c0f52ef5776218cc5486f8864e72f8`, the next read-only in
 - Binance USD-M `/fapi/v1/exchangeInfo` is a candidate for a future read-only adapter, not a verified implementation.
 - G0-01/G0-02/G0-03/G0-05 remain BLOCKED. No network request, tests, workflow, code edits, DB/runtime/VPS/exchange actions occurred. GREEN-1..5 remain NOT AUTHORIZED.
 
-
 ## Latest work — GREEN-0 design contracts (2026-11-11)
 
 Owner approved design/documentation and source-contract inspection only. Added two proposal documents:
@@ -2997,8 +3013,7 @@ Next: if owner wants to proceed beyond planning, first approve a bounded provisi
 - Attempted shallow clone of the exact branch to run `python -m unittest pipeline.test_lifecycle_disposition -v` and `python -m py_compile pipeline/lifecycle_disposition.py pipeline/test_lifecycle_disposition.py`; clone failed because the execution environment could not resolve `github.com`. Both commands therefore BLOCKED / NOT RUN; no test or compile PASS claim.
 - Five-axis source review: correctness CONDITIONAL / NOT VERIFIED; readability PASS; architecture PASS (pure boundary intact); security CONDITIONAL (caller-supplied sensitivity/provenance facts are unauthenticated); performance PASS (bounded in-memory lookups). One fixture-helper issue corrected. No further source changes.
 - GitHub Actions NOT DISPATCHED; no run/artifact. Repository-wide tests NOT RUN. TEST-01–07 unchanged, 0/87 executed. Runtime/VPS NOT VERIFIED. Destructive authority NOT GRANTED.
-- No schema/registry/API/adapter/runner/oracle/workflow/scheduler/service/permission/credential/database/storage/VPS/data/model/ledger/runtime changes; no inventory, secret scan, provider/network/database access, archive, quarantine, cleanup, expiry, compaction, vacuum or deletion.
-- Next gate: obtain a test-capable checkout/environment containing exact branch source, then run the two commands in the G0.20 report and record full output. Any remediation remains limited to `pipeline/lifecycle_disposition.py` and `pipeline/test_lifecycle_disposition.py` under the existing approval. T0 independent/protected; CORE_LEDGER and AI_LEDGER separate; paper-only and `AI_EXECUTION_ENABLED=false` unchanged.
+- No schema/registry/API/adapter/runner/oracle/workflow/scheduler/service/permission/credential/database/storage/VPS/data/model/ledger/runtime changes; no inventory, secret scan, provider/network/database access, archive, quarantine, cleanup, expiry, compaction, vacuum or deletion.- Next gate: obtain a test-capable checkout/environment containing exact branch source, then run the two commands in the G0.20 report and record full output. Any remediation remains limited to `pipeline/lifecycle_disposition.py` and `pipeline/test_lifecycle_disposition.py` under the existing approval. T0 independent/protected; CORE_LEDGER and AI_LEDGER separate; paper-only and `AI_EXECUTION_ENABLED=false` unchanged.
 
 
 ## G0.20-B — Exact-source GitHub Actions verification (2026-11-11)
@@ -3497,8 +3512,7 @@ Next: if owner wants to proceed beyond planning, first approve a bounded provisi
 ### G0.42 — G0.41 workflow admission correction owner package (2026-11-11)
 
 - Prepared docs-only owner package: `docs/evidence/G0_42_G041_WORKFLOW_ADMISSION_CORRECTION_OWNER_PACKAGE_2026-11-11.md`.
-- Package commit: `91478d3382bdde22bcc9f251d72aff20f8d96a83`.
-- G0.41 workflow run [43052133091](https://github.com/kenznguyen/btcusdt-telegram-signals2/actions/runs/43052133091) was SKIPPED; job `130631821560` reported no steps; no artifact. Frozen runner `prepare_preflight(...)` was NOT INVOKED.
+- Package commit: `91478d3382bdde22bcc9f251d72aff20f8d96a83`.- G0.41 workflow run [43052133091](https://github.com/kenznguyen/btcusdt-telegram-signals2/actions/runs/43052133091) was SKIPPED; job `130631821560` reported no steps; no artifact. Frozen runner `prepare_preflight(...)` was NOT INVOKED.
 - The workflow job condition included `contains(github.event.head_commit.added, '.github/workflows/g041-s1-single-measurement.yml')`. GitHub REST commit metadata labels the workflow file `added`, but run/job metadata does not expose expression evaluation. Exact false sub-expression and root cause remain **NOT VERIFIED**; the `contains(...)` clause is only a plausible fault, not a proven cause.
 - G0.42 requests explicit approval for one edit to the existing workflow path, one narrow D14 amendment, and one fresh one-shot G0.41 measurement attempt. Proposed gate uses exact branch, exact immediate parent SHA (the final handoff HEAD recorded below), `head_commit.id == github.sha`, and `run_attempt == 1`; existing branch/path trigger remains. No `contains(head_commit.added, ...)` check.
 - After this package and handoff commit are both recorded, the exact current branch HEAD becomes the required `github.event.before` value for the single authorized implementation push. That exact SHA is the next owner package's baseline and must be copied literally into the workflow condition; no wildcard/fallback.
@@ -3997,8 +4011,7 @@ Critical limits:
 - Job `130724361663`: repository-file inventory **10/10 PASS**, verdict `L4_REPOSITORY_FILE_INVENTORY=PASS`.
 - Job `130724361672`: artifact manifest **19/19 PASS**, verdict `L4_ARTIFACT_MANIFEST=PASS`. Total: **41/41 tests PASS** across all three jobs.
 - Current-run output artifacts:
-  - Lineage ID `13883561072`, name `t0-l4-minimum-lineage-43078412140`, 1,150 bytes, ZIP digest `sha256:7533fb1f81acd5001509e01c4808ed41f5e5e2151c826f9faaaaf043a53cacaa`, expiry `2026-11-18T18:30:27Z`.
-  - Repository inventory ID `13882149316`, name `t0-l4-repository-file-inventory-43078412140`, 4,489 bytes, ZIP digest `sha256:a48fe17269f6faf58237f9adfca1887cf9e7cd22b82cdd4647e786396b83ea55`, expiry `2026-11-18T18:30:27Z`.
+  - Lineage ID `13883561072`, name `t0-l4-minimum-lineage-43078412140`, 1,150 bytes, ZIP digest `sha256:7533fb1f81acd5001509e01c4808ed41f5e5e2151c826f9faaaaf043a53cacaa`, expiry `2026-11-18T18:30:27Z`.  - Repository inventory ID `13882149316`, name `t0-l4-repository-file-inventory-43078412140`, 4,489 bytes, ZIP digest `sha256:a48fe17269f6faf58237f9adfca1887cf9e7cd22b82cdd4647e786396b83ea55`, expiry `2026-11-18T18:30:27Z`.
   - Manifest ID `13881878807`, name `t0-l4-artifact-manifest-43078412140`, 3,626 bytes, ZIP digest `sha256:8ea24a3eafd04cb424593251a9bb76c5c62b88409e19634162ffe1786a0ffe95`, expiry `2026-11-18T18:30:27Z`.
 - Independently downloaded and re-hashed manifest artifact `13881878807`: ZIP SHA-256 `8ea24a3eafd04cb424593251a9bb76c5c62b88409e19634162ffe1786a0ffe95`, matching GitHub metadata; ZIP CRC passed. Manifest JSON SHA-256 `4b37dbe429626deae17f50b95b903e16bc6b6e9210b71567764fb608d0343627` matches its sidecar. Parsed schema `T0_L4_GITHUB_ARTIFACT_MANIFEST_V1`, collector source SHA `f00b30af40f65a5ce06501ade6ccf72a27740306`, exactly eight unique allowlisted artifacts.
 - The eight-item manifest reconciles the two P1.8.14 synthetic artifacts and six L4 CI source artifacts. It keeps generated current-run outputs separate from source inputs; the current run's outputs are not self-included. The newly produced current-run lineage and repository-inventory outputs have not yet been independently read back and are not in the eight-item source allowlist.
@@ -4497,8 +4510,7 @@ Boundaries unchanged: T0 and T1 remain independent (no T1→T0); T0 unchanged; n
 - Added `await_handler_drain`: successful join permits shutdown to continue; handler task failure or timeout returns an error. Main now uses `await_handler_drain(...).await?`, so a drain timeout blocks final CSV and gap persistence instead of logging and continuing.
 - Added tests:
   - `handler_drain_timeout_is_an_error_not_permission_to_flush`
-  - `handler_drain_completes_successfully_before_final_persistence`
-- Commits:
+  - `handler_drain_completes_successfully_before_final_persistence`- Commits:
   - `237fce5d5cd8a955d0fe4a8966954ed9812221a4` — add handler drain regression tests.
   - `56f713711dd45486a6c56d3bc1f9d6881178c1d8` — implement fail-closed drain handling.
   - `5e38a18682da60c66ed644d88ec9433d196288b5` — rustfmt correction.
@@ -4997,7 +5009,6 @@ These findings make the current stop condition explicit: completing Trusted Admi
 ---
 
 # CURRENT STATUS OVERRIDE — 2026-11-19 — F4-R1 call-site audit and CI evidence gate
-
 - This entry updates the previous final 151-test R1 handoff. Read-only call-site audit completed on the existing `main`; no application source or test fixture changed in this follow-up.
 - All indexed `PaperLedger(` call sites were categorized. Production API factory `pipeline.api.ledger()` provisions/verifies the shared Account/Risk Contract before constructing strategy ledgers. Local CLI is initialization/snapshot-only and does not submit orders. README instructs contract provisioning before order submission. Test-only construction without a contract is limited to initialization/migration/read-only setup; increased exposure is unconditionally blocked in the submit transaction when the persisted contract or required limits are absent (`RISK_LIMITS_UNCONFIGURED`).
 - The dual-strategy API RED spec file has setup-only Ledger construction and no direct submit calls; it remains outside the bounded R1 risk-contract admission suite. F4-R2/R3 test specifications remain outside this approval and OPEN.
