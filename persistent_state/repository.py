@@ -614,7 +614,7 @@ class SQLiteStateRepository:
                     ).fetchone()[0]
                     head = connection.execute(
                         """
-                        SELECT generation.*
+                        SELECT generation.*, head.covered_event_sequence AS head_sequence
                         FROM ps_checkpoint_heads AS head
                         JOIN ps_checkpoint_generations AS generation
                           ON generation.checkpoint_id = head.checkpoint_id
@@ -627,9 +627,26 @@ class SQLiteStateRepository:
                         verified_checkpoint is None
                         or verified_checkpoint.session_id != fencing_token.session_id
                         or verified_checkpoint.covered_event_sequence != latest_sequence
+                        or head["head_sequence"] != verified_checkpoint.covered_event_sequence
                     ):
                         raise CheckpointRequiredForCloseError(
                             "CLOSED requires this session's verified checkpoint at the latest committed event sequence"
+                        )
+                    expected_versions = {
+                        row["aggregate_id"]: row["aggregate_version"]
+                        for row in connection.execute(
+                            """
+                            SELECT aggregate_id, MAX(aggregate_version) AS aggregate_version
+                            FROM ps_events
+                            WHERE account_scope_id = ? AND event_sequence <= ?
+                            GROUP BY aggregate_id
+                            """,
+                            (fencing_token.account_scope_id, verified_checkpoint.covered_event_sequence),
+                        ).fetchall()
+                    }
+                    if json.loads(verified_checkpoint.aggregate_versions_json) != expected_versions:
+                        raise CheckpointIntegrityError(
+                            "checkpoint aggregate versions do not match the committed event prefix"
                         )
             latest_sequence = connection.execute(
                 "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
