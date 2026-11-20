@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Staging plan reconciled and independently re-reviewed
+
+- Updated staging plan: `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md`, blob `b35e25d5d52a09dc73cfb1ced91b408a4979b045`.
+- Independent re-review: `docs/reviews/T0_ARCHIVE_STAGING_PLAN_RECONCILIATION_INDEPENDENT_REREVIEW_2026-11-20.md`, blob `44c7cf4f6006d0a0ad529d37044181cefa20e9d0`.
+- Review outcome: **DOCUMENT RECONCILIATION PASS — EXECUTION REMAINS BLOCKED ONLY BY THE REQUIRED DESTINATION PREFLIGHT**.
+- Plan now matches existing owner decision: exactly 404 allowlisted objects (202 ZIP + 202 paired sidecars), official Binance Public Data S3-compatible source, exact destination `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001`, 100 MiB cumulative response-body ceiling including retries, bounded requests and create-only raw preservation. No second approval is required for this exact scope; any deviation requires a new owner decision.
+- Clarified deterministic sidecar parsing, streamed retry-inclusive cap accounting, no-follow/exclusive path creation, Binance USD-M 12-column CSV schema and exact header detection, decimal/OHLC constraints, UTC timestamp/grid rules, quarantine behavior and per-object/run-level evidence.
+- Archive provenance inventory is explicitly separate from the final reconstructed dataset/build manifest. Historical sidecar own size/hash remains NOT VERIFIED; fresh run must measure it. Historical aggregate discrepancy of 11,277 bytes remains accepted and unexplained.
+- Independent manifest recheck: 404/404 unique objects; 202 ZIP + 202 sidecars; all ZIP pairings/metadata PASS; M15 241,440 rows; H1 60,360 rows; total 301,800.
+- Qualification: historical payload report does not retain literal CSV header names or per-object header mode. Plan pins the expected schema and requires exact-match detection and fresh 76/126 aggregate header reconciliation; payload checks have not been rerun.
+- Owner-approved exact target preflight is **NOT RUN**. No archive request/listing/download or staging. No SQLite, Dropbox, REST tail, VPS/runtime, feeder/writer/lease, T1/T2, restore, deployment, cutover, cleanup or auto-delete.
+- SQLite creation/open/write/import remains **NOT AUTHORIZED** and requires separate explicit owner approval.
+- No tests/workflows run; no Actions run/job/artifact. Documentation only.
+- Audit note: an intermediate empty-file contents commit `2c9cf6138da440ed00b4f6349434e470a6cc13cf` was immediately restored from the previous source; final plan is fully restored and updated at blob `b35e25d5d52a09dc73cfb1ced91b408a4979b045`. See independent review report for traceability.
+- Next: read-only preflight of the exact approved target. If any condition fails or is unverifiable, STOP; no alternate destination.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Independent review of archive manifest, staging plan and verification rules
 
 - Review report: `docs/reviews/T0_ARCHIVE_MANIFEST_STAGING_VERIFICATION_INDEPENDENT_REVIEW_2026-11-20.md`.
