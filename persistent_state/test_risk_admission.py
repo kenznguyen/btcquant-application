@@ -108,6 +108,18 @@ class SharedRiskAdmissionTests(unittest.TestCase):
                 self.assertFalse(result.allowed)
                 self.assertEqual(result.reason_code, "RISK_INPUT_INVALID")
 
+    def test_new_order_cannot_overcommit_equity_after_existing_reserved_margin(self):
+        nearly_full = RiskState(
+            account_scope_id="paper-account", kill_switch_latched=False,
+            kill_switch_reason=None, risk_policy_version="shared-risk-v1",
+            reserved_margin_quote="995", aggregate_version=5,
+        )
+        result = self.engine.evaluate(
+            self.proposal(margin="10"), replace(self.context, risk_state=nearly_full),
+        )
+        self.assertFalse(result.allowed)
+        self.assertEqual(result.reason_code, "INSUFFICIENT_MARGIN_CAPACITY")
+
     def test_reserved_margin_above_equity_blocks_unreconciled_capacity(self):
         overcommitted = RiskState(
             account_scope_id="paper-account", kill_switch_latched=False,
