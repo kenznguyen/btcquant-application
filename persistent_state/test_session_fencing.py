@@ -10,6 +10,7 @@ from persistent_state.contracts import (
 )
 from persistent_state.repository import (
     AggregateMutation, CheckpointIntegrityError, CheckpointRequiredForCloseError,
+    GracefulStopTimeoutError,
     SessionStateConflictError,
     SessionTransitionError, SQLiteStateRepository, StaleFencingTokenError,
 )
