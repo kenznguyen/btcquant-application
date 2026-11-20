@@ -188,6 +188,21 @@ class SessionFencingTests(unittest.TestCase):
         self.assertEqual(closed.status, SessionStatus.CLOSED)
         self.assertEqual(closed.ended_at_ms, 1_800_000_100_002)
 
+    def test_stop_exceeding_30_second_grace_becomes_interrupted(self):
+        token = start_running(self.repository)
+        stop_requested_at = 1_800_000_100_000
+        self.repository.advance_session(
+            token, expected_status=SessionStatus.RUNNING,
+            new_status=SessionStatus.CHECKPOINTING, at_ms=stop_requested_at,
+        )
+        result = self.repository.advance_session(
+            token, expected_status=SessionStatus.CHECKPOINTING,
+            new_status=SessionStatus.CLOSED, at_ms=stop_requested_at + 30_001,
+        )
+        self.assertEqual(result.status, SessionStatus.INTERRUPTED)
+        self.assertEqual(result.ended_at_ms, stop_requested_at + 30_001)
+        self.assertEqual(result.stop_requested_at_ms, stop_requested_at)
+
     def test_close_revalidates_checkpoint_checksum_before_marking_closed(self):
         token = start_running(self.repository)
         commit_one(self.repository, token)
