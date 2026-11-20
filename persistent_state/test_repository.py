@@ -140,6 +140,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
         self.assertTrue(retried.duplicate)
         self.assertEqual(retried.event_id, original.event_id)
         self.assertEqual(self.repository.read_aggregate("paper-account", "ledger-core").aggregate_version, 1)
+        self.assertEqual(self.repository.get_session("session-1").last_committed_event_sequence, 1)
         self.assertEqual(len(self.repository.read_events("paper-account")), 1)
 
     def test_same_key_with_different_payload_is_rejected(self):
