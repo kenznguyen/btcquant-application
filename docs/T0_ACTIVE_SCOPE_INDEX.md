@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T0 staging plan reconciliation PASS
+
+- Plan: `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md`, blob `b35e25d5d52a09dc73cfb1ced91b408a4979b045`.
+- Independent re-review: `docs/reviews/T0_ARCHIVE_STAGING_PLAN_RECONCILIATION_INDEPENDENT_REREVIEW_2026-11-20.md`, blob `44c7cf4f6006d0a0ad529d37044181cefa20e9d0`.
+- Status: **DOCUMENT RECONCILIATION PASS — DESTINATION PREFLIGHT NOT RUN / BLOCKING**.
+- Existing approval remains exactly 404 allowlisted objects, exact path `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001`, 100 MiB including retries. No alternate path or scope expansion.
+- SQLite remains NOT AUTHORIZED; requires separate owner approval.
+- No archive network access/materialization, SQLite, Dropbox, REST tail, VPS/runtime, T1/T2, deployment or cleanup. No tests/workflows/Actions run.
+- Next: exact-path read-only destination preflight; STOP on any failed or unverifiable condition.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Owner approved archive materialization; exact local target; preflight pending
 
 - Owner decision: `docs/decisions/T0_RECONSTRUCTED_ARCHIVE_MATERIALIZATION_APPROVAL_2026-11-20.md`, commit `c8793aee2ac3cab5594372e718421c33aa0d46ff`.
