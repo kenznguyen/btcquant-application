@@ -5586,3 +5586,28 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Runtime work on personal PC is **PAUSED**. No tests or workflows, Actions runs/jobs/artifacts, REST calls, archive access/download/copy, host preflight, SQLite create/open/write/import/validation, runtime, T1/T2, deployment or trading occurred for this documentation update.
 - SQLite creation/import remains **NOT AUTHORIZED** and requires separate explicit approval naming exact host/path, source inventory, importer SHA, coverage/gap policy and validation gates. No Canonical promotion is implied.
 - Next: documentation review only if requested; otherwise hold.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T0 PR #1 independent review P1 reconciliation
+
+- Review evidence retained in [PR #1 — DO NOT MERGE](https://github.com/kenznguyen/btcquant-application/pull/1). PR remains **OPEN / UNMERGED** and is a review-only mirror; never merge its `review-snapshots/fastapi-2026-11-20/` files.
+- Independent automated review records:
+  - Reviewed PR head SHA: `f940443d3e5f583e2c0bfd4c1d15d9f31a576775`.
+  - Codex review state: **COMPLETED**; review summary reports findings and unresolved findings.
+  - Graphify review: **COMPLETED**; no confirmed issues in its summary, with 20 unconfirmed leads.
+  - Codex P1 thread: `pipeline/api.py` imported `candle_query` from retired `market_data.api`, potentially causing `pipeline.api` import failure.
+  - Review thread remains unresolved on the review-only PR; do not alter the review snapshot or merge it merely to clear the thread.
+- Source remediation provenance:
+  - Fix commit: `cb3317c0a46625c03afc24a9bd6b3b19b0504460`, message `fix: import T0 candle query from current FastAPI contract module`.
+  - Fix changes `pipeline/api.py` to import `candle_query` from `market_data.api_contract`; the same commit updates three workflow blob-pins to the resulting `pipeline/api.py` blob `cca5432a6ca6bbe27cd3a3f9562712b06cb0d4b2`.
+  - Current `main` HEAD inspected: `7b9df05bda3f80c0f2e71f229c826f45b8f1da6a`; current `pipeline/api.py` blob: `2c5c35951dbe902e2553ad186bedaf0ca22b29e0`.
+  - Exact current source check: first-party import is `from market_data.api_contract import candle_query`; no import from `market_data.api` remains in `pipeline/api.py`. Current `main` also contains `market_data/test_wsgi_retirement.py`, which asserts that `market_data.api` is not importable.
+  - Git compare confirms current `main` descends from the fix commit and contains subsequent changes. The P1 source-level remediation is therefore **PASS** on current `main`.
+- Qualification: no workflow was dispatched and no test was run specifically against current HEAD `7b9df05bda3f80c0f2e71f229c826f45b8f1da6a` during this reconciliation. Runtime/import regression qualification on that exact HEAD is **NOT VERIFIED**. Do not convert static source PASS into CI PASS.
+- PR #1 is preserved unchanged as independent review evidence. No merge, PR branch rewrite, snapshot edit, runtime change or source-code edit was performed for this reconciliation.
+- T0 next step remains governed by `docs/plans/T0_CANONICAL_SQLITE_RECONSTRUCTION_EXECUTION_PLAN_2026-11-20.md`: execution is **BLOCKED / NOT AUTHORIZED**. The exact-destination preflight report `docs/evidence/T0_EXACT_DESTINATION_PREFLIGHT_2026-11-20.md` is **BLOCKED / NOT VERIFIED** because the available container is not the owner-controlled host. Do not retry from an unrelated environment or select another destination.
+- Before any archive or database operation, owner gates remain: identify the actual owner-controlled host and exact destination; establish current immutable availability of all 404 source objects; accept bounded coverage/gap policy; pin importer SHA and dependencies; confirm Candle Contract/schema and `available_at_ms`; approve validation/quarantine policy; then issue a separate explicit execution approval. Complete-coverage objective remains separately blocked by unverified earliest-ever history and post-cutoff coverage.
+- T0 invariants unchanged: former Canonical = **LOST**; new RECONSTRUCTED SQLite = **NOT CREATED**; no archive retrieval/materialization, SQLite create/open/write/import/validation, promotion, runtime, T1/T2, PostgreSQL, deployment, cleanup/auto-delete or trading is authorized by this review reconciliation.
+- Work record: documentation-only update to this handoff; no tests/workflows/Actions run/job/artifact. Main source SHA inspected: `7b9df05bda3f80c0f2e71f229c826f45b8f1da6a`. Review evidence SHA: `f940443d3e5f583e2c0bfd4c1d15d9f31a576775`.
+- Next: keep PR #1 as non-mergeable evidence; when authorized, run the relevant regression/CI against an exact current source SHA. For T0 reconstruction, first resolve the owner-controlled host/destination and remaining execution gates; do not initiate data operations before separate approval.
