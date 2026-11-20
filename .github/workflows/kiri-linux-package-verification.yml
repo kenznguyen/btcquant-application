@@ -50,7 +50,7 @@ jobs:
           test "$fingerprint" = "900CB63F75328B627AF5549353263AE758141A6B"
           gpg --dearmor --yes --output "$RUNNER_TEMP/kiri-archive-keyring.gpg" "$RUNNER_TEMP/kiri-archive-key.asc"
           gpgv --keyring "$RUNNER_TEMP/kiri-archive-keyring.gpg" "$RUNNER_TEMP/SHA256SUMS-linux.asc" "$RUNNER_TEMP/SHA256SUMS-linux"
-          grep -F "639f64abb7f3bd063a80ed1744e891156351c56cf2ad502633c47536c397a961  $assetVar" "$RUNNER_TEMP/SHA256SUMS-linux"
+          grep -F "639f64abb7f3bd063a80ed1744e891156351c56cf2ad502633c47536c397a961  $asset" "$RUNNER_TEMP/SHA256SUMS-linux"
           dpkg-deb --info "$asset"
           dpkg-deb --field "$asset" Package Version Architecture Depends
           dpkg-deb --contents "$asset" > "$RUNNER_TEMP/kiri-evidence/package-contents.txt"
@@ -198,7 +198,7 @@ jobs:
           test "$fingerprint" = "900CB63F75328B627AF5549353263AE758141A6B"
           gpg --dearmor --yes --output "$RUNNER_TEMP/kiri-archive-keyring.gpg" "$RUNNER_TEMP/kiri-archive-key.asc"
           gpgv --keyring "$RUNNER_TEMP/kiri-archive-keyring.gpg" "$RUNNER_TEMP/SHA256SUMS-linux.asc" "$RUNNER_TEMP/SHA256SUMS-linux"
-          grep -F "24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9  $assetVar" "$RUNNER_TEMP/SHA256SUMS-linux"
+          grep -F "24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9  $asset" "$RUNNER_TEMP/SHA256SUMS-linux"
           dpkg-deb --info "$asset"
           dpkg-deb --field "$asset" Package Version Architecture Depends
           dpkg-deb --control "$asset" "$RUNNER_TEMP/kiri-lite-control"
