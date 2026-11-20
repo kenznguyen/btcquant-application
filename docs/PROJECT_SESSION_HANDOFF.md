@@ -5704,3 +5704,18 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Source parent handoff blob: `cef41f44a093db0bb9ec380d04e3a4e8fce512ba`. Decision commit: `4ce14993ba8d30213f7609f1c7875212a80eedd2`; contract update commit: `2aa3f92649454bb020b26d62a0ab290b749bfafa`.
 - Tests/workflows/Actions run/job/artifact: none. Status: **OPEN ARCHITECTURE DECISIONS CLOSED FOR SCOPE PLANNING**; implementation **NOT STARTED / NOT AUTHORIZED**; runtime **NOT STARTED / NOT AUTHORIZED**.
 - Next: owner reviews the bounded implementation scope and separately authorizes source changes.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Windows selected as Application SQLite target OS
+
+- Owner selected **Windows provisionally as the target operating system** for the Application-owned Persistent State SQLite database.
+- Physical storage decision: use the Windows per-user application-data/user-data location class, outside the Git repository and separate from all T0 storage. This does not select a concrete known folder or absolute path.
+- Exact absolute path is intentionally deferred; no directory creation, filesystem probing, staging selection, database creation/open/write, or runtime action is authorized or required during this design phase.
+- Updated decision record: `docs/decisions/PERSISTENT_STATE_ARCHITECTURE_DECISIONS_2026-11-20.md`, commit `89b575dbc0dcdf58651820f12b9d19487a98783a`, blob `d6368c5735b1029cd95cf0813ca97cb768590746`.
+- Updated contract: `docs/architecture/PERSISTENT_STATE_CONTRACT_AND_SESSION_LIFECYCLE_2026-11-20.md`, commit `1d4f763e8e97f80baa48f9ac8718b4ccd0a71f18`, blob `24264245ac793ba4607ed123d492e831e723eab4`.
+- Repository: `kenznguyen/btcquant-application`, branch `main`. Source handoff blob before this update: `99a33a5af1f35b6f2bafd9b67ad9a768e9095af6`.
+- Scope: documentation-only decision clarification. Tests/workflows/Actions run/job/artifact: **none**. No source code, tests, database, filesystem, T0, host, VPS, runtime, T1/T2 or trading system accessed or changed.
+- Status: **WINDOWS TARGET OS SELECTED / RECORDED**; exact path **DEFERRED**; implementation **NOT STARTED / NOT AUTHORIZED**; runtime **NOT STARTED / NOT AUTHORIZED**.
+- Next: retain the Windows target and defer exact path selection until implementation planning requires it. The bounded contract-first/test-first implementation still requires separate explicit authorization.
