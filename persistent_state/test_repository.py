@@ -7,7 +7,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from persistent_state.contracts import (
-    EventRecord, IdempotencyClaim, StrategyId, canonical_json, derive_idempotency_key,
+    EventRecord, IdempotencyClaim, SessionRecord, SessionStatus, StrategyId,
+    canonical_json, derive_idempotency_key,
 )
 from persistent_state.repository import (
     AggregateMutation, AggregateVersionConflictError, EventSequenceConflictError,
@@ -20,6 +21,26 @@ def digest(value):
     return "sha256:" + hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def start_running_session(repository, session_id, account_scope_id):
+    started_at = 1_800_000_000_000
+    session = SessionRecord(
+        session_id=session_id, account_scope_id=account_scope_id,
+        status=SessionStatus.START_REQUESTED, started_at_ms=started_at,
+        initiator="MANUAL", source_snapshot_id="snapshot-1",
+        config_hash="sha256:" + "a" * 64, code_version="git:" + "b" * 40,
+        last_committed_event_sequence=0,
+    )
+    token = repository.claim_writer(session)
+    for expected, target in (
+        (SessionStatus.START_REQUESTED, SessionStatus.PREFLIGHT),
+        (SessionStatus.PREFLIGHT, SessionStatus.RESTORING),
+        (SessionStatus.RESTORING, SessionStatus.READY),
+        (SessionStatus.READY, SessionStatus.RUNNING),
+    ):
+        repository.advance_session(token, expected_status=expected, new_status=target, at_ms=started_at + 1)
+    return token
+
+
 class SQLiteStateRepositoryTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -27,9 +48,11 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
         self.path = Path(self.temp.name) / "application-state-test.sqlite3"
         self.repository = SQLiteStateRepository(self.path)
         self.repository.initialize()
+        self.token = start_running_session(self.repository, "session-1", "paper-account")
 
-    def transition(self, *, account="paper-account", sequence=1, expected_version=0,
-                   ordinal=0, payload='{"target":"0.01"}', state='{"position":"0.01"}',
+    def transition(self, *, account="paper-account", session_id="session-1",
+                   sequence=1, expected_version=0, ordinal=0,
+                   payload='{"target":"0.01"}', state='{"position":"0.01"}',
                    event_id="event-1", strategy=StrategyId.CORE):
         ledger_id = "ledger-" + strategy.value.lower()
         snapshot_id = "snapshot-1"
@@ -46,7 +69,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
             action_kind="ENTRY", action_ordinal=ordinal,
         )
         event = EventRecord(
-            event_id=event_id, account_scope_id=account, session_id="session-1",
+            event_id=event_id, account_scope_id=account, session_id=session_id,
             event_sequence=sequence, aggregate_version=expected_version + 1,
             event_type="POSITION_UPDATED", strategy_id=strategy,
             strategy_version=strategy_version, created_at_ms=1_800_000_000_000,
@@ -97,7 +120,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
 
     def test_commit_atomically_appends_event_claim_and_aggregate(self):
         event, claim, mutation = self.transition()
-        result = self.repository.commit_transition(event, claim, mutation)
+        result = self.repository.commit_transition(event, claim, mutation, fencing_token=self.token)
         self.assertFalse(result.duplicate)
         self.assertEqual(result.event_id, "event-1")
         self.assertEqual(result.event_sequence, 1)
@@ -113,7 +136,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
         retry_event, retry_claim, retry_mutation = self.transition(
             sequence=2, expected_version=1, event_id="event-retry",
         )
-        retried = self.repository.commit_transition(retry_event, retry_claim, retry_mutation)
+        retried = self.repository.commit_transition(retry_event, retry_claim, retry_mutation, fencing_token=self.token)
         self.assertTrue(retried.duplicate)
         self.assertEqual(retried.event_id, original.event_id)
         self.assertEqual(self.repository.read_aggregate("paper-account", "ledger-core").aggregate_version, 1)
@@ -137,7 +160,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
             sequence=2, expected_version=0, event_id="event-stale", ordinal=1,
         )
         with self.assertRaises(AggregateVersionConflictError):
-            self.repository.commit_transition(stale_event, stale_claim, stale_mutation)
+            self.repository.commit_transition(stale_event, stale_claim, stale_mutation, fencing_token=self.token)
         self.assertEqual(len(self.repository.read_events("paper-account")), 1)
         self.assertEqual(self.repository.read_aggregate("paper-account", "ledger-core").aggregate_version, 1)
 
@@ -192,14 +215,18 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
         self.assertFalse(missing.exists())
 
     def test_account_scopes_keep_aggregate_state_separate(self):
+        token_a = start_running_session(self.repository, "session-a", "paper-a")
+        token_b = start_running_session(self.repository, "session-b", "paper-b")
         event_a, claim_a, mutation_a = self.transition(
-            account="paper-a", event_id="event-a", state='{"position":"0.01"}',
+            account="paper-a", session_id="session-a", event_id="event-a",
+            state='{"position":"0.01"}',
         )
         event_b, claim_b, mutation_b = self.transition(
-            account="paper-b", event_id="event-b", state='{"position":"0.02"}',
+            account="paper-b", session_id="session-b", event_id="event-b",
+            state='{"position":"0.02"}',
         )
-        self.repository.commit_transition(event_a, claim_a, mutation_a)
-        self.repository.commit_transition(event_b, claim_b, mutation_b)
+        self.repository.commit_transition(event_a, claim_a, mutation_a, fencing_token=token_a)
+        self.repository.commit_transition(event_b, claim_b, mutation_b, fencing_token=token_b)
         self.assertEqual(
             self.repository.read_aggregate("paper-a", "ledger-core").state_json,
             '{"position":"0.01"}',
