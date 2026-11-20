@@ -126,6 +126,7 @@ http {{
     nginx_handle = nginx_log.open("w")
     uvicorn_proc = nginx_proc = None
     results = []
+    completed = False
     try:
         uvicorn_proc = subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "market_data.fastapi_app:app",
@@ -216,18 +217,44 @@ http {{
         print("database=temporary_sqlite_fixture_only")
         print("canonical_t0_database=NOT_MOUNTED")
         print("external_network_during_test=DISABLED")
+        completed = True
     finally:
         for proc in (nginx_proc, uvicorn_proc):
             if proc is not None and proc.poll() is None:
                 proc.terminate()
                 try:
-                    proc.wait(timeout=5)
+                    proc.wait(timeout=12 if proc is uvicorn_proc else 5)
                 except subprocess.TimeoutExpired:
                     proc.kill()
                     proc.wait(timeout=5)
+        uvicorn_handle.flush()
+        nginx_handle.flush()
+        if not completed:
+            print("=== FAILURE DIAGNOSTICS ===", flush=True)
+            print(f"diagnostic_directory={root}", flush=True)
+            for label, proc, log_path in (
+                ("uvicorn", uvicorn_proc, uvicorn_log),
+                ("nginx", nginx_proc, nginx_log),
+            ):
+                returncode = None if proc is None else proc.poll()
+                print(f"{label}_returncode={returncode}", flush=True)
+                print(f"--- {label} stdout/stderr: {log_path} ---", flush=True)
+                try:
+                    print(log_path.read_text(errors="replace"), flush=True)
+                except OSError as exc:
+                    print(f"log_read_error={exc!r}", flush=True)
+            for label, log_path in (
+                ("nginx_access", access_log),
+                ("nginx_error", nginx_root / "logs" / "error.log"),
+            ):
+                print(f"--- {label}: {log_path} ---", flush=True)
+                if log_path.exists():
+                    print(log_path.read_text(errors="replace"), flush=True)
+            print("temporary_diagnostics_preserved=YES", flush=True)
         uvicorn_handle.close()
         nginx_handle.close()
-        shutil.rmtree(root, ignore_errors=True)
+        if completed:
+            shutil.rmtree(root, ignore_errors=True)
 
 
 if __name__ == "__main__":
