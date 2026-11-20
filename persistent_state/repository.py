@@ -26,6 +26,9 @@ from persistent_state.contracts import (
 from persistent_state.lifecycle import is_terminal_session_status, validate_session_transition
 
 
+GRACEFUL_STOP_TIMEOUT_MS = 30_000
+
+
 class RepositoryError(RuntimeError):
     """Base class for persistent-state repository errors."""
 
@@ -192,6 +195,7 @@ _SCHEMA_STATEMENTS = (
         status TEXT NOT NULL,
         started_at_ms INTEGER NOT NULL,
         ended_at_ms INTEGER,
+        stop_requested_at_ms INTEGER,
         initiator TEXT NOT NULL,
         source_snapshot_id TEXT NOT NULL,
         config_hash TEXT NOT NULL,
@@ -465,14 +469,14 @@ class SQLiteStateRepository:
                 """
                 INSERT INTO ps_sessions (
                     session_id, account_scope_id, status, started_at_ms, ended_at_ms,
-                    initiator, source_snapshot_id, config_hash, code_version,
+                    stop_requested_at_ms, initiator, source_snapshot_id, config_hash, code_version,
                     last_committed_event_sequence, schema_version
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     session.session_id, session.account_scope_id, session.status.value,
-                    session.started_at_ms, session.ended_at_ms, session.initiator,
-                    session.source_snapshot_id, session.config_hash, session.code_version,
+                    session.started_at_ms, session.ended_at_ms, session.stop_requested_at_ms,
+                    session.initiator, session.source_snapshot_id, session.config_hash, session.code_version,
                     session.last_committed_event_sequence, session.schema_version,
                 ),
             )
@@ -542,7 +546,8 @@ class SQLiteStateRepository:
                 initiator=row["initiator"], source_snapshot_id=row["source_snapshot_id"],
                 config_hash=row["config_hash"], code_version=row["code_version"],
                 last_committed_event_sequence=row["last_committed_event_sequence"],
-                ended_at_ms=row["ended_at_ms"], schema_version=row["schema_version"],
+                ended_at_ms=row["ended_at_ms"], stop_requested_at_ms=row["stop_requested_at_ms"],
+                schema_version=row["schema_version"],
             )
         finally:
             connection.close()
@@ -584,45 +589,57 @@ class SQLiteStateRepository:
             )
             if at_ms < session["started_at_ms"]:
                 raise ValueError("session transition timestamp cannot precede session start")
+            effective_status = new_status
+            stop_requested_at_ms = session["stop_requested_at_ms"]
+            if new_status is SessionStatus.CHECKPOINTING:
+                stop_requested_at_ms = at_ms
             if new_status is SessionStatus.CLOSED:
-                latest_sequence = connection.execute(
-                    "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
-                    (fencing_token.account_scope_id,),
-                ).fetchone()[0]
-                head = connection.execute(
-                    """
-                    SELECT generation.*
-                    FROM ps_checkpoint_heads AS head
-                    JOIN ps_checkpoint_generations AS generation
-                      ON generation.checkpoint_id = head.checkpoint_id
-                    WHERE head.account_scope_id = ?
-                    """,
-                    (fencing_token.account_scope_id,),
-                ).fetchone()
-                verified_checkpoint = None if head is None else self._checkpoint_from_row(head)
-                if (
-                    verified_checkpoint is None
-                    or verified_checkpoint.session_id != fencing_token.session_id
-                    or verified_checkpoint.covered_event_sequence != latest_sequence
-                ):
-                    raise CheckpointRequiredForCloseError(
-                        "CLOSED requires this session's verified checkpoint at the latest committed event sequence"
-                    )
+                if stop_requested_at_ms is None:
+                    raise SessionTransitionError("CHECKPOINTING session has no stop request timestamp")
+                if at_ms - stop_requested_at_ms > GRACEFUL_STOP_TIMEOUT_MS:
+                    # The 30-second manual Stop window elapsed. Preserve the
+                    # session as interrupted rather than falsely declaring it closed.
+                    effective_status = SessionStatus.INTERRUPTED
+                else:
+                    latest_sequence = connection.execute(
+                        "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
+                        (fencing_token.account_scope_id,),
+                    ).fetchone()[0]
+                    head = connection.execute(
+                        """
+                        SELECT generation.*
+                        FROM ps_checkpoint_heads AS head
+                        JOIN ps_checkpoint_generations AS generation
+                          ON generation.checkpoint_id = head.checkpoint_id
+                        WHERE head.account_scope_id = ?
+                        """,
+                        (fencing_token.account_scope_id,),
+                    ).fetchone()
+                    verified_checkpoint = None if head is None else self._checkpoint_from_row(head)
+                    if (
+                        verified_checkpoint is None
+                        or verified_checkpoint.session_id != fencing_token.session_id
+                        or verified_checkpoint.covered_event_sequence != latest_sequence
+                    ):
+                        raise CheckpointRequiredForCloseError(
+                            "CLOSED requires this session's verified checkpoint at the latest committed event sequence"
+                        )
             latest_sequence = connection.execute(
                 "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
                 (fencing_token.account_scope_id,),
             ).fetchone()[0]
-            terminal = is_terminal_session_status(new_status)
+            terminal = is_terminal_session_status(effective_status)
             ended_at_ms = at_ms if terminal else None
             connection.execute(
                 """
                 UPDATE ps_sessions
-                SET status = ?, ended_at_ms = ?, last_committed_event_sequence = ?
+                SET status = ?, ended_at_ms = ?, stop_requested_at_ms = ?,
+                    last_committed_event_sequence = ?
                 WHERE session_id = ? AND status = ?
                 """,
                 (
-                    new_status.value, ended_at_ms, latest_sequence,
-                    fencing_token.session_id, expected_status.value,
+                    effective_status.value, ended_at_ms, stop_requested_at_ms,
+                    latest_sequence, fencing_token.session_id, expected_status.value,
                 ),
             )
             connection.commit()
