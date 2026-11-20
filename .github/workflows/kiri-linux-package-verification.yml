@@ -295,3 +295,159 @@ jobs:
             echo "- Scope: disposable GitHub-hosted runner only"
             echo "- No project VPS, T0 SQLite, T1/T2, secrets, or deployment targets are used."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  verify-lite-deb-ubuntu-2604:
+    name: Kiri Lite 0.2.2 Debian package / Ubuntu 26.04.1
+    runs-on: ubuntu-26.04
+    timeout-minutes: 25
+    steps:
+      - name: Record and assert Ubuntu 26.04.1 runner baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat /etc/os-release
+          uname -a
+          dpkg --print-architecture
+          systemd --version
+          test "$(dpkg --print-architecture)" = amd64
+          grep -q '^VERSION_ID="26.04"$' /etc/os-release
+          test -d /run/systemd/system
+          systemd_version="$(systemd --version | awk 'NR == 1 {print $2}')"
+          dpkg --compare-versions "$systemd_version" ge 259
+          command -v docker
+          docker --version
+          mkdir -p "$RUNNER_TEMP/kiri-ubuntu-2604-evidence"
+          {
+            cat /etc/os-release
+            uname -a
+            systemd --version
+            docker --version
+          } > "$RUNNER_TEMP/kiri-ubuntu-2604-evidence/runner-baseline.txt"
+
+      - name: Download Kiri Lite and verify publisher-signed checksum manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          asset="kiri-lite_0.2.2_amd64.deb"
+          url="https://github.com/libracoder/kiri/releases/download/v0.2.2/$asset"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 "$url" -o "$asset"
+          printf '%s  %s\\n' "24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9" "$asset" | sha256sum --check -
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gnupg
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://download.runkiri.com/SHA256SUMS-linux -o "$RUNNER_TEMP/SHA256SUMS-linux"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://download.runkiri.com/SHA256SUMS-linux.asc -o "$RUNNER_TEMP/SHA256SUMS-linux.asc"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://download.runkiri.com/kiri-archive-key.asc -o "$RUNNER_TEMP/kiri-archive-key.asc"
+          fingerprint="$(gpg --show-keys --with-colons "$RUNNER_TEMP/kiri-archive-key.asc" | awk -F: '$1 == "fpr" {print $10; exit}')"
+          test "$fingerprint" = "900CB63F75328B627AF5549353263AE758141A6B"
+          gpg --dearmor --yes --output "$RUNNER_TEMP/kiri-archive-keyring.gpg" "$RUNNER_TEMP/kiri-archive-key.asc"
+          gpgv --keyring "$RUNNER_TEMP/kiri-archive-keyring.gpg" "$RUNNER_TEMP/SHA256SUMS-linux.asc" "$RUNNER_TEMP/SHA256SUMS-linux"
+          grep -F "24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9  $asset" "$RUNNER_TEMP/SHA256SUMS-linux"
+          dpkg-deb --info "$asset"
+          dpkg-deb --field "$asset" Package Version Architecture Depends
+          dpkg-deb --control "$asset" "$RUNNER_TEMP/kiri-lite-control"
+
+      - name: Verify signed release tag and package maintainer scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_json="$RUNNER_TEMP/kiri-lite-tag.json"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 \\
+            "https://api.github.com/repos/libracoder/kiri/git/tags/0cd223cfb2c1038068b22000b973376c7231e7a4" \\
+            -o "$tag_json"
+          jq -e '.tag == "v0.2.2" and .verification.verified == true and .object.sha == "686bffa5f38ba6ecc3d086c36ec7148cd7fb976a"' "$tag_json" >/dev/null
+          declare -A expected_blobs=(
+            [postinst]="72246f6b94cc17a5e59ffbdee21bf0abfc18cffa"
+            [prerm]="c5a8ec2a3f521957b2efd598d71b9fad32530f35"
+            [postrm]="9172a2bf9f4c14f27584197a6d131caa09d1112e"
+          )
+          for script in postinst prerm postrm; do
+            actual_blob="$(git hash-object "$RUNNER_TEMP/kiri-lite-control/$script")"
+            test "$actual_blob" = "${expected_blobs[$script]}"
+          done
+          echo "PASS: signed release tag and all package maintainer scripts match pinned source."
+
+      - name: Install Kiri Lite without starting or enabling service
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          sudo apt-get install -y --no-install-recommends "./kiri-lite_0.2.2_amd64.deb"
+          dpkg-query -W -f='${Package} ${Version} ${Architecture}\\n' kiri-lite
+          getent group kiri
+          systemctl cat kiri.service
+          if systemctl is-active --quiet kiri.service; then
+            echo "FAIL: fresh Kiri Lite installation unexpectedly started kiri.service"
+            exit 1
+          fi
+          if systemctl is-enabled --quiet kiri.service; then
+            echo "FAIL: fresh Kiri Lite installation unexpectedly enabled kiri.service"
+            exit 1
+          fi
+          echo "PASS: fresh install is inert; service was not auto-started or enabled."
+
+      - name: Explicitly start Kiri Lite and run Docker API/container smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo systemctl enable --now kiri.service
+          for attempt in $(seq 1 30); do
+            if sudo test -S /run/kiri/docker.sock; then
+              break
+            fi
+            sleep 2
+          done
+          sudo test -S /run/kiri/docker.sock
+          test "$(stat -c '%a:%U:%G' /run/kiri/docker.sock)" = "660:root:kiri"
+          systemctl is-active --quiet kiri.service
+          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker version
+          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker run --rm hello-world
+          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker run --rm alpine:3.21 sh -c 'test -r /etc/os-release && echo KIRI_CONTAINER_EXECUTION_PASS'
+          sudo journalctl -u kiri.service --no-pager -n 100 > "$RUNNER_TEMP/kiri-ubuntu-2604-evidence/kiri-service-journal.txt"
+          {
+            stat -c '%a:%U:%G' /run/kiri/docker.sock
+            systemctl is-active kiri.service
+            sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker version
+          } > "$RUNNER_TEMP/kiri-ubuntu-2604-evidence/runtime-smoke.txt"
+          echo "PASS: Kiri Lite service, socket permissions, Docker API, hello-world and Alpine container."
+
+      - name: Verify remove preserves state and purge removes Kiri data on disposable runner
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if dpkg-query -W -f='${Status}' kiri-lite 2>/dev/null | grep -q "install ok installed"; then
+            sudo apt-get remove -y kiri-lite
+            if systemctl is-active --quiet kiri.service; then
+              echo "FAIL: kiri.service remained active after apt remove"
+              exit 1
+            fi
+            if test -d /var/lib/kiri; then
+              echo "PASS: apt remove retained Kiri state."
+              sudo apt-get purge -y kiri-lite
+              test ! -e /var/lib/kiri
+              test ! -e /var/lib/kiri-daemon
+              echo "PASS: apt purge removed Kiri state on disposable runner."
+            else
+              echo "BLOCKED: Kiri state directory absent; purge data-deletion behavior not exercised."
+              sudo apt-get purge -y kiri-lite
+            fi
+          else
+            echo "Kiri Lite was not installed; lifecycle cleanup not exercised."
+          fi
+
+      - name: Publish Ubuntu 26.04.1 compatibility summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Kiri Lite 0.2.2 — Ubuntu 26.04.1 compatibility"
+            echo "- Runner label: ubuntu-26.04 (GitHub-hosted disposable VM)"
+            echo "- Required OS: Ubuntu 26.04.1 LTS / amd64"
+            echo "- Required init: systemd >= 259"
+            echo "- Scope: package provenance, install, inert initial state, explicit service start, Docker API, containers, remove/purge."
+            echo "- No VPS, persistent project host, T0 SQLite, T1/T2, project secrets, or deployment targets."
+          } >> "$GITHUB_STEP_SUMMARY"
+          if test -d "$RUNNER_TEMP/kiri-ubuntu-2604-evidence"; then
+            find "$RUNNER_TEMP/kiri-ubuntu-2604-evidence" -maxdepth 1 -type f -printf '%f\\n' | sort
+          fi
