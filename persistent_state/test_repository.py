@@ -132,7 +132,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
 
     def test_same_key_and_payload_reuses_original_result_without_second_mutation(self):
         event, claim, mutation = self.transition()
-        original = self.repository.commit_transition(event, claim, mutation)
+        original = self.repository.commit_transition(event, claim, mutation, fencing_token=self.token)
         retry_event, retry_claim, retry_mutation = self.transition(
             sequence=2, expected_version=1, event_id="event-retry",
         )
@@ -144,18 +144,18 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
 
     def test_same_key_with_different_payload_is_rejected(self):
         event, claim, mutation = self.transition()
-        self.repository.commit_transition(event, claim, mutation)
+        self.repository.commit_transition(event, claim, mutation, fencing_token=self.token)
         retry_event, retry_claim, retry_mutation = self.transition(
             sequence=2, expected_version=1, event_id="event-conflict",
             payload='{"target":"0.02"}', state='{"position":"0.02"}',
         )
         with self.assertRaises(IdempotencyConflictError):
-            self.repository.commit_transition(retry_event, retry_claim, retry_mutation)
+            self.repository.commit_transition(retry_event, retry_claim, retry_mutation, fencing_token=self.token)
         self.assertEqual(len(self.repository.read_events("paper-account")), 1)
 
     def test_stale_aggregate_version_is_rejected_without_partial_writes(self):
         event, claim, mutation = self.transition()
-        self.repository.commit_transition(event, claim, mutation)
+        self.repository.commit_transition(event, claim, mutation, fencing_token=self.token)
         stale_event, stale_claim, stale_mutation = self.transition(
             sequence=2, expected_version=0, event_id="event-stale", ordinal=1,
         )
@@ -167,7 +167,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
     def test_noncontiguous_event_sequence_is_rejected(self):
         event, claim, mutation = self.transition(sequence=2)
         with self.assertRaises(EventSequenceConflictError):
-            self.repository.commit_transition(event, claim, mutation)
+            self.repository.commit_transition(event, claim, mutation, fencing_token=self.token)
         self.assertEqual(self.repository.read_events("paper-account"), ())
 
     def test_cross_scope_or_ledger_mismatch_is_rejected_before_write(self):
@@ -178,7 +178,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
             expected_version=0, state_json=mutation.state_json,
         )
         with self.assertRaises(TransitionContractError):
-            self.repository.commit_transition(event, claim, mismatched)
+            self.repository.commit_transition(event, claim, mismatched, fencing_token=self.token)
         self.assertEqual(self.repository.read_events("paper-account"), ())
 
     def test_failure_after_event_and_claim_insert_rolls_back_everything(self):
@@ -188,7 +188,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
             side_effect=RuntimeError("injected failure after event and claim insert"),
         ):
             with self.assertRaisesRegex(RuntimeError, "injected failure"):
-                self.repository.commit_transition(event, claim, mutation)
+                self.repository.commit_transition(event, claim, mutation, fencing_token=self.token)
         self.assertEqual(self.repository.read_events("paper-account"), ())
         self.assertIsNone(self.repository.read_aggregate("paper-account", "ledger-core"))
         with sqlite3.connect(self.path) as connection:
@@ -197,7 +197,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
 
     def test_event_and_idempotency_history_are_append_only(self):
         event, claim, mutation = self.transition()
-        self.repository.commit_transition(event, claim, mutation)
+        self.repository.commit_transition(event, claim, mutation, fencing_token=self.token)
         with sqlite3.connect(self.path) as connection:
             with self.assertRaises(sqlite3.IntegrityError):
                 connection.execute("DELETE FROM ps_events WHERE event_id='event-1'")
@@ -238,7 +238,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
 
     def test_reopen_preserves_existing_version_one_state(self):
         event, claim, mutation = self.transition()
-        self.repository.commit_transition(event, claim, mutation)
+        self.repository.commit_transition(event, claim, mutation, fencing_token=self.token)
         reopened = SQLiteStateRepository(self.path)
         reopened.initialize()
         self.assertEqual(reopened.read_aggregate("paper-account", "ledger-core").aggregate_version, 1)
