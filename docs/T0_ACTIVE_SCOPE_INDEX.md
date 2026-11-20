@@ -466,3 +466,19 @@
 - Offline-only: reads saved M15/H1 JSON; no network, archive, SQLite or runtime access. Fixed cutoff 2026-11-20T08:02:15.852Z; expected closed counts M15 128, H1 32; forming 08:00 candle excluded.
 - Synthetic unit tests and CLI fixture smoke PASS; no Actions workflow/run/artifact.
 - Actual payload validation remains **BLOCKED / NOT VERIFIED** because previous personal-host probe did not retain raw JSON response arrays. No new REST retrieval is authorized by this validator; obtain separate approval before any new request.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Personal-host REST tail retrieval and offline validation PASS
+
+- Owner separately approved one bounded personal-host retrieval of Binance USD-M public REST klines for BTCUSDT M15/H1, preserving exact JSON response bodies locally, followed by the existing offline read-only validator.
+- Evidence: `docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md`.
+- Retrieval: M15 and H1 both HTTP 200 from CloudFront POP `SGN50-P3`; request IDs, response byte counts and locally reported SHA-256 values are recorded in the evidence. Payloads remain on the user's Windows machine and were not committed.
+- Fixed cutoff `2026-11-20T08:02:15.852Z`; M15 129 raw / 128 closed / 1 forming excluded; H1 33 raw / 32 closed / 1 forming excluded.
+- Actual offline validation output: both intervals `ok: true`, no errors, no missing grid intervals. Result **PASS for the bounded retrieved window and checks implemented by the validator**.
+- Regression suite: 10/10 PASS on user's local Windows host. Local `git rev-parse HEAD` reported `04a0a6275ff44da20f0a40e11ab541f9c112459f`; branch `main`; working tree reported clean after removing generated `__pycache__`.
+- No GitHub Actions run/job/artifact was produced. Retrieval script was an untracked local script outside the repository. Payloads and metadata remain local.
+- This does not establish earliest-ever history, completeness outside the tested window, recovery of the lost Canonical SQLite, or a reconstructed database. Archive historical bounds and this REST tail window are separate evidence sets.
+- No archive retrieval, SQLite open/write/create/import, Dropbox, VPS/runtime, feeder/writer, T1/T2, deployment, restore, cleanup, or trading action occurred.
+- Next: preserve the evidence and handoff. Any archive materialization or SQLite reconstruction remains subject to its own explicit approval and existing gates.
