@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T1 repository ownership decision approved
+
+- Decision: `docs/decisions/T1_REPOSITORY_OWNERSHIP_AND_CONSUMER_BOUNDARY_2026-11-20.md`, commit `10313ef41b975343e5e09e24793be48258d1c46e`.
+- T1 implementation stays in `kenznguyen/binance-futures-collector`; do not copy/fork its full implementation into `kenznguyen/btcquant-application`.
+- Application-side T1 artifacts are limited to separately approved consumer contracts/interfaces, DTOs, validation, adapters and deterministic fixtures/mocks.
+- T1 HTTP Provider remains **PAUSED**; T1 → T2 runtime connection **NOT APPROVED**; T1 storage/data migration **NOT AUTHORIZED**.
+- T0 Canonical SQLite and its independent data ownership remain unchanged.
+- Provenance snapshots: application pre-decision main HEAD `0844e16b08d52fa7cf6ed001d7c260ee6bde1ff8`; T1 main latest observed `c91a8c22d3b6236c98ab9a4d4d69b25d47f7f738`.
+- Documentation-only; no tests/workflows run and no Actions run/job/artifact. No runtime/data/database/trading changes.
+- Next: separately define a versioned T1 consumer contract only if required by T2. Runtime transport or provider activation requires a new owner approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — T0 staging plan reconciliation PASS
 
 - Plan: `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md`, blob `b35e25d5d52a09dc73cfb1ced91b408a4979b045`.
