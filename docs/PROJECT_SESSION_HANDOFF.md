@@ -5719,3 +5719,21 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Scope: documentation-only decision clarification. Tests/workflows/Actions run/job/artifact: **none**. No source code, tests, database, filesystem, T0, host, VPS, runtime, T1/T2 or trading system accessed or changed.
 - Status: **WINDOWS TARGET OS SELECTED / RECORDED**; exact path **DEFERRED**; implementation **NOT STARTED / NOT AUTHORIZED**; runtime **NOT STARTED / NOT AUTHORIZED**.
 - Next: retain the Windows target and defer exact path selection until implementation planning requires it. The bounded contract-first/test-first implementation still requires separate explicit authorization.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Persistent State contract-first milestone 1 PASS
+
+- Owner explicitly authorized the bounded contract-first/test-first implementation scope. This milestone completes only typed contracts and pure validators; it does not authorize or implement a database/runtime.
+- Exact tested source SHA: `37d27f5dbfa4956a5ac2bfb51e243da036dbcf1b` on `main`.
+- Added `persistent_state/contracts.py`, blob `3795e6de3e7b083388e34499d1b31adcc86ac4ff`; `persistent_state/test_contracts.py`, blob `e7fadae7728a0e90c40e7eee4711c383be7cae38`; `persistent_state/__init__.py`, blob `74f7350899839f6a44f08c3095f562d697443320`.
+- Added isolated workflow `.github/workflows/persistent-state-contracts.yml`, blob `a10edc3908274a18e30ca3e3af80820970f56fd5`.
+- Contracts implemented: SessionRecord/SessionStatus, EventRecord (strategy-attributed and account-level events), StrategyState, PositionLedger, Core-only SmartDCAState, RiskState/Kill Switch, IdempotencyClaim with deterministic intent key, and Checkpoint with canonical JSON + SHA-256 validation. Immutable dataclasses; exact decimal strings; UTC epoch-ms integer checks; schema v1 fail-closed.
+- TDD RED: test-first commit `5b94a9a81d212014e42a186396998b44891ac9f0`; run [44714082922](https://github.com/kenznguyen/btcquant-application/actions/runs/44714082922) failed as expected because the contracts module did not yet exist.
+- TDD GREEN final: run [44714758403](https://github.com/kenznguyen/btcquant-application/actions/runs/44714758403), exact SHA above, conclusion **SUCCESS**. Job `136215182291`: 32 contract tests PASS + 160 adjacent paper-ledger/strategy API regression tests PASS.
+- Artifact `persistent-state-contract-test-evidence`: ID `14618857418`, SHA-256 `f5ef3d29ccd3b8d3f10f8ac1cd50bb98d71f0e965fd27169f52e7a154d4a1578`, expiry 2026-12-04.
+- Evidence report: `docs/evidence/PERSISTENT_STATE_CONTRACTS_IMPLEMENTATION_2026-11-20.md`, commit `ae61b09db5bbb1e3662bf26ae6e61e79729cb418`.
+- No database was opened/created; no Windows path selected/probed; no T0, Binance, T1/T2, VPS, staging, filesystem, market-data provider, credentials or exchange accessed. No scheduler, autostart, runtime or trading added. Existing paper/pipeline implementation unchanged.
+- Status: **CONTRACT TYPES + VALIDATORS PASS**; implementation scope overall **IN PROGRESS**; SQLite repository/atomic transaction, replay/checkpoint/fencing/recovery, preflight and risk-admission tests **NOT STARTED**; runtime **NOT AUTHORIZED**.
+- Next: TDD implementation of the isolated SQLite repository boundary and atomic event/idempotency/ledger/aggregate-version commit using temporary test DBs only. No default DB path and no real/T0/staging DB operations.
