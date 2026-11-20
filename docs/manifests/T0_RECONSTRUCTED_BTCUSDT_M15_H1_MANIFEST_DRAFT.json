@@ -2,7 +2,7 @@
   "manifest_format": "T0_RECONSTRUCTED_DATASET_MANIFEST",
   "format_version": "1.0.0",
   "manifest_status": "DRAFT_NOT_FOR_DATABASE_BUILD",
-  "dataset_id": "binance-usdm-btcusdt-m15-h1-reconstructed-archive-partial-20261120",
+  "dataset_id": "binance-usdm-btcusdt-m15-h1-reconstructed-archive-plus-rest-tail-20261120",
   "lineage": "RECONSTRUCTED",
   "acceptance_status": "RECONSTRUCTED_PARTIAL_COVERAGE",
   "official_status": false,
@@ -15,11 +15,51 @@
     "source_base": "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision/",
     "api_key_used": false,
     "rest_tail": {
-      "status": "NOT_VERIFIED_CLOSED_BY_OWNER_DECISION_NO_FURTHER_RETRIEVAL",
+      "status": "RETRIEVED_AND_OFFLINE_VALIDATED_BOUNDED_WINDOW",
+      "source_family": "BINANCE_USDM_PUBLIC_REST_KLINES",
+      "endpoint": "https://fapi.binance.com/fapi/v1/klines",
+      "symbol": "BTCUSDT",
       "requested_start_utc": "2026-11-19T00:00:00Z",
-      "http_status": 451,
-      "payload_received": false,
-      "retry_authorized": false
+      "api_end_time_exclusive_utc": "2026-11-20T08:02:15.852Z",
+      "validation_cutoff_utc": "2026-11-20T08:02:15.852Z",
+      "retrieval_times_utc": {
+        "15m": "2026-11-20T08:16:35.864034Z",
+        "1h": "2026-11-20T08:16:36.131662Z"
+      },
+      "intervals": {
+        "15m": {
+          "http_status": 200,
+          "response_bytes": 18102,
+          "request_id": "36cab00e-0a9b-49e3-9c6c-d26840d10b1e",
+          "cloudfront_pop": "SGN50-P3",
+          "sha256": "b83d2a860af5fcb67dde7c51c004a2b307c91a4bd3a43c54216d83058c84b6e3",
+          "raw_rows": 129,
+          "closed_rows": 128,
+          "forming_rows_excluded": 1,
+          "errors": [],
+          "gaps": [],
+          "validation_ok": true
+        },
+        "1h": {
+          "http_status": 200,
+          "response_bytes": 4740,
+          "request_id": "777005bd-6054-4386-9f98-50f00512317c",
+          "cloudfront_pop": "SGN50-P3",
+          "sha256": "033bf0ae6b8b68cf6e2d488422e82031e2481cf1326bd0b254c76c1acedc2d6b",
+          "raw_rows": 33,
+          "closed_rows": 32,
+          "forming_rows_excluded": 1,
+          "errors": [],
+          "gaps": [],
+          "validation_ok": true
+        }
+      },
+      "payload_storage": "LOCAL_USER_HOST_ONLY_NOT_COMMITTED",
+      "metadata_file": "%USERPROFILE%/btcquant-rest-tail-20261120/metadata.json",
+      "hash_verification": "SHA256_REPORTED_BY_LOCAL_RETRIEVAL_SCRIPT_NOT_INDEPENDENTLY_RECOMPUTED_IN_REPOSITORY",
+      "github_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md",
+      "evidence_status": "PASS_FOR_BOUNDED_WINDOW_AND_IMPLEMENTED_VALIDATOR_CHECKS",
+      "no_further_retrieval_authorized": true
     }
   },
   "retrieval_evidence": {
@@ -63,30 +103,30 @@
     "15m": {
       "interval_ms": 900000,
       "first_observed_open_time_utc": "2019-12-31T00:00:00Z",
-      "last_validated_open_time_utc": "2026-11-18T23:45:00Z",
+      "last_validated_open_time_utc": "2026-11-20T07:45:00Z",
       "first_observed_open_time_ms": 1577750400000,
-      "last_validated_open_time_ms": 1795045500000,
-      "observed_rows": 241440,
-      "expected_rows_within_observed_bounds": 241440,
+      "last_validated_open_time_ms": 1795160700000,
+      "observed_rows": 241568,
+      "expected_rows_within_observed_bounds": 241568,
       "missing_rows_within_observed_bounds": 0,
       "coverage_ratio_within_observed_bounds": 1,
-      "continuity_status_within_observed_bounds": "PASS",
+      "continuity_status_within_observed_bounds": "PASS_ARCHIVE_PLUS_VALIDATED_REST_TAIL_WINDOW",
       "earliest_available_history": "NOT_VERIFIED",
-      "post_archive_tail": "NOT_VERIFIED_CLOSED_BY_OWNER_DECISION"
+      "post_archive_tail": "PASS_THROUGH_LAST_CLOSED_CANDLE_AT_FIXED_CUTOFF_ONLY"
     },
     "1h": {
       "interval_ms": 3600000,
       "first_observed_open_time_utc": "2019-12-31T00:00:00Z",
-      "last_validated_open_time_utc": "2026-11-18T23:00:00Z",
+      "last_validated_open_time_utc": "2026-11-20T07:00:00Z",
       "first_observed_open_time_ms": 1577750400000,
-      "last_validated_open_time_ms": 1795042800000,
-      "observed_rows": 60360,
-      "expected_rows_within_observed_bounds": 60360,
+      "last_validated_open_time_ms": 1795158000000,
+      "observed_rows": 60392,
+      "expected_rows_within_observed_bounds": 60392,
       "missing_rows_within_observed_bounds": 0,
       "coverage_ratio_within_observed_bounds": 1,
-      "continuity_status_within_observed_bounds": "PASS",
+      "continuity_status_within_observed_bounds": "PASS_ARCHIVE_PLUS_VALIDATED_REST_TAIL_WINDOW",
       "earliest_available_history": "NOT_VERIFIED",
-      "post_archive_tail": "NOT_VERIFIED_CLOSED_BY_OWNER_DECISION"
+      "post_archive_tail": "PASS_THROUGH_LAST_CLOSED_CANDLE_AT_FIXED_CUTOFF_ONLY"
     }
   },
   "boundary_limitations": [
@@ -99,30 +139,31 @@
     },
     {
       "type": "TRAILING_TAIL",
-      "from": "2026-11-19T00:00:00Z",
+      "from": "2026-11-20T08:00:00Z",
       "through": null,
-      "status": "NOT_VERIFIED_CLOSED_BY_OWNER_DECISION_NO_FURTHER_RETRIEVAL",
-      "description": "No REST tail payload was retrieved. No further retrieval is authorized without a new owner decision."
+      "status": "NOT_VERIFIED_AFTER_FIXED_VALIDATION_CUTOFF",
+      "description": "The REST payload was validated only through the fixed cutoff 2026-11-20T08:02:15.852Z; the forming candle was excluded. No later candle coverage is established."
     }
   ],
   "gap_inventory": {
-    "status": "PASS_WITHIN_OBSERVED_ARCHIVE_BOUNDS_ONLY",
+    "status": "PASS_WITHIN_COMBINED_OBSERVED_ARCHIVE_AND_VALIDATED_REST_BOUNDS_ONLY",
     "synthetic_fill": false,
     "interpolation": false,
     "forward_fill": false,
     "silent_omission": false,
     "records": [],
-    "note": "Empty records means no internal timestamp gaps were detected inside the validated archive bounds. It does not close the leading or trailing boundary limitations."
+    "note": "No gaps were reported in the previously validated archive interval or in the bounded REST tail validation. The archive-to-REST boundary is contiguous for M15 and H1. This does not establish earliest-ever history or coverage after the fixed REST cutoff."
   },
   "provenance": {
     "archive_validation_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_ARCHIVE_PAYLOAD_VALIDATION_2026-11-20.md",
-    "rest_tail_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_VALIDATION_2026-11-20.md",
+    "rest_tail_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md",
     "archive_metadata_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_ARCHIVE_METADATA_INSPECTION_2026-11-20.md",
     "evidence_commits": {
       "archive_metadata": "0b37e158e30824e7e6cfd80ff9d8a457ee715ec9",
       "archive_payload_validation": "c40d5b68af5493199c5601ce7133caa2f9088823",
       "rest_tail_attempt": "782d4a46f6a75dfc2aa4977e6a33b14e86ede268",
-      "owner_tail_closure": "600bb812236e8445286b6a6cbb036b4afd6b20b8"
+      "owner_tail_closure": "600bb812236e8445286b6a6cbb036b4afd6b20b8",
+      "rest_tail_personal_host_validation": "RECORDED_IN_CURRENT_DOCUMENTATION_RECONCILIATION_COMMIT"
     },
     "per_object_inventory": {
       "status": "IDENTITY_COMPLETE_METADATA_PARTIAL",
@@ -139,7 +180,8 @@
       "build_readiness": "BLOCKED_PENDING_SIDECAR_METADATA_POLICY_AND_RAW_MATERIALIZATION_APPROVAL",
       "note": "All 404 object identities are represented. ZIP records include key, byte size, SHA-256, timeframe, period, row count and validation. Sidecar records include paired key and expected ZIP digest, but their own object byte size and payload SHA-256 are not present in source evidence and remain NOT_VERIFIED. Do not substitute ZIP SHA-256 for sidecar SHA-256.",
       "aggregate_reconciliation": "BLOCKED_MISMATCH_11277_BYTES"
-    }
+    },
+    "rest_tail_validation_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md"
   },
   "candle_contract": {
     "version": "1.1.0",
@@ -202,11 +244,11 @@
       "evidence": "docs/decisions/T0_RECONSTRUCTED_PARTIAL_COVERAGE_ACCEPTANCE_2026-11-20.md"
     },
     {
-      "decision": "LEAVE_REST_TAIL_NOT_VERIFIED_AND_CLOSED",
+      "decision": "ACCEPT_BOUNDED_REST_TAIL_AS_ADDITIONAL_RECONSTRUCTION_SOURCE_EVIDENCE",
       "decision_date": "2026-11-20",
-      "scope": "No retry, alternate endpoint/domain, proxy, geo-routing or other execution environment.",
-      "evidence": "docs/PROJECT_SESSION_HANDOFF.md"
+      "scope": "Accept only the retrieved BTCUSDT USD-M M15/H1 REST payloads and closed candles through the fixed cutoff; do not infer later coverage or authorize further REST retrieval.",
+      "evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md"
     }
   ],
-  "next_gate": "Separate bounded approval for raw ZIP/sidecar materialization into an isolated local staging path; SQLite creation and writes require a distinct later approval."
+  "next_gate": "Documentation-only source reconciliation, schema/available_at_ms semantics, gap/conflict policy, exact host/destination, importer identity and separate execution approval. No SQLite build is authorized."
 }
