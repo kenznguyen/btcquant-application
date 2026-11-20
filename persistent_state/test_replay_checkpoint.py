@@ -69,11 +69,13 @@ def commit_event(repository, sequence, fencing_token):
     return repository.commit_transition(event, claim, mutation, fencing_token=fencing_token)
 
 
-def make_checkpoint(sequence, *, checkpoint_id=None, payload=None):
+def make_checkpoint(sequence, *, checkpoint_id=None, payload=None, token=None):
     payload_json = canonical_json(payload or {"lastSequence": sequence, "state": {"position": str(sequence)}})
+    account_scope_id = "paper-account" if token is None else token.account_scope_id
+    session_id = "session-1" if token is None else token.session_id
     return Checkpoint(
         checkpoint_id=checkpoint_id or f"checkpoint-{sequence}",
-        account_scope_id=token.account_scope_id, session_id=token.session_id, schema_version=1,
+        account_scope_id=account_scope_id, session_id=session_id, schema_version=1,
         covered_event_sequence=sequence,
         aggregate_versions_json=canonical_json({"ledger-core": sequence}),
         payload_json=payload_json,
@@ -112,7 +114,7 @@ class CheckpointRepositoryTests(unittest.TestCase):
 
     def test_publishes_verified_checkpoint_and_advances_active_pointer(self):
         commit_event(self.repository, 1, self.token)
-        checkpoint = make_checkpoint(1)
+        checkpoint = make_checkpoint(1, token=self.token)
         result = self.repository.publish_checkpoint(checkpoint, fencing_token=self.token)
         self.assertTrue(result.is_active)
         self.assertFalse(result.duplicate)
@@ -120,14 +122,14 @@ class CheckpointRepositoryTests(unittest.TestCase):
 
     def test_checkpoint_cannot_cover_uncommitted_event_sequence(self):
         with self.assertRaises(CheckpointCoverageError):
-            self.repository.publish_checkpoint(make_checkpoint(1), fencing_token=self.token)
+            self.repository.publish_checkpoint(make_checkpoint(1, token=self.token), fencing_token=self.token)
         self.assertIsNone(self.repository.read_active_checkpoint("paper-account"))
         self.assertEqual(self.repository.list_checkpoints("paper-account"), ())
 
     def test_checkpoint_aggregate_versions_must_match_committed_event_prefix(self):
         commit_event(self.repository, 1, self.token)
         mismatched = replace(
-            make_checkpoint(1),
+            make_checkpoint(1, token=self.token),
             aggregate_versions_json=canonical_json({"ledger-core": 0}),
         )
         with self.assertRaises(CheckpointCoverageError):
@@ -137,8 +139,8 @@ class CheckpointRepositoryTests(unittest.TestCase):
     def test_active_checkpoint_pointer_never_moves_backwards(self):
         commit_event(self.repository, 1, self.token)
         commit_event(self.repository, 2, self.token)
-        newer = make_checkpoint(2)
-        older = make_checkpoint(1)
+        newer = make_checkpoint(2, token=self.token)
+        older = make_checkpoint(1, token=self.token)
         self.assertTrue(self.repository.publish_checkpoint(newer, fencing_token=self.token).is_active)
         old_result = self.repository.publish_checkpoint(older, fencing_token=self.token)
         self.assertFalse(old_result.is_active)
@@ -147,7 +149,7 @@ class CheckpointRepositoryTests(unittest.TestCase):
 
     def test_same_checkpoint_id_and_same_content_is_idempotent(self):
         commit_event(self.repository, 1, self.token)
-        checkpoint = make_checkpoint(1)
+        checkpoint = make_checkpoint(1, token=self.token)
         first = self.repository.publish_checkpoint(checkpoint, fencing_token=self.token)
         retry = self.repository.publish_checkpoint(checkpoint, fencing_token=self.token)
         self.assertFalse(first.duplicate)
@@ -156,20 +158,20 @@ class CheckpointRepositoryTests(unittest.TestCase):
 
     def test_same_checkpoint_id_with_different_content_is_conflict(self):
         commit_event(self.repository, 1, self.token)
-        self.repository.publish_checkpoint(make_checkpoint(1), fencing_token=self.token)
+        self.repository.publish_checkpoint(make_checkpoint(1, token=self.token), fencing_token=self.token)
         conflicting = make_checkpoint(1, payload={"lastSequence": 1, "state": {"position": "tampered"}})
         with self.assertRaises(CheckpointConflictError):
             self.repository.publish_checkpoint(conflicting, fencing_token=self.token)
 
     def test_different_checkpoint_ids_at_same_coverage_are_conflict(self):
         commit_event(self.repository, 1, self.token)
-        self.repository.publish_checkpoint(make_checkpoint(1, checkpoint_id="checkpoint-a"), fencing_token=self.token)
+        self.repository.publish_checkpoint(make_checkpoint(1, checkpoint_id="checkpoint-a", token=self.token), fencing_token=self.token)
         with self.assertRaises(CheckpointConflictError):
-            self.repository.publish_checkpoint(make_checkpoint(1, checkpoint_id="checkpoint-b"), fencing_token=self.token)
+            self.repository.publish_checkpoint(make_checkpoint(1, checkpoint_id="checkpoint-b", token=self.token), fencing_token=self.token)
 
     def test_checkpoint_insert_and_active_pointer_update_roll_back_together(self):
         commit_event(self.repository, 1, self.token)
-        checkpoint = make_checkpoint(1)
+        checkpoint = make_checkpoint(1, token=self.token)
         with patch.object(
             self.repository, "_set_checkpoint_head",
             side_effect=RuntimeError("injected checkpoint pointer failure"),
@@ -181,7 +183,7 @@ class CheckpointRepositoryTests(unittest.TestCase):
 
     def test_corrupted_checkpoint_payload_is_rejected_on_read(self):
         commit_event(self.repository, 1, self.token)
-        self.repository.publish_checkpoint(make_checkpoint(1), fencing_token=self.token)
+        self.repository.publish_checkpoint(make_checkpoint(1, token=self.token), fencing_token=self.token)
         with sqlite3.connect(self.path) as connection:
             connection.execute("DROP TRIGGER ps_checkpoints_no_update")
             connection.execute(
@@ -202,7 +204,7 @@ class CheckpointRepositoryTests(unittest.TestCase):
 
     def test_checkpoint_generations_are_append_only(self):
         commit_event(self.repository, 1, self.token)
-        self.repository.publish_checkpoint(make_checkpoint(1), fencing_token=self.token)
+        self.repository.publish_checkpoint(make_checkpoint(1, token=self.token), fencing_token=self.token)
         with sqlite3.connect(self.path) as connection:
             with self.assertRaises(sqlite3.IntegrityError):
                 connection.execute("DELETE FROM ps_checkpoint_generations WHERE checkpoint_id='checkpoint-1'")
