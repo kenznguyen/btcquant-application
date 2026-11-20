@@ -132,7 +132,7 @@ jobs:
           sudo env DOCKER_CONFIG="$docker_config" docker context create kiri --docker "host=unix:///run/kiri/docker.sock"
           sudo env DOCKER_CONFIG="$docker_config" docker --context kiri load -i "$RUNNER_TEMP/buildkit-image.tar"
           sudo env DOCKER_CONFIG="$docker_config" docker buildx create --name kiri-build --driver docker-container \
-            --driver-opt "image=$buildkit_ref" --driver-opt "default-load=true" kiri
+            --driver-opt "image=moby/buildkit:buildx-stable-1" --driver-opt "default-load=true" kiri
           timeout 300s sudo env DOCKER_CONFIG="$docker_config" docker buildx inspect kiri-build --bootstrap \
             | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-inspect.txt"
           timeout 300s sudo env DOCKER_CONFIG="$docker_config" docker buildx build --builder kiri-build --load --tag local/kiri-buildx-smoke:ci .
