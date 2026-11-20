@@ -1,0 +1,63 @@
+name: Persistent State contract tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "persistent_state/**"
+      - ".github/workflows/persistent-state-contracts.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: persistent-state-contracts
+  cancel-in-progress: false
+
+jobs:
+  contract-tests:
+    name: Persistent State contracts — isolated Python 3.12
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Record exact source and test environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir -p "$RUNNER_TEMP/persistent-state-evidence"
+          {
+            echo "repository=$GITHUB_REPOSITORY"
+            echo "branch=$GITHUB_REF_NAME"
+            echo "source_sha=$GITHUB_SHA"
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "python_version=$(python3 --version)"
+            echo "network_access=not_used_by_test"
+            echo "database=none"
+            echo "T0_access=none"
+            echo "runtime=none"
+          } > "$RUNNER_TEMP/persistent-state-evidence/metadata.txt"
+
+      - name: Run contract tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest -v persistent_state.test_contracts 2>&1 | tee "$RUNNER_TEMP/persistent-state-evidence/unittest.log"
+
+      - name: Upload contract test evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: persistent-state-contract-test-evidence
+          path: ${{ runner.temp }}/persistent-state-evidence/
+          if-no-files-found: error
+          retention-days: 14
