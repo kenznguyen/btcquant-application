@@ -1107,7 +1107,7 @@ class SQLiteStateRepository:
                 SELECT event_id, account_scope_id, session_id, event_sequence, aggregate_id,
                        aggregate_version, event_type, strategy_id, strategy_version,
                        created_at_ms, recorded_at_ms, payload_json, aggregate_state_json,
-                       market_snapshot_id, candle_open_time_ms, aggregate_id
+                       market_snapshot_id, candle_open_time_ms
                 FROM ps_events
                 WHERE account_scope_id = ? AND event_sequence > ?
                 ORDER BY event_sequence ASC
