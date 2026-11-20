@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Kiri Lite Ubuntu 26.04.1 compatibility PASS (GitHub Actions only)
+
+- Owner-approved scope: verify Kiri Lite 0.2.2 on a disposable GitHub-hosted Ubuntu 26.04.1 runner only. Explicitly no VPS, persistent host, T0 SQLite, T1/T2, project secrets, deployment or real trading system.
+- Final tested workflow/source SHA: `9639f08648697d146ae4ce0b7c93b300d8cc777e`, branch `main`, workflow `.github/workflows/kiri-linux-package-verification.yml`.
+- Final Actions run [44667282678](https://github.com/kenznguyen/btcquant-application/actions/runs/44667282678): **SUCCESS**, exact head SHA above. Kiri Lite Ubuntu 24.04 job `136060570044` SUCCESS; Kiri Lite Ubuntu 26.04.1 job `136060571687` SUCCESS; full Kiri Ubuntu 24.04 job `136060628718` SUCCESS.
+- Ubuntu 26.04.1 runner observed: amd64, kernel `7.0.0-1020-azure`, systemd `259.9-0ubuntu0.1`, Docker CLI `29.4.2`.
+- Kiri Lite package `kiri-lite_0.2.2_amd64.deb`, SHA-256 `24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9`; official signed checksum manifest and pinned publisher key fingerprint `900CB63F75328B627AF5549353263AE758141A6B` verified. Signed release tag and package maintainer script Git blob IDs verified.
+- Ubuntu 26.04.1 lifecycle: package install PASS; fresh install did not start/enable service; explicit systemd start PASS; socket `/run/kiri/docker.sock` mode/owner/group `660:root:kiri`; Docker API identifies Server Kiri; `hello-world` PASS; Alpine 3.21 execution PASS; apt remove retained Kiri data; apt purge deleted Kiri data on disposable runner. All 9 job steps completed SUCCESS.
+- Preserved failed attempts: run `44667151168` failed Ubuntu 26.04 preflight because the workflow called `systemd --version` while that executable was unavailable under that name; corrected to `systemctl --version`. In final run `44667282678`, a separate Ubuntu 24.04 Kiri Lite job hit transient GitHub API HTTP 403 on tag retrieval; only that failed job was rerun and it passed. Final workflow run overall SUCCESS.
+- Evidence report: `docs/evidence/KIRI_LITE_UBUNTU_26_04_1_COMPATIBILITY_2026-11-20.md`, commit `9883bc434bdb0d1254958fab4623efd80c4346ee`.
+- No separate Actions artifact uploaded; exact job logs and run page are retained evidence.
+- Status: Kiri Lite 0.2.2 / Ubuntu 24.04 amd64 **PASS — CI**; Kiri Lite 0.2.2 / Ubuntu 26.04.1 amd64 **PASS — CI**; full Kiri / Ubuntu 24.04 amd64 **PASS — CI**. Full Kiri / Ubuntu 26.04, ARM64, RPM, Compose/buildx workload parity, persistent-host Docker coexistence, performance and independent security audit remain **NOT TESTED / NOT VERIFIED**.
+- Recommendation: retain Kiri Lite as candidate for a future separately approved evaluation only. Persistent-host/VPS installation, service activation, Docker replacement, project socket integration and T0/T1/T2 remain **NOT APPROVED**.
+- Next: preserve this boundary. Do not use VPS or deploy. Any persistent host installation or runtime integration requires new explicit owner approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Kiri Linux package verification PASS (CI only)
 
 - Owner approval: **APPROVED — Verification Only**. Explicit restriction confirmed: do not use the project VPS. No persistent host, project VPS, project runtime, T0/T1/T2, canonical SQLite, deployment target or trading system was accessed.
