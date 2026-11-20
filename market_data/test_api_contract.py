@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from market_data.api_contract import _freshness
+from market_data.api_contract import _freshness, candle_envelope
 from market_data.fastapi_app import app
 from market_data.store import Candle, CandleStore, INTERVAL_MS, read_window
 from market_data.feeder import LeaseStore
@@ -104,6 +104,44 @@ class CandleContractFailClosedTest(unittest.TestCase):
     def test_unsupported_timeframe_is_rejected(self):
         with self.assertRaises(ValueError):
             _freshness([candle(START)], "1d", START + M15 + 1_000, True, "AS_OF")
+
+
+    def test_h1_contiguous_current_window_is_evaluable(self):
+        interval = INTERVAL_MS["1h"]
+        start = 1_800_000_000_000 // interval * interval
+        evaluation = start + 2 * interval + 1_000
+        rows = [
+            {"openTimeMs": start, "closeTimeMs": start + interval,
+             "availableAtMs": start + interval + 7},
+            {"openTimeMs": start + interval, "closeTimeMs": start + 2 * interval,
+             "availableAtMs": start + 2 * interval + 7},
+        ]
+        result = _freshness(rows, "1h", evaluation, True, "AS_OF")
+        self.assertTrue(result["timestampValid"])
+        self.assertTrue(result["fresh"])
+        self.assertTrue(result["evaluable"])
+
+    def test_envelope_rejects_invalid_generated_timestamp(self):
+        result = {
+            "timeframe": "15m", "candles": [],
+            "coverage": {"complete": False},
+        }
+        for generated in (-1, True, 1.5, "1800000000000"):
+            with self.subTest(generated=generated):
+                with self.assertRaises(ValueError):
+                    candle_envelope(result, generated)
+
+    def test_envelope_rejects_future_as_of_timestamp(self):
+        result = {
+            "timeframe": "15m", "candles": [],
+            "coverage": {"complete": False},
+        }
+        with self.assertRaises(ValueError):
+            candle_envelope(result, START + M15 + 1_000, START + M15 + 1_001)
+
+    def test_envelope_rejects_incomplete_storage_result_shape(self):
+        with self.assertRaises(ValueError):
+            candle_envelope({"timeframe": "15m", "candles": []}, START)
 
     def test_fastapi_and_application_market_adapter_preserve_same_candle_window(self):
         with tempfile.TemporaryDirectory() as directory:
