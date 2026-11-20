@@ -113,3 +113,40 @@ No archive objects were accessed, downloaded, copied or changed. No destination 
 - Workflow run, job, artifact: none.
 - Status: **PLAN DRAFTED / EXECUTION BLOCKED / NOT AUTHORIZED**.
 - Next: resolve the seven owner gates in Section 4, then submit the fully pinned execution request for separate approval.
+
+
+---
+
+# CURRENT RECONCILIATION ADDENDUM — 2026-11-20 — Archive + REST tail
+
+## Documentation-only reconciliation — archive + validated REST tail (2026-11-20)
+
+This addendum supersedes only the earlier statement that the REST tail was NOT VERIFIED / closed because no payload had been retained. A separately approved, one-time personal-host retrieval subsequently succeeded and the saved payloads passed the offline validator. It does not authorize another REST request.
+
+### Reconciled source evidence
+- Archive source remains the 404-object identity inventory (202 ZIP + 202 paired checksum sidecars), with historical validation evidence for M15 241,440 rows and H1 60,360 rows. The observed archive opens end at M15 2026-11-18 23:45 UTC and H1 2026-11-18 23:00 UTC.
+- REST tail source is separately described in `docs/manifests/T0_BINANCE_UM_BTCUSDT_REST_TAIL_SOURCE_EVIDENCE_2026-11-20.json`; payload evidence is `docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md`.
+- REST fixed cutoff: 2026-11-20T08:02:15.852Z. M15 129 raw / 128 closed / 1 forming excluded; H1 33 raw / 32 closed / 1 forming excluded. Both returned `ok=true`, empty errors and gaps.
+- The archive-to-REST boundary is contiguous by open-time grid: M15 23:45 on Nov 18 → 00:00 Nov 19; H1 23:00 on Nov 18 → 00:00 Nov 19.
+- Conditional combined counts, before a fresh source-level reconciliation: M15 241,568; H1 60,392. These are expected candidate counts, not approved import counts or a completed merged dataset.
+- REST hashes are those reported by the local retrieval script; payload bytes and hashes were not independently re-read/recomputed by GitHub. Payloads remain local and are not committed.
+
+### Required reconciliation before any build
+1. Keep archive-object inventory and REST source evidence as separate source manifests; the reconstructed dataset manifest references both.
+2. Do not equate the 404 archive object identities with the final dataset manifest. Reconcile each archive object and REST payload to normalized candle identities.
+3. Canonical candle identity: exchange + market_type + symbol + timeframe + open_time_ms. Exact duplicate identity with identical normalized values is one output row with multi-source provenance; conflicting values quarantine the entire candidate build. No silent precedence, dropping, interpolation, forward-fill or synthetic candles.
+4. Verify exact archive/REST boundary and all internal grids independently for each timeframe; emit machine-readable gaps and duplicate/conflict reports.
+5. Preserve source-only CSV fields and document their disposition; no schema extension is implied.
+6. Resolve `available_at_ms` before importer selection. REST retrieval timestamps are known, but archive historical first-observation times are not established by current evidence. Do not backdate to candle close or invent a historical availability time. Preserve source retrieval/acquisition timestamps separately. The final mapping requires an explicit owner-approved deterministic policy compatible with Candle Contract 1.1.0.
+7. The 11,277-byte historical aggregate discrepancy and missing historical per-sidecar size/SHA remain unresolved. Fresh object materialization, if later separately approved, must measure all objects individually; do not adjust historical values.
+8. Current full-history status remains NOT VERIFIED: earliest-ever start boundary is unproven; post-cutoff tail is unverified. This evidence supports only bounded observed coverage, not COMPLETE.
+
+### Gate and authorization status
+- Documentation-only reconciliation: APPROVED and recorded.
+- Runtime work on personal PC: PAUSED by owner.
+- Archive materialization/download/copy: NOT AUTHORIZED by this addendum.
+- Host/path preflight: NOT AUTHORIZED by this addendum.
+- Normalize/reconcile execution, importer implementation/run: NOT AUTHORIZED.
+- SQLite creation/open/write/import and DB validation: NOT AUTHORIZED; requires separate explicit approval.
+- No tests, workflows, Actions runs/jobs/artifacts, database operations, network retrieval, host probes or runtime operations were performed for this addendum.
+
