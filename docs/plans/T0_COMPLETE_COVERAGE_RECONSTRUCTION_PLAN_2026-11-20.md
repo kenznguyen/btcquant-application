@@ -156,3 +156,10 @@ Submit source inventory revision, source provenance, importer SHA, dependency ha
 - Data/source/host operations: none.
 - Status: **PLAN RECORDED — EXECUTION BLOCKED / NOT AUTHORIZED**.
 - Next: owner to identify the intended host/provider and OS, then resolve the completeness boundary and acceptable authoritative source strategy. After all gates are pinned, request separate approval for each operational phase.
+
+
+---
+
+# CURRENT EVIDENCE ADDENDUM — 2026-11-20 — Bounded REST tail
+
+The previously recorded REST-tail NOT VERIFIED status is superseded only for the specific personal-host payload and fixed cutoff recorded in `docs/manifests/T0_BINANCE_UM_BTCUSDT_REST_TAIL_SOURCE_EVIDENCE_2026-11-20.json`. The tail passes offline validation and joins the archive boundary for M15/H1. This does not satisfy the COMPLETE definition in Section 2: earliest-ever start remains unverified, the post-cutoff tail remains unverified, the 11,277-byte historical archive discrepancy remains unresolved, and no complete-source acquisition/reconciliation has occurred. The plan remains PLAN ONLY — EXECUTION BLOCKED / NOT AUTHORIZED. No additional REST retrieval, source discovery, host preflight, archive materialization, SQLite creation/import or runtime operation is authorized.
