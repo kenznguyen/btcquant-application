@@ -1,3 +1,7 @@
+> **SUPERSEDED / HOLD — 2026-11-20 status clarification**  
+> This plan is retained for historical traceability only. Do not execute its earlier statements that raw archive materialization was approved or that only destination preflight remained. The later controlling record `docs/decisions/T0_CANONICAL_DATA_PRESERVE_AND_RECONSTRUCT_DECISION_2026-11-20.md` limits approval to design/procedure; the execution plan `docs/plans/T0_CANONICAL_SQLITE_RECONSTRUCTION_EXECUTION_PLAN_2026-11-20.md` states archive transfer and all subsequent data operations are not authorized.  
+> Current asset status: **OLD CANONICAL = LOST** (owner confirms no copy remains); **NEW RECONSTRUCTED DATA = NOT CREATED**. Archive materialization, SQLite creation/import, validation, promotion, runtime and deletion are not authorized by this historical plan. A new explicit owner approval is required before any data operation. See `docs/decisions/T0_OLD_CANONICAL_LOSS_AND_RECONSTRUCTION_STATUS_2026-11-20.md`.  
+>
 # T0 Reconstructed Partial Coverage — Isolated SQLite Staging Plan
 
 Date: 2026-11-20  
