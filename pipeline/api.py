@@ -10,7 +10,7 @@ import threading
 import time
 from urllib.parse import parse_qs, unquote
 
-from market_data.api import candle_query
+from market_data.api_contract import candle_query
 from market_data.postgres import StoreUnavailable
 from market_data.storage import create_store_from_env
 from pipeline.values import stamp
