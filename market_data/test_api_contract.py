@@ -95,6 +95,78 @@ class CandleContractFailClosedTest(unittest.TestCase):
         )
         self.assertFalse(result["evaluable"])
 
+    def test_future_availability_has_no_negative_observation_age(self):
+        evaluation = START + M15 + 3
+        result = _freshness(
+            [candle(START, available_offset=M15 + 7)],
+            "15m", evaluation, True, "AS_OF",
+        )
+        self.assertIsNone(result["observationAgeMs"])
+        self.assertEqual(result["closeLagMs"], 3)
+        self.assertFalse(result["timestampValid"])
+
+    def test_future_close_and_availability_have_no_negative_lags(self):
+        evaluation = START + M15 - 1
+        result = _freshness(
+            [candle(START)],
+            "15m", evaluation, True, "AS_OF",
+        )
+        self.assertIsNone(result["observationAgeMs"])
+        self.assertIsNone(result["closeLagMs"])
+        self.assertFalse(result["timestampValid"])
+
+    def test_fastapi_rejects_future_as_of_before_opening_store(self):
+        evaluation = START + M15 + 1_000
+        future = evaluation + 1
+        env = {
+            "MARKET_DATA_BACKEND": "sqlite",
+            "MARKET_DATA_DB": "/unused/test.sqlite3",
+            "MARKET_DATA_TOKEN": "isolated-contract-token",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with patch("market_data.fastapi_app.time.time_ns",
+                       return_value=evaluation * 1_000_000):
+                with patch("market_data.fastapi_app.create_store_from_env",
+                           side_effect=AssertionError("store must not be opened")) as factory:
+                    response = TestClient(app).get(
+                        "/v1/candles",
+                        params={"symbol": "BTCUSDT", "timeframe": "15m",
+                                "startMs": START, "endMs": START + M15,
+                                "asOfMs": future},
+                        headers={"Authorization": "Bearer isolated-contract-token"},
+                    )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"error": "INVALID_QUERY"})
+        factory.assert_not_called()
+
+    def test_fastapi_response_envelope_error_is_not_reported_as_store_outage(self):
+        evaluation = START + M15 + 1_000
+        env = {
+            "MARKET_DATA_BACKEND": "sqlite",
+            "MARKET_DATA_DB": "/unused/test.sqlite3",
+            "MARKET_DATA_TOKEN": "isolated-contract-token",
+        }
+        store = type("Store", (), {
+            "read_window": lambda self, **query: {
+                "timeframe": "15m", "candles": [], "coverage": {"complete": False},
+            }
+        })()
+        with patch.dict(os.environ, env, clear=True):
+            with patch("market_data.fastapi_app.time.time_ns",
+                       return_value=evaluation * 1_000_000):
+                with patch("market_data.fastapi_app.create_store_from_env",
+                           return_value=store):
+                    with patch("market_data.fastapi_app.candle_envelope",
+                               side_effect=ValueError("invalid internal result")):
+                        response = TestClient(app).get(
+                            "/v1/candles",
+                            params={"symbol": "BTCUSDT", "timeframe": "15m",
+                                    "startMs": START, "endMs": START + M15},
+                            headers={"Authorization": "Bearer isolated-contract-token"},
+                        )
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json(), {"error": "INTERNAL_ERROR"})
+
     def test_invalid_evaluation_timestamp_is_rejected(self):
         for evaluation in (-1, True, "1800000000000", 1.5):
             with self.subTest(evaluation=evaluation):
