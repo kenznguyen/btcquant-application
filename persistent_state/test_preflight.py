@@ -6,13 +6,13 @@ from persistent_state.preflight import (
 )
 
 
-AS_OF = 1_800_000_000_000
+AS_OF = 1_800_000_000_500
 INTERVALS = {"15m": 900_000, "1h": 3_600_000}
 
 
 def make_snapshot(timeframe, *, count=3, as_of=AS_OF, latest_lag_periods=1):
     interval = INTERVALS[timeframe]
-    latest_close = as_of - (latest_lag_periods - 1) * interval
+    latest_close = (as_of // interval) * interval - (latest_lag_periods - 1) * interval
     start = latest_close - count * interval
     candles = []
     for index in range(count):
@@ -24,7 +24,7 @@ def make_snapshot(timeframe, *, count=3, as_of=AS_OF, latest_lag_periods=1):
             "openTimeMs": opening, "closeTimeMs": close,
             "open": "100", "high": "102", "low": "99", "close": "101",
             "volume": "2.5", "isClosed": True,
-            "availableAtMs": close,
+            "availableAtMs": close + 100,
             "availabilityKind": "FIRST_OBSERVED",
             "quality": "VALIDATED", "source": "ccxt.binanceusdm",
         })
