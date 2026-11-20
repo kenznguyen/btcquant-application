@@ -124,6 +124,31 @@ class PersistentRecoveryTests(unittest.TestCase):
             "aggregateVersion": 2, "state": {"position": "2"},
         })
 
+    def test_manual_restart_after_crash_restores_checkpoint_and_committed_tail(self):
+        self.commit(1)
+        self.checkpoint(1)
+        self.commit(2)
+        reopened = SQLiteStateRepository(self.path)
+        new_session = SessionRecord(
+            session_id="session-after-crash", account_scope_id="paper-account",
+            status=SessionStatus.START_REQUESTED, started_at_ms=1_800_000_030_000,
+            initiator="MANUAL", source_snapshot_id="snapshot-1",
+            config_hash="sha256:" + "a" * 64, code_version="git:" + "c" * 40,
+            last_committed_event_sequence=0,
+        )
+        reopened.claim_writer(new_session)
+        self.assertEqual(
+            reopened.get_session("session-1").status, SessionStatus.INTERRUPTED,
+        )
+        recovered = recover_repository_state(reopened, "paper-account", reducer)
+        self.assertEqual(recovered.checkpoint_id, "checkpoint-1")
+        self.assertEqual(recovered.last_event_sequence, 2)
+        self.assertEqual(recovered.replayed_event_count, 1)
+        self.assertEqual(
+            json.loads(recovered.state_json)["aggregates"]["ledger-core"]["state"]["position"],
+            "2",
+        )
+
     def test_repeated_recovery_is_deterministic_and_does_not_mutate_history(self):
         self.commit(1)
         self.commit(2)
