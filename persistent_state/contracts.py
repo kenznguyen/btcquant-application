@@ -207,6 +207,7 @@ class EventRecord:
     payload_json: str
     market_snapshot_id: str | None = None
     candle_open_time_ms: int | None = None
+    aggregate_id: str | None = None
     schema_version: int = CONTRACT_SCHEMA_VERSION
 
     def __post_init__(self) -> None:
@@ -227,6 +228,8 @@ class EventRecord:
         _canonical_json_object("payload_json", self.payload_json)
         if self.market_snapshot_id is not None:
             _nonempty("market_snapshot_id", self.market_snapshot_id)
+        if self.aggregate_id is not None:
+            _nonempty("aggregate_id", self.aggregate_id)
         _optional_integer("candle_open_time_ms", self.candle_open_time_ms)
         _schema_version(self.schema_version)
 
