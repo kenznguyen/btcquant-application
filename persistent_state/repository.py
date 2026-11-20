@@ -15,6 +15,7 @@ from typing import Protocol
 
 from persistent_state.contracts import (
     CONTRACT_SCHEMA_VERSION,
+    Checkpoint,
     EventRecord,
     IdempotencyClaim,
     StrategyId,
@@ -44,6 +45,18 @@ class EventSequenceConflictError(RepositoryError):
 
 class TransitionContractError(RepositoryError):
     """Event, idempotency claim and aggregate mutation do not describe one transition."""
+
+
+class CheckpointCoverageError(RepositoryError):
+    """Checkpoint claims to cover events that are not committed."""
+
+
+class CheckpointConflictError(RepositoryError):
+    """Checkpoint identity or active generation conflicts with an existing checkpoint."""
+
+
+class CheckpointIntegrityError(RepositoryError):
+    """A persisted checkpoint fails checksum or metadata validation."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,6 +106,13 @@ class CommitResult:
     event_id: str
     event_sequence: int
     aggregate_version: int
+    duplicate: bool
+
+
+@dataclass(frozen=True, slots=True)
+class CheckpointPublishResult:
+    checkpoint_id: str
+    is_active: bool
     duplicate: bool
 
 
@@ -185,12 +205,51 @@ _SCHEMA_STATEMENTS = (
         SELECT RAISE(ABORT, 'ps_idempotency_claims is append-only');
     END
     """,
+    """
+    CREATE TABLE ps_checkpoint_generations (
+        checkpoint_id TEXT PRIMARY KEY,
+        account_scope_id TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        schema_version INTEGER NOT NULL CHECK (schema_version > 0),
+        covered_event_sequence INTEGER NOT NULL CHECK (covered_event_sequence >= 0),
+        aggregate_versions_json TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        payload_checksum TEXT NOT NULL,
+        created_at_ms INTEGER NOT NULL,
+        source_snapshot_id TEXT NOT NULL,
+        strategy_versions_json TEXT NOT NULL,
+        config_hash TEXT NOT NULL
+    )
+    """,
+    """
+    CREATE TABLE ps_checkpoint_heads (
+        account_scope_id TEXT PRIMARY KEY,
+        checkpoint_id TEXT NOT NULL REFERENCES ps_checkpoint_generations(checkpoint_id),
+        covered_event_sequence INTEGER NOT NULL CHECK (covered_event_sequence >= 0)
+    )
+    """,
+    """
+    CREATE TRIGGER ps_checkpoints_no_update
+    BEFORE UPDATE ON ps_checkpoint_generations
+    BEGIN
+        SELECT RAISE(ABORT, 'ps_checkpoint_generations is append-only');
+    END
+    """,
+    """
+    CREATE TRIGGER ps_checkpoints_no_delete
+    BEFORE DELETE ON ps_checkpoint_generations
+    BEGIN
+        SELECT RAISE(ABORT, 'ps_checkpoint_generations is append-only');
+    END
+    """,
 )
 
 _REQUIRED_SCHEMA_OBJECTS = {
     "ps_aggregate_state", "ps_events", "ps_idempotency_claims",
     "ps_events_no_update", "ps_events_no_delete",
     "ps_idempotency_no_update", "ps_idempotency_no_delete",
+    "ps_checkpoint_generations", "ps_checkpoint_heads",
+    "ps_checkpoints_no_update", "ps_checkpoints_no_delete",
 }
 
 
@@ -435,6 +494,178 @@ class SQLiteStateRepository:
         if cursor.rowcount != 1:
             raise AggregateVersionConflictError("aggregate changed while committing transition")
 
+    @staticmethod
+    def _checkpoint_from_row(row: sqlite3.Row) -> Checkpoint:
+        try:
+            return Checkpoint(
+                checkpoint_id=row["checkpoint_id"],
+                account_scope_id=row["account_scope_id"],
+                session_id=row["session_id"],
+                schema_version=row["schema_version"],
+                covered_event_sequence=row["covered_event_sequence"],
+                aggregate_versions_json=row["aggregate_versions_json"],
+                payload_json=row["payload_json"],
+                payload_checksum=row["payload_checksum"],
+                created_at_ms=row["created_at_ms"],
+                source_snapshot_id=row["source_snapshot_id"],
+                strategy_versions_json=row["strategy_versions_json"],
+                config_hash=row["config_hash"],
+            )
+        except (TypeError, ValueError) as exc:
+            raise CheckpointIntegrityError("persisted checkpoint failed contract validation") from exc
+
+    def publish_checkpoint(self, checkpoint: Checkpoint) -> CheckpointPublishResult:
+        """Persist an immutable verified generation and atomically advance its active pointer."""
+        if not isinstance(checkpoint, Checkpoint):
+            raise TypeError("checkpoint must be a validated Checkpoint")
+        connection = self._connect_existing()
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            latest_sequence = connection.execute(
+                "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
+                (checkpoint.account_scope_id,),
+            ).fetchone()[0]
+            if checkpoint.covered_event_sequence > latest_sequence:
+                raise CheckpointCoverageError(
+                    f"checkpoint covers sequence {checkpoint.covered_event_sequence}, "
+                    f"but only {latest_sequence} events are committed"
+                )
+
+            existing = connection.execute(
+                "SELECT * FROM ps_checkpoint_generations WHERE checkpoint_id = ?",
+                (checkpoint.checkpoint_id,),
+            ).fetchone()
+            if existing is not None:
+                stored = self._checkpoint_from_row(existing)
+                if stored != checkpoint:
+                    raise CheckpointConflictError("checkpoint_id already exists with different content")
+                head = connection.execute(
+                    "SELECT checkpoint_id FROM ps_checkpoint_heads WHERE account_scope_id = ?",
+                    (checkpoint.account_scope_id,),
+                ).fetchone()
+                connection.commit()
+                return CheckpointPublishResult(
+                    checkpoint_id=checkpoint.checkpoint_id,
+                    is_active=head is not None and head["checkpoint_id"] == checkpoint.checkpoint_id,
+                    duplicate=True,
+                )
+
+            current_head = connection.execute(
+                "SELECT checkpoint_id, covered_event_sequence FROM ps_checkpoint_heads WHERE account_scope_id = ?",
+                (checkpoint.account_scope_id,),
+            ).fetchone()
+            if (
+                current_head is not None
+                and current_head["covered_event_sequence"] == checkpoint.covered_event_sequence
+                and current_head["checkpoint_id"] != checkpoint.checkpoint_id
+            ):
+                raise CheckpointConflictError(
+                    "different checkpoint generation already exists at the active coverage boundary"
+                )
+
+            connection.execute(
+                """
+                INSERT INTO ps_checkpoint_generations (
+                    checkpoint_id, account_scope_id, session_id, schema_version,
+                    covered_event_sequence, aggregate_versions_json, payload_json,
+                    payload_checksum, created_at_ms, source_snapshot_id,
+                    strategy_versions_json, config_hash
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    checkpoint.checkpoint_id, checkpoint.account_scope_id, checkpoint.session_id,
+                    checkpoint.schema_version, checkpoint.covered_event_sequence,
+                    checkpoint.aggregate_versions_json, checkpoint.payload_json,
+                    checkpoint.payload_checksum, checkpoint.created_at_ms,
+                    checkpoint.source_snapshot_id, checkpoint.strategy_versions_json,
+                    checkpoint.config_hash,
+                ),
+            )
+            self._set_checkpoint_head(connection, checkpoint)
+            head = connection.execute(
+                "SELECT checkpoint_id FROM ps_checkpoint_heads WHERE account_scope_id = ?",
+                (checkpoint.account_scope_id,),
+            ).fetchone()
+            connection.commit()
+            return CheckpointPublishResult(
+                checkpoint_id=checkpoint.checkpoint_id,
+                is_active=head is not None and head["checkpoint_id"] == checkpoint.checkpoint_id,
+                duplicate=False,
+            )
+        except Exception:
+            if connection.in_transaction:
+                connection.rollback()
+            raise
+        finally:
+            connection.close()
+
+    @staticmethod
+    def _set_checkpoint_head(connection: sqlite3.Connection, checkpoint: Checkpoint) -> None:
+        current = connection.execute(
+            "SELECT checkpoint_id, covered_event_sequence FROM ps_checkpoint_heads WHERE account_scope_id = ?",
+            (checkpoint.account_scope_id,),
+        ).fetchone()
+        if current is None:
+            connection.execute(
+                "INSERT INTO ps_checkpoint_heads (account_scope_id, checkpoint_id, covered_event_sequence) "
+                "VALUES (?, ?, ?)",
+                (checkpoint.account_scope_id, checkpoint.checkpoint_id, checkpoint.covered_event_sequence),
+            )
+        elif checkpoint.covered_event_sequence > current["covered_event_sequence"]:
+            connection.execute(
+                "UPDATE ps_checkpoint_heads SET checkpoint_id = ?, covered_event_sequence = ? "
+                "WHERE account_scope_id = ?",
+                (checkpoint.checkpoint_id, checkpoint.covered_event_sequence, checkpoint.account_scope_id),
+            )
+        elif checkpoint.covered_event_sequence == current["covered_event_sequence"]:
+            if checkpoint.checkpoint_id != current["checkpoint_id"]:
+                raise CheckpointConflictError("active checkpoint cannot be replaced at the same event sequence")
+
+    def read_active_checkpoint(self, account_scope_id: str) -> Checkpoint | None:
+        if not isinstance(account_scope_id, str) or not account_scope_id.strip():
+            raise ValueError("account_scope_id must be a non-empty string")
+        connection = self._connect_existing()
+        try:
+            row = connection.execute(
+                """
+                SELECT generation.*
+                FROM ps_checkpoint_heads AS head
+                JOIN ps_checkpoint_generations AS generation
+                  ON generation.checkpoint_id = head.checkpoint_id
+                WHERE head.account_scope_id = ?
+                """,
+                (account_scope_id,),
+            ).fetchone()
+            if row is None:
+                return None
+            checkpoint = self._checkpoint_from_row(row)
+            head_sequence = connection.execute(
+                "SELECT covered_event_sequence FROM ps_checkpoint_heads WHERE account_scope_id = ?",
+                (account_scope_id,),
+            ).fetchone()["covered_event_sequence"]
+            if head_sequence != checkpoint.covered_event_sequence:
+                raise CheckpointIntegrityError("active checkpoint pointer sequence does not match generation")
+            return checkpoint
+        finally:
+            connection.close()
+
+    def list_checkpoints(self, account_scope_id: str) -> tuple[Checkpoint, ...]:
+        if not isinstance(account_scope_id, str) or not account_scope_id.strip():
+            raise ValueError("account_scope_id must be a non-empty string")
+        connection = self._connect_existing()
+        try:
+            rows = connection.execute(
+                """
+                SELECT * FROM ps_checkpoint_generations
+                WHERE account_scope_id = ?
+                ORDER BY covered_event_sequence DESC, created_at_ms DESC, checkpoint_id ASC
+                """,
+                (account_scope_id,),
+            ).fetchall()
+            return tuple(self._checkpoint_from_row(row) for row in rows)
+        finally:
+            connection.close()
+
     def read_aggregate(self, account_scope_id: str, aggregate_id: str) -> AggregateSnapshot | None:
         if not isinstance(account_scope_id, str) or not account_scope_id.strip():
             raise ValueError("account_scope_id must be a non-empty string")
@@ -501,7 +732,8 @@ class SQLiteStateRepository:
 
 __all__ = [
     "AggregateMutation", "AggregateSnapshot", "AggregateVersionConflictError",
-    "CommitResult", "EventSequenceConflictError", "IdempotencyConflictError",
-    "RepositoryError", "RepositorySchemaError", "SQLiteStateRepository",
-    "StateRepository", "TransitionContractError",
+    "CheckpointConflictError", "CheckpointCoverageError", "CheckpointIntegrityError",
+    "CheckpointPublishResult", "CommitResult", "EventSequenceConflictError",
+    "IdempotencyConflictError", "RepositoryError", "RepositorySchemaError",
+    "SQLiteStateRepository", "StateRepository", "TransitionContractError",
 ]
