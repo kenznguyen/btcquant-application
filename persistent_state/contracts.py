@@ -208,6 +208,7 @@ class EventRecord:
     market_snapshot_id: str | None = None
     candle_open_time_ms: int | None = None
     aggregate_id: str | None = None
+    aggregate_state_json: str | None = None
     schema_version: int = CONTRACT_SCHEMA_VERSION
 
     def __post_init__(self) -> None:
@@ -231,6 +232,8 @@ class EventRecord:
         if self.aggregate_id is not None:
             _nonempty("aggregate_id", self.aggregate_id)
         _optional_integer("candle_open_time_ms", self.candle_open_time_ms)
+        if self.aggregate_state_json is not None:
+            _canonical_json_object("aggregate_state_json", self.aggregate_state_json)
         _schema_version(self.schema_version)
 
 
