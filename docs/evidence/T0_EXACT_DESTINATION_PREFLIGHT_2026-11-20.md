@@ -73,3 +73,18 @@ Even after a successful preflight, this authorization covers only the approved r
 - Owner decision blob: `87a2be9ea1ca16f1ce3d5a27a9349c1132da698b`.
 - GitHub Actions run/job/artifact: none; no workflow was run.
 - Source/runtime SHA: no application source was executed or changed by this preflight.
+
+
+## 7. Repeat preflight attempt (2026-11-20)
+
+A second read-only attempt was performed in the available command container (hostname `12a89ff72da3`, effective identity `uid=1000(oai) gid=1000(oai_shared)`). This is still not established as the owner-controlled host named in the approval.
+
+Observed in this container:
+- `/` and `/srv` exist; `/srv` is mode 0755, uid/gid 0:0.
+- `/srv/btcquant`, `/srv/btcquant/staging`, and the exact target do not exist.
+- `stat` and `namei -l` confirm the path is unresolved at `/srv/btcquant`.
+- `findmnt -T` cannot resolve the target.
+- `df -B1` and `df -i` cannot inspect capacity for the absent target.
+- A bounded search under `/srv` found no directory with a Dropbox-like name; this does not establish Dropbox separation on the actual owner host.
+
+This second attempt does not improve the target-host evidence. All host-specific gates remain **NOT VERIFIED** and the verdict remains **BLOCKED**. No network requests, filesystem mutations, directory creation, SQLite operations or runtime actions were performed. No GitHub Actions run was triggered.
