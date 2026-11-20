@@ -23,7 +23,8 @@ class FiveLayerApiTest(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.end = 1_800_001_800_000
         self.now = self.end + 5000
-        self.db = self.root / "system.sqlite3"
+        self.db = self.root / "market-data.sqlite3"
+        self.paper_db = self.root / "paper-ledger.sqlite3"
         CandleStore(self.db)
         seed_candles(self.db, [
             Candle("15m", self.end-1_800_000, "100", "102", "99", "101", "3", self.end-899_000),
@@ -60,7 +61,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.book = {"source": "hummingbot", "connector": "binance_perpetual", "symbol": "BTCUSDT",
                      "observedAtMs": self.now-100, "bids": [{"price": "100", "quantity": "1"}],
                      "asks": [{"price": "100.02", "quantity": "1"}]}
-        self.config = {"MARKET_DATA_DB": str(self.db), "MARKET_DATA_TOKEN": "read-token",
+        self.config = {"MARKET_DATA_DB": str(self.db), "PAPER_DB": str(self.paper_db), "MARKET_DATA_TOKEN": "read-token",
                        "CONTROL_TOKEN": "paper-control-token", "INTELLIGENCE_REPORT_PATH": str(self.intel_path),
                        "FREQAI_REPORT_PATH": str(self.pred_path), "STRATEGY_CORE_REPORT_PATH": str(self.core_path),
                        "PAPER_MAX_DRAWDOWN_PCT":"95", "PAPER_MAX_DAILY_LOSS_USDT":"95",
@@ -68,6 +69,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.env = patch.dict(os.environ, self.config, clear=True)
         self.env.start()
         self.addCleanup(self.env.stop)
+        api.ledger()  # Explicitly initialize the disposable PAPER_DB fixture.
         self.clock = patch.object(api, "now_ms", return_value=self.now)
         self.clock.start()
         self.addCleanup(self.clock.stop)
@@ -117,7 +119,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(intelligence["netTakerQuote"], "100")
         self.assertEqual(intelligence["collectorCommit"], "bc4f0ef633fbeee4a49defd72827f17162693805")
         self.assertEqual(len(intelligence["inputFiles"]["trades"][0]["sha256"]), 64)
-        with sqlite3.connect(self.db) as connection:
+        with sqlite3.connect(self.paper_db) as connection:
             before_tables = connection.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
             ).fetchall()
@@ -127,7 +129,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["reason"], "AI_CALIBRATION_ADMISSION_CONTEXT_UNAVAILABLE")
         self.assertIsNone(result["intent"])
         # Offline AI research must not initialize or mutate any paper Ledger state.
-        with sqlite3.connect(self.db) as connection:
+        with sqlite3.connect(self.paper_db) as connection:
             after_tables = connection.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
             ).fetchall()
@@ -142,7 +144,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(first["order"], retry["order"])
         self.assertEqual(before, after)
     def test_ai_paper_execution_is_disabled_under_core_first_policy(self):
-        with sqlite3.connect(self.db) as connection:
+        with sqlite3.connect(self.paper_db) as connection:
             before = connection.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
             ).fetchall()
@@ -155,7 +157,7 @@ class FiveLayerApiTest(unittest.TestCase):
             ledger.assert_not_called()
             ai_decide.assert_not_called()
             core_decide.assert_not_called()
-        with sqlite3.connect(self.db) as connection:
+        with sqlite3.connect(self.paper_db) as connection:
             after = connection.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
             ).fetchall()
@@ -233,13 +235,13 @@ class FiveLayerApiTest(unittest.TestCase):
 
     def test_missing_store_does_not_create_a_fake_fresh_paper_account_on_write(self):
         path = self.root / "missing.sqlite3"
-        with patch.dict(os.environ, {"MARKET_DATA_DB": str(path)}):
+        with patch.dict(os.environ, {"PAPER_DB": str(path)}):
             self.assertEqual(self.request("/v1/paper/evaluate", "POST", {})[0], 503)
             self.assertFalse(path.exists())
 
     def test_read_only_paper_does_not_create_missing_or_uninitialized_account(self):
         self.assertEqual(self.request("/v1/paper")[0], 503)
-        with patch.dict(os.environ, {"MARKET_DATA_DB": str(self.root / "absent.sqlite3")}):
+        with patch.dict(os.environ, {"PAPER_DB": str(self.root / "absent.sqlite3")}):
             self.assertEqual(self.request("/v1/paper")[0], 503)
             self.assertFalse((self.root / "absent.sqlite3").exists())
 
@@ -251,7 +253,7 @@ class FiveLayerApiTest(unittest.TestCase):
 
     def test_corrupt_stored_candles_and_paper_state_are_service_errors(self):
         self.request("/v1/paper/pause", "POST", {"paused": False})
-        with sqlite3.connect(self.db) as connection:
+        with sqlite3.connect(self.paper_db) as connection:
             connection.execute("UPDATE paper_state SET position='NaN'")
         self.assertEqual(self.request("/v1/paper")[0], 503)
         with sqlite3.connect(self.db) as connection:
@@ -288,7 +290,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["initialCapital"],"100")
         self.assertEqual(result["latest"]["equity"],"100")
         self.assertEqual(result["dailyLossUsdt"],"0")
-        with sqlite3.connect(self.db) as connection:
+        with sqlite3.connect(self.paper_db) as connection:
             self.assertEqual(connection.execute("SELECT COUNT(*) FROM paper_equity_history").fetchone()[0],1)
             self.assertIsNone(connection.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='paper_schema_migrations'"
@@ -346,11 +348,11 @@ class FiveLayerApiTest(unittest.TestCase):
 
     def test_risk_limit_breach_auto_kills_new_core_paper_intents(self):
         self.request("/v1/equity")
-        with sqlite3.connect(self.db) as connection:
+        with sqlite3.connect(self.paper_db) as connection:
             connection.execute("UPDATE paper_state SET realized='-25' WHERE id=1")
-        contract = read_account_risk_contract(self.db)
+        contract = read_account_risk_contract(self.paper_db)
         update_account_risk_contract(
-            self.db,
+            self.paper_db,
             {"maxDrawdownPct": "20", "maxDailyLossUsdt": "10", "maxExposureUsdt": "1000"},
             expected_contract_hash=contract["contractHash"],
             source="API_TEST_ACCOUNT_POLICY",
@@ -370,7 +372,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["order"]["reason"],"RISK_LIMITS_UNCONFIGURED")
     def test_quality_reports_tampered_account_risk_contract_as_invalid(self):
         self.request("/v1/equity")
-        with sqlite3.connect(self.db) as connection:
+        with sqlite3.connect(self.paper_db) as connection:
             connection.execute(
                 "UPDATE paper_account_risk_contract SET limits_json='{}' WHERE account_id=1"
             )
@@ -464,6 +466,33 @@ class FiveLayerApiTest(unittest.TestCase):
             self.assertFalse(paper["liveTradingSupported"])
             self.assertEqual(len(calls), before_paper_read)
 
+
+    def test_paper_database_is_isolated_from_canonical_market_data(self):
+        self.assertNotEqual(self.db.resolve(), self.paper_db.resolve())
+        self.request("/v1/paper")
+        self.request("/v1/equity")
+        with sqlite3.connect(self.db) as connection:
+            t0_tables = {row[0] for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )}
+        with sqlite3.connect(self.paper_db) as connection:
+            paper_tables = {row[0] for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )}
+        self.assertTrue(t0_tables)
+        self.assertFalse(any(name.startswith("paper_") for name in t0_tables))
+        self.assertIn("paper_state", paper_tables)
+        self.assertIn("paper_account_risk_contract", paper_tables)
+
+    def test_paper_database_alias_of_market_data_is_rejected_before_read_or_write(self):
+        with patch.dict(os.environ, {"PAPER_DB": str(self.db)}):
+            self.assertEqual(self.request("/v1/paper")[0], 503)
+            self.assertEqual(self.request("/v1/paper/pause", "POST", {"paused": True})[0], 503)
+        with sqlite3.connect(self.db) as connection:
+            tables = {row[0] for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )}
+        self.assertFalse(any(name.startswith("paper_") for name in tables))
 
 if __name__ == "__main__":
     unittest.main()

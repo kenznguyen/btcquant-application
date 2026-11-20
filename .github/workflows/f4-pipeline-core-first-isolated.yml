@@ -8,6 +8,7 @@ on:
       - ".github/workflows/f4-pipeline-core-first-isolated.yml"
       - "pipeline/api.py"
       - "pipeline/test_api.py"
+      - "paper_execution/database_paths.py"
       - "pipeline/test_decision.py"
       - "pipeline/values.py"
       - "market_data/store.py"
@@ -64,13 +65,13 @@ jobs:
             echo "runner_image=ubuntu-24.04"
             echo "python_image=python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df"
             echo "test_modules=pipeline.test_api,pipeline.test_decision"
-            echo "expected_test_count=42"
+            echo "expected_test_count=44"
             echo "network_mode=none (Docker test container)"
             echo "credentials=none"
             echo "canonical_database_mount=none"
           } > "$RUNNER_TEMP/f4-test-artifacts/runner_metadata.txt"
           verify_blob pipeline/api.py e60e9800e4735902ec46b3fe927d6108cac5b6c2
-          verify_blob pipeline/test_api.py 3ddb51d763eb9bef836c5cf85a1ddc471bae0875
+          verify_blob pipeline/test_api.py c1a02175f5a4e0706de680c5c5d7944b6bc367e1
           verify_blob pipeline/test_decision.py 6781f26d66635f56662a627bdd3b4a63f26c1f28
           verify_blob pipeline/values.py 5576376454af129b944919fb588e26c0657a781e
           verify_blob market_data/store.py 4e1b0c54bd56455abe5be0e5c7d0807e63e0bc78
