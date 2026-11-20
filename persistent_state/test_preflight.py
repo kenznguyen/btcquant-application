@@ -24,7 +24,7 @@ def make_snapshot(timeframe, *, count=3, as_of=AS_OF, latest_lag_periods=1):
             "openTimeMs": opening, "closeTimeMs": close,
             "open": "100", "high": "102", "low": "99", "close": "101",
             "volume": "2.5", "isClosed": True,
-            "availableAtMs": close + 100,
+            "availableAtMs": close,
             "availabilityKind": "FIRST_OBSERVED",
             "quality": "VALIDATED", "source": "ccxt.binanceusdm",
         })
@@ -65,6 +65,11 @@ class MarketDataPreflightTests(unittest.TestCase):
     def test_uses_approved_timeframe_freshness_limits(self):
         self.assertEqual(M15_MAX_LAG_MS, 20 * 60_000)
         self.assertEqual(H1_MAX_LAG_MS, 70 * 60_000)
+        self.assertEqual(
+            self.validate(m15=make_snapshot("15m", latest_lag_periods=2),
+                          h1=make_snapshot("1h", latest_lag_periods=2)).status,
+            "READY",
+        )
         m15 = make_snapshot("15m", latest_lag_periods=3)
         h1 = make_snapshot("1h", latest_lag_periods=3)
         self.assertEqual(self.validate(m15=m15).status, "BLOCKED_PREFLIGHT")
@@ -137,6 +142,16 @@ class MarketDataPreflightTests(unittest.TestCase):
             snapshot["candles"][-1].update(mutation)
             with self.subTest(mutation=mutation):
                 self.assertEqual(self.validate(m15=snapshot).status, "BLOCKED_PREFLIGHT")
+
+    def test_requires_explicit_empty_gap_list_and_integer_coverage_counts(self):
+        snapshot = copy.deepcopy(self.m15)
+        snapshot["coverage"]["gaps"] = None
+        self.assertEqual(self.validate(m15=snapshot).status, "BLOCKED_PREFLIGHT")
+        single = make_snapshot("15m", count=1)
+        single["coverage"]["expected"] = True
+        single["coverage"]["returned"] = True
+        result = self.validate(m15=single, required={"15m": 1, "1h": 3})
+        self.assertEqual(result.status, "BLOCKED_PREFLIGHT")
 
     def test_blocks_dataset_version_and_coverage_count_mismatch(self):
         snapshot = copy.deepcopy(self.m15)
