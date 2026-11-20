@@ -308,11 +308,11 @@ jobs:
           cat /etc/os-release
           uname -a
           dpkg --print-architecture
-          systemd --version
+          systemctl --version
           test "$(dpkg --print-architecture)" = amd64
           grep -q '^VERSION_ID="26.04"$' /etc/os-release
           test -d /run/systemd/system
-          systemd_version="$(systemd --version | awk 'NR == 1 {print $2}')"
+          systemd_version="$(systemctl --version | awk 'NR == 1 {print $2}')"
           dpkg --compare-versions "$systemd_version" ge 259
           command -v docker
           docker --version
@@ -320,7 +320,7 @@ jobs:
           {
             cat /etc/os-release
             uname -a
-            systemd --version
+            systemctl --version
             docker --version
           } > "$RUNNER_TEMP/kiri-ubuntu-2604-evidence/runner-baseline.txt"
 
