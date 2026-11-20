@@ -1,0 +1,382 @@
+name: T0 FastAPI contract regression
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - market_data/test_fastapi_api.py
+      - market_data/runtime_smoke.py
+      - market_data/uvicorn_nginx_smoke.py
+      - market_data/test_api.py
+      - market_data/test_controlled_ingestion_acceptance.py
+      - market_data/test_t0_controlled_ingestion_acceptance.py
+      - requirements-market-data.txt
+      - requirements-market-data.lock
+      - market_data/test_wsgi_retirement.py
+      - market_data/fastapi_app.py
+      - market_data/api_contract.py
+      - market_data/storage.py
+      - market_data/store.py
+      - market_data/postgres.py
+      - market_data/feeder.py
+      - market_data/write_gateway.py
+      - market_data/sync.py
+      - requirements-market-data-fastapi.in
+      - requirements-market-data-fastapi-test.in
+      - requirements-market-data-fastapi.lock
+      - requirements-market-data-fastapi-test.lock
+      - requirements-market-data-fastapi.sha256
+      - .github/workflows/t0-fastapi-migration.yml
+      - .github/workflows/t0-sqlite-aggregate.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t0-fastapi-migration
+  cancel-in-progress: false
+
+jobs:
+  fastapi-contract-tests:
+    name: FastAPI contract tests on CPython 3.12.16
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source and prepare evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
+          test -f market_data/test_fastapi_api.py
+          test -f requirements-market-data-fastapi.in
+          test -f requirements-market-data-fastapi-test.in
+          test -f requirements-market-data-fastapi.lock
+          test -f requirements-market-data-fastapi-test.lock
+          test -f requirements-market-data-fastapi.sha256
+          mkdir -p "$RUNNER_TEMP/t0-fastapi-red-artifacts"
+          chmod 0777 "$RUNNER_TEMP/t0-fastapi-red-artifacts"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_commit=$GITHUB_SHA"
+            echo "checked_out_source_sha=$actual"
+            echo "python_target=3.12.16"
+            echo "test_scope=FastAPI contract, migrated API/ingestion acceptance and WSGI retirement guards, offline"
+            echo "dependency_download_network=bridge"
+            echo "test_container_network=none"
+            echo "canonical_database=not mounted"
+            echo "runtime_or_exchange=not accessed"
+            echo "credentials=none"
+          } > "$RUNNER_TEMP/t0-fastapi-red-artifacts/runner_metadata.txt"
+
+      - name: Verify committed lock hashes and prepare offline wheelhouse
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/t0-fastapi-red-artifacts"
+          wheelhouse="$RUNNER_TEMP/t0-fastapi-wheelhouse"
+          mkdir -p "$wheelhouse/runtime" "$wheelhouse/test"
+          sha256sum -c requirements-market-data-fastapi.sha256
+          docker pull --platform linux/amd64 "$PYTHON_IMAGE"
+          docker run --rm --platform linux/amd64 \
+            --network bridge --memory 1g --cpus 2 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$artifacts,dst=/artifacts" \
+            --mount "type=bind,src=$wheelhouse,dst=/wheelhouse" \
+            --workdir /workspace "$PYTHON_IMAGE" bash -euc '
+              python -m pip download --only-binary=:all: --require-hashes \
+                -r /workspace/requirements-market-data-fastapi.lock -d /wheelhouse/runtime
+              python -m pip download --only-binary=:all: --require-hashes \
+                -r /workspace/requirements-market-data-fastapi-test.lock -d /wheelhouse/test
+              python -m pip install --disable-pip-version-check --no-index \
+                --find-links=/wheelhouse/test --require-hashes \
+                -r /workspace/requirements-market-data-fastapi-test.lock
+              python --version > /artifacts/python-version.txt
+              python -m pip freeze > /artifacts/installed-packages.txt
+            '
+          cp requirements-market-data-fastapi.in requirements-market-data-fastapi.lock \
+            requirements-market-data-fastapi-test.in requirements-market-data-fastapi-test.lock \
+            requirements-market-data-fastapi.sha256 "$artifacts/"
+          echo "dependency_install=committed SHA-256 locks, offline wheelhouse" >> "$artifacts/runner_metadata.txt"
+
+      - name: Execute FastAPI contract tests
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/t0-fastapi-red-artifacts"
+          log="$artifacts/fastapi-contract-tests.log"
+          if docker run --rm --platform linux/amd64 \
+            --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --pids-limit 128 \
+            --memory 1g --cpus 2 --user 65534:65534 \
+            --tmpfs /tmp:rw,exec,nosuid,nodev,size=128m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$artifacts,dst=/artifacts,readonly" \
+            --mount "type=bind,src=$RUNNER_TEMP/t0-fastapi-wheelhouse/test,dst=/wheelhouse,readonly" \
+            --env HOME=/tmp --env TMPDIR=/tmp \
+            --env PYTHONDONTWRITEBYTECODE=1 --env PYTHONPATH=/tmp/site-packages:/workspace \
+            --workdir /workspace "$PYTHON_IMAGE" bash -euc '
+              python -m pip install --disable-pip-version-check --no-index \
+                --find-links=/wheelhouse --require-hashes \
+                -r /artifacts/requirements-market-data-fastapi-test.lock
+              python -m unittest -v market_data.test_fastapi_api market_data.test_api market_data.test_controlled_ingestion_acceptance market_data.test_t0_controlled_ingestion_acceptance market_data.test_wsgi_retirement
+            ' > "$log" 2>&1; then
+            test_status=0
+          else
+            test_status=$?
+          fi
+          cat "$log"
+          test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
+          {
+            echo "test_count=${test_count:-NOT_REPORTED}"
+            echo "test_exit_code=$test_status"
+          } >> "$artifacts/runner_metadata.txt"
+          {
+            echo "## T0 FastAPI contract regression"
+            echo
+            echo "- Exact source SHA: $GITHUB_SHA"
+            echo "- Python: CPython 3.12.16"
+            echo "- Test count: ${test_count:-NOT_REPORTED}"
+            echo "- Exit code: $test_status"
+            echo "- Committed runtime/test lock SHA-256: verified"
+            echo "- Test container network: disabled"
+            echo "- Canonical SQLite/runtime/exchange: not accessed"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$test_status" -eq 0 && "$test_count" != "50" ]]; then
+            echo "Expected 50 FastAPI and migrated API tests; observed ${test_count:-no test summary}." >&2
+            exit 1
+          fi
+          exit "$test_status"
+
+      - name: Upload FastAPI contract and dependency evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t0-fastapi-contract-evidence
+          path: ${{ runner.temp }}/t0-fastapi-red-artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+  runtime-lock-smoke:
+    name: Runtime-lock-only install and in-process ASGI smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source and runtime lock hash
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
+          sha256sum -c requirements-market-data-fastapi.sha256
+          test -f market_data/runtime_smoke.py
+          mkdir -p "$RUNNER_TEMP/t0-fastapi-runtime-artifacts" "$RUNNER_TEMP/t0-fastapi-runtime-wheelhouse"
+          chmod 0777 "$RUNNER_TEMP/t0-fastapi-runtime-artifacts"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_commit=$GITHUB_SHA"
+            echo "checked_out_source_sha=$actual"
+            echo "python_target=3.12.16"
+            echo "installed_lock=requirements-market-data-fastapi.lock only"
+            echo "test_lock=not installed"
+            echo "dependency_download_network=bridge"
+            echo "runtime_smoke_container_network=none"
+            echo "canonical_database=not mounted or accessed"
+            echo "credentials=none"
+            echo "exchange_or_external_service=not accessed"
+          } > "$RUNNER_TEMP/t0-fastapi-runtime-artifacts/runner_metadata.txt"
+
+      - name: Download runtime-lock wheels only
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          docker pull --platform linux/amd64 "$PYTHON_IMAGE"
+          docker run --rm --platform linux/amd64 \
+            --network bridge --memory 1g --cpus 2 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$RUNNER_TEMP/t0-fastapi-runtime-wheelhouse,dst=/wheelhouse" \
+            --workdir /workspace "$PYTHON_IMAGE" bash -euc '
+              python -m pip download --only-binary=:all: --require-hashes \
+                -r /workspace/requirements-market-data-fastapi.lock -d /wheelhouse
+            '
+          cp requirements-market-data-fastapi.lock "$RUNNER_TEMP/t0-fastapi-runtime-artifacts/"
+          echo "runtime_wheel_download=PASS" >> "$RUNNER_TEMP/t0-fastapi-runtime-artifacts/runner_metadata.txt"
+
+      - name: Install runtime lock in a clean offline environment and smoke ASGI
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/t0-fastapi-runtime-artifacts"
+          log="$artifacts/runtime-lock-smoke.log"
+          if docker run --rm --platform linux/amd64 \
+            --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --pids-limit 64 \
+            --memory 1g --cpus 2 --user 65534:65534 \
+            --tmpfs /tmp:rw,exec,nosuid,nodev,size=256m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$RUNNER_TEMP/t0-fastapi-runtime-wheelhouse,dst=/wheelhouse,readonly" \
+            --env HOME=/tmp --env TMPDIR=/tmp --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace --workdir /workspace "$PYTHON_IMAGE" bash -euc '
+              python -m venv /tmp/runtime-venv
+              /tmp/runtime-venv/bin/python -m pip install --disable-pip-version-check \
+                --no-index --find-links=/wheelhouse --require-hashes \
+                -r /workspace/requirements-market-data-fastapi.lock
+              /tmp/runtime-venv/bin/python -m pip check
+              /tmp/runtime-venv/bin/python -m pip freeze
+              /tmp/runtime-venv/bin/python /workspace/market_data/runtime_smoke.py
+            ' > "$log" 2>&1; then
+            smoke_status=0
+          else
+            smoke_status=$?
+          fi
+          cat "$log"
+          {
+            echo "runtime_lock_smoke_exit_code=$smoke_status"
+            echo "runtime_lock_smoke_status=$([ "$smoke_status" -eq 0 ] && echo PASS || echo FAIL)"
+          } >> "$artifacts/runner_metadata.txt"
+          {
+            echo "## T0 FastAPI runtime-lock-only smoke"
+            echo
+            echo "- Exact source SHA: $GITHUB_SHA"
+            echo "- Runtime lock SHA-256: verified"
+            echo "- Environment: clean CPython 3.12.16 venv, runtime lock only"
+            echo "- Install: offline from hash-verified wheelhouse"
+            echo "- Container: network disabled, read-only root, non-root, bounded resources"
+            echo "- ASGI health: in-process; no socket"
+            echo "- Canonical SQLite, credentials, exchange, external services: not accessed"
+            echo "- Exit code: $smoke_status"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$smoke_status"
+
+      - name: Upload runtime-only smoke evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t0-fastapi-runtime-lock-smoke
+          path: ${{ runner.temp }}/t0-fastapi-runtime-artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+
+  uvicorn-nginx-socket-integration:
+    name: Isolated Uvicorn process/socket + Nginx reverse-proxy integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify source and prepare isolated integration image
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
+          test -f market_data/uvicorn_nginx_smoke.py
+          sha256sum -c requirements-market-data-fastapi.sha256
+          context="$RUNNER_TEMP/t0-uvicorn-nginx-build"
+          artifacts="$RUNNER_TEMP/t0-uvicorn-nginx-artifacts"
+          mkdir -p "$context" "$artifacts"
+          cp requirements-market-data-fastapi.lock "$context/"
+          chmod 0777 "$artifacts"
+          cat > "$context/Dockerfile" <<'DOCKERFILE'
+          FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+          RUN apt-get update && apt-get install -y --no-install-recommends nginx && rm -rf /var/lib/apt/lists/*
+          COPY requirements-market-data-fastapi.lock /tmp/requirements.lock
+          RUN python -m pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock && rm /tmp/requirements.lock
+          DOCKERFILE
+          docker build --platform linux/amd64 --tag t0-uvicorn-nginx-ci:"$GITHUB_SHA" "$context"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_commit=$GITHUB_SHA"
+            echo "checked_out_source_sha=$actual"
+            echo "python_image=$PYTHON_IMAGE"
+            echo "runtime_lock_sha256_verified=PASS"
+            echo "nginx_install=isolated_ephemeral_container"
+            echo "test_network=none"
+            echo "listeners=127.0.0.1_only"
+            echo "canonical_t0_database=not_mounted"
+            echo "credentials=synthetic_dummy_token_only"
+            echo "vps_or_deployment=NOT_ACCESSED"
+            echo "trading=NOT_ACCESSED"
+          } > "$artifacts/runner_metadata.txt"
+          docker run --rm --network none --entrypoint nginx t0-uvicorn-nginx-ci:"$GITHUB_SHA" -v 2>&1 | tee "$artifacts/nginx-version.txt"
+
+      - name: Run real Uvicorn and Nginx processes with external network disabled
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/t0-uvicorn-nginx-artifacts"
+          log="$artifacts/uvicorn-nginx-integration.log"
+          if docker run --rm --platform linux/amd64 \
+            --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --pids-limit 64 \
+            --memory 1g --cpus 2 --user 65534:65534 \
+            --tmpfs /tmp:rw,exec,nosuid,nodev,size=256m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --env HOME=/tmp --env TMPDIR=/tmp --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace --workdir /workspace \
+            "t0-uvicorn-nginx-ci:$GITHUB_SHA" \
+            python /workspace/market_data/uvicorn_nginx_smoke.py > "$log" 2>&1; then
+            smoke_status=0
+          else
+            smoke_status=$?
+          fi
+          cat "$log"
+          {
+            echo "integration_exit_code=$smoke_status"
+            echo "integration_status=$([ "$smoke_status" -eq 0 ] && echo PASS || echo FAIL)"
+          } >> "$artifacts/runner_metadata.txt"
+          {
+            echo "## Isolated Uvicorn + Nginx integration"
+            echo
+            echo "- Exact source SHA: $GITHUB_SHA"
+            echo "- Uvicorn: real subprocess, TCP loopback socket"
+            echo "- Nginx: real subprocess, loopback reverse proxy"
+            echo "- Test container: non-root, read-only root, network disabled, bounded resources"
+            echo "- Data: temporary SQLite fixture only"
+            echo "- Canonical T0 SQLite, VPS, credentials, exchange, T1/T2 and trading: not accessed"
+            echo "- Result: $([ "$smoke_status" -eq 0 ] && echo PASS || echo FAIL)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$smoke_status"
+
+      - name: Upload Uvicorn and Nginx integration evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t0-uvicorn-nginx-socket-integration
+          path: ${{ runner.temp }}/t0-uvicorn-nginx-artifacts/
+          if-no-files-found: error
+          retention-days: 14
