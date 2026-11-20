@@ -187,3 +187,25 @@ The following remain deliberately unspecified and require separate review/approv
 - Tests/workflows/Actions run/job/artifact: none.
 - Status: **DESIGN REVIEWED / RECORDED**; implementation **NOT STARTED / NOT AUTHORIZED**; runtime **NOT STARTED / NOT AUTHORIZED**.
 - Next: review the open decisions and approve a separately bounded contract-first implementation/test task. No database or runtime work is implied.
+
+
+---
+
+## 13. Closed architecture decisions — 2026-11-20
+
+The open decisions in section 12 are closed for v1 scope planning by `docs/decisions/PERSISTENT_STATE_ARCHITECTURE_DECISIONS_2026-11-20.md` (commit `4ce14993ba8d30213f7609f1c7875212a80eedd2`).
+
+Summary:
+- Application-owned SQLite, physically separate from T0 and outside the Git repository; exact absolute path deferred until target OS/environment is selected.
+- Normalized tables plus versioned canonical JSON event/checkpoint payloads; exact decimal accounting values and UTC epoch-ms timestamps.
+- Explicit forward-only migrations, verified SQLite Online Backup before migration; unknown/newer schema fails closed.
+- Atomic event + idempotency + ledger + aggregate-version transaction. Immutable verified checkpoints on clean close and every 100 committed state events; retain at least 3 verified generations.
+- Retain event and idempotency history indefinitely in v1; no TTL, purge, compaction or automatic deletion.
+- At least 3 verified rolling SQLite Online Backup API backups; require OS full-disk encryption for persistent deployment; backup restore is manual.
+- Freshness limits at preflight: latest closed M15 <= 20 minutes; H1 <= 70 minutes. No forming candles. No gaps/duplicates/conflicts in the complete active feature lookback; irrelevant older gaps must be reported and proven outside all active lookbacks.
+- No exchange account connector in v1. Initial paper equity is an immutable user-configured seed; subsequent equity/capacity is derived from reconciled paper ledger and current risk policy.
+- Recovery is automatic only when deterministic; ambiguous state blocks for operator review. Kill Switch reset is explicit/manual and audited.
+- Graceful Stop: stop new proposals, finish current atomic transition and checkpoint; 30-second window, otherwise INTERRUPTED, never forced CLOSED.
+- T1/T2 runtime and external orders excluded from v1.
+
+The decision record also defines a bounded contract-first/test-first implementation scope and explicit exclusions. No implementation is authorized by this closure.
