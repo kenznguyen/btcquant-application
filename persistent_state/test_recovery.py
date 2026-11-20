@@ -21,7 +21,7 @@ def reducer(state, event):
     aggregates = state.setdefault("aggregates", {})
     aggregates[event.aggregate_id] = {
         "aggregateVersion": event.aggregate_version,
-        "position": json.loads(event.payload_json)["position"],
+        "state": json.loads(event.payload_json),
     }
     return state
 
@@ -88,7 +88,7 @@ class PersistentRecoveryTests(unittest.TestCase):
     def checkpoint(self, sequence):
         payload = canonical_json({
             "aggregates": {
-                "ledger-core": {"aggregateVersion": sequence, "position": str(sequence)}
+                "ledger-core": {"aggregateVersion": sequence, "state": {"position": str(sequence)}}
             }
         })
         checkpoint = Checkpoint(
@@ -110,7 +110,7 @@ class PersistentRecoveryTests(unittest.TestCase):
         result = recover_repository_state(self.repository, "paper-account", reducer)
         self.assertEqual(result.last_event_sequence, 2)
         self.assertEqual(result.replayed_event_count, 2)
-        self.assertEqual(json.loads(result.state_json)["aggregates"]["ledger-core"]["position"], "2")
+        self.assertEqual(json.loads(result.state_json)["aggregates"]["ledger-core"]["state"]["position"], "2")
 
     def test_replays_only_committed_tail_after_verified_checkpoint(self):
         self.commit(1)
@@ -121,7 +121,7 @@ class PersistentRecoveryTests(unittest.TestCase):
         self.assertEqual(result.last_event_sequence, 2)
         self.assertEqual(result.replayed_event_count, 1)
         self.assertEqual(json.loads(result.state_json)["aggregates"]["ledger-core"], {
-            "aggregateVersion": 2, "position": "2",
+            "aggregateVersion": 2, "state": {"position": "2"},
         })
 
     def test_repeated_recovery_is_deterministic_and_does_not_mutate_history(self):
