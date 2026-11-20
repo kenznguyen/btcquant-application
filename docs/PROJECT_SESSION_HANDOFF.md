@@ -5859,3 +5859,14 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Review package remains `docs/reviews/T0_CANDLE_CONTRACT_GRAPHIFY_INDEPENDENT_REVIEW_PACKAGE_2026-11-20.md`; package commit `9f4d3fe7ca99486ec8c58fdbb156ce0a153bcb23`.
 - Next permitted step: in Graphify web app, refresh/re-index `kenznguyen/btcquant-application` to exact commit `fc2e484...`; then use Graphify's repository/PR review workflow and verify exact head SHA before accepting the verdict. Do not substitute PR #1's prior review.
 - Runtime, layer integration, VPS, canonical data, Binance REST, deployment, and trading remain out of scope and blocked.
+
+
+## Graphify refresh verification — 2026-11-20
+
+- User confirmed Graphify was refreshed. Verified via Graphify `graph_stats`: build `c59f2010-1e37-4356-b622-81afe42d8dc4`, indexed commit `7dee670a6b2e3045a1ab4de9afbda825a6af70f4`, indexed at `2026-11-20T11:56:50.779861Z`, 1,732 nodes / 5,213 edges.
+- GitHub compare `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235...7dee670a6b2e3045a1ab4de9afbda825a6af70f4`: 4 commits ahead, 0 behind; only documentation paths changed (`docs/PROJECT_SESSION_HANDOFF.md`, `docs/T0_ACTIVE_SCOPE_INDEX.md`, T0 evidence report, Graphify review package). No source-code files changed after target SHA.
+- Graphify node lookup resolved exact `candle_envelope()` at `market_data/api_contract.py:L97` and returned its indexed body and call/test neighbors.
+- Therefore Graphify snapshot contains the exact target source content, although the indexed commit SHA is a later docs-only descendant rather than the literal target SHA.
+- Graphify `review_status` still lists only PR #1 review for unrelated snapshot head `f940443d3e5f583e2c0bfd4c1d15d9f31a576775`; it is not evidence for target SHA.
+- Available Graphify tools expose review status but no review-start/re-run action. No review was initiated. Independent-review verdict remains **NOT VERIFIED**.
+- Next: trigger a Graphify automated review from a reviewable PR/snapshot containing the target source, or provide a Graphify review result tied to this exact source snapshot. Do not reuse PR #1's prior result. Keep T0/Application integration blocked pending independent review and explicit approval.
