@@ -74,10 +74,14 @@
     }
   },
   "integrity_notes": {
-    "payload_sha256": "Reported by the local retrieval script; not independently recomputed by repository tooling in this documentation-only task.",
-    "exact_response_bytes": "Script wrote response body bytes without JSON reserialization; this is supported by user-provided script output, not by direct inspection of local files.",
-    "payload_files_committed": false,
-    "metadata_file": "%USERPROFILE%/btcquant-rest-tail-20261120/metadata.json"
+    "payload_sha256": "Independently recomputed from the uploaded source files before repository write; see SHA-256 values in payload entries.",
+    "exact_response_bytes": "Uploaded JSON payload text was transferred without JSON parsing or re-serialization. Files contain ASCII JSON; character lengths match the independently measured source byte lengths.",
+    "payload_files_committed": true,
+    "metadata_file": "%USERPROFILE%/btcquant-rest-tail-20261120/metadata.json",
+    "repository_payload_paths": {
+      "15m": "artifacts/market-data/binance-rest-tail/2026-11-20/m15.json",
+      "1h": "artifacts/market-data/binance-rest-tail/2026-11-20/h1.json"
+    }
   },
   "restrictions": {
     "further_rest_retrieval_authorized": false,
