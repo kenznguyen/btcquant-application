@@ -317,12 +317,13 @@ class CandleContractFailClosedTest(unittest.TestCase):
             future_environ = dict(environ, QUERY_STRING=future_query)
             future_statuses = []
             with patch.dict(os.environ, env, clear=True):
-                future_raw = b"".join(
-                    common_api.application(
-                        future_environ,
-                        lambda status, headers: future_statuses.append((status, headers)),
+                with patch("pipeline.api.now_ms", return_value=evaluation):
+                    future_raw = b"".join(
+                        common_api.application(
+                            future_environ,
+                            lambda status, headers: future_statuses.append((status, headers)),
+                        )
                     )
-                )
             self.assertEqual(fastapi_future.status_code, 400)
             self.assertEqual(future_statuses[0][0], "400 Bad Request")
             self.assertEqual(json.loads(future_raw), fastapi_future.json())
