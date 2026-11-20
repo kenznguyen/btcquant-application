@@ -1,6 +1,7 @@
 import hashlib
 import json
 import sqlite3
+from dataclasses import replace
 import tempfile
 import unittest
 from pathlib import Path
@@ -95,6 +96,16 @@ class CheckpointRepositoryTests(unittest.TestCase):
         with self.assertRaises(CheckpointCoverageError):
             self.repository.publish_checkpoint(make_checkpoint(1))
         self.assertIsNone(self.repository.read_active_checkpoint("paper-account"))
+        self.assertEqual(self.repository.list_checkpoints("paper-account"), ())
+
+    def test_checkpoint_aggregate_versions_must_match_committed_event_prefix(self):
+        commit_event(self.repository, 1)
+        mismatched = replace(
+            make_checkpoint(1),
+            aggregate_versions_json=canonical_json({"ledger-core": 0}),
+        )
+        with self.assertRaises(CheckpointCoverageError):
+            self.repository.publish_checkpoint(mismatched)
         self.assertEqual(self.repository.list_checkpoints("paper-account"), ())
 
     def test_active_checkpoint_pointer_never_moves_backwards(self):
