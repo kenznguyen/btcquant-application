@@ -95,11 +95,25 @@ def _sha256(name: str, value: Any) -> str:
     return value
 
 
+def _reject_binary_floats(value: Any) -> None:
+    if isinstance(value, float):
+        raise ValueError("binary floating-point values are not valid persisted state")
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise ValueError("canonical JSON object keys must be strings")
+            _reject_binary_floats(item)
+    elif isinstance(value, list):
+        for item in value:
+            _reject_binary_floats(item)
+
+
 def canonical_json(value: Any) -> str:
-    """Return deterministic JSON for an object payload."""
+    """Return deterministic JSON for an object payload without binary floats."""
     if not isinstance(value, dict):
         raise ValueError("canonical JSON payload must be an object")
     try:
+        _reject_binary_floats(value)
         return json.dumps(
             value, sort_keys=True, separators=(",", ":"),
             ensure_ascii=False, allow_nan=False,
