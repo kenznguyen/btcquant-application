@@ -143,27 +143,36 @@ jobs:
             | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-result.txt"
 
       - name: Verify Docker Compose workload against Kiri socket
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
           work="$RUNNER_TEMP/kiri-compose-smoke"
           mkdir -p "$work"
+          docker_config="$RUNNER_TEMP/kiri-docker-config"
+
+          # Transfer a known image from the runner's Docker Engine so Compose is
+          # independently tested and does not depend on Kiri-side registry DNS.
+          env -u DOCKER_HOST docker pull busybox:1.36
+          env -u DOCKER_HOST docker save busybox:1.36 -o "$RUNNER_TEMP/busybox-compose-image.tar"
+          sudo env DOCKER_CONFIG="$docker_config" docker --context kiri load -i "$RUNNER_TEMP/busybox-compose-image.tar"
+
           cat > "$work/compose.yaml" <<'EOF'
           services:
             smoke:
-              image: local/kiri-buildx-smoke:ci
+              image: busybox:1.36
               pull_policy: never
+              command: ["sh", "-c", "echo KIRI_COMPOSE_PASS"]
           EOF
           cd "$work"
-          docker_config="$RUNNER_TEMP/kiri-docker-config"
           sudo env DOCKER_CONFIG="$docker_config" docker --context kiri compose version \
             | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-version-kiri.txt"
           sudo env DOCKER_CONFIG="$docker_config" docker --context kiri compose -p kiri-ci-smoke -f compose.yaml config \
             | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-config.txt"
           sudo env DOCKER_CONFIG="$docker_config" docker --context kiri compose -p kiri-ci-smoke -f compose.yaml run --rm smoke \
             | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-run.txt"
-          grep -Fxq KIRI_BUILDX_IMAGE_PASS "$RUNNER_TEMP/kiri-coexistence-evidence/compose-run.txt"
-          echo "PASS: Compose ran the Buildx-produced image through the Kiri endpoint." \
+          grep -Fxq KIRI_COMPOSE_PASS "$RUNNER_TEMP/kiri-coexistence-evidence/compose-run.txt"
+          echo "PASS: Compose ran an independently preloaded image through the Kiri context." \
             | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-result.txt"
 
       - name: Recheck original Docker Engine after Kiri workloads
