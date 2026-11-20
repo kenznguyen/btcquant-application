@@ -530,6 +530,22 @@ class SQLiteStateRepository:
                     f"checkpoint covers sequence {checkpoint.covered_event_sequence}, "
                     f"but only {latest_sequence} events are committed"
                 )
+            expected_versions = {
+                row["aggregate_id"]: row["aggregate_version"]
+                for row in connection.execute(
+                    """
+                    SELECT aggregate_id, MAX(aggregate_version) AS aggregate_version
+                    FROM ps_events
+                    WHERE account_scope_id = ? AND event_sequence <= ?
+                    GROUP BY aggregate_id
+                    """,
+                    (checkpoint.account_scope_id, checkpoint.covered_event_sequence),
+                ).fetchall()
+            }
+            if json.loads(checkpoint.aggregate_versions_json) != expected_versions:
+                raise CheckpointCoverageError(
+                    "checkpoint aggregate versions do not match the committed event prefix"
+                )
 
             existing = connection.execute(
                 "SELECT * FROM ps_checkpoint_generations WHERE checkpoint_id = ?",
