@@ -181,7 +181,9 @@
       "note": "All 404 object identities are represented. ZIP records include key, byte size, SHA-256, timeframe, period, row count and validation. Sidecar records include paired key and expected ZIP digest, but their own object byte size and payload SHA-256 are not present in source evidence and remain NOT_VERIFIED. Do not substitute ZIP SHA-256 for sidecar SHA-256.",
       "aggregate_reconciliation": "BLOCKED_MISMATCH_11277_BYTES"
     },
-    "rest_tail_validation_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md"
+    "rest_tail_validation_evidence": "docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md",
+    "rest_tail_source_manifest": "docs/manifests/T0_BINANCE_UM_BTCUSDT_REST_TAIL_SOURCE_EVIDENCE_2026-11-20.json",
+    "rest_tail_source_manifest_commit": "3672ccf45dd62fed15a6188a584c45cdd041b87d"
   },
   "candle_contract": {
     "version": "1.1.0",
@@ -207,8 +209,9 @@
       "volume",
       "available_at_ms"
     ],
-    "first_observed_semantics": "available_at_ms must represent first observation/import time; never backdate to historical candle close.",
-    "archive_extra_fields": "The source CSV contains 12 columns. Preserve original ZIP/CSV payloads and record the explicit mapping/disposition for source-only fields not represented in the current CandleStore schema. No schema extension is authorized."
+    "first_observed_semantics": "UNRESOLVED_FOR_HISTORICAL_IMPORT: archive first-observation timestamps are not evidenced. Do not backdate to candle close or invent values. Preserve per-source acquisition/retrieval timestamps separately; obtain explicit owner-approved deterministic available_at_ms policy before importer selection or DB build.",
+    "archive_extra_fields": "The source CSV contains 12 columns. Preserve original ZIP/CSV payloads and record the explicit mapping/disposition for source-only fields not represented in the current CandleStore schema. No schema extension is authorized.",
+    "available_at_ms_policy_status": "BLOCKED_PENDING_OWNER_DECISION"
   },
   "sqlite": {
     "status": "NOT_CREATED_NOT_AUTHORIZED",
