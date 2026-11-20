@@ -5737,3 +5737,21 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - No database was opened/created; no Windows path selected/probed; no T0, Binance, T1/T2, VPS, staging, filesystem, market-data provider, credentials or exchange accessed. No scheduler, autostart, runtime or trading added. Existing paper/pipeline implementation unchanged.
 - Status: **CONTRACT TYPES + VALIDATORS PASS**; implementation scope overall **IN PROGRESS**; SQLite repository/atomic transaction, replay/checkpoint/fencing/recovery, preflight and risk-admission tests **NOT STARTED**; runtime **NOT AUTHORIZED**.
 - Next: TDD implementation of the isolated SQLite repository boundary and atomic event/idempotency/ledger/aggregate-version commit using temporary test DBs only. No default DB path and no real/T0/staging DB operations.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Persistent State SQLite repository milestone 2 PASS
+
+- Owner-approved bounded implementation continues; this milestone adds only an isolated repository API, not application runtime wiring.
+- Exact tested source SHA: `f3973c4c269316a9fe486ed1776cc0f10e428082` on `main`.
+- Added `persistent_state/repository.py`, blob `fb919209714be8cf3a75368eeb7f33466e3c2f5b`; `persistent_state/test_repository.py`, blob `e889b8429ecd524a6d39afeffc59f0040d4fa14f`.
+- Updated workflow `.github/workflows/persistent-state-contracts.yml`, blob `5e333fbcc216e037cbd939d7e19f1fe707405775`.
+- Behavior: explicit path/no default/no constructor I/O; explicit initialize; schema v1 fail-closed/no auto-migration; append-only events/idempotency claims; BEGIN IMMEDIATE atomic event + idempotency + aggregate mutation; contiguous account event sequence; aggregate compare-and-swap; same-key/same-hash dedupe; same-key/different-hash conflict; account/Core/AI scope checks; read-only reads do not create a missing DB.
+- TDD RED: test-first commit `fbe226ab9e6cd8e323e87d13704cd66800845c42`; run [44715319436](https://github.com/kenznguyen/btcquant-application/actions/runs/44715319436) failed as expected because `persistent_state.repository` did not exist.
+- TDD GREEN final: run [44715599693](https://github.com/kenznguyen/btcquant-application/actions/runs/44715599693), exact SHA above, **SUCCESS**; job `136218055853`: 47 contracts/repository tests PASS + 160 adjacent paper-ledger/strategy API regression tests PASS.
+- Artifact `persistent-state-contract-test-evidence`: ID `14618583925`, SHA-256 `09823d5a2917d0bf731bafe2fe3b9899e4cd060c1874b7d878e40d319d8c7f60`, expiry 2026-12-04.
+- Evidence report: `docs/evidence/PERSISTENT_STATE_SQLITE_REPOSITORY_IMPLEMENTATION_2026-11-20.md`, commit `3dac475e67cacae332f5d98dca2629db26c77c3e`.
+- All DB tests used disposable temporary directories. No production/Windows path, T0 Canonical, feeder, market-data source, Binance, T1/T2, VPS, staging, credentials, exchange or trading was accessed. No scheduler/autostart/runtime integration, migration, checkpoint persistence, retention deletion or compaction was added.
+- Status: **CONTRACTS PASS; SQLITE REPOSITORY/ATOMIC TRANSITION PASS**; full approved implementation scope **IN PROGRESS**. Replay/checkpoint/fencing/recovery/preflight/risk-admission tests **NOT STARTED**; production DB and runtime **NOT AUTHORIZED**.
+- Next: implement deterministic event replay and checkpoint validation/publication against temporary test DBs only. Event history remains authoritative; no production path or T0 access.
