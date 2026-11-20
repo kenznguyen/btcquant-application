@@ -593,6 +593,8 @@ class SQLiteStateRepository:
             stop_requested_at_ms = session["stop_requested_at_ms"]
             if new_status is SessionStatus.CHECKPOINTING:
                 stop_requested_at_ms = at_ms
+            if stop_requested_at_ms is not None and at_ms < stop_requested_at_ms:
+                raise ValueError("session transition timestamp cannot precede Stop request")
             if new_status is SessionStatus.CLOSED:
                 if stop_requested_at_ms is None:
                     raise SessionTransitionError("CHECKPOINTING session has no stop request timestamp")
