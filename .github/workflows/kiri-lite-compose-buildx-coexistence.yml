@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: kiri-lite-compose-buildx-coexistence
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   compose-buildx-coexistence:
