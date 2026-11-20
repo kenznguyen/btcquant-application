@@ -742,6 +742,19 @@ class SQLiteStateRepository:
                 ),
             )
             self._apply_aggregate_mutation(connection, mutation)
+            session_update = connection.execute(
+                """
+                UPDATE ps_sessions
+                SET last_committed_event_sequence = ?
+                WHERE session_id = ? AND account_scope_id = ? AND status = ?
+                """,
+                (
+                    event.event_sequence, fencing_token.session_id,
+                    fencing_token.account_scope_id, SessionStatus.RUNNING.value,
+                ),
+            )
+            if session_update.rowcount != 1:
+                raise SessionStateConflictError("session stopped being RUNNING during the transition")
             connection.commit()
             return CommitResult(
                 event_id=event.event_id, event_sequence=event.event_sequence,
