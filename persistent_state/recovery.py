@@ -39,6 +39,18 @@ def _aggregate_versions(events: tuple[EventRecord, ...]) -> dict[str, int]:
             raise RecoveryValidationError(
                 f"event {event.event_id} has no aggregate identity"
             )
+        if event.aggregate_state_json is None:
+            raise RecoveryValidationError(
+                f"event {event.event_id} has no committed aggregate-state snapshot"
+            )
+        try:
+            event_state = json.loads(event.aggregate_state_json)
+            if not isinstance(event_state, dict) or canonical_json(event_state) != event.aggregate_state_json:
+                raise ValueError("aggregate state snapshot is not canonical")
+        except (TypeError, json.JSONDecodeError, ValueError) as exc:
+            raise RecoveryValidationError(
+                f"event {event.event_id} has an invalid aggregate-state snapshot"
+            ) from exc
         if event.aggregate_id in versions and event.aggregate_version != versions[event.aggregate_id] + 1:
             raise RecoveryValidationError(
                 f"aggregate version is not contiguous for {event.aggregate_id}"
@@ -49,6 +61,34 @@ def _aggregate_versions(events: tuple[EventRecord, ...]) -> dict[str, int]:
             )
         versions[event.aggregate_id] = event.aggregate_version
     return versions
+
+
+def _replay_with_snapshot_validation(
+    initial_state_json: str,
+    events: tuple[EventRecord, ...],
+    *,
+    starting_sequence: int,
+    account_scope_id: str,
+    reducer: Reducer,
+):
+    def checked_reducer(state: dict, event: EventRecord) -> dict:
+        next_state = reducer(state, event)
+        aggregates = next_state.get("aggregates") if isinstance(next_state, dict) else None
+        item = aggregates.get(event.aggregate_id) if isinstance(aggregates, dict) else None
+        expected = {
+            "aggregateVersion": event.aggregate_version,
+            "state": json.loads(event.aggregate_state_json),
+        }
+        if item != expected:
+            raise ValueError(
+                f"event aggregate snapshot does not match deterministic replay: {event.aggregate_id}"
+            )
+        return next_state
+
+    return replay_events(
+        initial_state_json, events, starting_sequence=starting_sequence,
+        reducer=checked_reducer, account_scope_id=account_scope_id,
+    )
 
 
 def _validate_checkpoint_prefix(
@@ -66,7 +106,7 @@ def _validate_checkpoint_prefix(
     if declared_versions != versions:
         raise RecoveryValidationError("checkpoint aggregate versions do not match committed event prefix")
     try:
-        replayed_prefix = replay_events(
+        replayed_prefix = _replay_with_snapshot_validation(
             canonical_json({"aggregates": {}}),
             prefix_events,
             starting_sequence=0,
@@ -123,7 +163,7 @@ def recover_repository_state(
         checkpoint_id = checkpoint.checkpoint_id
 
     try:
-        result = replay_events(
+        result = _replay_with_snapshot_validation(
             initial_state, tail, starting_sequence=starting_sequence,
             reducer=reducer, account_scope_id=account_scope_id,
         )
