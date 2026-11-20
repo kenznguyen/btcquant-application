@@ -5521,3 +5521,18 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Tests/workflows/artifacts: none; documentation-only decision.
 - Next: prepare an execution plan with exact staging destination, source inventory, owner-approved M15/H1 coverage boundaries and gap policy, importer SHA, acceptance checks, retention and rollback controls. Obtain separate approval before any data operation.
 
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Offline REST tail validator prepared; raw payload unavailable
+
+- Owner requested preparation of a read-only validator for the personal-host Binance USD-M BTCUSDT REST tail response: M15 129 rows and H1 33 rows at cutoff 2026-11-20T08:02:15.852Z.
+- Implementation: `market_data/rest_tail_validator.py`, blob `3437e7a9181611cfed77eab59afee27136472963`, commit `014d30f75947143281176eae56557ab35672b1f`.
+- Regression tests: `market_data/test_rest_tail_validator.py`, blob `293d9a605b6ec6498d551504fda04eecf298601f`, test-first commit `98c651bd7dda9c7dc785957db4c57217919c84fa`.
+- Preparation evidence: `docs/evidence/T0_REST_TAIL_OFFLINE_VALIDATOR_PREPARATION_2026-11-20.md`, commit `4a6adce076b38e4aadb9e75fd561312880d9f09c`.
+- Validator is offline: it reads two local JSON response files, makes no network requests, does not use credentials/proxy, does not download archives, does not open/write SQLite, and does not mutate input files. It checks 12-field kline shape, timestamps/alignment/closeTime, ordering, duplicates, missing grid intervals, finite Decimal OHLCV fields, OHLC envelope, nonnegative volumes/trades and taker-buy volume bounds.
+- Fixed historical cutoff: 2026-11-20T08:02:15.852Z. The still-forming 08:00 candle is excluded: M15 expected 128 closed + 1 forming; H1 expected 32 closed + 1 forming.
+- 10 deterministic unittest cases passed in an isolated local temporary directory; py_compile and synthetic CLI fixture smoke passed. Tests are synthetic only; no GitHub Actions workflow/run/job/artifact was produced.
+- Critical limitation: the earlier personal-host probe did not retain raw JSON arrays. Actual 129/33 row OHLCV, duplicate, gap and continuity validation is **BLOCKED / NOT VERIFIED** until those exact payloads are supplied. Do not claim real-payload validation PASS.
+- The validator does not re-fetch Binance. The controlling T0 scope states REST tail retrieval was closed by owner decision/no further retrieval; any new REST request requires a separate explicit approval.
+- Status: validator **PREPARED**; actual response payload validation **BLOCKED — RAW PAYLOAD NOT RETAINED**. SQLite reconstruction/import, archive retrieval, runtime, T1/T2 and trading remain unchanged and not authorized.
+- Next: supply the original M15/H1 response JSON arrays if retained elsewhere. If unavailable, request separate approval before any new REST retrieval. No automatic fetch/retry/alternate route.
