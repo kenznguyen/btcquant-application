@@ -110,7 +110,7 @@ jobs:
           set -euo pipefail
           work="$RUNNER_TEMP/kiri-buildx-smoke"
           mkdir -p "$work"
-          printf '%s\\n' KIRI_BUILDX_IMAGE_PASS > "$work/proof"
+          printf '%s\n' KIRI_BUILDX_IMAGE_PASS > "$work/proof"
           cat > "$work/Dockerfile" <<'EOF'
           FROM scratch
           COPY busybox /bin/busybox
