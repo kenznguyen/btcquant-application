@@ -5838,3 +5838,24 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Review package includes exact six source/test blob SHAs, required invariants, five-axis checklist, CI evidence, explicit limitations, copy-ready review prompt, and no-runtime/no-data/no-integration constraints.
 - Independent review status: **PENDING**. No Graphify review verdict has been issued or claimed.
 - Next: refresh Graphify index to `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235`, then run/submit the independent review against that exact source snapshot. Keep T0/Application runtime and cross-layer integration blocked until review outcome and separate owner approval.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Graphify exact-SHA review attempt
+
+- Requested immutable review target: `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235`.
+- Independently fetched all six target files from GitHub at that exact commit. All six returned Git blob SHAs matched the review package exactly:
+  - `market_data/api_contract.py`: `4297ab173fee6f7ee78ef759217c229cd58eb4e4`
+  - `market_data/fastapi_app.py`: `e0b607770004a4c1b01c1368c5dce268298d89a3`
+  - `pipeline/api.py`: `887901302fc767750568933232daebb947902ee1`
+  - `market_data/test_api_contract.py`: `856e8b7ae8932df6e081fe012ee962a0cf509dea`
+  - `pipeline/test_api.py`: `8c4b4c3d0cb16cbd53a87ff40aafb35473b73bb7`
+  - `market_data/README.md`: `6561214efdca5108672b83809a9c12047462d72b`
+- Graphify `graph_stats` re-check still reports build `cf5b4948-3b68-486a-be13-bb4ea94ab585`, indexed commit `44dd517887caf256f293fc502d56afbbba124d29`, indexed at `2026-11-20T07:09:33.049614Z`. It is NOT the requested source snapshot.
+- Available Graphify agent tools expose indexed-graph queries and `review_status` (status only; explicitly does not start/re-run reviews). No refresh/re-index or start-review operation is exposed in this connected toolset. Graphify setup/troubleshooting directs repository management to `https://app.graphify.com`.
+- Graphify's existing completed review for PR #1 is not applicable: PR head `f940443d3e5f583e2c0bfd4c1d15d9f31a576775`, title references a separate Copilot review snapshot/source `0844e16`, not target `fc2e484...`.
+- Therefore exact-SHA Graphify review was NOT run; no findings or approval are claimed. Verdict for the requested Graphify review: **NOT VERIFIED** (index mismatch + no exposed refresh/start-review action).
+- Review package remains `docs/reviews/T0_CANDLE_CONTRACT_GRAPHIFY_INDEPENDENT_REVIEW_PACKAGE_2026-11-20.md`; package commit `9f4d3fe7ca99486ec8c58fdbb156ce0a153bcb23`.
+- Next permitted step: in Graphify web app, refresh/re-index `kenznguyen/btcquant-application` to exact commit `fc2e484...`; then use Graphify's repository/PR review workflow and verify exact head SHA before accepting the verdict. Do not substitute PR #1's prior review.
+- Runtime, layer integration, VPS, canonical data, Binance REST, deployment, and trading remain out of scope and blocked.
