@@ -7,6 +7,7 @@ directories only. This module has no T0, market-data, network or exchange client
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import os
 from pathlib import Path
 import sqlite3
@@ -69,8 +70,12 @@ class AggregateMutation:
             raise ValueError("expected_version must be an integer >= 0")
         # Requiring canonical JSON here keeps aggregate state deterministic at the
         # persistence boundary, rather than silently normalizing caller payloads.
-        from persistent_state.contracts import _canonical_json_object
-        _canonical_json_object("state_json", self.state_json)
+        try:
+            parsed = json.loads(self.state_json)
+        except (json.JSONDecodeError, TypeError) as exc:
+            raise ValueError("state_json must be valid canonical JSON") from exc
+        if not isinstance(parsed, dict) or canonical_json(parsed) != self.state_json:
+            raise ValueError("state_json must be a canonical JSON object")
 
 
 @dataclass(frozen=True, slots=True)
