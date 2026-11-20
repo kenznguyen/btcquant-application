@@ -196,7 +196,7 @@ The following remain deliberately unspecified and require separate review/approv
 The open decisions in section 12 are closed for v1 scope planning by `docs/decisions/PERSISTENT_STATE_ARCHITECTURE_DECISIONS_2026-11-20.md` (commit `4ce14993ba8d30213f7609f1c7875212a80eedd2`).
 
 Summary:
-- Application-owned SQLite, physically separate from T0 and outside the Git repository; exact absolute path deferred until target OS/environment is selected.
+- Application-owned SQLite, physically separate from T0 and outside the Git repository. Windows is the temporarily selected target OS; use the Windows per-user application-data/user-data area as the location class. Exact absolute path and concrete known-folder choice remain deliberately deferred; no directory is created or probed during design.
 - Normalized tables plus versioned canonical JSON event/checkpoint payloads; exact decimal accounting values and UTC epoch-ms timestamps.
 - Explicit forward-only migrations, verified SQLite Online Backup before migration; unknown/newer schema fails closed.
 - Atomic event + idempotency + ledger + aggregate-version transaction. Immutable verified checkpoints on clean close and every 100 committed state events; retain at least 3 verified generations.
