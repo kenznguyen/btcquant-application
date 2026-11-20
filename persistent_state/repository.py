@@ -1126,7 +1126,6 @@ class SQLiteStateRepository:
                     candle_open_time_ms=row["candle_open_time_ms"],
                     aggregate_id=row["aggregate_id"],
                     aggregate_state_json=row["aggregate_state_json"],
-                    aggregate_id=row["aggregate_id"],
                 )
                 for row in rows
             )
