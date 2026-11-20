@@ -1,4 +1,5 @@
 import hashlib
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,7 +9,8 @@ from persistent_state.contracts import (
     StrategyId, canonical_json, derive_idempotency_key,
 )
 from persistent_state.repository import (
-    AggregateMutation, CheckpointRequiredForCloseError, SessionStateConflictError,
+    AggregateMutation, CheckpointIntegrityError, CheckpointRequiredForCloseError,
+    SessionStateConflictError,
     SessionTransitionError, SQLiteStateRepository, StaleFencingTokenError,
 )
 
@@ -168,6 +170,36 @@ class SessionFencingTests(unittest.TestCase):
         )
         self.assertEqual(closed.status, SessionStatus.CLOSED)
         self.assertEqual(closed.ended_at_ms, 1_800_000_100_002)
+
+    def test_close_revalidates_checkpoint_checksum_before_marking_closed(self):
+        token = start_running(self.repository)
+        commit_one(self.repository, token)
+        self.repository.advance_session(
+            token, expected_status=SessionStatus.RUNNING,
+            new_status=SessionStatus.CHECKPOINTING, at_ms=1_800_000_100_000,
+        )
+        self.repository.publish_checkpoint(checkpoint_for(token), fencing_token=token)
+        with sqlite3.connect(self.path) as connection:
+            connection.execute("DROP TRIGGER ps_checkpoints_no_update")
+            connection.execute(
+                "UPDATE ps_checkpoint_generations SET payload_json=? WHERE checkpoint_id=?",
+                ('{"tampered":true}', "checkpoint-session-1-1"),
+            )
+            connection.execute(
+                """
+                CREATE TRIGGER ps_checkpoints_no_update
+                BEFORE UPDATE ON ps_checkpoint_generations
+                BEGIN
+                    SELECT RAISE(ABORT, 'ps_checkpoint_generations is append-only');
+                END
+                """
+            )
+        with self.assertRaises(CheckpointIntegrityError):
+            self.repository.advance_session(
+                token, expected_status=SessionStatus.CHECKPOINTING,
+                new_status=SessionStatus.CLOSED, at_ms=1_800_000_100_001,
+            )
+        self.assertEqual(self.repository.get_session("session-1").status, SessionStatus.CHECKPOINTING)
 
     def test_closed_session_is_not_relabelled_interrupted_on_next_start(self):
         token = start_running(self.repository)
