@@ -12,7 +12,7 @@
 | Topic | Decision |
 |---|---|
 | Persistence backend | Application-owned SQLite database, separate from every T0 database and T0 Canonical asset. No PostgreSQL in the first implementation. |
-| Physical location | OS user-data/application-data directory outside the Git repository and outside T0 storage. Resolve the exact absolute path only after target OS/environment is explicitly selected. No staging path is implied. |
+| Target OS / physical location | **Windows is the temporarily selected target OS** for the Application-owned SQLite v1. Store it in the Windows per-user application-data/user-data area, outside the Git repository and outside T0 storage. The exact absolute directory and concrete Windows known-folder choice are deliberately deferred; do not create, probe or reserve a path during design. No staging path is implied. |
 | Schema | Normalized SQLite tables for sessions, events, aggregate versions, strategy states, Core/AI ledgers, idempotency claims, risk events, checkpoints and checkpoint generations. Versioned canonical JSON payloads for extensible event/checkpoint bodies. |
 | Numeric representation | Financial quantities/prices use exact decimal strings or integer-scaled units; never binary floating-point as persisted accounting truth. Timestamps are UTC epoch milliseconds; preserve source/exchange timestamps separately. |
 | Migration | Explicit, forward-only, versioned migrations. Take and verify a SQLite Online Backup API backup before migration. Unknown/newer schema or failed migration => fail closed; no destructive auto-reset or downgrade. |
@@ -60,4 +60,5 @@ The next implementation authorization, if granted, should be limited to the foll
 - Work performed: architecture decision documentation only.
 - Tests/workflows/Actions run/job/artifact: none.
 - Status: **OPEN ARCHITECTURE DECISIONS CLOSED FOR SCOPE PLANNING**; implementation **NOT STARTED / NOT AUTHORIZED**; runtime **NOT STARTED / NOT AUTHORIZED**.
+- Target OS clarification (2026-11-20): Windows selected provisionally for resolving the Application SQLite storage-location design. Exact absolute path remains intentionally undecided and is not required during this design phase.
 - Next: owner review of the bounded implementation scope and separate explicit authorization before any source changes.
