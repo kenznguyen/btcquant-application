@@ -5986,3 +5986,22 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Review disposition: R1 **RESOLVED** by source inspection; final FastAPI CI **PASS**. Advisory A1 (two wall-clock reads in FastAPI) remains non-blocking and unchanged, as it was outside the approved scope. The independent review's overall R1 blocker is cleared; a formal follow-up reviewer pass has not been run, so review status is **FIX APPLIED / CI PASS / FOLLOW-UP REVIEW NOT VERIFIED**.
 - Runtime/production readiness remains **NOT VERIFIED**. No VPS, canonical SQLite, T1/T2, PostgreSQL activation, exchange, deployment, or live trading was accessed or enabled. `ai_execution_enabled=false` remains unchanged.
 - Next: focused independent follow-up review of R1 resolution if requested. No further changes are authorized by this narrow approval.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Independent follow-up review: R1 resolution
+
+- Review target: source SHA `b8f12fdbe7eed4eccd71a505279409ef5f610e03`; prior finding recorded against `ecf33b76d31278d7447172c2d76056455121466f`.
+- Exact compare shows one changed file only: `market_data/test_api_contract.py`, 6 additions / 5 deletions. The only semantic change is wrapping the common-adapter future-`asOfMs` request in `patch("pipeline.api.now_ms", return_value=evaluation)`.
+- Follow-up review confirms both adapters now evaluate the future-`asOfMs` case against the same deterministic clock instant. The previously identified dependence on wall-clock time is removed. The test continues to compare FastAPI and common-adapter status and JSON response parity (both 400 for future `asOfMs`).
+- Review axes:
+  - Correctness: **PASS** for R1 resolution; deterministic clock seam is patched at the common adapter's owning module.
+  - Readability: **PASS**; minimal nested context manager, explicit target.
+  - Architecture: **PASS**; test-only change, no production API or shared module changes.
+  - Security: **PASS**; no input, auth, secrets, or data-flow change.
+  - Performance: **PASS**; no production runtime effect.
+- Verification: GitHub Actions run [`44741770172`](https://github.com/kenznguyen/btcquant-application/actions/runs/44741770172), exact source SHA `b8f12fdbe7eed4eccd71a505279409ef5f610e03`, completed SUCCESS; **69/69** FastAPI contract/API tests pass, runtime-lock + in-process ASGI smoke PASS, isolated Uvicorn + Nginx integration PASS. Artifact IDs and SHA-256 digests are recorded in the preceding handoff section.
+- Verdict: **FOLLOW-UP REVIEW PASS — R1 CLOSED**. No new required finding from this narrowly scoped follow-up.
+- Advisory A1 remains: FastAPI reads `now_ms()` before and after storage. It was explicitly non-blocking and outside the approved R1 correction; no change is recommended or authorized in this review.
+- SQLite aggregate workflow was not rerun for this test-only file change; prior 174/174 evidence is tied to its earlier exact SHA and is not relabeled. FastAPI CI is current for the R1 source SHA.
+- Runtime/production readiness remains **NOT VERIFIED**. No VPS, canonical SQLite, T1/T2, PostgreSQL activation, exchange, deployment, or live trading was accessed or enabled. `ai_execution_enabled=false` remains unchanged.
+- Next: preserve this review outcome; no further code changes are required for R1. Any work on advisory A1 or other scope requires separate approval.
