@@ -54,7 +54,9 @@ def resolve_paper_db_path(environ=None, *, require_exists=False):
             continue
         t0_path = _canonical_path(value, code="T0_DATABASE_PATH_INVALID")
         if _overlaps(paper, t0_path):
-            raise PaperDatabasePathError("PAPER_DB_MUST_BE_DISTINCT_FROM_T0")
+            code = ("T0_LEDGER_PATH_FORBIDDEN" if key == "T0_FEEDER_LEASE_DB"
+                    else "PAPER_DB_MUST_BE_DISTINCT_FROM_T0")
+            raise PaperDatabasePathError(code)
 
     legacy = env.get("PAPER_TRADING_DB")
     if legacy:

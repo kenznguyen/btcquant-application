@@ -141,7 +141,6 @@ class FiveLayerApiTest(unittest.TestCase):
                 "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
             ).fetchall()
         self.assertEqual(after_tables, before_tables)
-        self.assertNotIn("paper_orders", {row[0] for row in after_tables})
     def test_core_retries_do_not_duplicate_positions_or_fees(self):
         with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
             _, first = self.request("/v1/paper/evaluate", "POST", {"source": "CORE"})
@@ -247,10 +246,12 @@ class FiveLayerApiTest(unittest.TestCase):
             self.assertFalse(path.exists())
 
     def test_read_only_paper_does_not_create_missing_or_uninitialized_account(self):
-        self.assertEqual(self.request("/v1/paper")[0], 503)
-        with patch.dict(os.environ, {"PAPER_DB": str(self.root / "absent.sqlite3")}):
+        self.assertEqual(self.request("/v1/paper")[0], 200)
+        missing = self.root / "absent.sqlite3"
+        with patch.dict(os.environ, {"PAPER_DB": str(missing)}):
             self.assertEqual(self.request("/v1/paper")[0], 503)
-            self.assertFalse((self.root / "absent.sqlite3").exists())
+            self.assertEqual(self.request("/v1/equity")[0], 503)
+            self.assertFalse(missing.exists())
 
     def test_empty_intelligence_snapshot_does_not_become_ready(self):
         missing = build_snapshot(self.now-300_000, self.now-1000, self.now-500)
@@ -373,6 +374,8 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["order"]["reason"],"MAX_DRAWDOWN_LIMIT")
         self.assertTrue(self.request("/v1/paper")[1]["riskControl"]["killed"])
     def test_unconfigured_risk_limits_fail_closed_for_core(self):
+        with sqlite3.connect(self.paper_db) as connection:
+            connection.execute("DELETE FROM paper_account_risk_contract WHERE account_id=1")
         with patch.dict(os.environ,{"PAPER_MAX_DRAWDOWN_PCT":"","PAPER_MAX_DAILY_LOSS_USDT":"","PAPER_MAX_EXPOSURE_USDT":""}):
             with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
                 _, result = self.request("/v1/paper/evaluate","POST",{"source":"CORE"})

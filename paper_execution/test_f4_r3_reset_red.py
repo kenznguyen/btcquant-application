@@ -15,6 +15,9 @@ class F4KillResetAtomicReadinessRedTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name) / "reset.sqlite3"
+        self.t0_path = Path(self.temp.name) / "market.sqlite3"
+        with sqlite3.connect(self.t0_path) as connection:
+            connection.execute("CREATE TABLE candles (open_time_ms INTEGER)")
         self.now = 1_800_000_000_000
         self.ledger = PaperLedger(self.path)
         self.ledger.set_killed(True, self.now, "TEST_KILL")
@@ -46,7 +49,7 @@ class F4KillResetAtomicReadinessRedTest(unittest.TestCase):
             def snapshot(self):
                 return {"orders": []}
 
-        with patch.dict(os.environ, {"MARKET_DATA_DB": str(self.path)}), \
+        with patch.dict(os.environ, {"PAPER_DB": str(self.path), "MARKET_DATA_DB": str(self.t0_path)}), \
              patch.object(api, "context", return_value={
                  "candles": {"coverage": {"complete": True}}, "book": {"observedAtMs": self.now},
              }), \
@@ -59,7 +62,7 @@ class F4KillResetAtomicReadinessRedTest(unittest.TestCase):
     def test_authoritative_account_risk_not_ready_blocks_reset_preflight(self):
         from pipeline import api
 
-        with patch.dict(os.environ, {"MARKET_DATA_DB": str(self.path)}), \
+        with patch.dict(os.environ, {"PAPER_DB": str(self.path), "MARKET_DATA_DB": str(self.t0_path)}), \
              patch.object(api, "context", return_value={
                  "candles": {"coverage": {"complete": True}}, "book": {"observedAtMs": self.now},
              }), \
@@ -131,7 +134,7 @@ class F4KillResetAtomicReadinessRedTest(unittest.TestCase):
         }
         statuses = []
         with patch.dict(os.environ, {
-                "MARKET_DATA_DB": str(self.path), "CONTROL_TOKEN": "control-token",
+                "PAPER_DB": str(self.path), "MARKET_DATA_DB": str(self.t0_path), "CONTROL_TOKEN": "control-token",
                 "MARKET_DATA_TOKEN": "read-token",
             }), \
              patch.object(api, "now_ms", return_value=self.now + 1), \

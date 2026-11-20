@@ -59,16 +59,16 @@ jobs:
           db_paths_test_blob="$(git hash-object paper_execution/test_database_paths.py)"
           echo "IDENTITY head=$head_sha github_sha=$GITHUB_SHA test=$test_blob ledger=$ledger_blob api=$api_blob risk_control=$risk_control_blob risk_contract=$risk_contract_blob ledger_test=$ledger_test_blob api_test=$api_test_blob dual_test=$dual_test_blob contracts=$contracts_blob"
           [[ "$head_sha" == "$GITHUB_SHA" ]]
-          [[ "$test_blob" == "ea87e42b52889ed9fd926f3d647a9b8ca87d22df" ]]
+          [[ "$test_blob" == "c98ead20d50497dd668673a38bb83359ea0687a7" ]]
           [[ "$ledger_blob" == "9cc03db8b7506543f9eef2835eb5cb7cda701d6c" ]]
           [[ "$api_blob" == "2c5c35951dbe902e2553ad186bedaf0ca22b29e0" ]]
           [[ "$risk_control_blob" == "c8fe573a7a5b0716159e50a678423e402d7df3ba" ]]
           [[ "$risk_contract_blob" == "7ae74740568e3bcad78acd928896ee363cc62613" ]]
-          [[ "$ledger_test_blob" == "71c7719d3e84be41bb7ca200b50fe6b5ee0f68e9" ]]
-          [[ "$api_test_blob" == "515e4607e4d0891a6c26096c5fd60d3eaf5eeeac" ]]
+          [[ "$ledger_test_blob" == "e162f7ff38d61c33da5f8e801af0d836346e80c6" ]]
+          [[ "$api_test_blob" == "f665944247f63ddc4c135099a91ad0637b02d597" ]]
           [[ "$dual_test_blob" == "0cf05418940a07a8357ee9d6039325a1efcb16f2" ]]
           [[ "$contracts_blob" == "14368ea20d56879b9c9fc6c2eddf07e8c44ab5da" ]]
-          [[ "$db_paths_blob" == "e3c9504e26d81642560282c9e12f77a8c6d94454" ]]
+          [[ "$db_paths_blob" == "aa813461d607069872960f1d55d6b29667a87642" ]]
           [[ "$db_paths_test_blob" == "36b45c10c58d79eb84c5c3a072e15131c05d036d" ]]
           {
             echo "workflow_run_id=$GITHUB_RUN_ID"

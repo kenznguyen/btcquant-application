@@ -225,15 +225,17 @@ class PaperLedgerTest(unittest.TestCase):
 
     def test_explicit_local_cli_initializes_paper_state_without_changing_candles(self):
         path = Path(self.temp.name) / "initialize.sqlite3"
-        with sqlite3.connect(path) as connection:
+        t0_path = Path(self.temp.name) / "canonical.sqlite3"
+        with sqlite3.connect(t0_path) as connection:
             connection.execute("CREATE TABLE candles (open_time_ms INTEGER)")
             connection.execute("INSERT INTO candles VALUES (123)")
-        output = subprocess.check_output([sys.executable, "-m", "paper_execution", "--db", str(path)], text=True)
+        with patch.dict(os.environ, {"PAPER_DB": str(path), "MARKET_DATA_DB": str(t0_path)}):
+            output = subprocess.check_output([sys.executable, "-m", "paper_execution", "--db", str(path)], text=True)
         result = json.loads(output)
         self.assertEqual(result["mode"], "PAPER")
         self.assertEqual(result["positionBase"], "0")
         self.assertFalse(result["liveTradingSupported"])
-        with sqlite3.connect(path) as connection:
+        with sqlite3.connect(t0_path) as connection:
             self.assertEqual(connection.execute("SELECT * FROM candles").fetchall(), [(123,)])
 
     def test_kill_switch_is_persistent_and_blocks_every_paper_intent(self):
