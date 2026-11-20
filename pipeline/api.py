@@ -527,11 +527,12 @@ def application(environ, start_response):
                 query = candle_query(environ.get("QUERY_STRING", ""))
             except ValueError:
                 return response("400 Bad Request", {"error": "INVALID_QUERY"})
-            if query["as_of_ms"] is not None and query["as_of_ms"] > timestamp:
-                return response("400 Bad Request", {"error": "INVALID_QUERY"})
             try:
                 result = market_window(**query)
-                result = candle_envelope(result, timestamp, query["as_of_ms"])
+                generated_at_ms = now_ms()
+                if query["as_of_ms"] is not None and query["as_of_ms"] > generated_at_ms:
+                    return response("400 Bad Request", {"error": "INVALID_QUERY"})
+                result = candle_envelope(result, generated_at_ms, query["as_of_ms"])
             except (ValueError, OSError, sqlite3.Error):
                 return response("503 Service Unavailable", {"error": "STORE_UNAVAILABLE"})
         elif path == "/v1/paper":
