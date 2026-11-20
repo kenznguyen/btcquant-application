@@ -56,7 +56,7 @@ class MarketDataPreflightTests(unittest.TestCase):
 
     def test_accepts_aligned_complete_closed_m15_h1_snapshots(self):
         result = self.validate()
-        self.assertEqual(result.status, "READY")
+        self.assertEqual(result.status, "READY", result.reasons)
         self.assertEqual(result.reasons, ())
         self.assertTrue(result.snapshot_id.startswith("sha256:"))
         self.assertEqual(result.as_of_ms, AS_OF)
@@ -112,7 +112,7 @@ class MarketDataPreflightTests(unittest.TestCase):
         duplicate = copy.deepcopy(self.m15)
         duplicate["candles"][1] = copy.deepcopy(duplicate["candles"][0])
         result = self.validate(m15=duplicate)
-        self.assertIn("CANDLE_SEQUENCE_INVALID", result.reasons)
+        self.assertIn("CANDLE_SEQUENCE_INVALID", result.reasons, result.reasons)
         unordered = copy.deepcopy(self.m15)
         unordered["candles"].reverse()
         result = self.validate(m15=unordered)
