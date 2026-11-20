@@ -5,7 +5,7 @@ import unittest
 from persistent_state.contracts import (
     Checkpoint, EventRecord, IdempotencyClaim, PositionLedger, RiskState,
     SessionRecord, SessionStatus, SmartDCAState, StrategyId, StrategyState,
-    derive_idempotency_key,
+    canonical_json as canonical_payload_json, derive_idempotency_key,
 )
 
 
@@ -36,6 +36,18 @@ def event(**changes):
     )
     values.update(changes)
     return EventRecord(**values)
+
+
+class CanonicalJsonContractTests(unittest.TestCase):
+    def test_rejects_binary_float_values_even_when_nested(self):
+        with self.assertRaisesRegex(ValueError, "floating-point"):
+            canonical_payload_json({"position": {"price": 1.25}})
+
+    def test_accepts_exact_decimal_strings_and_integer_metadata(self):
+        self.assertEqual(
+            canonical_payload_json({"price": "1.25", "sequence": 7}),
+            '{"price":"1.25","sequence":7}',
+        )
 
 
 class SessionContractTests(unittest.TestCase):
