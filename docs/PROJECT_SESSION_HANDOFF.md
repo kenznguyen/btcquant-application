@@ -5645,3 +5645,20 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - This is a sequencing decision, not blanket authorization to implement or activate every component. No code, tests, workflows, data, database, host, runtime, or trading operation was performed by this documentation update.
 - Work record: documentation-only. Source branch `main`; parent/source HEAD `a3c26f0850c45f609c67d6ce0f540c7d230451e5` (decision-record commit). Tests/workflows/Actions run/job/artifact: none. Status: **DECISION APPROVED / RECORDED**.
 - Next: proceed only with separately scoped application/software work that does not require Feeder startup, Canonical data access, staging, persistent runtime, T1/T2 runtime connection, or trading.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — On-Demand Execution manual / persistent-state architecture approved
+
+- Owner selected **On-Demand Execution: manual Start/Stop; persistent state between sessions**.
+- Decision record: `docs/decisions/ON_DEMAND_EXECUTION_MANUAL_PERSISTENT_STATE_2026-11-20.md`, commit `ac7fc0c641c67a66743c3ac8568454a94cd9c180`.
+- Execution posture: no 24/7 process, scheduler, background runner, systemd/autostart, or persistent service. A session runs only after explicit user initiation and exits after checkpoint/close.
+- Persistent state is durable business state, not a continuously running process. Design requirements include versioned checkpoints; separate Core/AI decision and position ledgers; paper-position and Smart DCA continuity; atomic/recoverable persistence; idempotent replay; provenance/session identity; fail-closed restore; and fresh market-data preflight on every session.
+- Strategy invariants: preserve RSI + ADX + Smart DCA Core; independent AI may emit LONG/SHORT even when Core is silent; every proposed action must pass the common Shared Risk Engine and Kill Switch; paper-first only.
+- Operational limitation: while the process is stopped, there is no signal detection, monitoring, alerting, data collection, or risk intervention unless separately authorized external processes exist. Persisted paper positions remain recorded but are not actively monitored during downtime.
+- This is an architecture decision only. It does **not** authorize source implementation, schema migration, database creation/open/write, T0 reconstruction or Feeder startup, T1/T2 runtime connection, scheduler/background service, VPS/systemd/autostart, deployment, integrated paper execution, or live trading.
+- Existing Application-first delivery order remains in force. T0 remains an independent data asset; previous Canonical/data restrictions remain unchanged.
+- Work record: documentation-only. Parent/source HEAD before decision record: `71f01f2dd1d6cf29c7c09edb8126b8b91e6ea5b8`; decision commit: `ac7fc0c641c67a66743c3ac8568454a94cd9c180`. Tests/workflows/Actions run/job/artifact: none.
+- Status: **ARCHITECTURE DECISION APPROVED / RECORDED**; implementation **NOT STARTED / NOT AUTHORIZED**; runtime **NOT STARTED / NOT AUTHORIZED**.
+- Next: separately review a versioned persistent-state contract and session lifecycle test plan before authorizing implementation.
