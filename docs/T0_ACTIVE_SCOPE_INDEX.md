@@ -458,3 +458,11 @@
 - Manifest static checks **PASS** for 404 unique object identities, 202 ZIP + 202 sidecars, ZIP metadata/pair assertions 202/202, and row totals M15 241,440 / H1 60,360. Historical sidecar own-object metadata remains NOT VERIFIED.
 - Overall **REVIEW COMPLETE — EXECUTION PLAN BLOCKED**: reconcile stale staging-plan authorization wording, distinguish archive inventory from final dataset manifest, update stale sidecar approval condition, and clarify deterministic parser/transfer-cap/path-safety/CSV/timestamp/evidence rules.
 - Exact approved target remains `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001`; preflight not run. No archive transfer or SQLite. SQLite separately NOT AUTHORIZED.
+
+
+## 2026-11-20 — Offline REST tail validator prepared
+- Added `market_data/rest_tail_validator.py` (blob `3437e7a9181611cfed77eab59afee27136472963`) and 10 deterministic regression tests (`market_data/test_rest_tail_validator.py`, blob `293d9a605b6ec6498d551504fda04eecf298601f`).
+- Preparation evidence: `docs/evidence/T0_REST_TAIL_OFFLINE_VALIDATOR_PREPARATION_2026-11-20.md`, commit `4a6adce076b38e4aadb9e75fd561312880d9f09c`.
+- Offline-only: reads saved M15/H1 JSON; no network, archive, SQLite or runtime access. Fixed cutoff 2026-11-20T08:02:15.852Z; expected closed counts M15 128, H1 32; forming 08:00 candle excluded.
+- Synthetic unit tests and CLI fixture smoke PASS; no Actions workflow/run/artifact.
+- Actual payload validation remains **BLOCKED / NOT VERIFIED** because previous personal-host probe did not retain raw JSON response arrays. No new REST retrieval is authorized by this validator; obtain separate approval before any new request.
