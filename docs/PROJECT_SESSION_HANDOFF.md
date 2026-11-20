@@ -5626,3 +5626,22 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Work record: handoff documentation update only. No tests/workflows/Actions run/job/artifact; no host, path, archive, database, runtime or exchange accessed.
 - Source branch: `main`. Parent/source HEAD inspected before this update: `92f3e3b0ec59d34a15c65d2e45eba8caf26c0070`.
 - Next: wait for an identified owner-controlled staging environment and exact path, or receive a separately scoped request for non-staging documentation/static work.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Application-first delivery order approved
+
+- Owner approved **Option A — Application-first**: complete application/software foundations before restarting the Feeder or creating a new T0 Canonical dataset.
+- Decision record: `docs/decisions/DELIVERY_ORDER_APPLICATION_FIRST_2026-11-20.md`, commit `a3c26f0850c45f609c67d6ce0f540c7d230451e5`.
+- Delivery order:
+  1. T0 Application Foundation: API, versioned Data Contract, validation, and isolated tests using clearly classified fixtures/reference inputs.
+  2. T1 Collector: implementation remains in `kenznguyen/binance-futures-collector`; application-side consumer contracts/adapters only when separately approved. T1 HTTP Provider remains PAUSED; T1-to-T2 runtime connection NOT APPROVED.
+  3. T2 Strategy Development: preserve RSI + ADX + Smart DCA Strategy Core; develop independent AI LONG/SHORT strategy; keep ledgers separate.
+  4. Shared Risk Engine: common admission/risk controls for Core and AI; paper-first only.
+  5. Defer Feeder startup, Canonical reconstruction/database operations, persistent runtime/VPS activation, T1/T2 runtime connection, and integrated paper trading until prerequisites and separate approvals are satisfied.
+- Fixture/synthetic data is test-only. Binance reference/tail evidence is not Canonical unless separately reconciled and approved. Do not label either as T0 Canonical Data.
+- Existing T0 status is unchanged: former Canonical SQLite **LOST**; new reconstructed SQLite **NOT CREATED**; Feeder **NOT STARTED**; reconstruction **BLOCKED / NOT AUTHORIZED**. T0 remains an independent data asset.
+- This is a sequencing decision, not blanket authorization to implement or activate every component. No code, tests, workflows, data, database, host, runtime, or trading operation was performed by this documentation update.
+- Work record: documentation-only. Source branch `main`; parent/source HEAD `a3c26f0850c45f609c67d6ce0f540c7d230451e5` (decision-record commit). Tests/workflows/Actions run/job/artifact: none. Status: **DECISION APPROVED / RECORDED**.
+- Next: proceed only with separately scoped application/software work that does not require Feeder startup, Canonical data access, staging, persistent runtime, T1/T2 runtime connection, or trading.
