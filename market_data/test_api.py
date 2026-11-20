@@ -61,7 +61,7 @@ class CandleApiTest(unittest.TestCase):
     def test_as_of_does_not_backdate_imported_history(self):
         query = f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}&endMs={self.start+self.interval}&asOfMs={self.start+self.interval}"
         generated_at = self.start + self.interval + 100
-        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+        with patch("market_data.fastapi_app.now_ms", return_value=generated_at):
             code, body = self.request(query)
         self.assertEqual(code, 200)
         self.assertEqual(body["candles"], [])
@@ -158,7 +158,7 @@ class CandleApiTest(unittest.TestCase):
 
     def test_contract_v1_response_has_explicit_version_and_market_identity(self):
         generated_at = self.start + 2*self.interval + 1_000
-        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+        with patch("market_data.fastapi_app.now_ms", return_value=generated_at):
             code, body = self.request()
 
         self.assertEqual(code, 200)
@@ -177,7 +177,7 @@ class CandleApiTest(unittest.TestCase):
 
     def test_contract_v1_freshness_requires_complete_coverage(self):
         evaluation_time = self.start + self.interval + 1_000
-        with patch("market_data.fastapi_app.time.time_ns", return_value=evaluation_time * 1_000_000):
+        with patch("market_data.fastapi_app.now_ms", return_value=evaluation_time):
             code, body = self.request()
 
         self.assertEqual(code, 200)
@@ -203,7 +203,7 @@ class CandleApiTest(unittest.TestCase):
             f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
             f"&endMs={self.start+self.interval}"
         )
-        with patch("market_data.fastapi_app.time.time_ns", return_value=evaluation_time * 1_000_000):
+        with patch("market_data.fastapi_app.now_ms", return_value=evaluation_time):
             code, body = self.request(query)
 
         self.assertEqual(code, 200)
@@ -215,7 +215,7 @@ class CandleApiTest(unittest.TestCase):
 
     def test_contract_v1_stale_latest_candle_is_not_fresh_or_evaluable(self):
         evaluation_time = self.start + 2*self.interval + 1_000
-        with patch("market_data.fastapi_app.time.time_ns", return_value=evaluation_time * 1_000_000):
+        with patch("market_data.fastapi_app.now_ms", return_value=evaluation_time):
             code, body = self.request()
 
         self.assertEqual(code, 200)
@@ -230,7 +230,7 @@ class CandleApiTest(unittest.TestCase):
             f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
             f"&endMs={self.start+self.interval}&asOfMs={evaluation_time}"
         )
-        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+        with patch("market_data.fastapi_app.now_ms", return_value=generated_at):
             code, body = self.request(query)
 
         self.assertEqual(code, 200)
@@ -248,7 +248,7 @@ class CandleApiTest(unittest.TestCase):
             f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
             f"&endMs={self.start+self.interval}&asOfMs={generated_at+1}"
         )
-        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+        with patch("market_data.fastapi_app.now_ms", return_value=generated_at):
             code, body = self.request(query)
 
         self.assertEqual(code, 400)
@@ -267,7 +267,7 @@ class CandleApiTest(unittest.TestCase):
             f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
             f"&endMs={self.start+self.interval}"
         )
-        with patch("market_data.fastapi_app.time.time_ns", return_value=evaluation_time * 1_000_000):
+        with patch("market_data.fastapi_app.now_ms", return_value=evaluation_time):
             code, body = self.request(query)
 
         self.assertEqual(code, 200)
@@ -282,7 +282,7 @@ class CandleApiTest(unittest.TestCase):
             f"symbol=BTCUSDT&timeframe=15m&startMs={self.start}"
             f"&endMs={self.start+self.interval}&asOfMs={self.start+self.interval}"
         )
-        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+        with patch("market_data.fastapi_app.now_ms", return_value=generated_at):
             code, body = self.request(query)
 
         self.assertEqual(code, 200)
@@ -303,7 +303,7 @@ class CandleApiTest(unittest.TestCase):
 
     def test_contract_v1_candle_has_explicit_exclusive_close_and_quality_provenance(self):
         generated_at = self.start + 2*self.interval + 1_000
-        with patch("market_data.fastapi_app.time.time_ns", return_value=generated_at * 1_000_000):
+        with patch("market_data.fastapi_app.now_ms", return_value=generated_at):
             code, body = self.request()
 
         self.assertEqual(code, 200)
