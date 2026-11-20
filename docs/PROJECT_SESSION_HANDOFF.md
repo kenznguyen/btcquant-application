@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Old Canonical LOST; reconstructed data NOT CREATED
+
+- Owner explicitly confirmed: **no copy of the former Canonical Data remains**.
+- Authoritative distinction: **OLD CANONICAL = LOST**; **NEW RECONSTRUCTED DATA = NOT CREATED**. The former SQLite database is not recoverable. Binance ZIP/sidecar archives are source evidence, not a backup or replica of that database.
+- Status record: `docs/decisions/T0_OLD_CANONICAL_LOSS_AND_RECONSTRUCTION_STATUS_2026-11-20.md`.
+- Controlling design decision: `docs/decisions/T0_CANONICAL_DATA_PRESERVE_AND_RECONSTRUCT_DECISION_2026-11-20.md` — design/procedure only; no archive transfer, DB creation/import, validation writes, backup/restore, promotion or runtime authorization.
+- Execution plan: `docs/plans/T0_CANONICAL_SQLITE_RECONSTRUCTION_EXECUTION_PLAN_2026-11-20.md` — execution blocked/not authorized pending all listed owner gates.
+- Historical staging plan `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md` is marked **SUPERSEDED / HOLD**. Its older conditional materialization authorization must not be used to initiate archive access or transfer.
+- Archive evidence remains preserved; historical validation was 202 ZIP + 202 paired sidecars, 241,440 M15 and 60,360 H1 rows. Full historical completeness and REST tail remain NOT VERIFIED; historical 11,277-byte aggregate discrepancy remains unexplained.
+- New reconstruction DB: **NOT CREATED**. Import: **NOT STARTED**. DB validation: **NOT RUN**. Promotion: **NOT AUTHORIZED**.
+- No data operation, deletion, archive access, destination preflight, host/runtime action, test or workflow was performed for this documentation update. MAY-10 trial remains separately scoped and unchanged.
+- Next: resolve exact source availability, staging destination, accepted coverage/gap policy, importer SHA and validation gates; then obtain separate explicit execution approval. No archive or database operation before that approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Uvicorn SIGTERM isolated harness PASS
 
 - User authorized only: add diagnostic capture, determine SIGTERM cause, and rerun isolated GitHub Actions on a new SHA. Scope did not include production/runtime activation.
