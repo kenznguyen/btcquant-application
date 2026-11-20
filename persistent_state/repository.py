@@ -240,6 +240,7 @@ _SCHEMA_STATEMENTS = (
         created_at_ms INTEGER NOT NULL,
         recorded_at_ms INTEGER NOT NULL,
         payload_json TEXT NOT NULL,
+        aggregate_state_json TEXT NOT NULL,
         market_snapshot_id TEXT,
         candle_open_time_ms INTEGER,
         UNIQUE (account_scope_id, event_sequence),
@@ -671,6 +672,8 @@ class SQLiteStateRepository:
             raise TransitionContractError("account_scope_id mismatch across transition")
         if claim.ledger_id != mutation.aggregate_id:
             raise TransitionContractError("idempotency ledger_id must match aggregate_id")
+        if event.aggregate_id != mutation.aggregate_id:
+            raise TransitionContractError("event aggregate_id must match aggregate mutation")
         if claim.strategy_id != mutation.strategy_id or event.strategy_id != claim.strategy_id:
             raise TransitionContractError("strategy_id mismatch across transition")
         if event.strategy_version != claim.strategy_version:
@@ -747,16 +750,17 @@ class SQLiteStateRepository:
                 INSERT INTO ps_events (
                     event_id, account_scope_id, session_id, event_sequence, aggregate_id,
                     aggregate_version, event_type, strategy_id, strategy_version,
-                    created_at_ms, recorded_at_ms, payload_json, market_snapshot_id,
-                    candle_open_time_ms
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    created_at_ms, recorded_at_ms, payload_json, aggregate_state_json,
+                    market_snapshot_id, candle_open_time_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     event.event_id, event.account_scope_id, event.session_id, event.event_sequence,
                     mutation.aggregate_id, event.aggregate_version, event.event_type,
                     None if event.strategy_id is None else event.strategy_id.value,
                     event.strategy_version, event.created_at_ms, event.recorded_at_ms,
-                    event.payload_json, event.market_snapshot_id, event.candle_open_time_ms,
+                    event.payload_json, mutation.state_json, event.market_snapshot_id,
+                    event.candle_open_time_ms,
                 ),
             )
             connection.execute(
@@ -1084,8 +1088,8 @@ class SQLiteStateRepository:
                 """
                 SELECT event_id, account_scope_id, session_id, event_sequence, aggregate_id,
                        aggregate_version, event_type, strategy_id, strategy_version,
-                       created_at_ms, recorded_at_ms, payload_json, market_snapshot_id,
-                       candle_open_time_ms
+                       created_at_ms, recorded_at_ms, payload_json, aggregate_state_json,
+                       market_snapshot_id, candle_open_time_ms, aggregate_id
                 FROM ps_events
                 WHERE account_scope_id = ? AND event_sequence > ?
                 ORDER BY event_sequence ASC
@@ -1102,6 +1106,8 @@ class SQLiteStateRepository:
                     recorded_at_ms=row["recorded_at_ms"], payload_json=row["payload_json"],
                     market_snapshot_id=row["market_snapshot_id"],
                     candle_open_time_ms=row["candle_open_time_ms"],
+                    aggregate_id=row["aggregate_id"],
+                    aggregate_state_json=row["aggregate_state_json"],
                     aggregate_id=row["aggregate_id"],
                 )
                 for row in rows
