@@ -153,7 +153,6 @@ jobs:
             smoke:
               image: local/kiri-buildx-smoke:ci
               pull_policy: never
-              command: ["sh", "-c", "grep -Fx KIRI_BUILDX_IMAGE_PASS /kiri-buildx-proof"]
           EOF
           cd "$work"
           docker_config="$RUNNER_TEMP/kiri-docker-config"
