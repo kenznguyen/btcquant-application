@@ -122,7 +122,7 @@ def _validate_snapshot(snapshot, timeframe, as_of_ms, required_count):
         if (
             not _integer(open_ms) or not _integer(close_ms) or not _integer(available_ms)
             or open_ms % interval or close_ms != open_ms + interval
-            or available_ms < close_ms + 100
+            or available_ms < close_ms + 100 or available_ms > as_of_ms
             or candle.get("isClosed") is not True
             or candle.get("availabilityKind") != "FIRST_OBSERVED"
             or candle.get("quality") != "VALIDATED"
