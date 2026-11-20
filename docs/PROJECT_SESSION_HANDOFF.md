@@ -1,3 +1,23 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Kiri Linux package verification PASS (CI only)
+
+- Owner approval: **APPROVED — Verification Only**. Explicit restriction confirmed: do not use the project VPS. No persistent host, project VPS, project runtime, T0/T1/T2, canonical SQLite, deployment target or trading system was accessed.
+- Evidence report: `docs/evidence/KIRI_LINUX_PACKAGE_VERIFICATION_2026-11-20.md`, commit `f3692bc4093a9914b3958949caa69f503edc4447`.
+- Workflow: `.github/workflows/kiri-linux-package-verification.yml`; final tested workflow/source SHA `fedb39fbb06d619ed2c30049946de58020dbe55d`, branch `main`.
+- Final Actions run [44666669891](https://github.com/kenznguyen/btcquant-application/actions/runs/44666669891): **SUCCESS**, exact head SHA above. Full Kiri job `136057519290` SUCCESS; Kiri Lite job `136057519379` SUCCESS.
+- Tested only on GitHub-hosted disposable Ubuntu 24.04.5 amd64 runners, kernel `7.0.0-1017-azure`, systemd 255. No project secrets, data or deployment credentials were used.
+- Kiri v0.2.2 source tag `v0.2.2` object `0cd223cfb2c1038068b22000b973376c7231e7a4`, target commit `686bffa5f38ba6ecc3d086c36ec7148cd7fb976a`; GitHub API signature verification PASS.
+- Official Linux checksum manifest detached signature PASS using pinned Kiri Releases key fingerprint `900CB63F75328B627AF5549353263AE758141A6B`. Full package SHA-256 `639f64abb7f3bd063a80ed1744e891156351c56cf2ad502633c47536c397a961`; Kiri Lite SHA-256 `24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9`. Both match the signed manifest and GitHub release asset digests.
+- Both .deb packages' `postinst`, `prerm`, `postrm` scripts matched the expected Git blob IDs from the signed v0.2.2 source tree. Fresh direct package installation did not start or enable `kiri.service`; explicit start, socket permissions, Docker API and `hello-world` passed. `apt remove` retained Kiri data; `apt purge` deleted Kiri data on disposable runners.
+- Package comparison: full `kiri` installed size 167,288 KiB and on the runner pulled 54 new packages + 4 upgrades (~330 MB additional disk). `kiri-lite` installed size 8,928 KiB; runner apt installed only the package. Kiri Lite is recommended for separate future server evaluation when a Docker CLI already exists; this is not installation approval.
+- Security: membership in Linux group `kiri` is root-equivalent; daemon runs as root; service may create `/run/docker.sock` symlink if absent; Linux containers share the host kernel. `apt purge` is destructive to Kiri images/containers/volumes/state. Do not add users to the group casually.
+- Intermediate CI attempts were recorded, not hidden: run `44666190973` full-package job failed on transient raw.githubusercontent.com HTTP 403; run `44666553694` both jobs failed due a workflow interpolation typo after adding signed-manifest verification. Workflow was corrected and final exact-SHA run `44666669891` passed both jobs.
+- No separate Actions artifact was uploaded; exact job logs and run page are the evidence. No PR created; commits were made directly to existing `main`.
+- Remaining gaps: Ubuntu 26.04.1, ARM64, RPM, Compose/buildx workload compatibility, existing Docker coexistence on a persistent host, app/T0 integration, performance and independent security audit remain **NOT VERIFIED / NOT TESTED**.
+- Final disposition: package provenance and Ubuntu 24.04.5 amd64 lifecycle **PASS — CI ONLY**. Kiri Lite **RECOMMENDED FOR SEPARATE FUTURE EVALUATION**. Persistent host installation, Docker replacement, VPS/runtime, deployment and production use **NOT APPROVED**.
+- Next: preserve this boundary. Any persistent-host installation, service activation, Docker socket integration, or runtime/deployment requires a separate explicit owner approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Owner approved archive materialization; exact local target; preflight pending
 
 - Owner decision: `docs/decisions/T0_RECONSTRUCTED_ARCHIVE_MATERIALIZATION_APPROVAL_2026-11-20.md`, commit `c8793aee2ac3cab5594372e718421c33aa0d46ff`.
