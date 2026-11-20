@@ -1,3 +1,24 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — FastAPI/Uvicorn/Nginx static runtime review
+
+- Read-only review report: `docs/reviews/T0_FASTAPI_UVICORN_NGINX_RUNTIME_STATIC_REVIEW_2026-11-20.md`.
+- Current source HEAD inspected: `86354b2e1eb71d9c8443d85183d696a12833b317`; exact CI-tested source: `a20c51281c2fbee92e3363109bbc35f767084be4`.
+- Compare: 2 ahead / 0 behind; only `docs/PROJECT_SESSION_HANDOFF.md` differed from the CI-tested source at review time. FastAPI, storage, query contract, Uvicorn/Nginx harness, workflow and runtime lock blobs are unchanged.
+- Review verdict: **STATIC REVIEW PASS WITH OPERATIONAL QUALIFICATION BLOCKERS**. This is the same ChatGPT assistant's adversarial static review, not genuine independent second-person approval.
+- Positive controls: constant-time Bearer comparison; GET-only middleware; bounded query; no-store responses; synchronous SQLite route; SQLite `mode=ro`; missing DB fails closed; explicit backend selection with no silent fallback; generic store errors; pinned/hash-verified Python runtime dependencies.
+- Findings:
+  - F-01 MEDIUM: `/health` always returns 200 without validating token/backend/store; it is liveness-only, not readiness.
+  - F-02 MEDIUM / qualification blocker: no production Uvicorn launch, Nginx server config, service supervisor or persistent runtime definition exists in the inspected tree; only disposable CI harness config exists.
+  - F-03 MEDIUM: Nginx proxy connect/read/send timeouts and Uvicorn graceful-shutdown/keepalive/concurrency policy are not explicitly configured.
+  - F-04 MEDIUM: CI checks socket startup, HTTP path, Uvicorn termination and Nginx 502; graceful drain, Nginx shutdown/reaping, restart/recovery and supervisor behavior remain unverified.
+  - F-05 LOW: unauthenticated callers can distinguish missing service configuration (503) from bad credentials (401); inherited contract behavior, no secret/path leakage.
+- Fail-closed assessment: candle route/storage selection PASS for inspected cases; `/health` can be false-ready if treated as readiness.
+- Existing Actions run `44689777567` remains PASS for its enumerated CI-only checks. No new test/run was performed during this static review.
+- Restrictions unchanged: no VPS, canonical T0 SQLite, T1/T2, PostgreSQL activation, persistent runtime, systemd/autostart, public ingress, deployment or trading authorization.
+- Status: CI-only PASS; production runtime configuration and lifecycle **NOT VERIFIED**; genuine independent second-person review **PENDING**.
+- Next gate: decide/document liveness-only semantics and whether a separate readiness contract is needed; production runtime design requires separate owner approval before implementation or activation.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — T0 FastAPI isolated runtime CI PASS
 
 - Scope: owner authorized isolated GitHub Actions runtime testing for T0 FastAPI on `kenznguyen/btcquant-application`; T2 migration remains PAUSED.
