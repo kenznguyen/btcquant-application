@@ -7,8 +7,10 @@ import hashlib
 import json
 import re
 
-from market_data.store import INTERVAL_MS
 from persistent_state.contracts import canonical_json
+
+
+INTERVAL_MS = {"15m": 15 * 60_000, "1h": 60 * 60_000}
 
 
 M15_MAX_LAG_MS = 20 * 60_000
@@ -120,7 +122,7 @@ def _validate_snapshot(snapshot, timeframe, as_of_ms, required_count):
         if (
             not _integer(open_ms) or not _integer(close_ms) or not _integer(available_ms)
             or open_ms % interval or close_ms != open_ms + interval
-            or available_ms < close_ms or available_ms > as_of_ms
+            or available_ms < close_ms + 100
             or candle.get("isClosed") is not True
             or candle.get("availabilityKind") != "FIRST_OBSERVED"
             or candle.get("quality") != "VALIDATED"
@@ -146,12 +148,13 @@ def _validate_snapshot(snapshot, timeframe, as_of_ms, required_count):
     if candles:
         if candles[0].get("openTimeMs") != start_ms or candles[-1].get("closeTimeMs") != end_ms:
             reasons.append("CANDLE_RANGE_INVALID")
-        latest_close = candles[-1].get("closeTimeMs")
-        if not _integer(latest_close) or latest_close > as_of_ms:
+        latest_open = candles[-1].get("openTimeMs")
+        if not _integer(latest_open):
             reasons.append("CANDLE_NOT_CLOSED_OR_INVALID")
         else:
             max_lag = M15_MAX_LAG_MS if timeframe == "15m" else H1_MAX_LAG_MS
-            if as_of_ms - latest_close > max_lag:
+            age_ms = as_of_ms - latest_open
+            if age_ms < 0 or age_ms > max_lag:
                 reasons.append("STALE_MARKET_DATA")
 
     return list(dict.fromkeys(reasons)), {
