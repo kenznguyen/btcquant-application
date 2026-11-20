@@ -516,3 +516,16 @@
 - Runtime work on personal PC is **PAUSED**. No tests or workflows, Actions runs/jobs/artifacts, REST calls, archive access/download/copy, host preflight, SQLite create/open/write/import/validation, runtime, T1/T2, deployment or trading occurred for this documentation update.
 - SQLite creation/import remains **NOT AUTHORIZED** and requires separate explicit approval naming exact host/path, source inventory, importer SHA, coverage/gap policy and validation gates. No Canonical promotion is implied.
 - Next: documentation review only if requested; otherwise hold.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T0 API contract and adapter parity
+
+- Evidence: `docs/evidence/T0_CANDLE_CONTRACT_FAIL_CLOSED_AND_APPLICATION_ADAPTER_PARITY_2026-11-20.md`.
+- Source/test HEAD: `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235`.
+- T0 FastAPI contract: **65/65 PASS**, run [44728558303](https://github.com/kenznguyen/btcquant-application/actions/runs/44728558303), artifact ID `14625231382`.
+- T0 SQLite aggregate: **174/174 PASS**, run [44728445702](https://github.com/kenznguyen/btcquant-application/actions/runs/44728445702), artifact ID `14624483667`.
+- Application API parity: shared `candle_envelope()`, strict query parser, matching error behavior, cache/content headers and freshness fields. Adjacent F4 tests also PASS; see evidence report for exact runs and digests.
+- Internal review PASS; independent second-person review **PENDING**. Cross-layer runtime connection remains **BLOCKED / NOT AUTHORIZED**.
+- Original M15/H1 REST files were not accessed; integrity remains **NOT VERIFIED** pending independent hash recomputation from the exact source files.

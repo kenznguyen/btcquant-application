@@ -5807,3 +5807,21 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Status: **CONTRACTS PASS; SQLITE ATOMIC REPOSITORY PASS; REPLAY/CHECKPOINT PASS; CRASH/RESTART RECOVERY PASS; MARKET PREFLIGHT FIXTURE PASS; RISK ADMISSION CONTRACT PASS; SESSION LIFECYCLE MATRIX PASS**. Runtime and integration remain **BLOCKED / NOT AUTHORIZED** pending the blockers above. On-Demand manual Start/Stop, paper-only. T0 remains independent.
 - Next: close the five integration blockers with tests and independent review before wiring Core/AI runtime. Do not activate runtime or access production/T0/VPS.
 
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T0 Candle Contract fail-closed and Application adapter parity
+
+- Evidence report: `docs/evidence/T0_CANDLE_CONTRACT_FAIL_CLOSED_AND_APPLICATION_ADAPTER_PARITY_2026-11-20.md`.
+- Current source/test HEAD before this documentation update: `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235` on `main`.
+- T0 FastAPI contract CI run [44728558303](https://github.com/kenznguyen/btcquant-application/actions/runs/44728558303): **SUCCESS, 65/65 tests PASS**; artifact `t0-fastapi-contract-evidence`, ID `14625231382`, SHA-256 `4454a5f5dea5e71d2d35210ca362945c3f2b1dfe313c70e12eefa87bf99e3e10`.
+- T0 SQLite aggregate run [44728445702](https://github.com/kenznguyen/btcquant-application/actions/runs/44728445702): **SUCCESS, 174/174 tests PASS**; artifact ID `14624483667`, SHA-256 `4583c787e563863a5ef4274b0ae891f567e09136081d423282d60807e50d7f4e`.
+- Adjacent F4 Application API / Risk / Kill Reset runs [44727712387](https://github.com/kenznguyen/btcquant-application/actions/runs/44727712387), [44727712179](https://github.com/kenznguyen/btcquant-application/actions/runs/44727712179), [44727712233](https://github.com/kenznguyen/btcquant-application/actions/runs/44727712233): 44/44, 160/160 and 145/145 PASS respectively.
+- `market_data/api_contract.py` now rejects gaps, duplicate/out-of-order candles, invalid evaluation times/anchors, unsupported timeframes and invalid envelope inputs. `candle_envelope()` is shared by FastAPI T0 and Application Common API `/v1/candles` so response metadata, freshness, query validation and error behavior are aligned.
+- Exact blob SHAs and test/artifact evidence are recorded in the evidence report. README documents the contiguous timeframe-grid requirement.
+- Internal five-axis review: PASS for bounded changes. Independent second-person review: **PENDING**; do not claim external approval.
+- Integration readiness: **BLOCKED / NOT VERIFIED** pending independent review. T0/Application runtime remains disconnected and not authorized.
+- Original local `m15.json` / `h1.json` payloads were not available or inspected; prior script-reported SHA values remain **NOT INDEPENDENTLY VERIFIED**. No REST call was made.
+- No canonical SQLite access/create/import/restore/write, VPS, feeder, T1/T2, deployment, autostart or trading operation occurred.
+- Next: independent review of exact source HEAD `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235`; preserve all runtime and cross-layer connection gates until review approval.
