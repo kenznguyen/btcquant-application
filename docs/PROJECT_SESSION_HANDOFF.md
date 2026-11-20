@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T1 repository ownership decision approved
+
+- Decision: `docs/decisions/T1_REPOSITORY_OWNERSHIP_AND_CONSUMER_BOUNDARY_2026-11-20.md`, commit `10313ef41b975343e5e09e24793be48258d1c46e`.
+- Owner decision: do **not** copy/fork the full T1 collector into `kenznguyen/btcquant-application`; keep T1 implementation in `kenznguyen/binance-futures-collector`.
+- Application-side T1 scope is limited to separately approved consumer contracts/interfaces, DTOs, validation, consumer adapters and deterministic fixtures/mocks. No collector, raw storage, Orderbook Manager, capture/replay or provider implementation duplication.
+- T1 HTTP Provider remains **PAUSED**; existing commits are preserved. T1 → T2 runtime connection is **NOT APPROVED**. No T1 storage/data migration.
+- T0 remains an independent data asset. No Canonical SQLite, feeder/writer, runtime, deployment or trading behavior change is authorized by this decision.
+- Provenance snapshots: application pre-decision `main` HEAD `0844e16b08d52fa7cf6ed001d7c260ee6bde1ff8`; T1 repository `main` latest observed commit `c91a8c22d3b6236c98ab9a4d4d69b25d47f7f738` (2026-11-18). These identify inspected snapshots, not a full runtime audit.
+- Status: architecture decision **APPROVED / RECORDED**; consumer integration **NOT IMPLEMENTED**; provider **PAUSED**; runtime connection **NOT APPROVED**; storage migration **NOT AUTHORIZED**.
+- Documentation-only. No tests/workflows run; no Actions run/job/artifact. No T0/T1 data, database, VPS/runtime, exchange or trading system accessed or changed.
+- Next: if T2 needs T1 data, propose and review a versioned consumer contract and fixtures as a separate bounded scope. Any transport activation or runtime connection requires separate explicit approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Staging plan reconciled and independently re-reviewed
 
 - Updated staging plan: `docs/plans/T0_RECONSTRUCTED_PARTIAL_SQLITE_STAGING_PLAN_2026-11-20.md`, blob `b35e25d5d52a09dc73cfb1ced91b408a4979b045`.
