@@ -61,7 +61,7 @@ def commit_one(repository, token, *, sequence=1):
         strategy_id=StrategyId.CORE, strategy_version="core-v1",
         created_at_ms=1_800_000_000_000, recorded_at_ms=1_800_000_000_001,
         payload_json=payload, market_snapshot_id=snapshot,
-        candle_open_time_ms=1_800_000_000_000,
+        candle_open_time_ms=1_800_000_000_000, aggregate_id="ledger-core",
     )
     mutation = AggregateMutation(
         account_scope_id=token.account_scope_id, aggregate_id="ledger-core",
