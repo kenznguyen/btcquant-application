@@ -1,0 +1,210 @@
+name: Kiri Lite Compose Buildx and Docker coexistence
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/kiri-lite-compose-buildx-coexistence.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kiri-lite-compose-buildx-coexistence
+  cancel-in-progress: false
+
+jobs:
+  compose-buildx-coexistence:
+    name: Kiri Lite / ${{ matrix.os }} Compose Buildx and Docker Engine coexistence
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-26.04]
+    steps:
+      - name: Record and assert disposable runner baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/kiri-coexistence-evidence"
+          cat /etc/os-release | tee "$RUNNER_TEMP/kiri-coexistence-evidence/os-release.txt"
+          uname -a | tee "$RUNNER_TEMP/kiri-coexistence-evidence/uname.txt"
+          test "$(dpkg --print-architecture)" = amd64
+          test -d /run/systemd/system
+          docker --version | tee "$RUNNER_TEMP/kiri-coexistence-evidence/docker-cli.txt"
+          docker compose version | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-version.txt"
+          docker buildx version | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-version.txt"
+          test -S /run/docker.sock
+          test -S /var/run/docker.sock
+          baseline_engine_id="$(env -u DOCKER_HOST docker info --format '{{.ID}}')"
+          test -n "$baseline_engine_id"
+          baseline_socket="$(stat -Lc '%d:%i:%a:%U:%G' /run/docker.sock)"
+          baseline_socket_target="$(readlink -f /run/docker.sock)"
+          {
+            echo "engine_id=$baseline_engine_id"
+            echo "socket=$baseline_socket"
+            echo "socket_target=$baseline_socket_target"
+            env -u DOCKER_HOST docker info --format 'name={{.Name}} server={{.ServerVersion}} root={{.DockerRootDir}}'
+          } | tee "$RUNNER_TEMP/kiri-coexistence-evidence/docker-engine-before.txt"
+          printf '%s\n' "$baseline_engine_id" > "$RUNNER_TEMP/kiri-coexistence-evidence/docker-engine-id.before"
+          printf '%s\n' "$baseline_socket" > "$RUNNER_TEMP/kiri-coexistence-evidence/docker-socket.before"
+          printf '%s\n' "$baseline_socket_target" > "$RUNNER_TEMP/kiri-coexistence-evidence/docker-socket-target.before"
+
+      - name: Download and verify pinned Kiri Lite 0.2.2 package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          asset="kiri-lite_0.2.2_amd64.deb"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 \
+            "https://github.com/libracoder/kiri/releases/download/v0.2.2/$asset" -o "$asset"
+          printf '%s  %s\n' "24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9" "$asset" | sha256sum --check -
+          dpkg-deb --field "$asset" Package Version Architecture
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends "./$asset"
+          dpkg-query -W -f='${Package} ${Version} ${Architecture}\n' kiri-lite
+          if systemctl is-active --quiet kiri.service; then
+            echo "FAIL: Kiri unexpectedly active after fresh install"
+            exit 1
+          fi
+          if systemctl is-enabled --quiet kiri.service; then
+            echo "FAIL: Kiri unexpectedly enabled after fresh install"
+            exit 1
+          fi
+          echo "PASS: pinned Kiri Lite package installed inertly." | tee "$RUNNER_TEMP/kiri-coexistence-evidence/package-install.txt"
+
+      - name: Start Kiri and prove the original Docker Engine socket remains intact
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo systemctl enable --now kiri.service
+          for attempt in $(seq 1 30); do
+            sudo test -S /run/kiri/docker.sock && break
+            sleep 2
+          done
+          sudo test -S /run/kiri/docker.sock
+          test "$(stat -c '%a:%U:%G' /run/kiri/docker.sock)" = "660:root:kiri"
+          systemctl is-active --quiet kiri.service
+
+          after_engine_id="$(env -u DOCKER_HOST docker info --format '{{.ID}}')"
+          after_socket="$(stat -Lc '%d:%i:%a:%U:%G' /run/docker.sock)"
+          after_socket_target="$(readlink -f /run/docker.sock)"
+          test "$after_engine_id" = "$(cat "$RUNNER_TEMP/kiri-coexistence-evidence/docker-engine-id.before")"
+          test "$after_socket" = "$(cat "$RUNNER_TEMP/kiri-coexistence-evidence/docker-socket.before")"
+          test "$after_socket_target" = "$(cat "$RUNNER_TEMP/kiri-coexistence-evidence/docker-socket-target.before")"
+
+          kiri_server="$(sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker version --format '{{.Server.Platform.Name}}')"
+          printf '%s\n' "$kiri_server" | tee "$RUNNER_TEMP/kiri-coexistence-evidence/kiri-server-platform.txt"
+          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker info --format 'name={{.Name}} server={{.ServerVersion}} root={{.DockerRootDir}}' \
+            | tee "$RUNNER_TEMP/kiri-coexistence-evidence/kiri-engine.txt"
+          env -u DOCKER_HOST docker info --format 'name={{.Name}} server={{.ServerVersion}} root={{.DockerRootDir}}' \
+            | tee "$RUNNER_TEMP/kiri-coexistence-evidence/docker-engine-after.txt"
+          echo "PASS: Kiri has a separate socket; original Docker Engine ID and socket identity are unchanged." \
+            | tee "$RUNNER_TEMP/kiri-coexistence-evidence/coexistence.txt"
+
+      - name: Verify Buildx build and image execution against Kiri socket
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/kiri-buildx-smoke"
+          mkdir -p "$work"
+          cat > "$work/Dockerfile" <<'EOF'
+          FROM alpine:3.21
+          RUN printf 'KIRI_BUILDX_IMAGE_PASS\n' > /kiri-buildx-proof
+          CMD ["cat", "/kiri-buildx-proof"]
+          EOF
+          cd "$work"
+          export DOCKER_HOST=unix:///run/kiri/docker.sock
+          docker buildx inspect default | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-inspect.txt"
+          docker buildx build --load --tag local/kiri-buildx-smoke:ci .
+          docker run --rm local/kiri-buildx-smoke:ci | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-container.txt"
+          grep -Fxq KIRI_BUILDX_IMAGE_PASS "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-container.txt"
+          echo "PASS: Buildx built, loaded and ran an image using only the Kiri endpoint." \
+            | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-result.txt"
+
+      - name: Verify Docker Compose workload against Kiri socket
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/kiri-compose-smoke"
+          mkdir -p "$work"
+          cat > "$work/compose.yaml" <<'EOF'
+          services:
+            smoke:
+              image: local/kiri-buildx-smoke:ci
+              pull_policy: never
+              command: ["sh", "-c", "grep -Fx KIRI_BUILDX_IMAGE_PASS /kiri-buildx-proof"]
+          EOF
+          cd "$work"
+          export DOCKER_HOST=unix:///run/kiri/docker.sock
+          docker compose version | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-version-kiri.txt"
+          docker compose -p kiri-ci-smoke -f compose.yaml config \
+            | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-config.txt"
+          docker compose -p kiri-ci-smoke -f compose.yaml run --rm smoke \
+            | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-run.txt"
+          grep -Fxq KIRI_BUILDX_IMAGE_PASS "$RUNNER_TEMP/kiri-coexistence-evidence/compose-run.txt"
+          echo "PASS: Compose ran the Buildx-produced image through the Kiri endpoint." \
+            | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-result.txt"
+
+      - name: Recheck original Docker Engine after Kiri workloads
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -f "$RUNNER_TEMP/kiri-coexistence-evidence/docker-engine-id.before"; then
+            current_id="$(env -u DOCKER_HOST docker info --format '{{.ID}}')"
+            current_socket="$(stat -Lc '%d:%i:%a:%U:%G' /run/docker.sock)"
+            current_target="$(readlink -f /run/docker.sock)"
+            test "$current_id" = "$(cat "$RUNNER_TEMP/kiri-coexistence-evidence/docker-engine-id.before")"
+            test "$current_socket" = "$(cat "$RUNNER_TEMP/kiri-coexistence-evidence/docker-socket.before")"
+            test "$current_target" = "$(cat "$RUNNER_TEMP/kiri-coexistence-evidence/docker-socket-target.before")"
+            echo "PASS: original Docker Engine endpoint remains unchanged after Kiri workloads." \
+              | tee "$RUNNER_TEMP/kiri-coexistence-evidence/docker-engine-final.txt"
+          fi
+
+      - name: Remove Kiri and retain final Docker Engine check
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if dpkg-query -W -f='${Status}' kiri-lite 2>/dev/null | grep -q "install ok installed"; then
+            sudo apt-get remove -y kiri-lite
+            if systemctl is-active --quiet kiri.service; then
+              echo "FAIL: Kiri service still active after remove"
+              exit 1
+            fi
+            sudo apt-get purge -y kiri-lite
+            test ! -e /var/lib/kiri
+            test ! -e /var/lib/kiri-daemon
+            env -u DOCKER_HOST docker info --format 'engine_id={{.ID}} name={{.Name}}' \
+              | tee "$RUNNER_TEMP/kiri-coexistence-evidence/docker-engine-after-kiri-purge.txt"
+            test "$(env -u DOCKER_HOST docker info --format '{{.ID}}')" = \
+              "$(cat "$RUNNER_TEMP/kiri-coexistence-evidence/docker-engine-id.before")"
+            echo "PASS: Kiri removed/purged; original Docker Engine still responds." \
+              | tee "$RUNNER_TEMP/kiri-coexistence-evidence/remove-purge.txt"
+          fi
+
+      - name: Publish evidence artifact and summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kiri-compose-buildx-coexistence-${{ matrix.os }}
+          path: ${{ runner.temp }}/kiri-coexistence-evidence/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Write job summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Kiri Lite 0.2.2 — Compose / Buildx / Docker coexistence"
+            echo "- Runner: ${{ matrix.os }} (GitHub-hosted disposable VM)"
+            echo "- Kiri endpoint: unix:///run/kiri/docker.sock"
+            echo "- Existing Docker endpoint: /run/docker.sock; engine ID and socket inode are asserted unchanged."
+            echo "- Compose and Buildx are explicitly directed to Kiri via DOCKER_HOST."
+            echo "- No VPS, persistent host, project data, T0/T1/T2, or trading runtime."
+            echo "- Detailed evidence is uploaded as a workflow artifact."
+          } >> "$GITHUB_STEP_SUMMARY"
