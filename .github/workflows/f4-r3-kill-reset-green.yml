@@ -61,7 +61,7 @@ jobs:
           [[ "$head_sha" == "$GITHUB_SHA" ]]
           [[ "$test_blob" == "c98ead20d50497dd668673a38bb83359ea0687a7" ]]
           [[ "$ledger_blob" == "9cc03db8b7506543f9eef2835eb5cb7cda701d6c" ]]
-          [[ "$api_blob" == "2c5c35951dbe902e2553ad186bedaf0ca22b29e0" ]]
+          [[ "$api_blob" == "887901302fc767750568933232daebb947902ee1" ]]
           [[ "$risk_control_blob" == "c8fe573a7a5b0716159e50a678423e402d7df3ba" ]]
           [[ "$risk_contract_blob" == "7ae74740568e3bcad78acd928896ee363cc62613" ]]
           [[ "$ledger_test_blob" == "b1b170bd890ec2cc64bf70079651f1fbf1274573" ]]
