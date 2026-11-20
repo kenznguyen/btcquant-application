@@ -116,9 +116,14 @@ jobs:
           CMD ["cat", "/kiri-buildx-proof"]
           EOF
           cd "$work"
-          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker buildx inspect default | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-inspect.txt"
-          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker buildx build --load --tag local/kiri-buildx-smoke:ci .
-          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker run --rm local/kiri-buildx-smoke:ci | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-container.txt"
+          docker_config="$RUNNER_TEMP/kiri-docker-config"
+          sudo env DOCKER_CONFIG="$docker_config" docker context create kiri --docker "host=unix:///run/kiri/docker.sock"
+          sudo env DOCKER_CONFIG="$docker_config" docker buildx create --name kiri-build --driver docker-container --driver-opt default-load=true kiri
+          timeout 300s sudo env DOCKER_CONFIG="$docker_config" docker buildx inspect kiri-build --bootstrap \
+            | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-inspect.txt"
+          timeout 300s sudo env DOCKER_CONFIG="$docker_config" docker buildx build --builder kiri-build --load --tag local/kiri-buildx-smoke:ci .
+          sudo env DOCKER_CONFIG="$docker_config" docker --context kiri run --rm local/kiri-buildx-smoke:ci \
+            | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-container.txt"
           grep -Fxq KIRI_BUILDX_IMAGE_PASS "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-container.txt"
           echo "PASS: Buildx built, loaded and ran an image using only the Kiri endpoint." \
             | tee "$RUNNER_TEMP/kiri-coexistence-evidence/buildx-result.txt"
@@ -137,10 +142,12 @@ jobs:
               command: ["sh", "-c", "grep -Fx KIRI_BUILDX_IMAGE_PASS /kiri-buildx-proof"]
           EOF
           cd "$work"
-          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker compose version | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-version-kiri.txt"
-          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker compose -p kiri-ci-smoke -f compose.yaml config \
+          docker_config="$RUNNER_TEMP/kiri-docker-config"
+          sudo env DOCKER_CONFIG="$docker_config" docker --context kiri compose version \
+            | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-version-kiri.txt"
+          sudo env DOCKER_CONFIG="$docker_config" docker --context kiri compose -p kiri-ci-smoke -f compose.yaml config \
             | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-config.txt"
-          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker compose -p kiri-ci-smoke -f compose.yaml run --rm smoke \
+          sudo env DOCKER_CONFIG="$docker_config" docker --context kiri compose -p kiri-ci-smoke -f compose.yaml run --rm smoke \
             | tee "$RUNNER_TEMP/kiri-coexistence-evidence/compose-run.txt"
           grep -Fxq KIRI_BUILDX_IMAGE_PASS "$RUNNER_TEMP/kiri-coexistence-evidence/compose-run.txt"
           echo "PASS: Compose ran the Buildx-produced image through the Kiri endpoint." \
