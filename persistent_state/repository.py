@@ -1069,7 +1069,9 @@ class SQLiteStateRepository:
 __all__ = [
     "AggregateMutation", "AggregateSnapshot", "AggregateVersionConflictError",
     "CheckpointConflictError", "CheckpointCoverageError", "CheckpointIntegrityError",
-    "CheckpointPublishResult", "CommitResult", "EventSequenceConflictError",
-    "IdempotencyConflictError", "RepositoryError", "RepositorySchemaError",
-    "SQLiteStateRepository", "StateRepository", "TransitionContractError",
+    "CheckpointPublishResult", "CheckpointRequiredForCloseError", "CommitResult",
+    "EventSequenceConflictError", "FencingToken", "IdempotencyConflictError",
+    "RepositoryError", "RepositorySchemaError", "SQLiteStateRepository",
+    "SessionStateConflictError", "SessionTransitionError", "StaleFencingTokenError",
+    "StateRepository", "TransitionContractError", "WriterOwnershipError",
 ]
