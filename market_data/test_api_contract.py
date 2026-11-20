@@ -1,5 +1,7 @@
 """Direct fail-closed tests for the shared T0 Candle Contract helper."""
 
+import io
+import json
 import os
 import tempfile
 import unittest
@@ -13,6 +15,7 @@ from market_data.fastapi_app import app
 from market_data.store import Candle, CandleStore, INTERVAL_MS, read_window
 from market_data.feeder import LeaseStore
 from market_data.write_gateway import SQLiteWriteGateway
+from pipeline import api as common_api
 from pipeline.api import market_window
 
 
@@ -139,6 +142,50 @@ class CandleContractFailClosedTest(unittest.TestCase):
                     )
             self.assertEqual(response.status_code, 200)
             payload = response.json()
+            query_string = (
+                f"symbol=BTCUSDT&timeframe=15m&startMs={START}&endMs={end}"
+            )
+            environ = {
+                "PATH_INFO": "/v1/candles",
+                "REQUEST_METHOD": "GET",
+                "QUERY_STRING": query_string,
+                "HTTP_AUTHORIZATION": "Bearer isolated-contract-token",
+                "CONTENT_LENGTH": "0",
+                "wsgi.input": io.BytesIO(b""),
+            }
+            statuses = []
+            with patch("pipeline.api.now_ms", return_value=evaluation):
+                raw_common = b"".join(
+                    common_api.application(
+                        environ, lambda status, headers: statuses.append((status, headers))
+                    )
+                )
+            self.assertEqual(statuses[0][0], "200 OK")
+            common_payload = json.loads(raw_common)
+            for field in (
+                "contractVersion", "schemaVersion", "volumeUnit", "source",
+                "generatedAtMs", "freshness",
+            ):
+                with self.subTest(common_contract_field=field):
+                    self.assertEqual(common_payload[field], payload[field])
+
+            invalid_query = query_string + "&symbol=BTCUSDT"
+            fastapi_invalid = TestClient(app).get(
+                f"/v1/candles?{invalid_query}",
+                headers={"Authorization": "Bearer isolated-contract-token"},
+            )
+            invalid_environ = dict(environ, QUERY_STRING=invalid_query)
+            invalid_statuses = []
+            invalid_raw = b"".join(
+                common_api.application(
+                    invalid_environ,
+                    lambda status, headers: invalid_statuses.append((status, headers)),
+                )
+            )
+            self.assertEqual(fastapi_invalid.status_code, 400)
+            self.assertEqual(invalid_statuses[0][0], "400 Bad Request")
+            self.assertEqual(json.loads(invalid_raw), fastapi_invalid.json())
+
             for field in (
                 "exchange", "marketType", "symbol", "timeframe", "startMs",
                 "endMs", "asOfMs", "candles", "datasetVersion", "coverage",
