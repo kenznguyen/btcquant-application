@@ -1,0 +1,134 @@
+name: T0 offline REST tail validator
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - market_data/rest_tail_validator.py
+      - market_data/test_rest_tail_validator.py
+      - .github/workflows/t0-rest-tail-validator.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t0-rest-tail-validator
+  cancel-in-progress: false
+
+jobs:
+  offline-validator:
+    name: Offline REST tail validator regression tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source and prepare evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
+          test -s market_data/rest_tail_validator.py
+          test -s market_data/test_rest_tail_validator.py
+          mkdir -p "$RUNNER_TEMP/t0-rest-tail-artifacts"
+          chmod 0777 "$RUNNER_TEMP/t0-rest-tail-artifacts"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_commit=$GITHUB_SHA"
+            echo "checked_out_source_sha=$actual"
+            echo "validator_blob_sha=$(git rev-parse HEAD:market_data/rest_tail_validator.py)"
+            echo "test_blob_sha=$(git rev-parse HEAD:market_data/test_rest_tail_validator.py)"
+            echo "test_module=market_data.test_rest_tail_validator"
+            echo "expected_tests=10"
+            echo "runner_image=ubuntu-24.04"
+            echo "container_image=python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df"
+            echo "network_in_test_container=none"
+            echo "canonical_database_mount=none"
+            echo "credentials=none"
+            echo "real_binance_payloads=not_mounted"
+          } > "$RUNNER_TEMP/t0-rest-tail-artifacts/runner_metadata.txt"
+
+      - name: Pull immutable Python test image
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          docker version
+          docker pull --platform linux/amd64 "$PYTHON_IMAGE"
+          docker image inspect --format '{{.Id}} {{json .RepoDigests}}' "$PYTHON_IMAGE" \
+            | tee "$RUNNER_TEMP/t0-rest-tail-artifacts/container_image.txt"
+
+      - name: Run deterministic validator tests without network
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          artifacts="$RUNNER_TEMP/t0-rest-tail-artifacts"
+          log="$artifacts/unittest.log"
+          if docker run --rm \
+            --platform linux/amd64 \
+            --network none \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --pids-limit 128 \
+            --memory 1g \
+            --cpus 2 \
+            --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$artifacts,dst=/artifacts" \
+            --env HOME=/tmp \
+            --env TMPDIR=/tmp \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace \
+            --workdir /workspace \
+            "$PYTHON_IMAGE" \
+            bash -euc 'python -m py_compile market_data/rest_tail_validator.py market_data/test_rest_tail_validator.py && python -m unittest -v market_data.test_rest_tail_validator' \
+            > "$log" 2>&1; then
+            test_status=0
+          else
+            test_status=$?
+          fi
+          cat "$log"
+          test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
+          {
+            echo "test_command=python -m py_compile market_data/rest_tail_validator.py market_data/test_rest_tail_validator.py && python -m unittest -v market_data.test_rest_tail_validator"
+            echo "test_count=${test_count:-NOT_REPORTED}"
+            echo "test_exit_code=$test_status"
+          } >> "$artifacts/runner_metadata.txt"
+          {
+            echo "## T0 offline REST tail validator"
+            echo
+            echo "- Run: [$GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+            echo "- Exact source SHA: $GITHUB_SHA"
+            echo "- Validator blob: $(git rev-parse HEAD:market_data/rest_tail_validator.py)"
+            echo "- Regression tests: ${test_count:-NOT_REPORTED} (expected 10)"
+            echo "- Test container network: disabled"
+            echo "- Real Binance payloads, Canonical DB and runtime: not mounted or accessed"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$test_status" -eq 0 && "$test_count" != "10" ]]; then
+            echo "Expected 10 tests; observed ${test_count:-no test summary}." >&2
+            exit 1
+          fi
+          exit "$test_status"
+
+      - name: Upload offline validator evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t0-rest-tail-validator-evidence
+          path: ${{ runner.temp }}/t0-rest-tail-artifacts/
+          if-no-files-found: error
+          retention-days: 14
