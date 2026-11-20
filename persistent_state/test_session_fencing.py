@@ -141,6 +141,23 @@ class SessionFencingTests(unittest.TestCase):
         self.assertEqual(old_session.last_committed_event_sequence, 1)
         self.assertEqual(len(self.repository.read_events("paper-account")), 1)
         self.assertEqual(new_token.fencing_generation, 2)
+        for expected, target in (
+            (SessionStatus.START_REQUESTED, SessionStatus.PREFLIGHT),
+            (SessionStatus.PREFLIGHT, SessionStatus.RESTORING),
+            (SessionStatus.RESTORING, SessionStatus.READY),
+            (SessionStatus.READY, SessionStatus.RUNNING),
+        ):
+            self.repository.advance_session(
+                new_token, expected_status=expected, new_status=target, at_ms=1_800_000_020_001,
+            )
+        commit_one(self.repository, new_token, sequence=2)
+        self.assertEqual(
+            [event.event_sequence for event in self.repository.read_events("paper-account")],
+            [1, 2],
+        )
+        self.assertEqual(
+            self.repository.get_session("recovery-session").last_committed_event_sequence, 2,
+        )
 
     def test_checkpoint_from_stale_session_is_rejected(self):
         old_token = start_running(self.repository, "old-session")
