@@ -137,7 +137,7 @@ class CandleContractFailClosedTest(unittest.TestCase):
                     response = TestClient(app).get(
                         "/v1/candles",
                         params={"symbol": "BTCUSDT", "timeframe": "15m",
-                                "startMs": START, "endMs": end},
+                                "startMs": START, "endMs": end, "asOfMs": evaluation},
                         headers={"Authorization": "Bearer isolated-contract-token"},
                     )
             self.assertEqual(response.status_code, 200)
