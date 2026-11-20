@@ -149,3 +149,123 @@ jobs:
           if test -d "$RUNNER_TEMP/kiri-evidence"; then
             find "$RUNNER_TEMP/kiri-evidence" -maxdepth 1 -type f -printf '%f\n' | sort
           fi
+
+  verify-lite-deb-amd64:
+    name: Kiri Lite 0.2.2 Debian package / Ubuntu 24.04
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Record isolated runner baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat /etc/os-release
+          uname -a
+          dpkg --print-architecture
+          systemd --version
+          test "$(dpkg --print-architecture)" = amd64
+          test -d /run/systemd/system
+          command -v docker
+
+      - name: Download and verify pinned Kiri Lite release asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          asset="kiri-lite_0.2.2_amd64.deb"
+          url="https://github.com/libracoder/kiri/releases/download/v0.2.2/$asset"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 "$url" -o "$asset"
+          printf '%s  %s\n' "24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9" "$asset" | sha256sum --check -
+          dpkg-deb --info "$asset"
+          dpkg-deb --field "$asset" Package Version Architecture Depends
+          dpkg-deb --control "$asset" "$RUNNER_TEMP/kiri-lite-control"
+
+      - name: Verify signed source tag and package maintainer scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_json="$RUNNER_TEMP/kiri-lite-tag.json"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 \
+            "https://api.github.com/repos/libracoder/kiri/git/tags/0cd223cfb2c1038068b22000b973376c7231e7a4" \
+            -o "$tag_json"
+          jq -e '.tag == "v0.2.2" and .verification.verified == true and .object.sha == "686bffa5f38ba6ecc3d086c36ec7148cd7fb976a"' "$tag_json" >/dev/null
+          source_base="https://raw.githubusercontent.com/libracoder/kiri/686bffa5f38ba6ecc3d086c36ec7148cd7fb976a/packaging/linux/deb"
+          for script in postinst prerm postrm; do
+            curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 \
+              "$source_base/$script" -o "$RUNNER_TEMP/kiri-lite-source-$script"
+            cmp "$RUNNER_TEMP/kiri-lite-control/$script" "$RUNNER_TEMP/kiri-lite-source-$script"
+          done
+
+      - name: Install Kiri Lite without starting the engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends "./kiri-lite_0.2.2_amd64.deb"
+          dpkg-query -W -f='${Package} ${Version} ${Architecture}\n' kiri-lite
+          getent group kiri
+          if systemctl is-active --quiet kiri.service; then
+            echo "FAIL: fresh Kiri Lite installation unexpectedly started kiri.service"
+            exit 1
+          fi
+          if systemctl is-enabled --quiet kiri.service; then
+            echo "FAIL: fresh Kiri Lite installation unexpectedly enabled kiri.service"
+            exit 1
+          fi
+
+      - name: Start Kiri Lite and test with the runner Docker CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo systemctl enable --now kiri.service
+          for attempt in $(seq 1 30); do
+            if sudo test -S /run/kiri/docker.sock; then
+              break
+            fi
+            sleep 2
+          done
+          sudo test -S /run/kiri/docker.sock
+          test "$(stat -c '%a:%U:%G' /run/kiri/docker.sock)" = "660:root:kiri"
+          systemctl is-active --quiet kiri.service
+          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker version
+          sudo env DOCKER_HOST=unix:///run/kiri/docker.sock docker run --rm hello-world
+          echo "PASS: Kiri Lite works through the preinstalled Docker CLI."
+
+      - name: Verify remove preserves data and purge deletes only runner data
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if dpkg-query -W -f='${Status}' kiri-lite 2>/dev/null | grep -q "install ok installed"; then
+            sudo apt-get remove -y kiri-lite
+            if systemctl is-active --quiet kiri.service; then
+              echo "FAIL: kiri.service remained active after Kiri Lite removal"
+              exit 1
+            fi
+            if test -d /var/lib/kiri; then
+              echo "PASS: apt remove retained Kiri Lite data."
+              sudo apt-get purge -y kiri-lite
+              test ! -e /var/lib/kiri
+              test ! -e /var/lib/kiri-daemon
+              echo "PASS: apt purge removed Kiri Lite data on the disposable runner."
+            else
+              echo "BLOCKED: runtime data directory was not created; purge behavior not exercised."
+              sudo apt-get purge -y kiri-lite
+            fi
+          else
+            echo "Kiri Lite was not installed; uninstall lifecycle not exercised."
+          fi
+
+      - name: Publish Kiri Lite verification summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Kiri Lite Linux package verification"
+            echo "- Release: Kiri 0.2.2"
+            echo "- Package: kiri-lite_0.2.2_amd64.deb"
+            echo "- Runner: Ubuntu 24.04 / amd64"
+            echo "- Scope: disposable GitHub-hosted runner only"
+            echo "- No project VPS, T0 SQLite, T1/T2, secrets, or deployment targets are used."
+          } >> "$GITHUB_STEP_SUMMARY"
