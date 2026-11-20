@@ -73,9 +73,9 @@ def _freshness(candles, timeframe, evaluation_time_ms, coverage_complete, evalua
     open_time = latest.get("openTimeMs")
     close_time = latest.get("closeTimeMs")
     available_at = latest.get("availableAtMs")
-    if type(available_at) is int and available_at >= 0:
+    if type(available_at) is int and 0 <= available_at <= evaluation_time_ms:
         base["observationAgeMs"] = evaluation_time_ms - available_at
-    if type(close_time) is int and close_time >= 0:
+    if type(close_time) is int and 0 <= close_time <= evaluation_time_ms:
         base["closeLagMs"] = evaluation_time_ms - close_time
 
     close_lag = base["closeLagMs"]

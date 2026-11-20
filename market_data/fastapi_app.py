@@ -3,7 +3,6 @@
 import hmac
 import os
 import sqlite3
-import time
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -11,6 +10,13 @@ from fastapi.responses import JSONResponse
 from market_data.api_contract import candle_envelope, candle_query
 from market_data.postgres import StoreUnavailable
 from market_data.storage import create_store_from_env
+
+
+def now_ms():
+    """Return wall-clock milliseconds through a module-local test seam."""
+    import time
+
+    return time.time_ns() // 1_000_000
 
 
 app = FastAPI(
@@ -72,18 +78,22 @@ def dispatch(request: Request, path: str = ""):
     try:
         raw_query = request.scope.get("query_string", b"").decode("ascii")
         query = candle_query(raw_query)
-    except (UnicodeDecodeError, ValueError):
+    except ValueError:
+        return _reply(400, {"error": "INVALID_QUERY"})
+
+    validation_time_ms = now_ms()
+    if query["as_of_ms"] is not None and query["as_of_ms"] > validation_time_ms:
         return _reply(400, {"error": "INVALID_QUERY"})
 
     try:
         store = create_store_from_env()
         result = store.read_window(**query)
-        generated_at_ms = time.time_ns() // 1_000_000
-        if query["as_of_ms"] is not None and query["as_of_ms"] > generated_at_ms:
-            return _reply(400, {"error": "INVALID_QUERY"})
-
-        return _reply(
-            200, candle_envelope(result, generated_at_ms, query["as_of_ms"])
-        )
     except (OSError, sqlite3.Error, ValueError, StoreUnavailable):
         return _reply(503, {"error": "STORE_UNAVAILABLE"})
+
+    generated_at_ms = now_ms()
+    try:
+        payload = candle_envelope(result, generated_at_ms, query["as_of_ms"])
+    except (TypeError, ValueError, KeyError):
+        return _reply(500, {"error": "INTERNAL_ERROR"})
+    return _reply(200, payload)

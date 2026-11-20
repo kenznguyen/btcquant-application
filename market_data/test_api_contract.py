@@ -124,8 +124,7 @@ class CandleContractFailClosedTest(unittest.TestCase):
             "MARKET_DATA_TOKEN": "isolated-contract-token",
         }
         with patch.dict(os.environ, env, clear=True):
-            with patch("market_data.fastapi_app.time.time_ns",
-                       return_value=evaluation * 1_000_000):
+            with patch("market_data.fastapi_app.now_ms", return_value=evaluation):
                 with patch("market_data.fastapi_app.create_store_from_env",
                            side_effect=AssertionError("store must not be opened")) as factory:
                     response = TestClient(app).get(
@@ -152,8 +151,7 @@ class CandleContractFailClosedTest(unittest.TestCase):
             }
         })()
         with patch.dict(os.environ, env, clear=True):
-            with patch("market_data.fastapi_app.time.time_ns",
-                       return_value=evaluation * 1_000_000):
+            with patch("market_data.fastapi_app.now_ms", return_value=evaluation):
                 with patch("market_data.fastapi_app.create_store_from_env",
                            return_value=store):
                     with patch("market_data.fastapi_app.candle_envelope",
@@ -246,8 +244,7 @@ class CandleContractFailClosedTest(unittest.TestCase):
             }
             with patch.dict(os.environ, env, clear=True):
                 application_window = market_window("BTCUSDT", "15m", START, end, as_of_ms=evaluation)
-                with patch("market_data.fastapi_app.time.time_ns",
-                           return_value=evaluation * 1_000_000):
+                with patch("market_data.fastapi_app.now_ms", return_value=evaluation):
                     response = TestClient(app).get(
                         "/v1/candles",
                         params={"symbol": "BTCUSDT", "timeframe": "15m",
@@ -312,10 +309,11 @@ class CandleContractFailClosedTest(unittest.TestCase):
 
             future_query = query_string + f"&asOfMs={evaluation + 1}"
             with patch.dict(os.environ, env, clear=True):
-                fastapi_future = TestClient(app).get(
-                    f"/v1/candles?{future_query}",
-                    headers={"Authorization": "Bearer isolated-contract-token"},
-                )
+                with patch("market_data.fastapi_app.now_ms", return_value=evaluation):
+                    fastapi_future = TestClient(app).get(
+                        f"/v1/candles?{future_query}",
+                        headers={"Authorization": "Bearer isolated-contract-token"},
+                    )
             future_environ = dict(environ, QUERY_STRING=future_query)
             future_statuses = []
             with patch.dict(os.environ, env, clear=True):
