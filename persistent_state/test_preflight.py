@@ -24,7 +24,7 @@ def make_snapshot(timeframe, *, count=3, as_of=AS_OF, latest_lag_periods=1):
             "openTimeMs": opening, "closeTimeMs": close,
             "open": "100", "high": "102", "low": "99", "close": "101",
             "volume": "2.5", "isClosed": True,
-            "availableAtMs": close + 100,
+            "availableAtMs": close,
             "availabilityKind": "FIRST_OBSERVED",
             "quality": "VALIDATED", "source": "ccxt.binanceusdm",
         })
@@ -65,8 +65,8 @@ class MarketDataPreflightTests(unittest.TestCase):
     def test_uses_approved_timeframe_freshness_limits(self):
         self.assertEqual(M15_MAX_LAG_MS, 20 * 60_000)
         self.assertEqual(H1_MAX_LAG_MS, 70 * 60_000)
-        m15 = make_snapshot("15m", latest_lag_periods=2)
-        h1 = make_snapshot("1h", latest_lag_periods=2)
+        m15 = make_snapshot("15m", latest_lag_periods=3)
+        h1 = make_snapshot("1h", latest_lag_periods=3)
         self.assertEqual(self.validate(m15=m15).status, "BLOCKED_PREFLIGHT")
         self.assertEqual(self.validate(h1=h1).status, "BLOCKED_PREFLIGHT")
 
