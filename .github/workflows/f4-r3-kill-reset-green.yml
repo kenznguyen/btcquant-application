@@ -65,7 +65,7 @@ jobs:
           [[ "$risk_control_blob" == "c8fe573a7a5b0716159e50a678423e402d7df3ba" ]]
           [[ "$risk_contract_blob" == "7ae74740568e3bcad78acd928896ee363cc62613" ]]
           [[ "$ledger_test_blob" == "b1b170bd890ec2cc64bf70079651f1fbf1274573" ]]
-          [[ "$api_test_blob" == "f665944247f63ddc4c135099a91ad0637b02d597" ]]
+          [[ "$api_test_blob" == "8c4b4c3d0cb16cbd53a87ff40aafb35473b73bb7" ]]
           [[ "$dual_test_blob" == "0cf05418940a07a8357ee9d6039325a1efcb16f2" ]]
           [[ "$contracts_blob" == "14368ea20d56879b9c9fc6c2eddf07e8c44ab5da" ]]
           [[ "$db_paths_blob" == "aa813461d607069872960f1d55d6b29667a87642" ]]
