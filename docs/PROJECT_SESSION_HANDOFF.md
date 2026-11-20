@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Application-first / T0 offline REST-tail validator CI PASS
+
+- Owner-approved delivery order: **Application-first**. Controlling decision: `docs/decisions/DELIVERY_ORDER_APPLICATION_FIRST_2026-11-20.md`. Complete application/software foundations before Feeder restart or new T0 Canonical reconstruction; this sequence does not authorize data, runtime, integration or trading operations.
+- T0 Application Foundation increment: add isolated GitHub Actions regression harness `.github/workflows/t0-rest-tail-validator.yml` (workflow blob `8303b83fb5bf6d5b309556992ae4feae60f2b446`) for the existing offline, read-only validator.
+- Validator source unchanged: `market_data/rest_tail_validator.py` blob `3437e7a9181611cfed77eab59afee27136472963`; tests blob `293d9a605b6ec6498d551504fda04eecf298601f`.
+- First CI attempt: run [44723808398](https://github.com/kenznguyen/btcquant-application/actions/runs/44723808398) failed in the harness because `py_compile` attempted to create `__pycache__` on the read-only source mount. This was a harness defect, not a validator test failure. Corrected the workflow to use in-memory AST parsing and `python -B -m unittest`; no source/test behavior was weakened.
+- Exact successful tested source SHA: `265268c0b527c4a323493c4643a67a46ee15a223`, branch `main`.
+- Successful GitHub Actions run [44723882441](https://github.com/kenznguyen/btcquant-application/actions/runs/44723882441), run 2, push event, conclusion **SUCCESS**; job `136246309375`; 10/10 regression tests PASS and syntax parsing PASS.
+- Artifact `t0-rest-tail-validator-evidence`: ID `14622617786`, SHA-256 `0ac0f81bacd65c8dd1b5748d1ba5da186dcc614963c050dfa8e0a403ec5ee713`, expires 2026-12-04.
+- Test boundary: Python 3.12.16 immutable image; test container network disabled; no credentials, real Binance payloads, Canonical SQLite, T0 runtime or VPS mounted/accessed.
+- Validator coverage is **synthetic/regression only**. Real REST payload validation remains **NOT VERIFIED**; current repository tree does not contain `m15.json` or `h1.json`. Do not retry Binance REST or use alternate routes; the existing HTTP 451 / owner-closed boundary remains.
+- Status: offline validator regression harness **PASS**; T0 Application Foundation **IN PROGRESS**; real payload validation **NOT VERIFIED**; T0 Canonical reconstruction/Feeder/runtime/T1-T2 runtime/trading remain **BLOCKED / NOT AUTHORIZED**.
+- Next: continue only isolated application contracts and deterministic tests. Real-payload validation may use only already-retained, owner-supplied response files if their exact source and integrity can be established; no network retrieval or Canonical promotion is implied.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Old Canonical LOST; reconstructed data NOT CREATED
 
 - Owner explicitly confirmed: **no copy of the former Canonical Data remains**.

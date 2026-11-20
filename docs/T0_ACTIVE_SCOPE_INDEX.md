@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Application-first T0 Application Foundation / REST-tail validator CI PASS
+
+- Controlling delivery decision: `docs/decisions/DELIVERY_ORDER_APPLICATION_FIRST_2026-11-20.md` — Application-first; complete application/software foundations before Feeder restart or new T0 Canonical reconstruction.
+- T0 Application Foundation increment: dedicated isolated workflow `.github/workflows/t0-rest-tail-validator.yml`, blob `8303b83fb5bf6d5b309556992ae4feae60f2b446`.
+- Exact tested source SHA: `265268c0b527c4a323493c4643a67a46ee15a223` on `main`; validator blob `3437e7a9181611cfed77eab59afee27136472963`; test blob `293d9a605b6ec6498d551504fda04eecf298601f`.
+- CI run [44723882441](https://github.com/kenznguyen/btcquant-application/actions/runs/44723882441), run 2, **SUCCESS**; job `136246309375`; syntax parse PASS and **10/10 synthetic regression tests PASS**.
+- Artifact `t0-rest-tail-validator-evidence`: ID `14622617786`, SHA-256 `0ac0f81bacd65c8dd1b5748d1ba5da186dcc614963c050dfa8e0a403ec5ee713`, expires 2026-12-04.
+- Initial run [44723808398](https://github.com/kenznguyen/btcquant-application/actions/runs/44723808398) failed because py_compile wrote bytecode into a read-only checkout. Harness corrected with in-memory AST parsing and `python -B`; no validator behavior or assertion was weakened.
+- Real REST payload validation remains **NOT VERIFIED**; `m15.json` and `h1.json` are absent from the current repository tree. No retry/retrieval; HTTP 451 / owner-closed boundary preserved.
+- No Canonical SQLite, archive, Dropbox, VPS, Feeder, credentials, T1/T2 runtime or trading was accessed or changed.
+- Status: offline validator CI **PASS**; T0 Application Foundation **IN PROGRESS**; real payload validation **NOT VERIFIED**; Canonical reconstruction/Feeder/runtime/integration/trading remain **BLOCKED / NOT AUTHORIZED**.
+- Evidence report: `docs/evidence/T0_REST_TAIL_VALIDATOR_CI_2026-11-20.md`.
+- Next: continue bounded application-side contracts and deterministic regression harnesses only. No data/runtime expansion without separate approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — T1 repository ownership decision approved
 
 - Decision: `docs/decisions/T1_REPOSITORY_OWNERSHIP_AND_CONSUMER_BOUNDARY_2026-11-20.md`, commit `10313ef41b975343e5e09e24793be48258d1c46e`.
