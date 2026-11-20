@@ -95,7 +95,7 @@ jobs:
             --env PYTHONPATH=/workspace \
             --workdir /workspace \
             "$PYTHON_IMAGE" \
-            bash -euc 'python -m py_compile market_data/rest_tail_validator.py market_data/test_rest_tail_validator.py && python -m unittest -v market_data.test_rest_tail_validator' \
+            bash -euc 'python -B -c "import ast, pathlib; [ast.parse(pathlib.Path(p).read_text(encoding=\"utf-8\"), filename=p) for p in (\"market_data/rest_tail_validator.py\", \"market_data/test_rest_tail_validator.py\")]" && python -B -m unittest -v market_data.test_rest_tail_validator' \
             > "$log" 2>&1; then
             test_status=0
           else
@@ -104,7 +104,7 @@ jobs:
           cat "$log"
           test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
           {
-            echo "test_command=python -m py_compile market_data/rest_tail_validator.py market_data/test_rest_tail_validator.py && python -m unittest -v market_data.test_rest_tail_validator"
+            echo "test_command=python -B -c 'import ast, pathlib; [ast.parse(pathlib.Path(p).read_text(encoding="utf-8"), filename=p) for p in ("market_data/rest_tail_validator.py", "market_data/test_rest_tail_validator.py")]' && python -B -m unittest -v market_data.test_rest_tail_validator"
             echo "test_count=${test_count:-NOT_REPORTED}"
             echo "test_exit_code=$test_status"
           } >> "$artifacts/runner_metadata.txt"
