@@ -5682,3 +5682,25 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Parent handoff blob before update: `c0fd744bb2976f4ce693be5cb79b375554b3408f`. Decision record commit: `960a3549ed4aee1d6ec5c43a987b7ca3390109f1`.
 - Tests/workflows/Actions run/job/artifact: none. Status: **DESIGN REVIEWED / RECORDED**; implementation **NOT STARTED / NOT AUTHORIZED**; runtime **NOT STARTED / NOT AUTHORIZED**.
 - Next: review open decisions and separately authorize a contract-first implementation/test task. No database or runtime work is implied.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Persistent State architecture decisions closed
+
+- Architecture decision record: `docs/decisions/PERSISTENT_STATE_ARCHITECTURE_DECISIONS_2026-11-20.md`, commit `4ce14993ba8d30213f7609f1c7875212a80eedd2`.
+- Persistent State Contract updated with closed decisions; update commit: `2aa3f92649454bb020b26d62a0ab290b749bfafa`.
+- V1 persistence: application-owned SQLite, separate from T0, outside repository. Exact absolute path waits for explicit target OS/environment selection. No PostgreSQL in v1.
+- Storage contract: normalized tables + versioned canonical JSON event/checkpoint bodies; exact decimal accounting; UTC epoch-ms timestamps; explicit forward-only migrations; verified SQLite Online Backup before migration; unknown/newer schema fails closed.
+- Atomicity: event + idempotency claim + ledger mutation + aggregate-version update in one SQLite transaction. Immutable verified checkpoint at clean close and every 100 committed state events; keep at least 3 verified checkpoint generations.
+- Retention/security: indefinite event/idempotency retention in v1; no TTL/purge/compaction. Keep at least 3 verified rolling backups; require OS full-disk encryption for persistent deployment; manual restore only; no secrets in state.
+- Preflight defaults: latest closed M15 age <=20m and H1 <=70m; no forming candles; no unresolved gaps/duplicates/conflicts inside active feature lookbacks; no synthetic or alternate-venue fallback.
+- Paper equity: no exchange account connector in v1; immutable user-configured initial paper-equity seed, then derive equity/capacity from reconciled paper ledger and current risk policy.
+- Recovery/Kill Switch: deterministic replay only; ambiguous state blocks for operator review. Kill Switch reset requires explicit manual audited action.
+- Stop: stop new proposals, complete current atomic transition and checkpoint within 30 seconds; otherwise leave INTERRUPTED, never force CLOSED.
+- T1/T2 runtime, external order systems, live data fetch, T0/Feeder/staging/VPS and production DB operations remain excluded.
+- A bounded contract-first/test-first implementation scope is documented in the decision record. It is a proposal for separate authorization, not implementation approval.
+- Work scope: documentation only. No code, tests, workflows, database, data, host, network, VPS, T0, Feeder, T1/T2 runtime or trading touched.
+- Source parent handoff blob: `cef41f44a093db0bb9ec380d04e3a4e8fce512ba`. Decision commit: `4ce14993ba8d30213f7609f1c7875212a80eedd2`; contract update commit: `2aa3f92649454bb020b26d62a0ab290b749bfafa`.
+- Tests/workflows/Actions run/job/artifact: none. Status: **OPEN ARCHITECTURE DECISIONS CLOSED FOR SCOPE PLANNING**; implementation **NOT STARTED / NOT AUTHORIZED**; runtime **NOT STARTED / NOT AUTHORIZED**.
+- Next: owner reviews the bounded implementation scope and separately authorizes source changes.
