@@ -235,6 +235,116 @@ class SessionFencingTests(unittest.TestCase):
         )
         self.assertEqual(result.status, SessionStatus.INTERRUPTED)
 
+    def test_close_revalidates_checkpoint_aggregate_versions_before_marking_closed(self):
+        token = start_running(self.repository)
+        commit_one(self.repository, token)
+        self.repository.advance_session(
+            token, expected_status=SessionStatus.RUNNING,
+            new_status=SessionStatus.CHECKPOINTING, at_ms=1_800_000_100_000,
+        )
+        self.repository.publish_checkpoint(checkpoint_for(token), fencing_token=token)
+        with sqlite3.connect(self.path) as connection:
+            connection.execute("DROP TRIGGER ps_checkpoints_no_update")
+            connection.execute(
+                "UPDATE ps_checkpoint_generations SET aggregate_versions_json=? WHERE checkpoint_id=?",
+                (canonical_json({"ledger-core": 0}), "checkpoint-session-1-1"),
+            )
+            connection.execute(
+                """
+                CREATE TRIGGER ps_checkpoints_no_update
+                BEFORE UPDATE ON ps_checkpoint_generations
+                BEGIN
+                    SELECT RAISE(ABORT, 'ps_checkpoint_generations is append-only');
+                END
+                """
+            )
+        with self.assertRaises(CheckpointIntegrityError):
+            self.repository.advance_session(
+                token, expected_status=SessionStatus.CHECKPOINTING,
+                new_status=SessionStatus.CLOSED, at_ms=1_800_000_100_001,
+            )
+        self.assertEqual(self.repository.get_session("session-1").status, SessionStatus.CHECKPOINTING)
+
+    def test_stop_blocks_new_paper_transitions_after_checkpointing_begins(self):
+        token = start_running(self.repository)
+        commit_one(self.repository, token)
+        self.repository.advance_session(
+            token, expected_status=SessionStatus.RUNNING,
+            new_status=SessionStatus.CHECKPOINTING, at_ms=1_800_000_100_000,
+        )
+        with self.assertRaises(SessionStateConflictError):
+            commit_one(self.repository, token, sequence=2)
+        self.assertEqual(len(self.repository.read_events("paper-account")), 1)
+
+    def test_blocked_preflight_and_restore_are_terminal(self):
+        preflight_token = self.repository.claim_writer(make_session("blocked-preflight"))
+        self.repository.advance_session(
+            preflight_token, expected_status=SessionStatus.START_REQUESTED,
+            new_status=SessionStatus.PREFLIGHT, at_ms=1_800_000_000_001,
+        )
+        self.repository.advance_session(
+            preflight_token, expected_status=SessionStatus.PREFLIGHT,
+            new_status=SessionStatus.BLOCKED_PREFLIGHT, at_ms=1_800_000_000_002,
+        )
+        with self.assertRaises(SessionTransitionError):
+            self.repository.advance_session(
+                preflight_token, expected_status=SessionStatus.BLOCKED_PREFLIGHT,
+                new_status=SessionStatus.READY, at_ms=1_800_000_000_003,
+            )
+        self.assertEqual(
+            self.repository.get_session("blocked-preflight").status,
+            SessionStatus.BLOCKED_PREFLIGHT,
+        )
+
+        restore_token = self.repository.claim_writer(
+            make_session("blocked-restore", started_at_ms=1_800_000_010_000)
+        )
+        self.repository.advance_session(
+            restore_token, expected_status=SessionStatus.START_REQUESTED,
+            new_status=SessionStatus.PREFLIGHT, at_ms=1_800_000_010_001,
+        )
+        self.repository.advance_session(
+            restore_token, expected_status=SessionStatus.PREFLIGHT,
+            new_status=SessionStatus.RESTORING, at_ms=1_800_000_010_002,
+        )
+        self.repository.advance_session(
+            restore_token, expected_status=SessionStatus.RESTORING,
+            new_status=SessionStatus.BLOCKED_RESTORE, at_ms=1_800_000_010_003,
+        )
+        with self.assertRaises(SessionTransitionError):
+            self.repository.advance_session(
+                restore_token, expected_status=SessionStatus.BLOCKED_RESTORE,
+                new_status=SessionStatus.READY, at_ms=1_800_000_010_004,
+            )
+        self.assertEqual(
+            self.repository.get_session("blocked-restore").status,
+            SessionStatus.BLOCKED_RESTORE,
+        )
+
+    def test_failed_persistence_and_aborted_sessions_cannot_resume(self):
+        failed_token = self.repository.claim_writer(make_session("failed-session"))
+        self.repository.advance_session(
+            failed_token, expected_status=SessionStatus.START_REQUESTED,
+            new_status=SessionStatus.FAILED_PERSISTENCE, at_ms=1_800_000_000_001,
+        )
+        with self.assertRaises(SessionTransitionError):
+            self.repository.advance_session(
+                failed_token, expected_status=SessionStatus.FAILED_PERSISTENCE,
+                new_status=SessionStatus.PREFLIGHT, at_ms=1_800_000_000_002,
+            )
+        aborted_token = self.repository.claim_writer(
+            make_session("aborted-session", started_at_ms=1_800_000_010_000)
+        )
+        self.repository.advance_session(
+            aborted_token, expected_status=SessionStatus.START_REQUESTED,
+            new_status=SessionStatus.ABORTED, at_ms=1_800_000_010_001,
+        )
+        with self.assertRaises(SessionTransitionError):
+            self.repository.advance_session(
+                aborted_token, expected_status=SessionStatus.ABORTED,
+                new_status=SessionStatus.PREFLIGHT, at_ms=1_800_000_010_002,
+            )
+
     def test_close_revalidates_checkpoint_checksum_before_marking_closed(self):
         token = start_running(self.repository)
         commit_one(self.repository, token)
