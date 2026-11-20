@@ -47,7 +47,7 @@ def commit_event(repository, sequence, fencing_token):
         strategy_id=event.strategy_id, strategy_version=event.strategy_version,
         created_at_ms=event.created_at_ms, recorded_at_ms=event.recorded_at_ms,
         payload_json=event.payload_json, market_snapshot_id=event.market_snapshot_id,
-        candle_open_time_ms=event.candle_open_time_ms,
+        candle_open_time_ms=event.candle_open_time_ms, aggregate_id=event.aggregate_id,
     )
     claim = IdempotencyClaim(
         idempotency_key=derive_idempotency_key(
