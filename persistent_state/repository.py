@@ -1028,6 +1028,22 @@ class SQLiteStateRepository:
             ).fetchone()["covered_event_sequence"]
             if head_sequence != checkpoint.covered_event_sequence:
                 raise CheckpointIntegrityError("active checkpoint pointer sequence does not match generation")
+            expected_versions = {
+                item["aggregate_id"]: item["aggregate_version"]
+                for item in connection.execute(
+                    """
+                    SELECT aggregate_id, MAX(aggregate_version) AS aggregate_version
+                    FROM ps_events
+                    WHERE account_scope_id = ? AND event_sequence <= ?
+                    GROUP BY aggregate_id
+                    """,
+                    (account_scope_id, checkpoint.covered_event_sequence),
+                ).fetchall()
+            }
+            if json.loads(checkpoint.aggregate_versions_json) != expected_versions:
+                raise CheckpointIntegrityError(
+                    "active checkpoint aggregate versions do not match the committed event prefix"
+                )
             return checkpoint
         finally:
             connection.close()
