@@ -5662,3 +5662,23 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Work record: documentation-only. Parent/source HEAD before decision record: `71f01f2dd1d6cf29c7c09edb8126b8b91e6ea5b8`; decision commit: `ac7fc0c641c67a66743c3ac8568454a94cd9c180`. Tests/workflows/Actions run/job/artifact: none.
 - Status: **ARCHITECTURE DECISION APPROVED / RECORDED**; implementation **NOT STARTED / NOT AUTHORIZED**; runtime **NOT STARTED / NOT AUTHORIZED**.
 - Next: separately review a versioned persistent-state contract and session lifecycle test plan before authorizing implementation.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Persistent State Contract and Session Lifecycle designed
+
+- Design record: `docs/architecture/PERSISTENT_STATE_CONTRACT_AND_SESSION_LIFECYCLE_2026-11-20.md`, commit `960a3549ed4aee1d6ec5c43a987b7ca3390109f1`.
+- Owner-selected mode remains On-Demand Execution: manual Start/Stop; durable state across sessions; no scheduler, background runner, systemd/autostart, or 24/7 service.
+- Contract uses an authoritative durable event history plus versioned immutable checkpoints; event replay is ordered and idempotent. A checkpoint is accepted only after checksum and committed event-sequence verification.
+- Core and AI retain independent state namespaces, decision histories and position ledgers. Smart DCA restores only from reconciled Core position/event history; AI cannot inherit Core DCA state.
+- Idempotency requires atomic unique intent claims, canonical payload-hash comparison and durable dedupe history. Same key/same payload reuses the recorded outcome; same key/different payload is a conflict. This is deduplicated paper-state processing, not a claim of distributed exactly-once execution.
+- Session lifecycle: IDLE → START_REQUESTED → PREFLIGHT → RESTORING → READY → RUNNING → CHECKPOINTING → CLOSED. Interrupted sessions recover from the last valid checkpoint plus committed event tail; invalid or ambiguous state fails closed. Single-writer ownership uses an atomic claim and fencing generation.
+- Every manual session revalidates approved market source, M15/H1 contract/lookback, closed-candle status, alignment/order/duplicates, gap policy, snapshot consistency and configured freshness thresholds. No new numeric freshness threshold or gap policy is approved here.
+- Shared Risk Engine and Kill Switch remain mandatory. Recompute risk capacity from the current approved equity/position snapshot; do not trust stale persisted capacity. Persisted paper positions are not monitored or protected while the application is stopped.
+- Contract test plan is specified, but no tests were run. Synthetic fixtures, if later approved, remain test-only and are not T0 Canonical data.
+- Open decisions before implementation: physical backend/location, concrete schema/migrations, retention/backup/encryption, freshness/gap thresholds, equity snapshot source, operator recovery/Kill Switch reset, graceful-stop/abort semantics, and any future T1/T2/external-order integration.
+- Work scope: documentation only. No source code, tests, workflows, database, market data, archive, host, VPS, T0, Feeder, T1/T2 runtime or trading system changed/accessed.
+- Parent handoff blob before update: `c0fd744bb2976f4ce693be5cb79b375554b3408f`. Decision record commit: `960a3549ed4aee1d6ec5c43a987b7ca3390109f1`.
+- Tests/workflows/Actions run/job/artifact: none. Status: **DESIGN REVIEWED / RECORDED**; implementation **NOT STARTED / NOT AUTHORIZED**; runtime **NOT STARTED / NOT AUTHORIZED**.
+- Next: review open decisions and separately authorize a contract-first implementation/test task. No database or runtime work is implied.
