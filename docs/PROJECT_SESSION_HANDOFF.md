@@ -5755,3 +5755,20 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - All DB tests used disposable temporary directories. No production/Windows path, T0 Canonical, feeder, market-data source, Binance, T1/T2, VPS, staging, credentials, exchange or trading was accessed. No scheduler/autostart/runtime integration, migration, checkpoint persistence, retention deletion or compaction was added.
 - Status: **CONTRACTS PASS; SQLITE REPOSITORY/ATOMIC TRANSITION PASS**; full approved implementation scope **IN PROGRESS**. Replay/checkpoint/fencing/recovery/preflight/risk-admission tests **NOT STARTED**; production DB and runtime **NOT AUTHORIZED**.
 - Next: implement deterministic event replay and checkpoint validation/publication against temporary test DBs only. Event history remains authoritative; no production path or T0 access.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Persistent State replay/checkpoint milestone 3 PASS
+
+- Exact tested source SHA: `bb64e0c196d5d1536f9704d9abdc79263b14671c` on `main`.
+- Updated `persistent_state/repository.py`, blob `b14d7f63793991ed28c06c6d1ffb41101a7d80c7`; added `persistent_state/replay.py`, blob `e94e94a2e62943f63641e97911655e043e9a873b`; added `persistent_state/test_replay_checkpoint.py`, blob `b7dead609d4cb0adf9ee79ac977b2c4094e96027`; canonical JSON now rejects binary floats (`persistent_state/contracts.py`, blob `3222360843292a4d0e34c29d019007d71d6ab335`).
+- Replay validates canonical state, strict contiguous sequence, account scope, duplicate event IDs and reducer result; replay from checkpoint starts after covered sequence.
+- Checkpoint generations are immutable/append-only, checksum-verified on read, must not cover uncommitted events, and aggregate-version map must match the committed event prefix. Active pointer advances monotonically; generation insert + pointer update are atomic; no pruning.
+- Test-first commit `5a503adda8577cdc6713313441b69b7ed546ee6a`; RED run [44716033557](https://github.com/kenznguyen/btcquant-application/actions/runs/44716033557) because replay module was absent.
+- Final CI [44716717988](https://github.com/kenznguyen/btcquant-application/actions/runs/44716717988), exact SHA above, **SUCCESS**; job `136221915283`: 67 contract/repository/replay/checkpoint tests PASS + 160 adjacent paper-ledger/strategy API regression tests PASS.
+- Artifact `persistent-state-contract-test-evidence`: ID `14619991744`, SHA-256 `953606cd4fcf927c0c76f3901b062a816cf152831098fde8d4ff8851fe311df6`, expiry 2026-12-04.
+- Evidence report: `docs/evidence/PERSISTENT_STATE_REPLAY_CHECKPOINT_IMPLEMENTATION_2026-11-20.md`, commit `7d961e40b66d0f2c034de7d2bfbca596d43d28f1`.
+- All DB tests use disposable temporary paths. No production/Windows path, T0, Binance, T1/T2, VPS, staging, provider, credentials, exchange, runtime or trading access. No automatic checkpoint cadence, production migration, backup/restore, scheduler or autostart added.
+- Status: **CONTRACTS PASS; SQLITE ATOMIC TRANSITION PASS; REPLAY/CHECKPOINT PASS**. Remaining approved implementation: fencing/session recovery, market-data preflight fixtures and risk-admission interface tests. Runtime/production DB remain **NOT AUTHORIZED**.
+- Next: implement single-writer ownership and fencing-generation semantics plus crash/restart recovery harness against temporary DBs only.
