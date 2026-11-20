@@ -29,7 +29,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
         self.repository.initialize()
 
     def transition(self, *, account="paper-account", sequence=1, expected_version=0,
-                   intent="intent-1", payload='{"target":"0.01"}', state='{"position":"0.01"}',
+                   ordinal=0, payload='{"target":"0.01"}', state='{"position":"0.01"}',
                    event_id="event-1", strategy=StrategyId.CORE):
         ledger_id = "ledger-" + strategy.value.lower()
         snapshot_id = "snapshot-1"
@@ -38,12 +38,12 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
             idempotency_key=derive_idempotency_key(
                 account_scope_id=account, ledger_id=ledger_id, strategy_id=strategy,
                 strategy_version=strategy_version, market_snapshot_id=snapshot_id,
-                candle_open_time_ms=1_800_000_000_000, action_kind="ENTRY", action_ordinal=0,
+                candle_open_time_ms=1_800_000_000_000, action_kind="ENTRY", action_ordinal=ordinal,
             ),
             payload_hash=digest(payload), account_scope_id=account, ledger_id=ledger_id,
             strategy_id=strategy, strategy_version=strategy_version,
             market_snapshot_id=snapshot_id, candle_open_time_ms=1_800_000_000_000,
-            action_kind="ENTRY", action_ordinal=0,
+            action_kind="ENTRY", action_ordinal=ordinal,
         )
         event = EventRecord(
             event_id=event_id, account_scope_id=account, session_id="session-1",
@@ -134,8 +134,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
         event, claim, mutation = self.transition()
         self.repository.commit_transition(event, claim, mutation)
         stale_event, stale_claim, stale_mutation = self.transition(
-            sequence=2, expected_version=0, event_id="event-stale",
-            intent="different-intent",
+            sequence=2, expected_version=0, event_id="event-stale", ordinal=1,
         )
         with self.assertRaises(AggregateVersionConflictError):
             self.repository.commit_transition(stale_event, stale_claim, stale_mutation)
