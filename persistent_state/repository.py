@@ -649,12 +649,21 @@ class SQLiteStateRepository:
 
     def commit_transition(
         self, event: EventRecord, claim: IdempotencyClaim, mutation: AggregateMutation,
+        *, fencing_token: FencingToken,
     ) -> CommitResult:
         """Atomically append event + idempotency claim + aggregate mutation."""
         self._validate_transition(event, claim, mutation)
+        if (
+            event.account_scope_id != fencing_token.account_scope_id
+            or event.session_id != fencing_token.session_id
+        ):
+            raise TransitionContractError("event must belong to the current fencing-token session")
         connection = self._connect_existing()
         try:
             connection.execute("BEGIN IMMEDIATE")
+            self._assert_fencing_token(
+                connection, fencing_token, required_statuses={SessionStatus.RUNNING},
+            )
             existing = connection.execute(
                 """
                 SELECT payload_hash, outcome_event_id, event_sequence, aggregate_version
@@ -800,13 +809,24 @@ class SQLiteStateRepository:
         except (TypeError, ValueError) as exc:
             raise CheckpointIntegrityError("persisted checkpoint failed contract validation") from exc
 
-    def publish_checkpoint(self, checkpoint: Checkpoint) -> CheckpointPublishResult:
+    def publish_checkpoint(
+        self, checkpoint: Checkpoint, *, fencing_token: FencingToken,
+    ) -> CheckpointPublishResult:
         """Persist an immutable verified generation and atomically advance its active pointer."""
         if not isinstance(checkpoint, Checkpoint):
             raise TypeError("checkpoint must be a validated Checkpoint")
+        if (
+            checkpoint.account_scope_id != fencing_token.account_scope_id
+            or checkpoint.session_id != fencing_token.session_id
+        ):
+            raise TransitionContractError("checkpoint must belong to the current fencing-token session")
         connection = self._connect_existing()
         try:
             connection.execute("BEGIN IMMEDIATE")
+            self._assert_fencing_token(
+                connection, fencing_token,
+                required_statuses={SessionStatus.RUNNING, SessionStatus.CHECKPOINTING},
+            )
             latest_sequence = connection.execute(
                 "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
                 (checkpoint.account_scope_id,),
