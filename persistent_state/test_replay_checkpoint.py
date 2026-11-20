@@ -163,9 +163,9 @@ class CheckpointRepositoryTests(unittest.TestCase):
 
     def test_different_checkpoint_ids_at_same_coverage_are_conflict(self):
         commit_event(self.repository, 1, self.token)
-        self.repository.publish_checkpoint(make_checkpoint(1, checkpoint_id="checkpoint-a"))
+        self.repository.publish_checkpoint(make_checkpoint(1, checkpoint_id="checkpoint-a"), fencing_token=self.token)
         with self.assertRaises(CheckpointConflictError):
-            self.repository.publish_checkpoint(make_checkpoint(1, checkpoint_id="checkpoint-b"))
+            self.repository.publish_checkpoint(make_checkpoint(1, checkpoint_id="checkpoint-b"), fencing_token=self.token)
 
     def test_checkpoint_insert_and_active_pointer_update_roll_back_together(self):
         commit_event(self.repository, 1, self.token)
@@ -210,7 +210,7 @@ class CheckpointRepositoryTests(unittest.TestCase):
     def test_keeps_all_verified_generations_without_automatic_pruning(self):
         for sequence in (1, 2, 3):
             commit_event(self.repository, sequence, self.token)
-            self.repository.publish_checkpoint(make_checkpoint(sequence))
+            self.repository.publish_checkpoint(make_checkpoint(sequence), fencing_token=self.token)
         self.assertEqual(len(self.repository.list_checkpoints("paper-account")), 3)
 
 
