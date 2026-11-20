@@ -70,6 +70,7 @@ class SQLiteStateRepositoryTests(unittest.TestCase):
         )
         event = EventRecord(
             event_id=event_id, account_scope_id=account, session_id=session_id,
+            aggregate_id=ledger_id,
             event_sequence=sequence, aggregate_version=expected_version + 1,
             event_type="POSITION_UPDATED", strategy_id=strategy,
             strategy_version=strategy_version, created_at_ms=1_800_000_000_000,
