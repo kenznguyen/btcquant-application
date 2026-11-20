@@ -77,6 +77,16 @@ class EventContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             event(event_sequence=0)
 
+    def test_allows_account_level_event_without_strategy_attribution(self):
+        item = event(
+            event_type="KILL_SWITCH_LATCHED", strategy_id=None, strategy_version=None,
+        )
+        self.assertIsNone(item.strategy_id)
+
+    def test_strategy_version_requires_strategy_attribution(self):
+        with self.assertRaises(ValueError):
+            event(strategy_id=None)
+
 
 class StrategyStateContractTests(unittest.TestCase):
     def test_accepts_independent_ai_state(self):
