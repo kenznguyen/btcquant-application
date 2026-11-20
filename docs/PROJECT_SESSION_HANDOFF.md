@@ -5870,3 +5870,21 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Graphify `review_status` still lists only PR #1 review for unrelated snapshot head `f940443d3e5f583e2c0bfd4c1d15d9f31a576775`; it is not evidence for target SHA.
 - Available Graphify tools expose review status but no review-start/re-run action. No review was initiated. Independent-review verdict remains **NOT VERIFIED**.
 - Next: trigger a Graphify automated review from a reviewable PR/snapshot containing the target source, or provide a Graphify review result tied to this exact source snapshot. Do not reuse PR #1's prior result. Keep T0/Application integration blocked pending independent review and explicit approval.
+
+
+## Graphify review PR opened — 2026-11-20
+
+- Created review-only PR #2: https://github.com/kenznguyen/btcquant-application/pull/2
+- Title: `DO NOT MERGE — Graphify review snapshot: T0 Candle Contract (source fc2e484)`.
+- Review branch: `review/t0-candle-contract-graphify-20261120`; PR head SHA `b39c118ad96dd1865b27d228a106b828dc638473`; base `main` at `a1405837320a7a10bbd5c790be5a02b93e2fb4a3`.
+- The PR adds 8 files only under `review-snapshots/t0-candle-contract-2026-11-20/`; no production-path files changed.
+- Six mirrored files were fetched from exact source commit `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235` and their Git blob SHAs re-verified 6/6:
+  - `market_data/api_contract.py`: `4297ab173fee6f7ee78ef759217c229cd58eb4e4`
+  - `market_data/fastapi_app.py`: `e0b607770004a4c1b01c1368c5dce268298d89a3`
+  - `pipeline/api.py`: `887901302fc767750568933232daebb947902ee1`
+  - `market_data/test_api_contract.py`: `856e8b7ae8932df6e081fe012ee962a0cf509dea`
+  - `pipeline/test_api.py`: `8c4b4c3d0cb16cbd53a87ff40aafb35473b73bb7`
+  - `market_data/README.md`: `6561214efdca5108672b83809a9c12047462d72b`
+- PR explicitly requests Graphify review across correctness, readability/simplicity, architecture, security, and performance, and includes existing CI evidence and strict no-merge/no-runtime restrictions.
+- Initial Graphify `review_status(pr_number=2)` returned `review: null` with message that Graphify has not reviewed PR #2 yet; Graphify says reviews start on PR open/update when reviews are enabled for the repository. No review verdict exists yet.
+- Current state: PR created and source mirror verified **PASS**; Graphify independent review **QUEUED/NOT STARTED (not yet verified)**. Keep PR open and do not merge. T0/Application integration remains blocked pending a completed review tied to this PR/source snapshot and explicit owner approval.
