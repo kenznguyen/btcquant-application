@@ -9,6 +9,7 @@ on:
       - market_data/runtime_smoke.py
       - market_data/uvicorn_nginx_smoke.py
       - market_data/test_api.py
+      - market_data/test_api_contract.py
       - market_data/test_controlled_ingestion_acceptance.py
       - market_data/test_t0_controlled_ingestion_acceptance.py
       - requirements-market-data.txt
