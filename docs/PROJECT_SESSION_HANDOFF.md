@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — FastAPI liveness / timeout / lifecycle baseline owner-approved; CI BLOCKED
+
+- Owner approved all three decisions: keep `/health` liveness-only; approve timeout/lifecycle values as design + isolated-test baseline only; proceed with docs, regression harness and isolated GitHub Actions only.
+- Decision: `docs/decisions/T0_FASTAPI_LIVENESS_TIMEOUT_LIFECYCLE_BASELINE_2026-11-20.md`, commit `99cb5b1327b2f14e43b392c17b58823cd4d81cd8`.
+- Harness source commit: `66a6fcdecd5a8f1201a7dca2a6520a040ef2cb0d`; `market_data/uvicorn_nginx_smoke.py` blob `ecddcb63a9840867c46d0dd355a4bf87ba5a8be9`.
+- CI run [44691209612](https://github.com/kenznguyen/btcquant-application/actions/runs/44691209612), run 41, push event, **FAILURE**.
+- Jobs: FastAPI contract tests `136137170900` PASS; runtime-lock-only + ASGI smoke `136137170825` PASS; Uvicorn/Nginx integration `136137170694` FAIL.
+- Failure: after SIGTERM, Uvicorn process return code was not zero; assertion at `market_data/uvicorn_nginx_smoke.py:195`. Do not weaken assertion or claim graceful shutdown PASS. SIGTERM lifecycle remains **NOT VERIFIED / BLOCKED**.
+- Artifacts: integration ID `14609120411`, SHA-256 `a774f6308e37b5e229a28abc7de6ba42e0a4436e9f9ff0c441fbf97363c91c38`; contract ID `14608891267`, SHA-256 `82321b4102d49a31f70e154ecc802053179de43b32c767071caabb3ac1ee1b05`; expiry 2026-12-04.
+- Evidence report: `docs/evidence/T0_FASTAPI_LIVENESS_TIMEOUT_LIFECYCLE_CI_2026-11-20.md`, commit `ba0123b10cb36e982aabb98b46f4871a0c75dbd4`.
+- Timeout directives and Uvicorn arguments were added only to the disposable CI harness; no production runtime config was added. Nginx config validation was added. Overall timeout/lifecycle CI is not PASS because the integration job failed before full evidence.
+- No VPS, canonical T0 SQLite, credentials, T1/T2, PostgreSQL activation, persistent runtime, supervisor, systemd/autostart, public ingress, deployment or trading was accessed or authorized.
+- Next: diagnose Uvicorn nonzero SIGTERM exit in isolated harness; add diagnostic capture without weakening assertion; rerun isolated Actions on exact source SHA. Keep all runtime and data boundaries unchanged.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — FastAPI/Uvicorn/Nginx static runtime review
 
 - Read-only review report: `docs/reviews/T0_FASTAPI_UVICORN_NGINX_RUNTIME_STATIC_REVIEW_2026-11-20.md`.
