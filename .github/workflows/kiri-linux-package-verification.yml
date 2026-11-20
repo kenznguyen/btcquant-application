@@ -41,6 +41,16 @@ jobs:
           url="https://github.com/libracoder/kiri/releases/download/v0.2.2/$asset"
           curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 "$url" -o "$asset"
           printf '%s  %s\n' "639f64abb7f3bd063a80ed1744e891156351c56cf2ad502633c47536c397a961" "$asset" | sha256sum --check -
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gnupg
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://download.runkiri.com/SHA256SUMS-linux -o "$RUNNER_TEMP/SHA256SUMS-linux"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://download.runkiri.com/SHA256SUMS-linux.asc -o "$RUNNER_TEMP/SHA256SUMS-linux.asc"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://download.runkiri.com/kiri-archive-key.asc -o "$RUNNER_TEMP/kiri-archive-key.asc"
+          fingerprint="$(gpg --show-keys --with-colons "$RUNNER_TEMP/kiri-archive-key.asc" | awk -F: '$1 == "fpr" {print $10; exit}')"
+          test "$fingerprint" = "900CB63F75328B627AF5549353263AE758141A6B"
+          gpg --dearmor --yes --output "$RUNNER_TEMP/kiri-archive-keyring.gpg" "$RUNNER_TEMP/kiri-archive-key.asc"
+          gpgv --keyring "$RUNNER_TEMP/kiri-archive-keyring.gpg" "$RUNNER_TEMP/SHA256SUMS-linux.asc" "$RUNNER_TEMP/SHA256SUMS-linux"
+          grep -F "639f64abb7f3bd063a80ed1744e891156351c56cf2ad502633c47536c397a961  $assetVar" "$RUNNER_TEMP/SHA256SUMS-linux"
           dpkg-deb --info "$asset"
           dpkg-deb --field "$asset" Package Version Architecture Depends
           dpkg-deb --contents "$asset" > "$RUNNER_TEMP/kiri-evidence/package-contents.txt"
@@ -179,6 +189,16 @@ jobs:
           url="https://github.com/libracoder/kiri/releases/download/v0.2.2/$asset"
           curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 "$url" -o "$asset"
           printf '%s  %s\n' "24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9" "$asset" | sha256sum --check -
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gnupg
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://download.runkiri.com/SHA256SUMS-linux -o "$RUNNER_TEMP/SHA256SUMS-linux"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://download.runkiri.com/SHA256SUMS-linux.asc -o "$RUNNER_TEMP/SHA256SUMS-linux.asc"
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://download.runkiri.com/kiri-archive-key.asc -o "$RUNNER_TEMP/kiri-archive-key.asc"
+          fingerprint="$(gpg --show-keys --with-colons "$RUNNER_TEMP/kiri-archive-key.asc" | awk -F: '$1 == "fpr" {print $10; exit}')"
+          test "$fingerprint" = "900CB63F75328B627AF5549353263AE758141A6B"
+          gpg --dearmor --yes --output "$RUNNER_TEMP/kiri-archive-keyring.gpg" "$RUNNER_TEMP/kiri-archive-key.asc"
+          gpgv --keyring "$RUNNER_TEMP/kiri-archive-keyring.gpg" "$RUNNER_TEMP/SHA256SUMS-linux.asc" "$RUNNER_TEMP/SHA256SUMS-linux"
+          grep -F "24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9  $assetVar" "$RUNNER_TEMP/SHA256SUMS-linux"
           dpkg-deb --info "$asset"
           dpkg-deb --field "$asset" Package Version Architecture Depends
           dpkg-deb --control "$asset" "$RUNNER_TEMP/kiri-lite-control"
