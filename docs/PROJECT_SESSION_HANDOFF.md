@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Independent review of archive manifest, staging plan and verification rules
+
+- Review report: `docs/reviews/T0_ARCHIVE_MANIFEST_STAGING_VERIFICATION_INDEPENDENT_REVIEW_2026-11-20.md`.
+- Reviewed HEAD: `d947a97dc8908723de5cf2c800cd6df38d236f8c`; manifest blob `eb251ac0924b46add906123f99b82e054d887a59`; staging plan blob `99d4adc4ffb63ee22084fd5014dd3dd3da7e68cf`; approval blob `87a2be9ea1ca16f1ce3d5a27a9349c1132da698b`; payload evidence blob `45386fa75a61039ed12e7b6b0f18e48b2f1ef725`.
+- Manifest static recheck **PASS**: 404 unique object keys; 202 ZIP + 202 sidecars; 202/202 ZIP metadata and paired digest assertions; no dangling pair; M15 241,440 / H1 60,360 rows. Sidecar own historical size/hash remains NOT VERIFIED; inventory is not the final dataset/build manifest.
+- Review outcome: **REVIEW COMPLETE — EXECUTION PLAN BLOCKED PENDING DOCUMENT RECONCILIATION AND DESTINATION PREFLIGHT**.
+- P1 findings: staging plan header/Phase A contradict existing conditional materialization approval; archive inventory versus final dataset manifest is ambiguous; stale sidecar metadata approval condition conflicts with the later owner decision that requires fresh sidecar measurements on the new run; destination preflight has not been evidenced.
+- Verification-rule clarifications required before execution: strict checksum sidecar parser grammar; transfer-cap byte accounting and streaming enforcement; atomic create-only/no-follow path safety; pinned 12-column CSV/header contract and decimal/OHLC invariants; exact UTC timestamp/grid semantics; complete per-object and run-level evidence.
+- Existing historical payload validation report is accepted as prior evidence only; it was not re-run in this static review.
+- Owner-approved exact materialization target remains `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001`, conditional on exact path preflight. No alternate destination.
+- No archive retrieval/staging, SQLite, Dropbox, REST tail, VPS/runtime, feeder/writer/lease, T1/T2, tests, workflow or deployment action. SQLite remains separately NOT AUTHORIZED.
+- Next: documentation-only plan reconciliation; then exact destination preflight. No archive network request before preflight passes.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — 404-object archive provenance inventory static review
 
 - Repository: `kenznguyen/btcquant-application`, branch `main`; reviewed baseline HEAD `d2c1ec24ddf3dd5ddc5970d231039799960f5404`.

@@ -424,3 +424,12 @@
 - **METADATA PARTIAL:** independent sidecar-object byte sizes and sidecar-payload SHA-256 were not retained and remain NOT VERIFIED. Do not infer them.
 - Preserve accepted historical 11,277-byte aggregate reporting discrepancy; measure all 404 objects individually in any newly approved materialization.
 - Materialization is owner-approved only after exact target preflight at `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001`. Preflight pending; no transfer, SQLite, Dropbox or runtime action.
+
+
+### Independent archive manifest/staging/verification review — 2026-11-20
+
+- Review: [T0 Archive Manifest, Staging and Verification Independent Review](reviews/T0_ARCHIVE_MANIFEST_STAGING_VERIFICATION_INDEPENDENT_REVIEW_2026-11-20.md).
+- Reviewed HEAD `d947a97dc8908723de5cf2c800cd6df38d236f8c`; manifest `eb251ac0924b46add906123f99b82e054d887a59`; plan `99d4adc4ffb63ee22084fd5014dd3dd3da7e68cf`; owner approval `87a2be9ea1ca16f1ce3d5a27a9349c1132da698b`; payload evidence `45386fa75a61039ed12e7b6b0f18e48b2f1ef725`.
+- Manifest static checks **PASS** for 404 unique object identities, 202 ZIP + 202 sidecars, ZIP metadata/pair assertions 202/202, and row totals M15 241,440 / H1 60,360. Historical sidecar own-object metadata remains NOT VERIFIED.
+- Overall **REVIEW COMPLETE — EXECUTION PLAN BLOCKED**: reconcile stale staging-plan authorization wording, distinguish archive inventory from final dataset manifest, update stale sidecar approval condition, and clarify deterministic parser/transfer-cap/path-safety/CSV/timestamp/evidence rules.
+- Exact approved target remains `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001`; preflight not run. No archive transfer or SQLite. SQLite separately NOT AUTHORIZED.
