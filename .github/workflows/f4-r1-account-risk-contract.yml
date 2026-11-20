@@ -56,7 +56,7 @@ jobs:
             echo "credentials=none"
             verify_blob paper_execution/test_f4_r1_account_contract.py e71cf941c7e59db44dcd7f3e0b948940e7f25cdc
             verify_blob paper_execution/test_risk_limits.py 3dd3afb6e7b7d361829bae0355412c468cbbc313
-            verify_blob paper_execution/test_ledger.py e162f7ff38d61c33da5f8e801af0d836346e80c6
+            verify_blob paper_execution/test_ledger.py b1b170bd890ec2cc64bf70079651f1fbf1274573
             verify_blob paper_execution/test_dual_ledger_red.py 0cf05418940a07a8357ee9d6039325a1efcb16f2
             verify_blob paper_execution/test_dual_ledger_migration_red.py 09320d363c8cb52806280c1de366895e09af3eeb
             verify_blob paper_execution/ledger.py 9cc03db8b7506543f9eef2835eb5cb7cda701d6c

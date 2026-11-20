@@ -158,10 +158,10 @@ jobs:
               "- Checked-out source SHA: $GITHUB_SHA" \
               '- Python: 3.12.16' \
               '- Network: none inside test container' \
-              "- Tests discovered: ${test_count:-NOT_REPORTED} (expected 42)" \
+              "- Tests discovered: ${test_count:-NOT_REPORTED} (expected 44)" \
               "- Test process exit code: $test_status"
           } >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$test_status" -eq 0 && "$test_count" != "42" ]]; then
+          if [[ "$test_status" -eq 0 && "$test_count" != "44" ]]; then
             echo "Expected 42 tests; observed ${test_count:-no test summary}." >&2
             exit 1
           fi
