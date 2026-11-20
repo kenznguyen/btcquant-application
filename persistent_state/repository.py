@@ -18,9 +18,12 @@ from persistent_state.contracts import (
     Checkpoint,
     EventRecord,
     IdempotencyClaim,
+    SessionRecord,
+    SessionStatus,
     StrategyId,
     canonical_json,
 )
+from persistent_state.lifecycle import is_terminal_session_status, validate_session_transition
 
 
 class RepositoryError(RuntimeError):
@@ -57,6 +60,45 @@ class CheckpointConflictError(RepositoryError):
 
 class CheckpointIntegrityError(RepositoryError):
     """A persisted checkpoint fails checksum or metadata validation."""
+
+
+class WriterOwnershipError(RepositoryError):
+    """A new writer session cannot be claimed."""
+
+
+class StaleFencingTokenError(RepositoryError):
+    """The caller's fencing generation is no longer current."""
+
+
+class SessionStateConflictError(RepositoryError):
+    """The session is not in the required lifecycle state."""
+
+
+class SessionTransitionError(RepositoryError):
+    """The requested session lifecycle transition is not permitted."""
+
+
+class CheckpointRequiredForCloseError(RepositoryError):
+    """A session cannot close without a verified checkpoint at its event boundary."""
+
+
+@dataclass(frozen=True, slots=True)
+class FencingToken:
+    account_scope_id: str
+    session_id: str
+    fencing_generation: int
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.account_scope_id, str) or not self.account_scope_id.strip():
+            raise ValueError("account_scope_id must be a non-empty string")
+        if not isinstance(self.session_id, str) or not self.session_id.strip():
+            raise ValueError("session_id must be a non-empty string")
+        if (
+            isinstance(self.fencing_generation, bool)
+            or not isinstance(self.fencing_generation, int)
+            or self.fencing_generation < 1
+        ):
+            raise ValueError("fencing_generation must be an integer >= 1")
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,8 +161,11 @@ class CheckpointPublishResult:
 class StateRepository(Protocol):
     def initialize(self) -> None: ...
 
+    def claim_writer(self, session: SessionRecord) -> FencingToken: ...
+
     def commit_transition(
         self, event: EventRecord, claim: IdempotencyClaim, mutation: AggregateMutation,
+        *, fencing_token: FencingToken,
     ) -> CommitResult: ...
 
     def read_aggregate(self, account_scope_id: str, aggregate_id: str) -> AggregateSnapshot | None: ...
@@ -129,6 +174,28 @@ class StateRepository(Protocol):
 
 
 _SCHEMA_STATEMENTS = (
+    """
+    CREATE TABLE ps_sessions (
+        session_id TEXT PRIMARY KEY,
+        account_scope_id TEXT NOT NULL,
+        status TEXT NOT NULL,
+        started_at_ms INTEGER NOT NULL,
+        ended_at_ms INTEGER,
+        initiator TEXT NOT NULL,
+        source_snapshot_id TEXT NOT NULL,
+        config_hash TEXT NOT NULL,
+        code_version TEXT NOT NULL,
+        last_committed_event_sequence INTEGER NOT NULL CHECK (last_committed_event_sequence >= 0),
+        schema_version INTEGER NOT NULL CHECK (schema_version > 0)
+    )
+    """,
+    """
+    CREATE TABLE ps_writer_fences (
+        account_scope_id TEXT PRIMARY KEY,
+        owner_session_id TEXT NOT NULL REFERENCES ps_sessions(session_id),
+        fencing_generation INTEGER NOT NULL CHECK (fencing_generation > 0)
+    )
+    """,
     """
     CREATE TABLE ps_aggregate_state (
         account_scope_id TEXT NOT NULL,
@@ -245,7 +312,7 @@ _SCHEMA_STATEMENTS = (
 )
 
 _REQUIRED_SCHEMA_OBJECTS = {
-    "ps_aggregate_state", "ps_events", "ps_idempotency_claims",
+    "ps_sessions", "ps_writer_fences", "ps_aggregate_state", "ps_events", "ps_idempotency_claims",
     "ps_events_no_update", "ps_events_no_delete",
     "ps_idempotency_no_update", "ps_idempotency_no_delete",
     "ps_checkpoint_generations", "ps_checkpoint_heads",
@@ -335,6 +402,225 @@ class SQLiteStateRepository:
             connection.close()
             raise
         return connection
+
+    def claim_writer(self, session: SessionRecord) -> FencingToken:
+        """Claim the account writer slot and fence any prior unfinished session."""
+        if not isinstance(session, SessionRecord):
+            raise TypeError("session must be a validated SessionRecord")
+        if session.status is not SessionStatus.START_REQUESTED or session.ended_at_ms is not None:
+            raise WriterOwnershipError("new writer session must start in START_REQUESTED")
+        connection = self._connect_existing()
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            if connection.execute(
+                "SELECT 1 FROM ps_sessions WHERE session_id = ?", (session.session_id,)
+            ).fetchone() is not None:
+                raise WriterOwnershipError("session_id already exists")
+
+            current = connection.execute(
+                "SELECT owner_session_id, fencing_generation FROM ps_writer_fences "
+                "WHERE account_scope_id = ?",
+                (session.account_scope_id,),
+            ).fetchone()
+            generation = 1 if current is None else current["fencing_generation"] + 1
+
+            if current is not None:
+                previous = connection.execute(
+                    "SELECT status, started_at_ms FROM ps_sessions WHERE session_id = ?",
+                    (current["owner_session_id"],),
+                ).fetchone()
+                if previous is None:
+                    raise RepositorySchemaError("writer fence references a missing session")
+                previous_status = SessionStatus(previous["status"])
+                if not is_terminal_session_status(previous_status):
+                    latest_sequence = connection.execute(
+                        "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
+                        (session.account_scope_id,),
+                    ).fetchone()[0]
+                    interrupted_at = max(session.started_at_ms, previous["started_at_ms"])
+                    connection.execute(
+                        """
+                        UPDATE ps_sessions
+                        SET status = ?, ended_at_ms = ?, last_committed_event_sequence = ?
+                        WHERE session_id = ?
+                        """,
+                        (
+                            SessionStatus.INTERRUPTED.value, interrupted_at,
+                            latest_sequence, current["owner_session_id"],
+                        ),
+                    )
+
+            connection.execute(
+                """
+                INSERT INTO ps_sessions (
+                    session_id, account_scope_id, status, started_at_ms, ended_at_ms,
+                    initiator, source_snapshot_id, config_hash, code_version,
+                    last_committed_event_sequence, schema_version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    session.session_id, session.account_scope_id, session.status.value,
+                    session.started_at_ms, session.ended_at_ms, session.initiator,
+                    session.source_snapshot_id, session.config_hash, session.code_version,
+                    session.last_committed_event_sequence, session.schema_version,
+                ),
+            )
+            connection.execute(
+                """
+                INSERT INTO ps_writer_fences (account_scope_id, owner_session_id, fencing_generation)
+                VALUES (?, ?, ?)
+                ON CONFLICT(account_scope_id) DO UPDATE SET
+                    owner_session_id = excluded.owner_session_id,
+                    fencing_generation = excluded.fencing_generation
+                """,
+                (session.account_scope_id, session.session_id, generation),
+            )
+            connection.commit()
+            return FencingToken(session.account_scope_id, session.session_id, generation)
+        except Exception:
+            if connection.in_transaction:
+                connection.rollback()
+            raise
+        finally:
+            connection.close()
+
+    @staticmethod
+    def _assert_fencing_token(
+        connection: sqlite3.Connection,
+        token: FencingToken,
+        *,
+        required_statuses: set[SessionStatus],
+    ) -> sqlite3.Row:
+        if not isinstance(token, FencingToken):
+            raise TypeError("fencing_token must be a FencingToken")
+        fence = connection.execute(
+            "SELECT owner_session_id, fencing_generation FROM ps_writer_fences WHERE account_scope_id = ?",
+            (token.account_scope_id,),
+        ).fetchone()
+        if (
+            fence is None
+            or fence["owner_session_id"] != token.session_id
+            or fence["fencing_generation"] != token.fencing_generation
+        ):
+            raise StaleFencingTokenError("writer fencing generation is stale")
+        session = connection.execute(
+            "SELECT * FROM ps_sessions WHERE session_id = ? AND account_scope_id = ?",
+            (token.session_id, token.account_scope_id),
+        ).fetchone()
+        if session is None:
+            raise StaleFencingTokenError("fencing token session does not exist")
+        if SessionStatus(session["status"]) not in required_statuses:
+            raise SessionStateConflictError(
+                "session status does not permit this operation: " + session["status"]
+            )
+        return session
+
+    def get_session(self, session_id: str) -> SessionRecord:
+        if not isinstance(session_id, str) or not session_id.strip():
+            raise ValueError("session_id must be a non-empty string")
+        connection = self._connect_existing()
+        try:
+            row = connection.execute(
+                "SELECT * FROM ps_sessions WHERE session_id = ?", (session_id,)
+            ).fetchone()
+            if row is None:
+                raise KeyError(session_id)
+            return SessionRecord(
+                session_id=row["session_id"], account_scope_id=row["account_scope_id"],
+                status=SessionStatus(row["status"]), started_at_ms=row["started_at_ms"],
+                initiator=row["initiator"], source_snapshot_id=row["source_snapshot_id"],
+                config_hash=row["config_hash"], code_version=row["code_version"],
+                last_committed_event_sequence=row["last_committed_event_sequence"],
+                ended_at_ms=row["ended_at_ms"], schema_version=row["schema_version"],
+            )
+        finally:
+            connection.close()
+
+    def get_writer_fence(self, account_scope_id: str) -> FencingToken | None:
+        if not isinstance(account_scope_id, str) or not account_scope_id.strip():
+            raise ValueError("account_scope_id must be a non-empty string")
+        connection = self._connect_existing()
+        try:
+            row = connection.execute(
+                "SELECT owner_session_id, fencing_generation FROM ps_writer_fences WHERE account_scope_id = ?",
+                (account_scope_id,),
+            ).fetchone()
+            if row is None:
+                return None
+            return FencingToken(account_scope_id, row["owner_session_id"], row["fencing_generation"])
+        finally:
+            connection.close()
+
+    def advance_session(
+        self,
+        fencing_token: FencingToken,
+        *,
+        expected_status: SessionStatus,
+        new_status: SessionStatus,
+        at_ms: int,
+    ) -> SessionRecord:
+        try:
+            validate_session_transition(expected_status, new_status)
+        except ValueError as exc:
+            raise SessionTransitionError(str(exc)) from exc
+        if isinstance(at_ms, bool) or not isinstance(at_ms, int) or at_ms < 0:
+            raise ValueError("at_ms must be an integer >= 0")
+        connection = self._connect_existing()
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            session = self._assert_fencing_token(
+                connection, fencing_token, required_statuses={expected_status},
+            )
+            if at_ms < session["started_at_ms"]:
+                raise ValueError("session transition timestamp cannot precede session start")
+            if new_status is SessionStatus.CLOSED:
+                latest_sequence = connection.execute(
+                    "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
+                    (fencing_token.account_scope_id,),
+                ).fetchone()[0]
+                head = connection.execute(
+                    """
+                    SELECT generation.session_id, generation.covered_event_sequence
+                    FROM ps_checkpoint_heads AS head
+                    JOIN ps_checkpoint_generations AS generation
+                      ON generation.checkpoint_id = head.checkpoint_id
+                    WHERE head.account_scope_id = ?
+                    """,
+                    (fencing_token.account_scope_id,),
+                ).fetchone()
+                if (
+                    head is None
+                    or head["session_id"] != fencing_token.session_id
+                    or head["covered_event_sequence"] != latest_sequence
+                ):
+                    raise CheckpointRequiredForCloseError(
+                        "CLOSED requires this session's verified checkpoint at the latest committed event sequence"
+                    )
+            latest_sequence = connection.execute(
+                "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
+                (fencing_token.account_scope_id,),
+            ).fetchone()[0]
+            terminal = is_terminal_session_status(new_status)
+            ended_at_ms = at_ms if terminal else None
+            connection.execute(
+                """
+                UPDATE ps_sessions
+                SET status = ?, ended_at_ms = ?, last_committed_event_sequence = ?
+                WHERE session_id = ? AND status = ?
+                """,
+                (
+                    new_status.value, ended_at_ms, latest_sequence,
+                    fencing_token.session_id, expected_status.value,
+                ),
+            )
+            connection.commit()
+        except Exception:
+            if connection.in_transaction:
+                connection.rollback()
+            raise
+        finally:
+            connection.close()
+        return self.get_session(fencing_token.session_id)
 
     @staticmethod
     def _validate_transition(
