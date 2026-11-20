@@ -1,4 +1,5 @@
 import unittest
+from dataclasses import replace
 
 from persistent_state.contracts import RiskState, SessionStatus, StrategyId
 from persistent_state.risk_admission import (
@@ -43,7 +44,7 @@ class SharedRiskAdmissionTests(unittest.TestCase):
             risk_policy_version="shared-risk-v1", reserved_margin_quote="5",
             aggregate_version=4,
         )
-        context = self.context.with_risk_state(latched)
+        context = replace(self.context, risk_state=latched)
         for strategy in (StrategyId.CORE, StrategyId.AI):
             with self.subTest(strategy=strategy):
                 result = self.engine.evaluate(self.proposal(strategy), context)
@@ -58,25 +59,25 @@ class SharedRiskAdmissionTests(unittest.TestCase):
         ):
             with self.subTest(status=status):
                 result = self.engine.evaluate(
-                    self.proposal(), self.context.with_session_status(status),
+                    self.proposal(), replace(self.context, session_status=status),
                 )
                 self.assertFalse(result.allowed)
                 self.assertEqual(result.reason_code, "SESSION_NOT_READY")
 
     def test_missing_shared_risk_engine_fails_closed(self):
-        context = self.context.with_engine_available(False)
+        context = replace(self.context, shared_risk_engine_available=False)
         result = self.engine.evaluate(self.proposal(), context)
         self.assertFalse(result.allowed)
         self.assertEqual(result.reason_code, "RISK_ENGINE_UNAVAILABLE")
 
     def test_missing_risk_state_fails_closed(self):
-        context = self.context.with_risk_state(None)
+        context = replace(self.context, risk_state=None)
         result = self.engine.evaluate(self.proposal(), context)
         self.assertFalse(result.allowed)
         self.assertEqual(result.reason_code, "RISK_STATE_UNAVAILABLE")
 
     def test_unreconciled_paper_ledger_fails_closed(self):
-        context = self.context.with_ledger_reconciled(False)
+        context = replace(self.context, ledger_reconciled=False)
         result = self.engine.evaluate(self.proposal(), context)
         self.assertFalse(result.allowed)
         self.assertEqual(result.reason_code, "RISK_STATE_UNRECONCILED")
@@ -87,7 +88,7 @@ class SharedRiskAdmissionTests(unittest.TestCase):
             kill_switch_reason=None, risk_policy_version="shared-risk-v1",
             reserved_margin_quote="0", aggregate_version=1,
         )
-        result = self.engine.evaluate(self.proposal(), self.context.with_risk_state(other))
+        result = self.engine.evaluate(self.proposal(), replace(self.context, risk_state=other))
         self.assertFalse(result.allowed)
         self.assertEqual(result.reason_code, "RISK_SCOPE_MISMATCH")
 
@@ -114,7 +115,7 @@ class SharedRiskAdmissionTests(unittest.TestCase):
             reserved_margin_quote="1001", aggregate_version=5,
         )
         result = self.engine.evaluate(
-            self.proposal(), self.context.with_risk_state(overcommitted),
+            self.proposal(), replace(self.context, risk_state=overcommitted),
         )
         self.assertFalse(result.allowed)
         self.assertEqual(result.reason_code, "RISK_STATE_UNRECONCILED")
