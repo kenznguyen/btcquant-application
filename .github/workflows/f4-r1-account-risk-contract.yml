@@ -106,7 +106,7 @@ jobs:
             echo "test_exit_code=$status"
             echo "test_count=${test_count:-NOT_REPORTED}"
           } >> "$artifacts/metadata.txt"
-          if [[ "$status" -eq 0 && "$test_count" != "151" ]]; then
+          if [[ "$status" -eq 0 && "$test_count" != "160" ]]; then
             echo "Expected 160 tests; observed ${test_count:-no test summary}." >&2
             status=1
           fi
