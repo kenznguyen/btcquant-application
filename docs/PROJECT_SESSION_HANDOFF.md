@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Uvicorn SIGTERM isolated harness PASS
+
+- User authorized only: add diagnostic capture, determine SIGTERM cause, and rerun isolated GitHub Actions on a new SHA. Scope did not include production/runtime activation.
+- Root cause determined from CI run 42 diagnostics: Uvicorn logs `Shutting down`, `Application shutdown complete.`, and `Finished server process`; then it re-raises the captured SIGTERM. On POSIX `subprocess.returncode == -15` is expected. The former test's requirement for return code 0 was incorrect; it was not an application shutdown failure.
+- Diagnostic-only commit: `bb454804c343497410c9b2022ce631e201996b88`; CI run [44691495222](https://github.com/kenznguyen/btcquant-application/actions/runs/44691495222) failed as expected under old assertion, but now preserved logs and process exit codes.
+- Corrected harness commit / exact tested source SHA: `da56b34acf1ef503a6b84dc897fad3de15fdc279`; file blob `c12ebb24c7d78a166413b0ae89a6fae78aff7cac`.
+- Successful workflow [44691581111](https://github.com/kenznguyen/btcquant-application/actions/runs/44691581111), run 43, event push, conclusion **SUCCESS**, completed 2026-11-20 06:59:05Z.
+- Jobs: contract tests `136138398424` PASS; runtime lock + ASGI `136138398656` PASS; Uvicorn/Nginx integration `136138398892` PASS.
+- SIGTERM test now requires `-signal.SIGTERM` and both orderly shutdown markers (`Application shutdown complete.`, `Finished server process`). Integration additionally confirms Nginx config timeout directives, proxy/auth contract, upstream shutdown 502, Nginx clean SIGTERM exit, and bearer token absent from Nginx logs.
+- Artifacts (expire 2026-12-04): contract ID `14608133886`, SHA-256 `9ff5e9c29db7c1897710cce28365f1cb7f23727f79f6c96c994e5d628f038a10`; runtime ID `14608737662`, SHA-256 `c3b055411576b3b8a0c83fe3137c1c2daab2d998b1df331e3024bb7c670143f3`; integration ID `14608638099`, SHA-256 `626b76acba1c5ae02ed611d9bd1a0964c1b8e3f84a60aed829e80c4139ef07bd`.
+- Evidence report: `docs/evidence/T0_FASTAPI_LIVENESS_TIMEOUT_LIFECYCLE_CI_2026-11-20.md`, update commit `2b16dcedabba01bd8227aa0d1f48463b4b3ad016`.
+- Status: **isolated CI PASS** for the exact SHA and enumerated coverage above. Production readiness/runtime, real VPS, supervisor/systemd/autostart, persistent runtime, public ingress remain **NOT VERIFIED / NOT AUTHORIZED**.
+- No canonical T0 SQLite, VPS, credentials, exchange, T1/T2, PostgreSQL activation or trading accessed or authorized. Keep these boundaries.
+- Next: no further implementation is authorized by this task. Preserve current passing state and await a separate approval for any broader scope.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — FastAPI liveness / timeout / lifecycle baseline owner-approved; CI BLOCKED
 
 - Owner approved all three decisions: keep `/health` liveness-only; approve timeout/lifecycle values as design + isolated-test baseline only; proceed with docs, regression harness and isolated GitHub Actions only.
