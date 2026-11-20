@@ -96,8 +96,13 @@ http {{
     server {{
         listen 127.0.0.1:{nginx_port};
         server_name localhost;
+        client_header_timeout 5s;
+        client_body_timeout 5s;
         location / {{
             proxy_pass http://127.0.0.1:{uvicorn_port};
+            proxy_connect_timeout 1s;
+            proxy_send_timeout 5s;
+            proxy_read_timeout 7s;
             proxy_http_version 1.1;
             proxy_set_header Host $host;
             proxy_set_header Authorization $http_authorization;
@@ -125,7 +130,9 @@ http {{
         uvicorn_proc = subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "market_data.fastapi_app:app",
              "--host", "127.0.0.1", "--port", str(uvicorn_port),
-             "--workers", "1", "--no-access-log"],
+             "--workers", "1", "--timeout-keep-alive", "5",
+             "--timeout-graceful-shutdown", "10", "--limit-concurrency", "16",
+             "--no-access-log"],
             cwd=Path.cwd(), env=env, stdout=uvicorn_handle, stderr=subprocess.STDOUT,
         )
         uvicorn_proc._probe_port = uvicorn_port
@@ -136,6 +143,11 @@ http {{
         )
         nginx_proc._probe_port = nginx_port
         wait_for_process(nginx_proc, nginx_log, "Nginx")
+        subprocess.run(
+            [nginx, "-p", str(nginx_root) + "/", "-c", str(nginx_conf), "-t"],
+            check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+        )
+        results.append("nginx_timeout_configuration_valid=PASS")
 
         base = f"http://127.0.0.1:{nginx_port}"
         code, headers, body = request(base + "/health")
@@ -179,11 +191,19 @@ http {{
         results.append("non_get_rejected=PASS")
 
         uvicorn_proc.terminate()
-        uvicorn_proc.wait(timeout=5)
+        uvicorn_proc.wait(timeout=12)
+        assert uvicorn_proc.returncode == 0
         uvicorn_proc = None
+        results.append("uvicorn_sigterm_graceful_exit=PASS")
         code, _, _ = request(base + "/health")
         assert code == 502
         results.append("upstream_shutdown_returns_502=PASS")
+
+        nginx_proc.terminate()
+        nginx_proc.wait(timeout=5)
+        assert nginx_proc.returncode == 0
+        nginx_proc = None
+        results.append("nginx_sigterm_clean_exit=PASS")
 
         for log_path in (access_log, nginx_root / "logs" / "error.log"):
             if log_path.exists():
