@@ -74,6 +74,13 @@ def _validate_snapshot(snapshot, timeframe, as_of_ms, required_count):
     coverage = snapshot.get("coverage")
     candles = snapshot.get("candles")
     if (
+        isinstance(coverage, dict)
+        and coverage.get("complete") is True
+        and isinstance(candles, list)
+        and len(candles) < required_count
+    ):
+        reasons.append("INSUFFICIENT_LOOKBACK")
+    elif (
         not isinstance(coverage, dict)
         or coverage.get("complete") is not True
         or coverage.get("expected") != required_count
