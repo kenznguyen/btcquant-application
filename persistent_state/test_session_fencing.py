@@ -79,7 +79,7 @@ def checkpoint_for(token, sequence=1):
         aggregate_versions_json=canonical_json({"ledger-core": sequence}),
         payload_json=payload,
         payload_checksum="sha256:" + hashlib.sha256(payload.encode()).hexdigest(),
-        created_at_ms=1_800_000_200_000, source_snapshot_id="snapshot-1",
+        created_at_ms=1_800_000_100_001, source_snapshot_id="snapshot-1",
         strategy_versions_json=canonical_json({"CORE": "core-v1", "AI": "ai-v1"}),
         config_hash="sha256:" + "a" * 64,
     )
@@ -183,10 +183,10 @@ class SessionFencingTests(unittest.TestCase):
         self.repository.publish_checkpoint(checkpoint_for(token), fencing_token=token)
         closed = self.repository.advance_session(
             token, expected_status=SessionStatus.CHECKPOINTING,
-            new_status=SessionStatus.CLOSED, at_ms=1_800_000_100_002,
+            new_status=SessionStatus.CLOSED, at_ms=1_800_000_130_000,
         )
         self.assertEqual(closed.status, SessionStatus.CLOSED)
-        self.assertEqual(closed.ended_at_ms, 1_800_000_100_002)
+        self.assertEqual(closed.ended_at_ms, 1_800_000_130_000)
 
     def test_stop_exceeding_30_second_grace_becomes_interrupted(self):
         token = start_running(self.repository)
@@ -202,6 +202,37 @@ class SessionFencingTests(unittest.TestCase):
         self.assertEqual(result.status, SessionStatus.INTERRUPTED)
         self.assertEqual(result.ended_at_ms, stop_requested_at + 30_001)
         self.assertEqual(result.stop_requested_at_ms, stop_requested_at)
+
+    def test_late_checkpoint_is_rejected_after_stop_grace_expires(self):
+        token = start_running(self.repository)
+        commit_one(self.repository, token)
+        stop_requested_at = 1_800_000_100_000
+        self.repository.advance_session(
+            token, expected_status=SessionStatus.RUNNING,
+            new_status=SessionStatus.CHECKPOINTING, at_ms=stop_requested_at,
+        )
+        late_checkpoint = checkpoint_for(token)
+        late_checkpoint = Checkpoint(
+            checkpoint_id=late_checkpoint.checkpoint_id,
+            account_scope_id=late_checkpoint.account_scope_id,
+            session_id=late_checkpoint.session_id,
+            schema_version=late_checkpoint.schema_version,
+            covered_event_sequence=late_checkpoint.covered_event_sequence,
+            aggregate_versions_json=late_checkpoint.aggregate_versions_json,
+            payload_json=late_checkpoint.payload_json,
+            payload_checksum=late_checkpoint.payload_checksum,
+            created_at_ms=stop_requested_at + 30_001,
+            source_snapshot_id=late_checkpoint.source_snapshot_id,
+            strategy_versions_json=late_checkpoint.strategy_versions_json,
+            config_hash=late_checkpoint.config_hash,
+        )
+        with self.assertRaises(GracefulStopTimeoutError):
+            self.repository.publish_checkpoint(late_checkpoint, fencing_token=token)
+        result = self.repository.advance_session(
+            token, expected_status=SessionStatus.CHECKPOINTING,
+            new_status=SessionStatus.CLOSED, at_ms=stop_requested_at + 30_001,
+        )
+        self.assertEqual(result.status, SessionStatus.INTERRUPTED)
 
     def test_close_revalidates_checkpoint_checksum_before_marking_closed(self):
         token = start_running(self.repository)
