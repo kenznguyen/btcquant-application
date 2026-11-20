@@ -118,8 +118,8 @@ def canonical_json(value: Any) -> str:
             value, sort_keys=True, separators=(",", ":"),
             ensure_ascii=False, allow_nan=False,
         )
-    except (TypeError, ValueError) as exc:
-        raise ValueError("payload must contain JSON-compatible finite values") from exc
+    except TypeError as exc:
+        raise ValueError("payload must contain JSON-compatible values") from exc
 
 
 def _canonical_json_object(name: str, value: Any) -> dict[str, Any]:
