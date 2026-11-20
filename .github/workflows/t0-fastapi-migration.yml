@@ -17,6 +17,7 @@ on:
       - market_data/test_wsgi_retirement.py
       - market_data/fastapi_app.py
       - market_data/api_contract.py
+      - pipeline/api.py
       - market_data/storage.py
       - market_data/store.py
       - market_data/postgres.py
