@@ -151,6 +151,15 @@ class CheckpointRepositoryTests(unittest.TestCase):
                 "UPDATE ps_checkpoint_generations SET payload_json=? WHERE checkpoint_id=?",
                 ('{"corrupted":true}', "checkpoint-1"),
             )
+            connection.execute(
+                """
+                CREATE TRIGGER ps_checkpoints_no_update
+                BEFORE UPDATE ON ps_checkpoint_generations
+                BEGIN
+                    SELECT RAISE(ABORT, 'ps_checkpoint_generations is append-only');
+                END
+                """
+            )
         with self.assertRaises(CheckpointIntegrityError):
             self.repository.read_active_checkpoint("paper-account")
 
@@ -171,7 +180,7 @@ class CheckpointRepositoryTests(unittest.TestCase):
 class EventReplayTests(unittest.TestCase):
     @staticmethod
     def reducer(state, event):
-        state["count"] += 1
+        state["count"] = state.get("count", 0) + 1
         state["lastEventId"] = event.event_id
         return state
 
