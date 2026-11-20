@@ -5825,3 +5825,16 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Original local `m15.json` / `h1.json` payloads were not available or inspected; prior script-reported SHA values remain **NOT INDEPENDENTLY VERIFIED**. No REST call was made.
 - No canonical SQLite access/create/import/restore/write, VPS, feeder, T1/T2, deployment, autostart or trading operation occurred.
 - Next: independent review of exact source HEAD `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235`; preserve all runtime and cross-layer connection gates until review approval.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Graphify independent review package prepared
+
+- Review package: `docs/reviews/T0_CANDLE_CONTRACT_GRAPHIFY_INDEPENDENT_REVIEW_PACKAGE_2026-11-20.md`, blob SHA `04cf6d14c1254d1025d04fa3729043a331b91424`.
+- Package commit: `9f4d3fe7ca99486ec8c58fdbb156ce0a153bcb23`; source code unchanged.
+- Immutable review target remains source/test HEAD `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235`; documentation-only current HEAD after package commit is `9f4d3fe7ca99486ec8c58fdbb156ce0a153bcb23`.
+- Graphify index is stale at `44dd517887caf256f293fc502d56afbbba124d29`, so Graphify review must refresh/re-index to the exact target SHA or mark indexed-source coverage NOT VERIFIED. Do not rely on stale graph results.
+- Review package includes exact six source/test blob SHAs, required invariants, five-axis checklist, CI evidence, explicit limitations, copy-ready review prompt, and no-runtime/no-data/no-integration constraints.
+- Independent review status: **PENDING**. No Graphify review verdict has been issued or claimed.
+- Next: refresh Graphify index to `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235`, then run/submit the independent review against that exact source snapshot. Keep T0/Application runtime and cross-layer integration blocked until review outcome and separate owner approval.
