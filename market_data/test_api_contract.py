@@ -101,6 +101,10 @@ class CandleContractFailClosedTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     _freshness([candle(START)], "15m", evaluation, True, "AS_OF")
 
+    def test_invalid_evaluation_anchor_is_rejected(self):
+        with self.assertRaises(ValueError):
+            _freshness([candle(START)], "15m", START + M15 + 1_000, True, [])
+
     def test_unsupported_timeframe_is_rejected(self):
         with self.assertRaises(ValueError):
             _freshness([candle(START)], "1d", START + M15 + 1_000, True, "AS_OF")

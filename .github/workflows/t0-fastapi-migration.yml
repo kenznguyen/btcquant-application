@@ -158,8 +158,8 @@ jobs:
             echo "- Test container network: disabled"
             echo "- Canonical SQLite/runtime/exchange: not accessed"
           } >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$test_status" -eq 0 && "$test_count" != "64" ]]; then
-            echo "Expected 64 FastAPI, Candle Contract and migrated API tests; observed ${test_count:-no test summary}." >&2
+          if [[ "$test_status" -eq 0 && "$test_count" != "65" ]]; then
+            echo "Expected 65 FastAPI, Candle Contract and migrated API tests; observed ${test_count:-no test summary}." >&2
             exit 1
           fi
           exit "$test_status"
