@@ -5611,3 +5611,18 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - T0 invariants unchanged: former Canonical = **LOST**; new RECONSTRUCTED SQLite = **NOT CREATED**; no archive retrieval/materialization, SQLite create/open/write/import/validation, promotion, runtime, T1/T2, PostgreSQL, deployment, cleanup/auto-delete or trading is authorized by this review reconciliation.
 - Work record: documentation-only update to this handoff; no tests/workflows/Actions run/job/artifact. Main source SHA inspected: `7b9df05bda3f80c0f2e71f229c826f45b8f1da6a`. Review evidence SHA: `f940443d3e5f583e2c0bfd4c1d15d9f31a576775`.
 - Next: keep PR #1 as non-mergeable evidence; when authorized, run the relevant regression/CI against an exact current source SHA. For T0 reconstruction, first resolve the owner-controlled host/destination and remaining execution gates; do not initiate data operations before separate approval.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T0 staging environment and absolute path not identified
+
+- Owner clarification: the T0 staging environment has **NOT BEEN IDENTIFIED** and the absolute staging path has **NOT BEEN DETERMINED**.
+- This clarification supersedes any earlier handoff/plan wording that could be read as confirming an available owner-controlled staging host or an established destination. In particular, the previously documented `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001` is only a proposed/planned path; it is **NOT a confirmed, owner-controlled, available destination** and must not be used as authorization to access a host or filesystem.
+- T0 reconstruction remains **BLOCKED / NOT AUTHORIZED**. Do not select an alternate host/path, run destination preflight from an unrelated environment, access/download archive objects, create/open/write/import/validate SQLite, promote data, or activate runtime.
+- Former Canonical remains **LOST**; new reconstructed SQLite remains **NOT CREATED**. T0 remains an independent data asset. PR #1 remains review-only, OPEN and UNMERGED.
+- Agreed next posture: hold all staging-dependent work. Only documentation/static review or isolated code work that does not access T0 source data, staging, SQLite, VPS/runtime, T1/T2 or trading may proceed under a separately bounded task. No specific implementation task is authorized by this clarification.
+- Required future owner input before staging work: identify the actual owner-controlled machine/environment and confirm its exact absolute destination path. This alone will not authorize archive/database operations; all remaining execution gates and a separate explicit execution approval still apply.
+- Work record: handoff documentation update only. No tests/workflows/Actions run/job/artifact; no host, path, archive, database, runtime or exchange accessed.
+- Source branch: `main`. Parent/source HEAD inspected before this update: `92f3e3b0ec59d34a15c65d2e45eba8caf26c0070`.
+- Next: wait for an identified owner-controlled staging environment and exact path, or receive a separately scoped request for non-staging documentation/static work.
