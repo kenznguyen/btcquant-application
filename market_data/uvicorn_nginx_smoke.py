@@ -6,6 +6,7 @@ Both listeners are restricted to 127.0.0.1; the CI container runs without networ
 import json
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -193,9 +194,18 @@ http {{
 
         uvicorn_proc.terminate()
         uvicorn_proc.wait(timeout=12)
-        assert uvicorn_proc.returncode == 0
-        uvicorn_proc = None
+        uvicorn_handle.flush()
+        uvicorn_shutdown_log = uvicorn_log.read_text(errors="replace")
+        assert uvicorn_proc.returncode == -signal.SIGTERM, (
+            f"expected Uvicorn to re-raise SIGTERM after graceful shutdown; "
+            f"returncode={uvicorn_proc.returncode}"
+        )
+        assert "Application shutdown complete." in uvicorn_shutdown_log
+        assert "Finished server process" in uvicorn_shutdown_log
+        results.append("uvicorn_sigterm_exit_signal=SIGTERM")
+        results.append("uvicorn_application_shutdown_complete=PASS")
         results.append("uvicorn_sigterm_graceful_exit=PASS")
+        uvicorn_proc = None
         code, _, _ = request(base + "/health")
         assert code == 502
         results.append("upstream_shutdown_returns_502=PASS")
