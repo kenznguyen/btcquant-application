@@ -62,7 +62,7 @@ class PersistentRecoveryTests(unittest.TestCase):
             created_at_ms=1_800_000_000_000 + sequence,
             recorded_at_ms=1_800_000_000_001 + sequence,
             payload_json=payload, market_snapshot_id="snapshot-1",
-            candle_open_time_ms=1_800_000_000_000,
+            candle_open_time_ms=1_800_000_000_000, aggregate_id="ledger-core",
         )
         claim = IdempotencyClaim(
             idempotency_key=derive_idempotency_key(
