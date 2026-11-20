@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Docker standard; Kiri Lite evaluation-only
+
+- Owner decision approved and recorded: `docs/decisions/DOCKER_STANDARD_KIRI_LITE_EVALUATION_ONLY_2026-11-20.md`.
+- Decision commit: `505703d3e632e67fb51fd0e47150ef23b6f3ba71`.
+- Decision: Docker remains the standard container runtime; Kiri Lite is evaluation-only and may only be considered for separately approved disposable-runner experiments.
+- Kiri VPS/persistent-host/workstation deployment, Docker replacement, default context/socket changes, `/var/run/docker.sock` takeover/symlink, application-user membership in root-equivalent group `kiri`, project integration and T0/T1/T2/trading-runtime connection are NOT APPROVED.
+- Basis: Kiri Lite 0.2.2 package SHA-256 `24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9`; tested workflow/source SHA `dce91fad64506ca1fbe09be1b51a55f0958b4153`; workflow `.github/workflows/kiri-lite-compose-buildx-coexistence.yml`; GitHub Actions run [44668934024](https://github.com/kenznguyen/btcquant-application/actions/runs/44668934024), SUCCESS; Ubuntu 24.04.5 job `136065096664` SUCCESS; Ubuntu 26.04.1 job `136065096922` SUCCESS.
+- Evidence report: `docs/evidence/KIRI_LITE_COMPOSE_BUILDX_DOCKER_COEXISTENCE_2026-11-20.md`, commit `150616c3d6ef32e0793d35aeac11cfc53f387cfd`.
+- Bounded Compose/Buildx smoke and Docker coexistence on disposable GitHub-hosted runners PASS. Full parity, registry/DNS/authentication, persistent-host coexistence, performance, long-duration stability and independent security audit remain NOT VERIFIED / NOT TESTED.
+- Review qualification: this conversation's review is not a separate human second-person security audit; production readiness remains NOT VERIFIED.
+- This increment is documentation-only. No tests/workflows were run; no workflow run/job/artifact was generated for this decision. No code, dependencies, Docker configuration, host runtime, T0 SQLite, T1/T2, Quant or trading behavior changed.
+- Next: preserve Docker as standard and Kiri as evaluation-only. Any broader Kiri test or deployment requires a separate bounded proposal and explicit owner approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Kiri Lite Compose/Buildx/Docker coexistence PASS (GitHub Actions only)
 
 - Scope: owner requested Compose/Buildx and existing Docker Engine coexistence verification on disposable GitHub Actions runners only. No VPS, persistent host, T0 SQLite, T1/T2, project secrets, deployment target, Quant runtime or real trading system was accessed.
