@@ -5489,3 +5489,20 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - No T1 service/provider, VPS, exchange, credentials, real orders, systemd or autostart were accessed.
 - Test databases were temporary isolated fixtures only.
 - Next permitted work: M2.1 read-only dependency closure and per-file Core Runtime migration manifest. Do not copy/activate runtime code until that review and separate approval are complete.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T0 Canonical data Preserve & Reconstruct design approved
+
+- Owner approved the Preserve & Reconstruct design, recorded in `docs/decisions/T0_CANONICAL_DATA_PRESERVE_AND_RECONSTRUCT_DECISION_2026-11-20.md`.
+- Decision commit: `eb4c0ccfae655725243eb0fb267b7566ebb31113`.
+- Preserve validated Binance USD-M BTCUSDT M15/H1 archive objects and paired checksum sidecars as immutable source evidence.
+- Eventual reconstruction target: a new SQLite database in a dedicated isolated staging location; never overwrite, mutate, move, or assume recovery of the former Canonical SQLite.
+- MAY-10 controlled runtime trial DB remains separate and is only for newly closed market data; archive import into that DB is prohibited.
+- All reconstructed history must be labeled `RECONSTRUCTED`, with source checksums, archive coverage, importer identity, schema/user_version, manifest and validation evidence retained.
+- Staging does not become Canonical automatically. Official designation, promotion, primary-location cutover, restore drill, Dropbox snapshot, or cleanup requires separate explicit approval.
+- This approval is **DESIGN / PROCEDURE ONLY**. No archive download/copy, staging DB creation, SQLite initialization, import, restore, promotion, or data mutation is authorized.
+- Current status: archive payload validation PASS for the previously validated objects; full historical completeness and REST tail NOT VERIFIED; reconstruction NOT STARTED; staging DB NOT CREATED; Canonical promotion NOT AUTHORIZED.
+- Tests/workflows/artifacts: none; documentation-only decision.
+- Next: prepare an execution plan with exact staging destination, source inventory, owner-approved M15/H1 coverage boundaries and gap policy, importer SHA, acceptance checks, retention and rollback controls. Obtain separate approval before any data operation.
+
