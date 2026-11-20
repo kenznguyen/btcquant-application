@@ -11,6 +11,7 @@ import time
 from urllib.parse import parse_qs, unquote
 
 from market_data.api_contract import candle_query
+from paper_execution.database_paths import resolve_paper_db_path
 from market_data.postgres import StoreUnavailable
 from market_data.storage import create_store_from_env
 from pipeline.values import stamp
@@ -73,9 +74,7 @@ def book_snapshot(timestamp):
 def ledger(strategy_id="MANUAL", *, admitted_leverage=None):
     from paper_execution.ledger import PaperLedger
     from paper_execution.equity import parse_limits
-    path = os.environ.get("MARKET_DATA_DB")
-    if not path:
-        raise ValueError("Unconfigured store")
+    path = resolve_paper_db_path(require_exists=True)
     limits = parse_limits(os.environ)
     if strategy_id in {"STRATEGY_CORE", "AI_FREQAI"}:
         from paper_execution.ledger import dual_ledger_ready
@@ -128,8 +127,11 @@ def resolve_order_strategy(db_path, order_id):
 def control_permit(timestamp):
     """A small shared SQLite budget for paper writes across API workers."""
     from contextlib import closing
-    path = os.environ.get("MARKET_DATA_DB")
-    if not path or not Path(path).is_file():
+    try:
+        path = resolve_paper_db_path(require_exists=True)
+    except sqlite3.Error:
+        return False
+    if not path.is_file():
         return False
     with closing(sqlite3.connect(path, timeout=5)) as connection, connection:
         connection.execute("BEGIN IMMEDIATE")
@@ -202,7 +204,7 @@ def core_decide(timestamp, book=None):
         from paper_execution.ledger import (
             dual_ledger_ready, read_snapshot, read_account_risk_snapshot,
         )
-        db_path = os.environ.get("MARKET_DATA_DB", "")
+        db_path = str(resolve_paper_db_path(require_exists=True))
         dual_ready = dual_ledger_ready(db_path)
         paper = (
             read_snapshot(db_path, strategy_id="STRATEGY_CORE")
@@ -324,7 +326,7 @@ def quality_snapshot(timestamp):
                     "availableAtMs":prediction.get("availableAtMs") if prediction else None})
     try:
         from paper_execution.risk_contract import read_account_risk_contract
-        contract = read_account_risk_contract(os.environ.get("MARKET_DATA_DB", ""))
+        contract = read_account_risk_contract(resolve_paper_db_path(require_exists=True))
         risk_limits = contract["limits"] if contract else None
         risk_ready = risk_limits is not None
         risk_stream = {"name":"Shared Risk Limits","status":"READY" if risk_ready else "DEGRADED",
@@ -355,7 +357,7 @@ def control_readiness(timestamp):
         dual_ledger_ready, has_pending_orders, read_account_risk_snapshot,
         read_snapshot,
     )
-    db_path = os.environ.get("MARKET_DATA_DB", "")
+    db_path = str(resolve_paper_db_path(require_exists=True))
     try:
         if dual_ledger_ready(db_path):
             read_snapshot(db_path, strategy_id="STRATEGY_CORE")
@@ -454,15 +456,17 @@ def application(environ, start_response):
             # Core-First enforcement: reject AI before rate-limit accounting or any DB/Ledger side effect.
             if path == "/v1/paper/evaluate" and payload == {"source": "AI"}:
                 return response("403 Forbidden", {"error": "AI_EXECUTION_DISABLED"})
-            if not os.environ.get("MARKET_DATA_DB") or not Path(os.environ["MARKET_DATA_DB"]).is_file():
-                return response("503 Service Unavailable", {"error": "STORE_UNAVAILABLE"})
+            try:
+                resolve_paper_db_path(require_exists=True)
+            except sqlite3.Error:
+                return response("503 Service Unavailable", {"error": "PAPER_STORE_UNAVAILABLE"})
             if not control_permit(timestamp):
                 return response("429 Too Many Requests", {"error": "CONTROL_RATE_LIMIT"})
             if path == "/v1/paper/pause" and set(payload) == {"paused"} and type(payload["paused"]) is bool:
                 result = ledger().set_paused(payload["paused"], timestamp)
             elif path == "/v1/paper/cancel" and set(payload) == {"orderId"} and isinstance(payload["orderId"], str) and 0 < len(payload["orderId"]) <= 100:
                 from paper_execution.ledger import cancel_dual_order, dual_ledger_ready
-                db_path = os.environ["MARKET_DATA_DB"]
+                db_path = str(resolve_paper_db_path(require_exists=True))
                 if dual_ledger_ready(db_path):
                     result = cancel_dual_order(db_path, payload["orderId"], timestamp)
                 else:
@@ -492,7 +496,7 @@ def application(environ, start_response):
                 # AI candidates remain available through offline /v1/decision.
                 source_id = "STRATEGY_CORE"
                 from paper_execution.ledger import dual_ledger_ready
-                dual_active = dual_ledger_ready(os.environ["MARKET_DATA_DB"])
+                dual_active = dual_ledger_ready(str(resolve_paper_db_path(require_exists=True)))
                 strategy_ledger = (
                     ledger(strategy_id=source_id) if dual_active else ledger()
                 )
@@ -528,7 +532,7 @@ def application(environ, start_response):
             from paper_execution.ledger import (
                 dual_ledger_ready, read_account_risk_snapshot, read_snapshot,
             )
-            db_path = os.environ.get("MARKET_DATA_DB", "")
+            db_path = str(resolve_paper_db_path(require_exists=True))
             if not db_path:
                 return response("503 Service Unavailable", {"error": "UNCONFIGURED"})
             if dual_ledger_ready(db_path):
@@ -559,7 +563,7 @@ def application(environ, start_response):
             limit = int(query.get("limit",["50"])[0])
             before = int(query["beforeId"][0]) if "beforeId" in query else None
             from paper_execution.ledger import read_audit
-            result = read_audit(os.environ.get("MARKET_DATA_DB", ""),limit=limit,before_id=before)
+            result = read_audit(resolve_paper_db_path(require_exists=True),limit=limit,before_id=before)
         elif path == "/v1/quality":
             result = quality_snapshot(timestamp)
         elif path == "/v1/order-book":

@@ -13,7 +13,9 @@ from futures_intelligence.import_collector import build_snapshot
 from market_data.store import Candle, CandleStore, read_window
 from market_data.test_support import seed_candles
 from pipeline import api
-from paper_execution.risk_contract import read_account_risk_contract, update_account_risk_contract
+from paper_execution.ledger import PaperLedger
+from paper_execution.risk_contract import (provision_account_risk_contract,
+                                           read_account_risk_contract, update_account_risk_contract)
 
 
 class FiveLayerApiTest(unittest.TestCase):
@@ -69,7 +71,12 @@ class FiveLayerApiTest(unittest.TestCase):
         self.env = patch.dict(os.environ, self.config, clear=True)
         self.env.start()
         self.addCleanup(self.env.stop)
-        api.ledger()  # Explicitly initialize the disposable PAPER_DB fixture.
+        PaperLedger(self.paper_db)
+        provision_account_risk_contract(
+            self.paper_db,
+            {"maxDrawdownPct": "95", "maxDailyLossUsdt": "95", "maxExposureUsdt": "1000"},
+            source="API_TEST_FIXTURE", recorded_at_ms=self.now,
+        )
         self.clock = patch.object(api, "now_ms", return_value=self.now)
         self.clock.start()
         self.addCleanup(self.clock.stop)

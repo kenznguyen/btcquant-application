@@ -8,7 +8,9 @@ hoặc hàm gửi lệnh thật**. `liveTradingSupported` luôn là `false`.
 from paper_execution.ledger import PaperLedger
 from paper_execution.risk_contract import provision_account_risk_contract
 
-db_path = ".data/market-data.sqlite3"
+db_path = ".data/paper/paper-ledger.sqlite3"
+# MARKET_DATA_DB remains the separate, T0-owned canonical candle database.
+# Set PAPER_DB to this path before invoking the Paper API or initializer.
 provision_account_risk_contract(
     db_path,
     {
@@ -24,10 +26,14 @@ result = ledger.submit(validated_paper_intent, validated_orderbook_snapshot, now
 state = ledger.snapshot()
 ```
 
-Khởi tạo local là thao tác riêng, không thực hiện trong HTTP GET:
+Khởi tạo local là thao tác riêng, không thực hiện trong HTTP GET. CLI bắt buộc nhận
+`PAPER_DB`; `--db` phải resolve đúng về `PAPER_DB` và bị từ chối nếu trùng/alias
+`MARKET_DATA_DB` hoặc `T0_FEEDER_LEASE_DB`. API chỉ mở file Paper đã tồn tại; nó
+không tự tạo file PAPER_DB thiếu. T0 Candle API tiếp tục đọc theo storage factory
+và không tạo bảng Paper trong canonical SQLite:
 
 ```bash
-python3 -m paper_execution --db .data/market-data.sqlite3
+PAPER_DB=.data/paper/paper-ledger.sqlite3 python3 -m paper_execution --db "$PAPER_DB"
 ```
 
 CLI có tham số `--max-position-base`, `--fee-rate`, `--max-spread-bps`.

@@ -55,18 +55,20 @@ jobs:
           api_test_blob="$(git hash-object pipeline/test_api.py)"
           dual_test_blob="$(git hash-object paper_execution/test_dual_ledger_red.py)"
           contracts_blob="$(git hash-object pipeline/CONTRACTS.md)"
+          db_paths_blob="$(git hash-object paper_execution/database_paths.py)"
           db_paths_test_blob="$(git hash-object paper_execution/test_database_paths.py)"
           echo "IDENTITY head=$head_sha github_sha=$GITHUB_SHA test=$test_blob ledger=$ledger_blob api=$api_blob risk_control=$risk_control_blob risk_contract=$risk_contract_blob ledger_test=$ledger_test_blob api_test=$api_test_blob dual_test=$dual_test_blob contracts=$contracts_blob"
           [[ "$head_sha" == "$GITHUB_SHA" ]]
           [[ "$test_blob" == "ea87e42b52889ed9fd926f3d647a9b8ca87d22df" ]]
           [[ "$ledger_blob" == "9cc03db8b7506543f9eef2835eb5cb7cda701d6c" ]]
-          [[ "$api_blob" == "cca5432a6ca6bbe27cd3a3f9562712b06cb0d4b2" ]]
+          [[ "$api_blob" == "2c5c35951dbe902e2553ad186bedaf0ca22b29e0" ]]
           [[ "$risk_control_blob" == "c8fe573a7a5b0716159e50a678423e402d7df3ba" ]]
           [[ "$risk_contract_blob" == "7ae74740568e3bcad78acd928896ee363cc62613" ]]
           [[ "$ledger_test_blob" == "71c7719d3e84be41bb7ca200b50fe6b5ee0f68e9" ]]
-          [[ "$api_test_blob" == "3ddb51d763eb9bef836c5cf85a1ddc471bae0875" ]]
+          [[ "$api_test_blob" == "515e4607e4d0891a6c26096c5fd60d3eaf5eeeac" ]]
           [[ "$dual_test_blob" == "0cf05418940a07a8357ee9d6039325a1efcb16f2" ]]
           [[ "$contracts_blob" == "14368ea20d56879b9c9fc6c2eddf07e8c44ab5da" ]]
+          [[ "$db_paths_blob" == "e3c9504e26d81642560282c9e12f77a8c6d94454" ]]
           [[ "$db_paths_test_blob" == "36b45c10c58d79eb84c5c3a072e15131c05d036d" ]]
           {
             echo "workflow_run_id=$GITHUB_RUN_ID"
@@ -81,6 +83,7 @@ jobs:
             echo "api_test_blob=$api_test_blob"
             echo "dual_test_blob=$dual_test_blob"
             echo "contracts_blob=$contracts_blob"
+            echo "db_paths_blob=$db_paths_blob"
             echo "db_paths_test_blob=$db_paths_test_blob"
             echo "python_image=python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df"
             echo "network_mode=none"
