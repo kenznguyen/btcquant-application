@@ -168,9 +168,20 @@ class StateRepository(Protocol):
         *, fencing_token: FencingToken,
     ) -> CommitResult: ...
 
+    def advance_session(
+        self, fencing_token: FencingToken, *, expected_status: SessionStatus,
+        new_status: SessionStatus, at_ms: int,
+    ) -> SessionRecord: ...
+
+    def publish_checkpoint(
+        self, checkpoint: Checkpoint, *, fencing_token: FencingToken,
+    ) -> CheckpointPublishResult: ...
+
     def read_aggregate(self, account_scope_id: str, aggregate_id: str) -> AggregateSnapshot | None: ...
 
     def read_events(self, account_scope_id: str, *, after_sequence: int = 0) -> tuple[EventRecord, ...]: ...
+
+    def read_active_checkpoint(self, account_scope_id: str) -> Checkpoint | None: ...
 
 
 _SCHEMA_STATEMENTS = (
