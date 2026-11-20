@@ -18,7 +18,7 @@ def _freshness(candles, timeframe, evaluation_time_ms, coverage_complete, evalua
         raise ValueError("Invalid evaluation timestamp")
     if not isinstance(candles, (list, tuple)):
         raise ValueError("Invalid candle collection")
-    if evaluation_anchor not in {"AS_OF", "GENERATED_AT"}:
+    if evaluation_anchor not in ("AS_OF", "GENERATED_AT"):
         raise ValueError("Invalid evaluation anchor")
 
     interval = INTERVAL_MS[timeframe]
@@ -92,6 +92,7 @@ def _freshness(candles, timeframe, evaluation_time_ms, coverage_complete, evalua
         coverage_complete is True and timestamp_valid and fresh
     )
     return base
+
 
 def candle_envelope(result, generated_at_ms, as_of_ms=None):
     """Build the versioned Candle Contract envelope for every HTTP adapter."""
