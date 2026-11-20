@@ -185,12 +185,6 @@ class CandleContractFailClosedTest(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             payload = response.json()
             self.assertEqual(response.headers.get("cache-control"), "no-store")
-            common_headers = dict(statuses[0][1])
-            self.assertEqual(common_headers.get("Cache-Control"), "no-store")
-            self.assertEqual(
-                common_headers.get("Content-Type"),
-                response.headers.get("content-type"),
-            )
             query_string = (
                 f"symbol=BTCUSDT&timeframe=15m&startMs={START}&endMs={end}&asOfMs={evaluation}"
             )
@@ -212,6 +206,12 @@ class CandleContractFailClosedTest(unittest.TestCase):
                     )
             self.assertEqual(statuses[0][0], "200 OK")
             common_payload = json.loads(raw_common)
+            common_headers = dict(statuses[0][1])
+            self.assertEqual(common_headers.get("Cache-Control"), "no-store")
+            self.assertEqual(
+                common_headers.get("Content-Type"),
+                response.headers.get("content-type"),
+            )
             for field in (
                 "contractVersion", "schemaVersion", "volumeUnit", "source",
                 "generatedAtMs", "freshness",
