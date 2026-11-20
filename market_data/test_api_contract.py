@@ -123,15 +123,15 @@ class CandleContractFailClosedTest(unittest.TestCase):
                        START + M15 + 7)
             ])
             end = START + M15
-            expected = read_window(str(database), "BTCUSDT", "15m", START, end)
             evaluation = START + M15 + 1_000
+            expected = read_window(str(database), "BTCUSDT", "15m", START, end, as_of_ms=evaluation)
             env = {
                 "MARKET_DATA_BACKEND": "sqlite",
                 "MARKET_DATA_DB": str(database),
                 "MARKET_DATA_TOKEN": "isolated-contract-token",
             }
             with patch.dict(os.environ, env, clear=True):
-                application_window = market_window("BTCUSDT", "15m", START, end)
+                application_window = market_window("BTCUSDT", "15m", START, end, as_of_ms=evaluation)
                 with patch("market_data.fastapi_app.time.time_ns",
                            return_value=evaluation * 1_000_000):
                     response = TestClient(app).get(
@@ -143,7 +143,7 @@ class CandleContractFailClosedTest(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             payload = response.json()
             query_string = (
-                f"symbol=BTCUSDT&timeframe=15m&startMs={START}&endMs={end}"
+                f"symbol=BTCUSDT&timeframe=15m&startMs={START}&endMs={end}&asOfMs={evaluation}"
             )
             environ = {
                 "PATH_INFO": "/v1/candles",
@@ -171,10 +171,11 @@ class CandleContractFailClosedTest(unittest.TestCase):
                     self.assertEqual(common_payload[field], payload[field])
 
             invalid_query = query_string + "&symbol=BTCUSDT"
-            fastapi_invalid = TestClient(app).get(
-                f"/v1/candles?{invalid_query}",
-                headers={"Authorization": "Bearer isolated-contract-token"},
-            )
+            with patch.dict(os.environ, env, clear=True):
+                fastapi_invalid = TestClient(app).get(
+                    f"/v1/candles?{invalid_query}",
+                    headers={"Authorization": "Bearer isolated-contract-token"},
+                )
             invalid_environ = dict(environ, QUERY_STRING=invalid_query)
             invalid_statuses = []
             with patch.dict(os.environ, env, clear=True):
@@ -187,6 +188,25 @@ class CandleContractFailClosedTest(unittest.TestCase):
             self.assertEqual(fastapi_invalid.status_code, 400)
             self.assertEqual(invalid_statuses[0][0], "400 Bad Request")
             self.assertEqual(json.loads(invalid_raw), fastapi_invalid.json())
+
+            future_query = query_string + f"&asOfMs={evaluation + 1}"
+            with patch.dict(os.environ, env, clear=True):
+                fastapi_future = TestClient(app).get(
+                    f"/v1/candles?{future_query}",
+                    headers={"Authorization": "Bearer isolated-contract-token"},
+                )
+            future_environ = dict(environ, QUERY_STRING=future_query)
+            future_statuses = []
+            with patch.dict(os.environ, env, clear=True):
+                future_raw = b"".join(
+                    common_api.application(
+                        future_environ,
+                        lambda status, headers: future_statuses.append((status, headers)),
+                    )
+                )
+            self.assertEqual(fastapi_future.status_code, 400)
+            self.assertEqual(future_statuses[0][0], "400 Bad Request")
+            self.assertEqual(json.loads(future_raw), fastapi_future.json())
 
             for field in (
                 "exchange", "marketType", "symbol", "timeframe", "startMs",

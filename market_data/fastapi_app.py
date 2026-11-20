@@ -8,7 +8,7 @@ import time
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from market_data.api_contract import DATA_SOURCE, VOLUME_UNIT, _freshness, candle_query
+from market_data.api_contract import candle_envelope, candle_query
 from market_data.postgres import StoreUnavailable
 from market_data.storage import create_store_from_env
 
@@ -86,20 +86,8 @@ def dispatch(request: Request, path: str = ""):
             query["as_of_ms"] if query["as_of_ms"] is not None else generated_at_ms
         )
         evaluation_anchor = "AS_OF" if query["as_of_ms"] is not None else "GENERATED_AT"
-        return _reply(200, {
-            **result,
-            "contractVersion": "1.1.0",
-            "schemaVersion": 1,
-            "volumeUnit": VOLUME_UNIT,
-            "source": DATA_SOURCE,
-            "generatedAtMs": generated_at_ms,
-            "freshness": _freshness(
-                result["candles"],
-                query["timeframe"],
-                evaluation_time_ms,
-                result["coverage"].get("complete") is True,
-                evaluation_anchor,
-            ),
-        })
+        return _reply(
+            200, candle_envelope(result, generated_at_ms, query["as_of_ms"])
+        )
     except (OSError, sqlite3.Error, ValueError, StoreUnavailable):
         return _reply(503, {"error": "STORE_UNAVAILABLE"})

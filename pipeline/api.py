@@ -10,7 +10,7 @@ import threading
 import time
 from urllib.parse import parse_qs, unquote
 
-from market_data.api_contract import candle_query
+from market_data.api_contract import candle_envelope, candle_query
 from paper_execution.database_paths import resolve_paper_db_path
 from market_data.postgres import StoreUnavailable
 from market_data.storage import create_store_from_env
@@ -523,9 +523,15 @@ def application(environ, start_response):
             else:
                 raise ValueError("Invalid control payload")
         elif path == "/v1/candles":
-            query = candle_query(environ.get("QUERY_STRING", ""))
+            try:
+                query = candle_query(environ.get("QUERY_STRING", ""))
+            except ValueError:
+                return response("400 Bad Request", {"error": "INVALID_QUERY"})
+            if query["as_of_ms"] is not None and query["as_of_ms"] > timestamp:
+                return response("400 Bad Request", {"error": "INVALID_QUERY"})
             try:
                 result = market_window(**query)
+                result = candle_envelope(result, timestamp, query["as_of_ms"])
             except (ValueError, OSError, sqlite3.Error):
                 return response("503 Service Unavailable", {"error": "STORE_UNAVAILABLE"})
         elif path == "/v1/paper":

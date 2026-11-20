@@ -93,6 +93,40 @@ def _freshness(candles, timeframe, evaluation_time_ms, coverage_complete, evalua
     )
     return base
 
+def candle_envelope(result, generated_at_ms, as_of_ms=None):
+    """Build the versioned Candle Contract envelope for every HTTP adapter."""
+    if type(generated_at_ms) is not int or generated_at_ms < 0:
+        raise ValueError("Invalid generated timestamp")
+    if as_of_ms is not None and (
+        type(as_of_ms) is not int or as_of_ms < 0 or as_of_ms > generated_at_ms
+    ):
+        raise ValueError("Invalid as-of timestamp")
+    if not isinstance(result, dict):
+        raise ValueError("Invalid candle result")
+    candles = result.get("candles")
+    coverage = result.get("coverage")
+    timeframe = result.get("timeframe")
+    if not isinstance(candles, list) or not isinstance(coverage, dict):
+        raise ValueError("Invalid candle result")
+    evaluation_time_ms = as_of_ms if as_of_ms is not None else generated_at_ms
+    evaluation_anchor = "AS_OF" if as_of_ms is not None else "GENERATED_AT"
+    return {
+        **result,
+        "contractVersion": "1.1.0",
+        "schemaVersion": 1,
+        "volumeUnit": VOLUME_UNIT,
+        "source": DATA_SOURCE,
+        "generatedAtMs": generated_at_ms,
+        "freshness": _freshness(
+            candles,
+            timeframe,
+            evaluation_time_ms,
+            coverage.get("complete") is True,
+            evaluation_anchor,
+        ),
+    }
+
+
 def candle_query(query):
     if len(query) > 2048:
         raise ValueError("Query too long")
