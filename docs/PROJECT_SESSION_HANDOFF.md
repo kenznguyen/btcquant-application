@@ -5968,3 +5968,21 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Verdict: **REQUEST CHANGES / NOT READY FOR REVIEW PASS** because R1 leaves a stated test-determinism requirement incomplete. Implementation behavior is otherwise consistent with the approved scope based on static inspection and existing CI evidence. Advisory A1 is non-blocking.
 - Review boundaries: no source changes, no tests run by the reviewer, no workflow rerun, no merge or deployment. Runtime/production readiness remains **NOT VERIFIED**. No VPS, Canonical SQLite, T1/T2, PostgreSQL activation, exchange, or trading was accessed.
 - Next permitted action: fix only R1 by adding the missing `pipeline.api.now_ms` patch to the common-adapter future-`asOfMs` test, run the GitHub Actions FastAPI workflow and SQLite aggregate workflow, then request a focused follow-up review. Any source edit remains subject to separate explicit owner approval.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Resolve R1 deterministic common-adapter clock test
+
+- Owner approval: explicitly granted for the narrow R1 fix only.
+- Scope: changed only `market_data/test_api_contract.py` in source commit `b8f12fdbe7eed4eccd71a505279409ef5f610e03`. Wrapped the common-adapter future-`asOfMs` request in `patch("pipeline.api.now_ms", return_value=evaluation)`, matching the deterministic FastAPI clock and making both adapter comparisons use the same evaluation instant. No production source, API contract, workflow configuration, runtime, or deployment behavior changed.
+- TDD/review trace: finding R1 from the read-only review recorded at commit `ecf33b76d31278d7447172c2d76056455121466f`; minimal test-only correction applied after explicit approval. The change addresses time determinism; no separate production behavior change was necessary.
+- FastAPI GitHub Actions run: [`44741770172`](https://github.com/kenznguyen/btcquant-application/actions/runs/44741770172), workflow `T0 FastAPI contract regression`, exact triggering source SHA `b8f12fdbe7eed4eccd71a505279409ef5f610e03`, completed **SUCCESS**.
+  - Contract/API tests: **69/69 PASS** on CPython 3.12.16.
+  - Runtime-lock-only install and in-process ASGI smoke: **PASS**.
+  - Isolated Uvicorn process/socket + Nginx reverse-proxy integration: **PASS**.
+  - Artifact `t0-fastapi-contract-evidence`: ID `14630637995`, SHA-256 `a80f0cb76caa045d2402bea336df9dc4590cd32b6acaa45944e34a7d1171fbd8`.
+  - Artifact `t0-fastapi-runtime-lock-smoke`: ID `14631810285`, SHA-256 `873c4449931cc21e2ef5713744c188bd2b9ef1f1811505c7cc7fbc964bcc1618`.
+  - Artifact `t0-uvicorn-nginx-socket-integration`: ID `14631670771`, SHA-256 `856f95b2c8e0d426dfac301c28c58b034ca795fbc1181f859484bbf9e3d73818`.
+- SQLite aggregate workflow `t0-sqlite-aggregate.yml` was **not rerun**: its push path filters do not include `market_data/test_api_contract.py`, and no workflow-dispatch action is available through the connected GitHub tools. Prior aggregate evidence `44740818608` (174/174 PASS) remains historical evidence for the earlier source SHA, not a claim about the new commit. No workflow file was changed merely to force a redundant run.
+- Review disposition: R1 **RESOLVED** by source inspection; final FastAPI CI **PASS**. Advisory A1 (two wall-clock reads in FastAPI) remains non-blocking and unchanged, as it was outside the approved scope. The independent review's overall R1 blocker is cleared; a formal follow-up reviewer pass has not been run, so review status is **FIX APPLIED / CI PASS / FOLLOW-UP REVIEW NOT VERIFIED**.
+- Runtime/production readiness remains **NOT VERIFIED**. No VPS, canonical SQLite, T1/T2, PostgreSQL activation, exchange, deployment, or live trading was accessed or enabled. `ai_execution_enabled=false` remains unchanged.
+- Next: focused independent follow-up review of R1 resolution if requested. No further changes are authorized by this narrow approval.
