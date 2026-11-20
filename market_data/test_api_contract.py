@@ -154,12 +154,13 @@ class CandleContractFailClosedTest(unittest.TestCase):
                 "wsgi.input": io.BytesIO(b""),
             }
             statuses = []
-            with patch("pipeline.api.now_ms", return_value=evaluation):
-                raw_common = b"".join(
-                    common_api.application(
-                        environ, lambda status, headers: statuses.append((status, headers))
+            with patch.dict(os.environ, env, clear=True):
+                with patch("pipeline.api.now_ms", return_value=evaluation):
+                    raw_common = b"".join(
+                        common_api.application(
+                            environ, lambda status, headers: statuses.append((status, headers))
+                        )
                     )
-                )
             self.assertEqual(statuses[0][0], "200 OK")
             common_payload = json.loads(raw_common)
             for field in (
@@ -176,12 +177,13 @@ class CandleContractFailClosedTest(unittest.TestCase):
             )
             invalid_environ = dict(environ, QUERY_STRING=invalid_query)
             invalid_statuses = []
-            invalid_raw = b"".join(
-                common_api.application(
-                    invalid_environ,
-                    lambda status, headers: invalid_statuses.append((status, headers)),
+            with patch.dict(os.environ, env, clear=True):
+                invalid_raw = b"".join(
+                    common_api.application(
+                        invalid_environ,
+                        lambda status, headers: invalid_statuses.append((status, headers)),
+                    )
                 )
-            )
             self.assertEqual(fastapi_invalid.status_code, 400)
             self.assertEqual(invalid_statuses[0][0], "400 Bad Request")
             self.assertEqual(json.loads(invalid_raw), fastapi_invalid.json())
