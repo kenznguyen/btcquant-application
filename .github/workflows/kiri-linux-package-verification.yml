@@ -332,7 +332,7 @@ jobs:
           asset="kiri-lite_0.2.2_amd64.deb"
           url="https://github.com/libracoder/kiri/releases/download/v0.2.2/$asset"
           curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 "$url" -o "$asset"
-          printf '%s  %s\\n' "24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9" "$asset" | sha256sum --check -
+          printf '%s  %s\n' "24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9" "$asset" | sha256sum --check -
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends gnupg
           curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://download.runkiri.com/SHA256SUMS-linux -o "$RUNNER_TEMP/SHA256SUMS-linux"
@@ -352,8 +352,8 @@ jobs:
         run: |
           set -euo pipefail
           tag_json="$RUNNER_TEMP/kiri-lite-tag.json"
-          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 \\
-            "https://api.github.com/repos/libracoder/kiri/git/tags/0cd223cfb2c1038068b22000b973376c7231e7a4" \\
+          curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 \
+            "https://api.github.com/repos/libracoder/kiri/git/tags/0cd223cfb2c1038068b22000b973376c7231e7a4" \
             -o "$tag_json"
           jq -e '.tag == "v0.2.2" and .verification.verified == true and .object.sha == "686bffa5f38ba6ecc3d086c36ec7148cd7fb976a"' "$tag_json" >/dev/null
           declare -A expected_blobs=(
@@ -373,7 +373,7 @@ jobs:
           set -euo pipefail
           cd "$RUNNER_TEMP"
           sudo apt-get install -y --no-install-recommends "./kiri-lite_0.2.2_amd64.deb"
-          dpkg-query -W -f='${Package} ${Version} ${Architecture}\\n' kiri-lite
+          dpkg-query -W -f='${Package} ${Version} ${Architecture}\n' kiri-lite
           getent group kiri
           systemctl cat kiri.service
           if systemctl is-active --quiet kiri.service; then
@@ -449,5 +449,5 @@ jobs:
             echo "- No VPS, persistent project host, T0 SQLite, T1/T2, project secrets, or deployment targets."
           } >> "$GITHUB_STEP_SUMMARY"
           if test -d "$RUNNER_TEMP/kiri-ubuntu-2604-evidence"; then
-            find "$RUNNER_TEMP/kiri-ubuntu-2604-evidence" -maxdepth 1 -type f -printf '%f\\n' | sort
+            find "$RUNNER_TEMP/kiri-ubuntu-2604-evidence" -maxdepth 1 -type f -printf '%f\n' | sort
           fi
