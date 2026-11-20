@@ -70,7 +70,7 @@ def _validate_snapshot(snapshot, timeframe, as_of_ms, required_count):
     version = snapshot.get("datasetVersion")
     if not isinstance(version, str) or not _SHA256.fullmatch(version):
         reasons.append("DATASET_VERSION_INVALID")
-    if snapshot.get("asOfMs") != as_of_ms:
+    if not _integer(snapshot.get("asOfMs")) or snapshot.get("asOfMs") != as_of_ms:
         reasons.append("SNAPSHOT_AS_OF_MISMATCH")
 
     coverage = snapshot.get("coverage")
@@ -85,9 +85,11 @@ def _validate_snapshot(snapshot, timeframe, as_of_ms, required_count):
     elif (
         not isinstance(coverage, dict)
         or coverage.get("complete") is not True
+        or type(coverage.get("expected")) is not int
         or coverage.get("expected") != required_count
+        or type(coverage.get("returned")) is not int
         or coverage.get("returned") != required_count
-        or coverage.get("gaps") not in ([], None)
+        or coverage.get("gaps") != []
         or not isinstance(candles, list)
         or len(candles) != required_count
     ):
@@ -122,7 +124,7 @@ def _validate_snapshot(snapshot, timeframe, as_of_ms, required_count):
         if (
             not _integer(open_ms) or not _integer(close_ms) or not _integer(available_ms)
             or open_ms % interval or close_ms != open_ms + interval
-            or available_ms < close_ms + 100 or available_ms > as_of_ms
+            or available_ms < close_ms or available_ms > as_of_ms
             or candle.get("isClosed") is not True
             or candle.get("availabilityKind") != "FIRST_OBSERVED"
             or candle.get("quality") != "VALIDATED"
@@ -148,12 +150,12 @@ def _validate_snapshot(snapshot, timeframe, as_of_ms, required_count):
     if candles:
         if candles[0].get("openTimeMs") != start_ms or candles[-1].get("closeTimeMs") != end_ms:
             reasons.append("CANDLE_RANGE_INVALID")
-        latest_open = candles[-1].get("openTimeMs")
-        if not _integer(latest_open):
+        latest_close = candles[-1].get("closeTimeMs")
+        if not _integer(latest_close):
             reasons.append("CANDLE_NOT_CLOSED_OR_INVALID")
         else:
             max_lag = M15_MAX_LAG_MS if timeframe == "15m" else H1_MAX_LAG_MS
-            age_ms = as_of_ms - latest_open
+            age_ms = as_of_ms - latest_close
             if age_ms < 0 or age_ms > max_lag:
                 reasons.append("STALE_MARKET_DATA")
 
