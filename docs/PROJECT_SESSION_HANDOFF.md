@@ -5536,3 +5536,35 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - The validator does not re-fetch Binance. The controlling T0 scope states REST tail retrieval was closed by owner decision/no further retrieval; any new REST request requires a separate explicit approval.
 - Status: validator **PREPARED**; actual response payload validation **BLOCKED — RAW PAYLOAD NOT RETAINED**. SQLite reconstruction/import, archive retrieval, runtime, T1/T2 and trading remain unchanged and not authorized.
 - Next: supply the original M15/H1 response JSON arrays if retained elsewhere. If unavailable, request separate approval before any new REST retrieval. No automatic fetch/retry/alternate route.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Personal-host Binance REST tail validation PASS
+
+## Work and scope
+- Repository: `kenznguyen/btcquant-application`, branch `main`.
+- Owner explicitly approved one bounded retrieval from the personal Windows host for Binance USD-M public REST klines, BTCUSDT M15/H1, preserving exact JSON bodies locally, followed by offline validation with the existing validator.
+- Evidence: `docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md`.
+- Retrieval was for the historical window starting 2026-11-19 00:00 UTC, API end bound/cutoff 2026-11-20T08:02:15.852Z. Retrieval timestamps were 08:16:35.864034Z (M15) and 08:16:36.131662Z (H1).
+
+## Retrieval result
+- M15 HTTP 200; 18,102 bytes; request ID `36cab00e-0a9b-49e3-9c6c-d26840d10b1e`; CloudFront POP `SGN50-P3`; local script reported SHA-256 `b83d2a860af5fcb67dde7c51c004a2b307c91a4bd3a43c54216d83058c84b6e3`.
+- H1 HTTP 200; 4,740 bytes; request ID `777005bd-6054-4386-9f98-50f00512317c`; CloudFront POP `SGN50-P3`; local script reported SHA-256 `033bf0ae6b8b68cf6e2d488422e82031e2481cf1326bd0b254c76c1acedc2d6b`.
+- Payload paths on user's host: `%USERPROFILE%\btcquant-rest-tail-20261120\m15.json`, `h1.json`; metadata in `metadata.json`. Payloads were not uploaded or committed. Hashes are recorded as reported by the user's script and were not independently recomputed in this repository session.
+
+## Offline validation and regression
+- Validator source: `market_data/rest_tail_validator.py`, blob `3437e7a9181611cfed77eab59afee27136472963`.
+- Regression test source: `market_data/test_rest_tail_validator.py`, blob `293d9a605b6ec6498d551504fda04eecf298601f`.
+- User ran the regression suite on Windows: **10/10 PASS**.
+- Local Git provenance reported by user: branch `main`; `git rev-parse HEAD` = `04a0a6275ff44da20f0a40e11ab541f9c112459f`; working tree clean after removing generated `market_data/__pycache__/`.
+- User ran the offline validator with fixed cutoff `1795161735852`.
+- Actual payload result: M15 129 raw / 128 closed / 1 forming excluded; H1 33 raw / 32 closed / 1 forming excluded. Both intervals returned `ok: true`, `errors: []`, `gaps: []`.
+- **PASS** is limited to the retrieved window and checks implemented by this validator. No GitHub Actions workflow/run/job/artifact was produced.
+
+## Scope and limits
+- This evidence extends the observed tail from 2026-11-19 00:00 UTC through the last closed candles at M15 07:45 UTC and H1 07:00 UTC on 2026-11-20, using the stated cutoff. It does not establish earliest-ever history, full historical completeness beyond the independently validated archive window, or data after the cutoff.
+- This does not recover or recreate the lost former Canonical SQLite and does not promote any reconstructed dataset to Canonical.
+- No archive retrieval, SQLite open/write/create/import, Dropbox, VPS/runtime, feeder/writer, T1/T2, deployment, restore, cleanup, or trading action occurred.
+- The previous “REST tail closed / no further retrieval” restriction is superseded only for this one specifically approved personal-host retrieval and this exact historical window. It does not authorize further REST calls or any alternate route.
+- Next: preserve evidence. Any further REST retrieval, archive materialization, SQLite reconstruction, or runtime/data operation requires its own explicit approval and existing gates.
