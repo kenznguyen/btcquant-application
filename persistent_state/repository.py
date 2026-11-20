@@ -1082,7 +1082,7 @@ class SQLiteStateRepository:
         try:
             rows = connection.execute(
                 """
-                SELECT event_id, account_scope_id, session_id, event_sequence,
+                SELECT event_id, account_scope_id, session_id, event_sequence, aggregate_id,
                        aggregate_version, event_type, strategy_id, strategy_version,
                        created_at_ms, recorded_at_ms, payload_json, market_snapshot_id,
                        candle_open_time_ms
@@ -1102,6 +1102,7 @@ class SQLiteStateRepository:
                     recorded_at_ms=row["recorded_at_ms"], payload_json=row["payload_json"],
                     market_snapshot_id=row["market_snapshot_id"],
                     candle_open_time_ms=row["candle_open_time_ms"],
+                    aggregate_id=row["aggregate_id"],
                 )
                 for row in rows
             )
