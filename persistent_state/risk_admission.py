@@ -133,6 +133,8 @@ class SharedRiskEngine:
             return self._deny("RISK_STATE_UNRECONCILED", risk_state)
         with localcontext() as decimal_context:
             decimal_context.prec = 60
+            if reserved_margin + requested_margin > equity:
+                return self._deny("INSUFFICIENT_MARGIN_CAPACITY", risk_state)
             order_limit = equity * self.order_margin_budget_pct
         if requested_margin > order_limit:
             return self._deny("ORDER_MARGIN_CAP_EXCEEDED", risk_state)
