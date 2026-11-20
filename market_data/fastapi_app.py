@@ -82,10 +82,6 @@ def dispatch(request: Request, path: str = ""):
         if query["as_of_ms"] is not None and query["as_of_ms"] > generated_at_ms:
             return _reply(400, {"error": "INVALID_QUERY"})
 
-        evaluation_time_ms = (
-            query["as_of_ms"] if query["as_of_ms"] is not None else generated_at_ms
-        )
-        evaluation_anchor = "AS_OF" if query["as_of_ms"] is not None else "GENERATED_AT"
         return _reply(
             200, candle_envelope(result, generated_at_ms, query["as_of_ms"])
         )

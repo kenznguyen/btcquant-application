@@ -58,10 +58,11 @@ Contract properties:
 - `datasetVersion` identifies the returned dataset/window content.
 - First-observed availability is preserved; importing old candles later does not backdate their availability.
 - `generatedAtMs` records response generation time. Freshness evaluation uses `asOfMs` when supplied (`evaluationAnchor=AS_OF`), otherwise `generatedAtMs` (`GENERATED_AT`). Future `asOfMs` values are rejected.
-- `timestampValid` requires every returned candle to have nonnegative integer timestamps, timeframe-aligned opens, an exclusive close equal to open plus one interval, first observation no earlier than close, no future availability relative to the evaluation time, and strictly increasing opens.
+- `timestampValid` requires every returned candle to have nonnegative integer timestamps, timeframe-aligned opens, an exclusive close equal to open plus one interval, first observation no earlier than close, no future availability relative to the evaluation time, and a contiguous open-time grid (each candle exactly one interval after its predecessor). Duplicates, out-of-order rows and gaps invalidate the timestamp sequence even if a caller incorrectly claims complete coverage.
 - `fresh` is true only when the latest returned candle is exactly the latest closed candle expected at the evaluation time; its close lag must be within `[0, one timeframe)`.
 - `evaluable` is true only when coverage is complete, timestamps are valid and the latest candle is fresh. Empty, stale, timestamp-invalid or incomplete windows are not evaluable.
 - Contract version is `1.1.0`; schema version remains 1 because the new freshness fields are additive.
+- The FastAPI T0 endpoint and the Application Common API `/v1/candles` adapter use the same `candle_envelope()` builder for contract version, schema, provenance, generated/as-of anchor and freshness fields. Both map malformed/duplicate queries and future `asOfMs` to `400 INVALID_QUERY`; storage failures remain fail-closed.
 - Missing storage/configuration fails closed; the API does not create a missing database.
 
 ## Verification
