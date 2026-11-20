@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — 404-object archive provenance inventory static review
+
+- Repository: `kenznguyen/btcquant-application`, branch `main`; reviewed baseline HEAD `d2c1ec24ddf3dd5ddc5970d231039799960f5404`.
+- Static review: `docs/reviews/T0_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_STATIC_REVIEW_2026-11-20.md`.
+- Inventory: `docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json`; reviewed blob SHA `eb251ac0924b46add906123f99b82e054d887a59`.
+- **PASS — 404/404 unique object identities:** 202 ZIP + 202 paired `.CHECKSUM` sidecars; 38 daily + 164 monthly ZIPs. All ZIP entries have key, byte size, SHA-256, row count and PASS; all 202 ZIP digests match the assertion in their paired sidecar record; all sidecar keys pair exactly as ZIP key + `.CHECKSUM`. M15/H1 row totals reconcile to 241,440 / 60,360.
+- **METADATA PARTIAL:** individual sidecar object byte sizes and sidecar-payload SHA-256 values were not retained in the historical evidence. They remain `NOT_VERIFIED`; do not infer them from ZIP digests or aggregate sidecar bytes.
+- Historical aggregate discrepancy remains accepted as an unexplained reporting discrepancy: per-object ZIP sizes sum to 14,910,840 bytes vs historical summary 14,922,117 (11,277-byte difference). Preserve both; new approved materialization must measure all 404 objects individually and compute a fresh aggregate.
+- Owner-approved exact staging path: `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001`; approval remains conditional on destination preflight. Preflight **PENDING / NOT RUN**; no archive transfer has started.
+- Next: perform only the approved exact-path filesystem preflight. If any requirement fails or cannot be verified, STOP; no alternate destination without new approval.
+- No archive/network access, raw staging, SQLite, Dropbox, VPS/runtime, feeder/writer, T1/T2, REST tail, schema/code/dependency/workflow changes, tests or Actions runs. SQLite remains separately gated and NOT AUTHORIZED.
+- Status: inventory identity **PASS**; ZIP provenance **PASS**; sidecar independent metadata **NOT VERIFIED**; materialization **APPROVED — PREFLIGHT PENDING / NOT RUN**.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Docker standard; Kiri Lite evaluation-only
 
 - Owner decision approved and recorded: `docs/decisions/DOCKER_STANDARD_KIRI_LITE_EVALUATION_ONLY_2026-11-20.md`.

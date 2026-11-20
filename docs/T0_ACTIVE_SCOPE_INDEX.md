@@ -414,3 +414,13 @@
 - 202/202 ZIP checksum and ZIP/CSV structural validations passed; 241,440 M15 + 60,360 H1 rows; no detected gaps or duplicates across the selected archive partition.
 - **NOT VERIFIED:** completeness beyond 2019-12-31 through 2026-11-18; current REST tail and any SQLite build.
 - No REST, SQLite, Dropbox, VPS/runtime, feeder/writer, deployment or cutover was performed.
+
+
+### 404-object Binance archive provenance inventory static review — 2026-11-20
+
+- Review: [T0 Archive Object Provenance Inventory Static Review](reviews/T0_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_STATIC_REVIEW_2026-11-20.md).
+- Reviewed baseline `d2c1ec24ddf3dd5ddc5970d231039799960f5404`; inventory blob `eb251ac0924b46add906123f99b82e054d887a59`.
+- **PASS:** 404/404 unique object identities (202 ZIP + 202 paired `.CHECKSUM` sidecars); 202/202 ZIP records have key/size/SHA-256/row count/PASS; 202/202 ZIP digests match their paired sidecar assertions; all pairs resolve; 38 daily + 164 monthly ZIPs; row totals M15 241,440 / H1 60,360.
+- **METADATA PARTIAL:** independent sidecar-object byte sizes and sidecar-payload SHA-256 were not retained and remain NOT VERIFIED. Do not infer them.
+- Preserve accepted historical 11,277-byte aggregate reporting discrepancy; measure all 404 objects individually in any newly approved materialization.
+- Materialization is owner-approved only after exact target preflight at `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001`. Preflight pending; no transfer, SQLite, Dropbox or runtime action.
