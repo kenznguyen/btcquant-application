@@ -482,3 +482,21 @@
 - This does not establish earliest-ever history, completeness outside the tested window, recovery of the lost Canonical SQLite, or a reconstructed database. Archive historical bounds and this REST tail window are separate evidence sets.
 - No archive retrieval, SQLite open/write/create/import, Dropbox, VPS/runtime, feeder/writer, T1/T2, deployment, restore, cleanup, or trading action occurred.
 - Next: preserve the evidence and handoff. Any archive materialization or SQLite reconstruction remains subject to its own explicit approval and existing gates.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — RECONSTRUCTED dataset documentation reconciliation
+
+## 2026-11-20 — Documentation-only reconciliation approved and recorded
+
+- Owner instruction: pause all personal-PC runtime work; approve documentation-only reconciliation of the archive evidence and the separately validated Binance USD-M BTCUSDT REST tail for a future `RECONSTRUCTED` dataset.
+- Current evidence: archive 202 ZIP + 202 paired sidecars; historical payload validation M15 241,440 / H1 60,360 rows through M15 2026-11-18 23:45 UTC and H1 2026-11-18 23:00 UTC. REST tail was retrieved once from the personal Windows host and offline validated at fixed cutoff 2026-11-20T08:02:15.852Z: M15 129 raw / 128 closed / 1 forming excluded; H1 33 raw / 32 closed / 1 forming excluded; both `ok=true`, no errors/gaps.
+- Archive/REST boundary is contiguous for both intervals. Conditional candidate combined counts are M15 241,568 and H1 60,392; not yet source-reconciled or approved for import.
+- New REST source manifest: `docs/manifests/T0_BINANCE_UM_BTCUSDT_REST_TAIL_SOURCE_EVIDENCE_2026-11-20.json`.
+- Updated draft dataset manifest: `docs/manifests/T0_RECONSTRUCTED_BTCUSDT_M15_H1_MANIFEST_DRAFT.json`; remains `DRAFT_NOT_FOR_DATABASE_BUILD`, SQLite `NOT_CREATED_NOT_AUTHORIZED`.
+- Updated execution plan addendum: `docs/plans/T0_CANONICAL_SQLITE_RECONSTRUCTION_EXECUTION_PLAN_2026-11-20.md`. Complete-coverage plan annotated but remains blocked because earliest-ever history and post-cutoff tail are not verified.
+- Key unresolved gates: 11,277-byte historical archive aggregate discrepancy; per-sidecar historical own size/SHA; current archive source availability; exact host and destination; importer SHA/dependency lock; source-to-candle reconciliation; duplicate/conflict policy; owner-approved `available_at_ms` semantics (archive historical first-observation time is not evidenced); gap/exception policy.
+- Runtime work on personal PC is **PAUSED**. No tests or workflows, Actions runs/jobs/artifacts, REST calls, archive access/download/copy, host preflight, SQLite create/open/write/import/validation, runtime, T1/T2, deployment or trading occurred for this documentation update.
+- SQLite creation/import remains **NOT AUTHORIZED** and requires separate explicit approval naming exact host/path, source inventory, importer SHA, coverage/gap policy and validation gates. No Canonical promotion is implied.
+- Next: documentation review only if requested; otherwise hold.
