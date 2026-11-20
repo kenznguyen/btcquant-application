@@ -162,6 +162,7 @@ class SessionRecord:
     code_version: str
     last_committed_event_sequence: int
     ended_at_ms: int | None = None
+    stop_requested_at_ms: int | None = None
     schema_version: int = CONTRACT_SCHEMA_VERSION
 
     def __post_init__(self) -> None:
@@ -179,10 +180,15 @@ class SessionRecord:
         _nonempty("code_version", self.code_version)
         _integer("last_committed_event_sequence", self.last_committed_event_sequence)
         _optional_integer("ended_at_ms", self.ended_at_ms)
+        _optional_integer("stop_requested_at_ms", self.stop_requested_at_ms)
         if status is SessionStatus.CLOSED and self.ended_at_ms is None:
             raise ValueError("CLOSED session requires ended_at_ms")
         if self.ended_at_ms is not None and self.ended_at_ms < self.started_at_ms:
             raise ValueError("ended_at_ms cannot precede started_at_ms")
+        if self.stop_requested_at_ms is not None and self.stop_requested_at_ms < self.started_at_ms:
+            raise ValueError("stop_requested_at_ms cannot precede started_at_ms")
+        if status is SessionStatus.CHECKPOINTING and self.stop_requested_at_ms is None:
+            raise ValueError("CHECKPOINTING session requires stop_requested_at_ms")
         _schema_version(self.schema_version)
 
 
