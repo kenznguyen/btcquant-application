@@ -5355,3 +5355,62 @@ These findings make the current stop condition explicit: completing Trusted Admi
 - M15/H1 each continuous from 2019-12-31 00:00 UTC through 2026-11-18 (last open 23:45 / 23:00), no gaps, duplicates, ordering errors or OHLC anomalies in the retrieved payload.
 - Status: archive payload validation PASS; full historical completeness and REST tail NOT VERIFIED. No SQLite, Dropbox, VPS/runtime, feeder/writer, deployment or cutover.
 - No GitHub Actions workflow/test run. Continue only after a separate approval for any subsequent REST tail or SQLite build.
+
+
+## 2026-11-20 — PAPER_DB isolation and Core Runtime / F4 integration plan
+
+### Work and scope
+- Target repository: `kenznguyen/btcquant-application`, branch `main`.
+- Exact application/test baseline: `ded86af644edd3cd0b38ce3ffd9a028213db00e4`.
+- Source/reference repository remains read-only: `kenznguyen/btcusdt-telegram-signals2`, branch `feature/core-operational-proof-20261112`, exact source HEAD `e6606e28a696374f31cd6db1ec0a1372d942d64d`.
+- Implemented a distinct `PAPER_DB` boundary for all Paper Ledger, Account Risk Contract, Kill Switch, write budget, equity, audit and Paper API operations.
+- `MARKET_DATA_DB` remains T0-owned and is accessed for candle data through the current storage factory/Candle Contract only.
+- Corrected the stale `market_data.api` import to `market_data.api_contract`; no candle schema/query semantics changed.
+- Added CLI path enforcement: `PAPER_DB` is required and `--db` must resolve to that path.
+- Added Core Runtime / F4 integration plan only. No Core Runtime code was copied or activated.
+
+### Implementation identities
+| File | Blob SHA |
+|---|---|
+| `paper_execution/database_paths.py` | `aa813461d607069872960f1d55d6b29667a87642` |
+| `pipeline/api.py` | `2c5c35951dbe902e2553ad186bedaf0ca22b29e0` |
+| `pipeline/test_api.py` | `f665944247f63ddc4c135099a91ad0637b02d597` |
+| `paper_execution/test_database_paths.py` | `36b45c10c58d79eb84c5c3a072e15131c05d036d` |
+| `paper_execution/__main__.py` | `91369f314e0c047fb6f79b91e9256d119a8654b4` |
+| `paper_execution/test_ledger.py` | `b1b170bd890ec2cc64bf70079651f1fbf1274573` |
+| `paper_execution/test_f4_r3_reset_red.py` | `c98ead20d50497dd668673a38bb83359ea0687a7` |
+| `paper_execution/README.md` | `2a9cd6b6e9d714c1ac8483e2fc89bf54763549bc` |
+
+### Git commits on the existing main branch
+- `0e5a27b69e8a21761b40bcad54d7ebfdcc8dd223` — TDD RED tests and F4 pin preparation.
+- `cb3317c0a46625c03afc24a9bd6b3b19b0504460` — corrected obsolete T0 candle-query import to current `market_data.api_contract`.
+- `d1ca47ae616697dd0bf466ef621384378a145fe2` — initial PAPER_DB isolation implementation.
+- `5dbb96dfb542f8a48aa3b73ceead10f0997023b9` — aligned Paper DB fixtures and T0 lease path tests.
+- `fc91eb5a7f2c69e351d946134e221556ffcda719` — finalized regression fixtures and workflow blob pins.
+- `ded86af644edd3cd0b38ce3ffd9a028213db00e4` — corrected F4-R1 exact expected-test-count gate. Application code blobs unchanged from `fc91eb5a`.
+
+### Verification and artifacts
+- F4 Pipeline API/Decision: PASS, 44 tests; run [44686288070](https://github.com/kenznguyen/btcquant-application/actions/runs/44686288070), source commit `fc91eb5a7f2c69e351d946134e221556ffcda719`; artifact ID `14606367905`, SHA-256 `1c9ac26fa5779bc6e49bc06f2631182d0a3ae7da6940286cdf232f4878c85471`.
+- F4 R3 Kill Reset: PASS, 145 tests; run [44686288058](https://github.com/kenznguyen/btcquant-application/actions/runs/44686288058), source commit `fc91eb5a7f2c69e351d946134e221556ffcda719`; artifact ID `14605749902`, SHA-256 `e9c7e65fc1d8b99f901afe6cfb18d2b247bd70247ac7cd079bc6b3297be69996`.
+- F4 R1 Account Risk Contract: PASS, 160 tests; run [44686406898](https://github.com/kenznguyen/btcquant-application/actions/runs/44686406898), workflow gate commit `ded86af644edd3cd0b38ce3ffd9a028213db00e4`; artifact ID `14606572771`, SHA-256 `77b83d89b647610a0c09652de08b0a25b34406e6b9279c513664a82f74d2bd45`.
+- RED evidence before implementation: F4 Pipeline run `44685167233` and F4 R1 run `44685167199`; they reproduced API/T0 path alias and missing path-guard failures.
+- Final F4 workflows ran with network disabled, no credentials and no canonical database mount.
+
+### Core Runtime / F4 integration plan
+Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026-11-20.md`, blob SHA `a172fbf7ae68f0b5dad928dd217fb093c28935ed`.
+- PAPER_DB isolation: PASS.
+- Core Runtime dependency and integration plan: COMPLETE (static review only).
+- Core Runtime migration: NOT STARTED.
+- Core Runtime preview/submission: NOT AUTHORIZED by this plan.
+- Target F4 Account Risk Contract and target PaperLedger transaction remain the only risk/admission authority.
+- Source `simulated_equity` / simulated-origin logic must be reconciled; do not copy the source one-shot runner unchanged or pass parallel `risk_limits`.
+- Source `runtime_factory.py` must not be copied unchanged: it requires T1 HTTP endpoints and constructs a T1 HTTP client.
+- `requests` and `rfc8785` require a separately reviewed, hash-pinned Core Runtime dependency closure.
+- T1 Provider remains PAUSED. Bundle tests may inject a deterministic T1 fixture only; no provider, HTTP client, socket, endpoint, continuous runner or runtime is activated.
+- AI execution remains disabled; live trading remains prohibited.
+
+### Runtime/data safety and next step
+- No canonical T0 database was mounted, read, copied, restored or modified.
+- No T1 service/provider, VPS, exchange, credentials, real orders, systemd or autostart were accessed.
+- Test databases were temporary isolated fixtures only.
+- Next permitted work: M2.1 read-only dependency closure and per-file Core Runtime migration manifest. Do not copy/activate runtime code until that review and separate approval are complete.
