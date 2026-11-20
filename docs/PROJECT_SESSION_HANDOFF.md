@@ -1,3 +1,25 @@
+# CURRENT STATUS OVERRIDE — 2026-11-20 — Kiri Lite Compose/Buildx/Docker coexistence PASS (GitHub Actions only)
+
+- Scope: owner requested Compose/Buildx and existing Docker Engine coexistence verification on disposable GitHub Actions runners only. No VPS, persistent host, T0 SQLite, T1/T2, project secrets, deployment target, Quant runtime or real trading system was accessed.
+- Evidence report: `docs/evidence/KIRI_LITE_COMPOSE_BUILDX_DOCKER_COEXISTENCE_2026-11-20.md`, commit `150616c3d6ef32e0793d35aeac11cfc53f387cfd`.
+- Workflow: `.github/workflows/kiri-lite-compose-buildx-coexistence.yml`; final tested source/workflow commit SHA `dce91fad64506ca1fbe09be1b51a55f0958b4153`, branch `main`.
+- Final Actions run [44668934024](https://github.com/kenznguyen/btcquant-application/actions/runs/44668934024): **SUCCESS**, exact head SHA `dce91fad64506ca1fbe09be1b51a55f0958b4153`.
+- Final jobs: Ubuntu 24.04.5 amd64 job `136065096664` **SUCCESS**; Ubuntu 26.04.1 amd64 job `136065096922` **SUCCESS**.
+- Artifacts: Ubuntu 24.04.5 ID `14598393874`, SHA-256 `25f78a26739ffabf00847300fe4dceb227a3889141122412c3e9b98be1fc0650`; Ubuntu 26.04.1 ID `14598463497`, SHA-256 `58a819c06a21ddf270e1f3444d23ff6925b5875717a6d7e681e01db895b0992c`. Both are available from the final run and retained 30 days.
+- Kiri Lite 0.2.2 package SHA-256 `24798125ee50bb24db86594a9ee1469b1032d9b2ffd7da616b06e40763c723b9`.
+- Ubuntu 24.04.5 runner: Docker Engine/CLI `28.0.4`, Compose `v2.38.2`, Buildx `v0.38.2`, Kiri server `27.5.1`, BuildKit `v0.34.2`. Ubuntu 26.04.1: Docker Engine/CLI `29.4.2`, Compose `v5.1.3`, Buildx `v0.39.0`, Kiri server `27.5.1`, BuildKit `v0.34.2`.
+- **PASS — Buildx smoke:** dedicated Docker context `kiri`, builder `kiri-build`, `docker-container` driver; local scratch/COPY image built, exported/loaded, inspected and run through Kiri. Container emitted `KIRI_BUILDX_IMAGE_PASS` on both runners.
+- **PASS — Compose smoke:** Compose config and one BusyBox service run through Kiri; container emitted `KIRI_COMPOSE_PASS` on both runners.
+- **PASS — coexistence:** original Docker Engine ID and `/run/docker.sock` device/inode/mode/owner/group were asserted unchanged after Kiri start and workloads; original Engine still responded after Kiri remove/purge. Kiri uses separate `/run/kiri/docker.sock`, mode `660:root:kiri`.
+- Runner user was not added to the root-equivalent `kiri` group; CI used explicit sudo. No default Docker socket replacement/takeover observed on these runners.
+- Important limits: external registry pulls/DNS through Kiri are NOT VERIFIED; final test preloaded BuildKit and test images through the existing Docker Engine. Smoke tests do not establish full Compose or BuildKit feature/workload parity. Persistent-host coexistence, performance/load, independent security audit, ARM64, RPM and Full Kiri on Ubuntu 26.04 remain NOT TESTED.
+- Intermediate CI failures were preserved in workflow history and explained in the evidence report: initial group-permission issue, default Buildx context/registry lookup, then a literal-newline test fixture issue. Final exact-SHA run `44668934024` passed both matrix jobs.
+- Status: Kiri Lite Compose smoke **PASS — CI**; Kiri Lite Buildx smoke **PASS — CI**; coexistence with existing Docker Engine on GitHub-hosted Ubuntu 24.04.5 and 26.04.1 runners **PASS — CI**. Full parity and persistent-host coexistence remain **NOT VERIFIED**.
+- **No deployment approval.** Kiri VPS/persistent-host installation, Docker replacement, default socket integration, project application integration and T0/T1/T2/trading-runtime connection remain **NOT APPROVED**.
+- Next: preserve the CI-only boundary. Any persistent-host/VPS installation or application/runtime integration requires a separate explicit owner approval and a new host-specific risk/compatibility plan.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Kiri Lite Ubuntu 26.04.1 compatibility PASS (GitHub Actions only)
 
 - Owner-approved scope: verify Kiri Lite 0.2.2 on a disposable GitHub-hosted Ubuntu 26.04.1 runner only. Explicitly no VPS, persistent host, T0 SQLite, T1/T2, project secrets, deployment or real trading system.
