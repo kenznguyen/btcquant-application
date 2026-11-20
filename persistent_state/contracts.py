@@ -180,8 +180,8 @@ class EventRecord:
     event_sequence: int
     aggregate_version: int
     event_type: str
-    strategy_id: StrategyId
-    strategy_version: str
+    strategy_id: StrategyId | None
+    strategy_version: str | None
     created_at_ms: int
     recorded_at_ms: int
     payload_json: str
@@ -190,9 +190,14 @@ class EventRecord:
     schema_version: int = CONTRACT_SCHEMA_VERSION
 
     def __post_init__(self) -> None:
-        for name in ("event_id", "account_scope_id", "session_id", "event_type", "strategy_version"):
+        for name in ("event_id", "account_scope_id", "session_id", "event_type"):
             _nonempty(name, getattr(self, name))
-        object.__setattr__(self, "strategy_id", _strategy(self.strategy_id))
+        if self.strategy_id is None:
+            if self.strategy_version is not None:
+                raise ValueError("strategy_version requires strategy_id")
+        else:
+            object.__setattr__(self, "strategy_id", _strategy(self.strategy_id))
+            _nonempty("strategy_version", self.strategy_version)
         _integer("event_sequence", self.event_sequence, minimum=1)
         _integer("aggregate_version", self.aggregate_version, minimum=1)
         _integer("created_at_ms", self.created_at_ms)
