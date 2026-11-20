@@ -133,7 +133,7 @@ jobs:
               python -m pip install --disable-pip-version-check --no-index \
                 --find-links=/wheelhouse --require-hashes \
                 -r /artifacts/requirements-market-data-fastapi-test.lock
-              python -m unittest -v market_data.test_fastapi_api market_data.test_api market_data.test_controlled_ingestion_acceptance market_data.test_t0_controlled_ingestion_acceptance market_data.test_wsgi_retirement
+              python -m unittest -v market_data.test_fastapi_api market_data.test_api market_data.test_api_contract market_data.test_controlled_ingestion_acceptance market_data.test_t0_controlled_ingestion_acceptance market_data.test_wsgi_retirement
             ' > "$log" 2>&1; then
             test_status=0
           else
@@ -156,8 +156,8 @@ jobs:
             echo "- Test container network: disabled"
             echo "- Canonical SQLite/runtime/exchange: not accessed"
           } >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$test_status" -eq 0 && "$test_count" != "50" ]]; then
-            echo "Expected 50 FastAPI and migrated API tests; observed ${test_count:-no test summary}." >&2
+          if [[ "$test_status" -eq 0 && "$test_count" != "60" ]]; then
+            echo "Expected 60 FastAPI, Candle Contract and migrated API tests; observed ${test_count:-no test summary}." >&2
             exit 1
           fi
           exit "$test_status"
