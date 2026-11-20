@@ -580,7 +580,7 @@ class SQLiteStateRepository:
                 ).fetchone()[0]
                 head = connection.execute(
                     """
-                    SELECT generation.session_id, generation.covered_event_sequence
+                    SELECT generation.*
                     FROM ps_checkpoint_heads AS head
                     JOIN ps_checkpoint_generations AS generation
                       ON generation.checkpoint_id = head.checkpoint_id
@@ -588,10 +588,11 @@ class SQLiteStateRepository:
                     """,
                     (fencing_token.account_scope_id,),
                 ).fetchone()
+                verified_checkpoint = None if head is None else self._checkpoint_from_row(head)
                 if (
-                    head is None
-                    or head["session_id"] != fencing_token.session_id
-                    or head["covered_event_sequence"] != latest_sequence
+                    verified_checkpoint is None
+                    or verified_checkpoint.session_id != fencing_token.session_id
+                    or verified_checkpoint.covered_event_sequence != latest_sequence
                 ):
                     raise CheckpointRequiredForCloseError(
                         "CLOSED requires this session's verified checkpoint at the latest committed event sequence"
