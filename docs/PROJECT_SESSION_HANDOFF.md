@@ -5920,3 +5920,33 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Triage status: **3 confirmed code-level behavior issues + 2 confirmed test determinism/isolation issues + 1 cleanup + 2 Graphify leads not supported as stated**. This is static source triage only; no runtime reproduction or tests were run. Fix status remains **NOT STARTED**.
 - Existing CI evidence (FastAPI contract 65/65 and SQLite aggregate 174/174) predates this triage and remains unchanged; it does not prove these new edge cases.
 - Next permitted step: prepare a narrowly scoped, test-first proposal for the confirmed Candle Contract/API/test issues, then obtain explicit owner approval before changing source. Keep PR #2 open as review-only **DO NOT MERGE**; no snapshot merge, runtime, VPS, canonical DB, T1/T2 integration, PostgreSQL activation, deployment or trading.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-20 — T0 Candle freshness / FastAPI boundary TDD completed
+
+- Scope approved by owner: source and regression-test changes for (1) future timestamp freshness diagnostics, (2) FastAPI future `asOfMs` validation before store access and separation of storage failures from envelope-construction failures, and (3) deterministic clock tests without patching the shared Python `time.time_ns` module. CI-only verification. No runtime, canonical T0 data, VPS, T1/T2 integration, PostgreSQL activation, deployment or trading.
+- Repository: `kenznguyen/btcquant-application`; branch: `main`.
+- TDD RED commit (tests only): `5a3a5271f4213c1bb28c2bbe403990eed90c0276`.
+  - Workflow: [T0 FastAPI contract regression #57](https://github.com/kenznguyen/btcquant-application/actions/runs/44740356527), run ID `44740356527`.
+  - Result: 69 tests, **RED as intended** — 4 failures reproducing the negative freshness age/lag metrics, storage opened before future-`asOfMs` rejection, and response-envelope `ValueError` mapped to storage 503.
+  - Artifact ID `14630681285`; SHA-256 `683881ea520ab442cee0a658dcde12ef0636fdac5b55082572ad6697d851cead`.
+- Initial implementation commit: `76b4116728e3958c85907c8a2345c68a2f0695db`.
+  - FastAPI run `44740667582` was **FAIL** because 21 existing tests in `market_data/test_api.py` and `market_data/test_fastapi_api.py` still patched the removed shared `fastapi_app.time.time_ns` attribute. This was a test migration gap, not a source regression. The same SHA's SQLite aggregate workflow `44740667619` was **PASS**.
+- Follow-up test-isolation commit: `b4e16a153ef7b0306784efa117b3121fc83dacb5`. Migrated all remaining FastAPI clock patches in `market_data/test_api.py` and `market_data/test_fastapi_api.py` to the module-local `market_data.fastapi_app.now_ms` seam. Verified at this exact SHA that all three FastAPI test files contain zero references to `market_data.fastapi_app.time.time_ns`.
+- Final FastAPI workflow: [T0 FastAPI contract regression](https://github.com/kenznguyen/btcquant-application/actions/runs/44740818574), run ID `44740818574`, exact SHA `b4e16a153ef7b0306784efa117b3121fc83dacb5`, completed **SUCCESS**.
+  - FastAPI/Candle Contract/migrated API suite: **69/69 PASS** on CPython 3.12.16.
+  - Runtime-lock-only install + in-process ASGI smoke: **PASS**.
+  - Isolated real Uvicorn process/socket + Nginx reverse-proxy integration: **PASS**.
+  - Artifacts:
+    - FastAPI contract: ID `14629963939`, SHA-256 `7c38525e612383808f2cf673ab15f8f9eb549b8064ae300f6b8a4b5a516e22d4`.
+    - Runtime lock smoke: ID `14630851431`, SHA-256 `2d927fec9fa8d021780e73f2958f3dd8e5f6241a59f399fe546f10cafa8f7a89`.
+    - Uvicorn/Nginx integration: ID `14630646824`, SHA-256 `bb98fb39154d3df3bf594cd640daa816a972470f2291885448d8b05cf0402626`.
+- Final SQLite aggregate workflow: [T0 SQLite-only aggregate regression](https://github.com/kenznguyen/btcquant-application/actions/runs/44740818608), run ID `44740818608`, exact SHA `b4e16a153ef7b0306784efa117b3121fc83dacb5`, **174/174 PASS**.
+  - Artifact ID `14629919931`; SHA-256 `87df9fe44627016066b893f9cf98d27bad5b31f80e64cb6993c7e9d8b61fc731`.
+- Source behavior changes:
+  1. `_freshness` now leaves `observationAgeMs` / `closeLagMs` null when their timestamps are later than the evaluation time; no negative age/lag values are emitted.
+  2. FastAPI has a module-local `now_ms()` clock seam. Future `asOfMs` is rejected before creating/reading the store. Store creation/read exceptions remain sanitized as `503 STORE_UNAVAILABLE`; response-envelope `TypeError` / `ValueError` / `KeyError` are sanitized as `500 INTERNAL_ERROR`.
+  3. Test clocks patch the module-local seam, not the shared Python `time.time_ns`; future-`asOfMs` tests for FastAPI and common adapter use fixed clocks.
+  4. Workflow's expected FastAPI contract count was updated from 65 to 69.
+- Status: source/test/CI scope **PASS**. This is CI evidence only. Runtime/production readiness remains **NOT VERIFIED**; no live runtime or exchange was accessed. Keep all existing no-runtime/no-canonical-data/no-integration/no-trading restrictions in force.
+- Next: retain the exact SHA and evidence above. Any broader API contract, runtime activation, layer integration, deployment or trading requires separate explicit approval.
