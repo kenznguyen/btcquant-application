@@ -85,6 +85,10 @@ class CheckpointRequiredForCloseError(RepositoryError):
     """A session cannot close without a verified checkpoint at its event boundary."""
 
 
+class GracefulStopTimeoutError(RepositoryError):
+    """The bounded manual Stop grace period has expired."""
+
+
 @dataclass(frozen=True, slots=True)
 class FencingToken:
     account_scope_id: str
@@ -867,10 +871,19 @@ class SQLiteStateRepository:
         connection = self._connect_existing()
         try:
             connection.execute("BEGIN IMMEDIATE")
-            self._assert_fencing_token(
+            session_row = self._assert_fencing_token(
                 connection, fencing_token,
                 required_statuses={SessionStatus.RUNNING, SessionStatus.CHECKPOINTING},
             )
+            if SessionStatus(session_row["status"]) is SessionStatus.CHECKPOINTING:
+                stop_requested_at = session_row["stop_requested_at_ms"]
+                if stop_requested_at is None:
+                    raise SessionStateConflictError("CHECKPOINTING session has no Stop request timestamp")
+                if (
+                    checkpoint.created_at_ms < stop_requested_at
+                    or checkpoint.created_at_ms - stop_requested_at > GRACEFUL_STOP_TIMEOUT_MS
+                ):
+                    raise GracefulStopTimeoutError("checkpoint was not produced within the 30-second Stop window")
             latest_sequence = connection.execute(
                 "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
                 (checkpoint.account_scope_id,),
@@ -1100,6 +1113,7 @@ __all__ = [
     "AggregateMutation", "AggregateSnapshot", "AggregateVersionConflictError",
     "CheckpointConflictError", "CheckpointCoverageError", "CheckpointIntegrityError",
     "CheckpointPublishResult", "CheckpointRequiredForCloseError", "CommitResult",
+    "GRACEFUL_STOP_TIMEOUT_MS", "GracefulStopTimeoutError",
     "EventSequenceConflictError", "FencingToken", "IdempotencyConflictError",
     "RepositoryError", "RepositorySchemaError", "SQLiteStateRepository",
     "SessionStateConflictError", "SessionTransitionError", "StaleFencingTokenError",
