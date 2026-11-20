@@ -8,8 +8,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from persistent_state.contracts import (
-    Checkpoint, EventRecord, IdempotencyClaim, StrategyId, canonical_json,
-    derive_idempotency_key,
+    Checkpoint, EventRecord, IdempotencyClaim, SessionRecord, SessionStatus,
+    StrategyId, canonical_json, derive_idempotency_key,
 )
 from persistent_state.repository import (
     AggregateMutation, CheckpointConflictError, CheckpointCoverageError,
@@ -37,34 +37,43 @@ def make_event(sequence, *, event_id=None, account="paper-account", aggregate_ve
     )
 
 
-def commit_event(repository, sequence):
-    event = make_event(sequence)
+def commit_event(repository, sequence, fencing_token):
+    event = make_event(sequence, event_id=f"event-{sequence}", account=fencing_token.account_scope_id)
+    event = EventRecord(
+        event_id=event.event_id, account_scope_id=event.account_scope_id,
+        session_id=fencing_token.session_id, event_sequence=event.event_sequence,
+        aggregate_version=event.aggregate_version, event_type=event.event_type,
+        strategy_id=event.strategy_id, strategy_version=event.strategy_version,
+        created_at_ms=event.created_at_ms, recorded_at_ms=event.recorded_at_ms,
+        payload_json=event.payload_json, market_snapshot_id=event.market_snapshot_id,
+        candle_open_time_ms=event.candle_open_time_ms,
+    )
     claim = IdempotencyClaim(
         idempotency_key=derive_idempotency_key(
-            account_scope_id="paper-account", ledger_id="ledger-core",
+            account_scope_id=fencing_token.account_scope_id, ledger_id="ledger-core",
             strategy_id=StrategyId.CORE, strategy_version="core-v1",
             market_snapshot_id="snapshot-1", candle_open_time_ms=1_800_000_000_000,
             action_kind="EVENT", action_ordinal=sequence,
         ),
-        payload_hash=digest(event.payload_json), account_scope_id="paper-account",
+        payload_hash=digest(event.payload_json), account_scope_id=fencing_token.account_scope_id,
         ledger_id="ledger-core", strategy_id=StrategyId.CORE, strategy_version="core-v1",
         market_snapshot_id="snapshot-1", candle_open_time_ms=1_800_000_000_000,
         action_kind="EVENT", action_ordinal=sequence,
     )
     mutation = AggregateMutation(
-        account_scope_id="paper-account", aggregate_id="ledger-core",
+        account_scope_id=fencing_token.account_scope_id, aggregate_id="ledger-core",
         aggregate_type="POSITION_LEDGER", strategy_id=StrategyId.CORE,
         expected_version=sequence - 1,
         state_json=canonical_json({"position": str(sequence)}),
     )
-    return repository.commit_transition(event, claim, mutation)
+    return repository.commit_transition(event, claim, mutation, fencing_token=fencing_token)
 
 
 def make_checkpoint(sequence, *, checkpoint_id=None, payload=None):
     payload_json = canonical_json(payload or {"lastSequence": sequence, "state": {"position": str(sequence)}})
     return Checkpoint(
         checkpoint_id=checkpoint_id or f"checkpoint-{sequence}",
-        account_scope_id="paper-account", session_id="session-1", schema_version=1,
+        account_scope_id=token.account_scope_id, session_id=token.session_id, schema_version=1,
         covered_event_sequence=sequence,
         aggregate_versions_json=canonical_json({"ledger-core": sequence}),
         payload_json=payload_json,
@@ -83,79 +92,96 @@ class CheckpointRepositoryTests(unittest.TestCase):
         self.path = Path(self.temp.name) / "checkpoint-test.sqlite3"
         self.repository = SQLiteStateRepository(self.path)
         self.repository.initialize()
+        session = SessionRecord(
+            session_id="session-1", account_scope_id="paper-account",
+            status=SessionStatus.START_REQUESTED, started_at_ms=1_800_000_000_000,
+            initiator="MANUAL", source_snapshot_id="snapshot-1",
+            config_hash="sha256:" + "a" * 64, code_version="git:" + "b" * 40,
+            last_committed_event_sequence=0,
+        )
+        self.token = self.repository.claim_writer(session)
+        for expected, target in (
+            (SessionStatus.START_REQUESTED, SessionStatus.PREFLIGHT),
+            (SessionStatus.PREFLIGHT, SessionStatus.RESTORING),
+            (SessionStatus.RESTORING, SessionStatus.READY),
+            (SessionStatus.READY, SessionStatus.RUNNING),
+        ):
+            self.repository.advance_session(
+                self.token, expected_status=expected, new_status=target, at_ms=1_800_000_000_001,
+            )
 
     def test_publishes_verified_checkpoint_and_advances_active_pointer(self):
-        commit_event(self.repository, 1)
+        commit_event(self.repository, 1, self.token)
         checkpoint = make_checkpoint(1)
-        result = self.repository.publish_checkpoint(checkpoint)
+        result = self.repository.publish_checkpoint(checkpoint, fencing_token=self.token)
         self.assertTrue(result.is_active)
         self.assertFalse(result.duplicate)
         self.assertEqual(self.repository.read_active_checkpoint("paper-account"), checkpoint)
 
     def test_checkpoint_cannot_cover_uncommitted_event_sequence(self):
         with self.assertRaises(CheckpointCoverageError):
-            self.repository.publish_checkpoint(make_checkpoint(1))
+            self.repository.publish_checkpoint(make_checkpoint(1), fencing_token=self.token)
         self.assertIsNone(self.repository.read_active_checkpoint("paper-account"))
         self.assertEqual(self.repository.list_checkpoints("paper-account"), ())
 
     def test_checkpoint_aggregate_versions_must_match_committed_event_prefix(self):
-        commit_event(self.repository, 1)
+        commit_event(self.repository, 1, self.token)
         mismatched = replace(
             make_checkpoint(1),
             aggregate_versions_json=canonical_json({"ledger-core": 0}),
         )
         with self.assertRaises(CheckpointCoverageError):
-            self.repository.publish_checkpoint(mismatched)
+            self.repository.publish_checkpoint(mismatched, fencing_token=self.token)
         self.assertEqual(self.repository.list_checkpoints("paper-account"), ())
 
     def test_active_checkpoint_pointer_never_moves_backwards(self):
-        commit_event(self.repository, 1)
-        commit_event(self.repository, 2)
+        commit_event(self.repository, 1, self.token)
+        commit_event(self.repository, 2, self.token)
         newer = make_checkpoint(2)
         older = make_checkpoint(1)
-        self.assertTrue(self.repository.publish_checkpoint(newer).is_active)
-        old_result = self.repository.publish_checkpoint(older)
+        self.assertTrue(self.repository.publish_checkpoint(newer, fencing_token=self.token).is_active)
+        old_result = self.repository.publish_checkpoint(older, fencing_token=self.token)
         self.assertFalse(old_result.is_active)
         self.assertEqual(self.repository.read_active_checkpoint("paper-account"), newer)
         self.assertEqual(len(self.repository.list_checkpoints("paper-account")), 2)
 
     def test_same_checkpoint_id_and_same_content_is_idempotent(self):
-        commit_event(self.repository, 1)
+        commit_event(self.repository, 1, self.token)
         checkpoint = make_checkpoint(1)
-        first = self.repository.publish_checkpoint(checkpoint)
-        retry = self.repository.publish_checkpoint(checkpoint)
+        first = self.repository.publish_checkpoint(checkpoint, fencing_token=self.token)
+        retry = self.repository.publish_checkpoint(checkpoint, fencing_token=self.token)
         self.assertFalse(first.duplicate)
         self.assertTrue(retry.duplicate)
         self.assertEqual(self.repository.list_checkpoints("paper-account"), (checkpoint,))
 
     def test_same_checkpoint_id_with_different_content_is_conflict(self):
-        commit_event(self.repository, 1)
-        self.repository.publish_checkpoint(make_checkpoint(1))
+        commit_event(self.repository, 1, self.token)
+        self.repository.publish_checkpoint(make_checkpoint(1), fencing_token=self.token)
         conflicting = make_checkpoint(1, payload={"lastSequence": 1, "state": {"position": "tampered"}})
         with self.assertRaises(CheckpointConflictError):
-            self.repository.publish_checkpoint(conflicting)
+            self.repository.publish_checkpoint(conflicting, fencing_token=self.token)
 
     def test_different_checkpoint_ids_at_same_coverage_are_conflict(self):
-        commit_event(self.repository, 1)
+        commit_event(self.repository, 1, self.token)
         self.repository.publish_checkpoint(make_checkpoint(1, checkpoint_id="checkpoint-a"))
         with self.assertRaises(CheckpointConflictError):
             self.repository.publish_checkpoint(make_checkpoint(1, checkpoint_id="checkpoint-b"))
 
     def test_checkpoint_insert_and_active_pointer_update_roll_back_together(self):
-        commit_event(self.repository, 1)
+        commit_event(self.repository, 1, self.token)
         checkpoint = make_checkpoint(1)
         with patch.object(
             self.repository, "_set_checkpoint_head",
             side_effect=RuntimeError("injected checkpoint pointer failure"),
         ):
             with self.assertRaisesRegex(RuntimeError, "pointer failure"):
-                self.repository.publish_checkpoint(checkpoint)
+                self.repository.publish_checkpoint(checkpoint, fencing_token=self.token)
         self.assertEqual(self.repository.list_checkpoints("paper-account"), ())
         self.assertIsNone(self.repository.read_active_checkpoint("paper-account"))
 
     def test_corrupted_checkpoint_payload_is_rejected_on_read(self):
-        commit_event(self.repository, 1)
-        self.repository.publish_checkpoint(make_checkpoint(1))
+        commit_event(self.repository, 1, self.token)
+        self.repository.publish_checkpoint(make_checkpoint(1), fencing_token=self.token)
         with sqlite3.connect(self.path) as connection:
             connection.execute("DROP TRIGGER ps_checkpoints_no_update")
             connection.execute(
@@ -175,15 +201,15 @@ class CheckpointRepositoryTests(unittest.TestCase):
             self.repository.read_active_checkpoint("paper-account")
 
     def test_checkpoint_generations_are_append_only(self):
-        commit_event(self.repository, 1)
-        self.repository.publish_checkpoint(make_checkpoint(1))
+        commit_event(self.repository, 1, self.token)
+        self.repository.publish_checkpoint(make_checkpoint(1), fencing_token=self.token)
         with sqlite3.connect(self.path) as connection:
             with self.assertRaises(sqlite3.IntegrityError):
                 connection.execute("DELETE FROM ps_checkpoint_generations WHERE checkpoint_id='checkpoint-1'")
 
     def test_keeps_all_verified_generations_without_automatic_pruning(self):
         for sequence in (1, 2, 3):
-            commit_event(self.repository, sequence)
+            commit_event(self.repository, sequence, self.token)
             self.repository.publish_checkpoint(make_checkpoint(sequence))
         self.assertEqual(len(self.repository.list_checkpoints("paper-account")), 3)
 
