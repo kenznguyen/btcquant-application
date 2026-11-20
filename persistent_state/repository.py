@@ -674,6 +674,8 @@ class SQLiteStateRepository:
             raise TransitionContractError("idempotency ledger_id must match aggregate_id")
         if event.aggregate_id != mutation.aggregate_id:
             raise TransitionContractError("event aggregate_id must match aggregate mutation")
+        if event.aggregate_id != mutation.aggregate_id:
+            raise TransitionContractError("event aggregate_id must match aggregate mutation")
         if claim.strategy_id != mutation.strategy_id or event.strategy_id != claim.strategy_id:
             raise TransitionContractError("strategy_id mismatch across transition")
         if event.strategy_version != claim.strategy_version:
