@@ -6346,3 +6346,17 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - T2 Adapter/Validator focused suite: **10/10 PASS** on both dependency probes. Full repository regression remains **NOT RUN**. Independent second-person review remains **NOT VERIFIED**.
 - No functional source changes remain from the probes; no risk policy, runner, ledger, AI, T0/T1, DB, runtime, deployment or trading behavior changed. No orders were placed.
 - Next: preserve T2 path-filter PASS; triage F4 failures separately under a new bounded approval. Do not expand this increment into F4, runtime or risk-policy work.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — F4 API mark provenance TDD increment
+
+- Owner approved a bounded TDD increment on existing `main`: API provenance propagation, focused regression test and F4 workflow correction. Evidence: `docs/evidence/F4_MARK_PROVENANCE_PROPAGATION_TDD_2026-11-21.md`; evidence commit `0df6aab3276481c2702de810463f740da128fee1`.
+- Final tested implementation/workflow source SHA: `941337c74d77d15d979adccb86ac42fe84cb3771`. Exact blobs: API `3133a6865282fd353d48a4c0c938c0741cf5d49b`; test `67f9b668632f0dd294a38e67ffae566ba44874fc`; F4 workflow `f360358d8007eafabb2b5bb7e4250ec58cf84666`.
+- API now builds one typed `MarketMarkProvenance` from the exact canonical `mark_window` and passes the same object to both account-mark writes before and after paper submission.
+- TDD RED: run [44902397355](https://github.com/kenznguyen/btcquant-application/actions/runs/44902397355) reproduced HTTP 400 `INVALID_INPUT` in the new regression test before the API fix.
+- Final F4 run [44902800155](https://github.com/kenznguyen/btcquant-application/actions/runs/44902800155), job `136842060442`: immutable source verification **PASS**; isolated provenance regression **1/1 PASS**; full F4 suite **BLOCKED**, 46 tests with 5 failures. Artifact `14706726809`, SHA-256 `a3cdf304773c20a3bc4c8f305ce9230d9ed8e70f81c23e6364bf29f78f12a6ac`.
+- Remaining five failures concern Kill Switch/Pause/drawdown/FILLED expectations while current Shared Risk Engine correctly returns `RISK_INPUTS_UNAVAILABLE` because the isolated test fixture lacks verified account/funding cutover. Do not weaken fail-closed admission or change risk policy in this increment.
+- Workflow now watches API/test/ledger/account-equity/mark-provenance paths, pins immutable source blobs and consistently reports the 46-test count. The focused provenance test runs separately before the full suite.
+- Compare from prior main `76e32a0d07ce82732218a72c2bb1b8a0b2316d7e` to tested SHA: 13 commits ahead / 0 behind; exactly three implementation paths changed: `pipeline/api.py`, `pipeline/test_api.py`, and `.github/workflows/f4-pipeline-core-first-isolated.yml`. No T2 files changed.
+- Status: API propagation **IMPLEMENTED**; focused regression **PASS**; F4 workflow correction **IMPLEMENTED / SOURCE VERIFICATION PASS**; full F4 suite **BLOCKED**; full repository regression **NOT RUN**; T2 **UNCHANGED**.
+- Next: obtain separate approval to diagnose and correct only the F4 account-risk readiness fixture (verified cutover/funding provenance) or revise affected test contracts. No Shared Risk Engine bypass, risk-policy change, T0/T1/T2 integration, DB/runtime, deployment, exchange or trading operation is authorized.
