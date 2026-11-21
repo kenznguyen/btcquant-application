@@ -73,7 +73,7 @@ jobs:
             --env PYTHONPATH=/workspace \
             --workdir /workspace \
             "$PYTHON_IMAGE" \
-            bash -euc 'python -B -m unittest -v market_data.test_t1_orderbook_contract' \
+            bash -euc 'python -B -m unittest -v market_data.test_t1_orderbook_contract market_data.test_rest_tail_validator' \
             > "$log" 2>&1; then
             test_status=0
           else
@@ -89,6 +89,7 @@ jobs:
             echo "## T1 Orderbook Consumer Contract V1"
             echo "- Exact source SHA: $GITHUB_SHA"
             echo "- Test count: ${test_count:-NOT_REPORTED}"
+            echo "- Adjacent T0 offline REST-tail regression included"
             echo "- Test container network: disabled"
             echo "- T1 Provider/T0 data/runtime: not connected or mounted"
           } >> "$GITHUB_STEP_SUMMARY"
