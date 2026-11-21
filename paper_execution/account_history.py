@@ -804,3 +804,130 @@ def migrate_daily_baseline_audit(connection, source_sha):
            VALUES (9,'daily_equity_baseline_audit_v9',?,?,?,'APPLIED')""",
         (DAILY_BASELINE_AUDIT_MIGRATION_CHECKSUM, applied_at, source_sha.lower()),
     )
+
+
+CONSUMED_MARK_PROVENANCE_MIGRATION_VERSION = 10
+CONSUMED_MARK_PROVENANCE_MIGRATION_CHECKSUM = hashlib.sha256(
+    b"dual-ledger-v10:immutable-consumed-market-mark-provenance"
+).hexdigest()
+
+
+def migrate_consumed_market_mark_provenance(connection, source_sha):
+    """Create the immutable record that binds each consumed account mark to its exact source payload."""
+    if (not isinstance(source_sha, str) or len(source_sha) != 40
+            or any(char not in "0123456789abcdef" for char in source_sha.lower())):
+        raise ValueError("DUAL_LEDGER_SOURCE_SHA_REQUIRED")
+    applied = connection.execute(
+        "SELECT checksum,status FROM paper_schema_migrations WHERE version=?",
+        (CONSUMED_MARK_PROVENANCE_MIGRATION_VERSION,),
+    ).fetchone()
+    triggers = {row[0] for row in connection.execute(
+        "SELECT name FROM sqlite_master WHERE type='trigger'"
+    )}
+    required_triggers = {
+        "paper_account_consumed_market_marks_immutable_update",
+        "paper_account_consumed_market_marks_immutable_delete",
+    }
+    if applied:
+        columns = {row[1] for row in connection.execute(
+            "PRAGMA table_info(paper_account_consumed_market_marks)"
+        )}
+        if (applied != (CONSUMED_MARK_PROVENANCE_MIGRATION_CHECKSUM, "APPLIED")
+                or not required_triggers.issubset(triggers)
+                or not {
+                    "mark_id", "account_id", "observed_at_ms", "candle_close_ms",
+                    "mark_price", "source_id", "source_snapshot_id", "dataset_version",
+                    "payload_sha256", "canonical_payload", "recorded_at_ms",
+                }.issubset(columns)):
+            raise sqlite3.DatabaseError("CONSUMED_MARK_PROVENANCE_SCHEMA_INCOMPLETE")
+        return
+    table = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' "
+        "AND name='paper_account_consumed_market_marks'"
+    ).fetchone()
+    if table or required_triggers.intersection(triggers):
+        raise sqlite3.DatabaseError("CONSUMED_MARK_PROVENANCE_SCHEMA_WITHOUT_MIGRATION_RECORD")
+    connection.execute("""CREATE TABLE paper_account_consumed_market_marks (
+        mark_id TEXT PRIMARY KEY,
+        account_id INTEGER NOT NULL REFERENCES paper_accounts(account_id),
+        observed_at_ms INTEGER NOT NULL,
+        candle_close_ms INTEGER NOT NULL,
+        mark_price TEXT NOT NULL,
+        source_id TEXT NOT NULL CHECK(length(trim(source_id))>0),
+        source_snapshot_id TEXT NOT NULL CHECK(length(source_snapshot_id)=71
+            AND substr(source_snapshot_id,1,7)='sha256:'
+            AND substr(source_snapshot_id,8) NOT GLOB '*[^0-9a-f]*'),
+        dataset_version TEXT NOT NULL CHECK(length(trim(dataset_version))>0),
+        payload_sha256 TEXT NOT NULL CHECK(length(payload_sha256)=64
+            AND payload_sha256 NOT GLOB '*[^0-9a-f]*'),
+        canonical_payload TEXT NOT NULL,
+        recorded_at_ms INTEGER NOT NULL,
+        UNIQUE(account_id,observed_at_ms),
+        CHECK(observed_at_ms>=candle_close_ms),
+        CHECK(source_snapshot_id='sha256:' || payload_sha256)
+    )""")
+    connection.execute("""CREATE TRIGGER paper_account_consumed_market_marks_immutable_update
+        BEFORE UPDATE ON paper_account_consumed_market_marks
+        BEGIN SELECT RAISE(ABORT,'CONSUMED_MARK_PROVENANCE_IMMUTABLE'); END""")
+    connection.execute("""CREATE TRIGGER paper_account_consumed_market_marks_immutable_delete
+        BEFORE DELETE ON paper_account_consumed_market_marks
+        BEGIN SELECT RAISE(ABORT,'CONSUMED_MARK_PROVENANCE_IMMUTABLE'); END""")
+    applied_at = connection.execute(
+        "SELECT updated_at_ms FROM paper_account_risk_state WHERE account_id=1"
+    ).fetchone()[0]
+    connection.execute(
+        """INSERT INTO paper_schema_migrations
+           (version,name,checksum,applied_at_ms,source_sha,status)
+           VALUES (10,'consumed_market_mark_provenance_v10',?,?,?,'APPLIED')""",
+        (CONSUMED_MARK_PROVENANCE_MIGRATION_CHECKSUM, applied_at, source_sha.lower()),
+    )
+
+
+def record_consumed_market_mark(connection, provenance, *, observed_at_ms):
+    """Persist the exact consumed candle in the same transaction as the equity mark."""
+    from paper_execution.mark_provenance import MarketMarkProvenance, validate_consumed_mark
+
+    if not isinstance(provenance, MarketMarkProvenance):
+        raise ValueError("TYPED_MARK_PROVENANCE_REQUIRED")
+    observed = _stamp(observed_at_ms, "ACCOUNT_HISTORY_MARK_TIME_INVALID")
+    if observed < provenance.candle_close_ms or observed - provenance.candle_close_ms > 30 * 60_000:
+        raise ValueError("ACCOUNT_HISTORY_MARK_TIME_INVALID")
+    migration = connection.execute(
+        "SELECT checksum,status FROM paper_schema_migrations WHERE version=?",
+        (CONSUMED_MARK_PROVENANCE_MIGRATION_VERSION,),
+    ).fetchone()
+    if migration != (CONSUMED_MARK_PROVENANCE_MIGRATION_CHECKSUM, "APPLIED"):
+        raise sqlite3.DatabaseError("CONSUMED_MARK_PROVENANCE_MIGRATION_NOT_APPLIED")
+    validate_consumed_mark(
+        provenance,
+        mark_price=provenance.mark_price,
+        candle_close_ms=provenance.candle_close_ms,
+        dataset_version=provenance.dataset_version,
+    )
+    mark_id = hashlib.sha256(
+        (provenance.source_snapshot_id + ":" + str(observed)).encode("utf-8")
+    ).hexdigest()
+    row = (
+        mark_id, 1, observed, provenance.candle_close_ms, provenance.mark_price,
+        provenance.source_id, provenance.source_snapshot_id, provenance.dataset_version,
+        provenance.source_payload_sha256, provenance.canonical_payload, observed,
+    )
+    existing = connection.execute(
+        """SELECT mark_id,account_id,observed_at_ms,candle_close_ms,mark_price,source_id,
+                  source_snapshot_id,dataset_version,payload_sha256,canonical_payload,recorded_at_ms
+           FROM paper_account_consumed_market_marks
+           WHERE account_id=1 AND observed_at_ms=?""",
+        (observed,),
+    ).fetchone()
+    if existing is not None:
+        if existing != row:
+            raise ValueError("CONSUMED_MARK_PROVENANCE_CONFLICT")
+        return {"markId": mark_id, "idempotent": True}
+    connection.execute(
+        """INSERT INTO paper_account_consumed_market_marks
+           (mark_id,account_id,observed_at_ms,candle_close_ms,mark_price,source_id,
+            source_snapshot_id,dataset_version,payload_sha256,canonical_payload,recorded_at_ms)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+        row,
+    )
+    return {"markId": mark_id, "idempotent": False}
