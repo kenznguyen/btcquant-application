@@ -2459,9 +2459,24 @@ os._exit(0)
             self.path, max_position_base="1", strategy_id="MANUAL",
             source_sha="a" * 40,
         )
+        from paper_execution.mark_provenance import build_market_mark_provenance
+        mark_window = {
+            "symbol": "BTCUSDT", "timeframe": "15m",
+            "datasetVersion": "sha256:" + "a" * 64,
+            "coverage": {"complete": True},
+            "candles": [{
+                "openTimeMs": self.now-900_000, "closeTimeMs": self.now-60_000,
+                "open": "109", "high": "111", "low": "108",
+                "close": "110", "volume": "1",
+            }],
+        }
+        provenance = build_market_mark_provenance(
+            mark_window, source_id="T0_CANONICAL_MARKET_DATA"
+        )
         account_result = account.record_account_mark(
             mark_price="110", candle_close_ms=self.now-60_000,
-            observed_at_ms=self.now, dataset_version="sha256:account-mark",
+            observed_at_ms=self.now, dataset_version=mark_window["datasetVersion"],
+            mark_provenance=provenance,
         )
         with sqlite3.connect(self.path) as connection:
             risk = connection.execute(
