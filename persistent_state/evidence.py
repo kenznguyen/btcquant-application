@@ -145,6 +145,23 @@ class RiskReadinessAttestation:
         _validate_outcome(self.passed, self.reason_codes)
 
 
+@dataclass(frozen=True, slots=True)
+class ReadyEvidenceBundle:
+    """The complete evidence set required for the RESTORING -> READY transition."""
+
+    preflight: PreflightAttestation
+    restore: RestoreAttestation
+    risk: RiskReadinessAttestation
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.preflight, PreflightAttestation):
+            raise ValueError("preflight attestation is required")
+        if not isinstance(self.restore, RestoreAttestation):
+            raise ValueError("restore attestation is required")
+        if not isinstance(self.risk, RiskReadinessAttestation):
+            raise ValueError("risk readiness attestation is required")
+
+
 def _validate_outcome(passed: object, reason_codes: object) -> None:
     if type(passed) is not bool:
         raise ValueError("passed must be boolean")
@@ -218,5 +235,5 @@ def validate_ready_evidence(
 
 __all__ = [
     "EvidenceBinding", "PreflightAttestation", "RestoreAttestation",
-    "RiskReadinessAttestation", "validate_ready_evidence",
+    "RiskReadinessAttestation", "ReadyEvidenceBundle", "validate_ready_evidence",
 ]
