@@ -914,6 +914,7 @@ def record_consumed_market_mark(connection, provenance, *, observed_at_ms):
         mark_price=provenance.mark_price,
         candle_close_ms=provenance.candle_close_ms,
         dataset_version=provenance.dataset_version,
+        observed_at_ms=observed,
     )
     mark_id = hashlib.sha256(
         (provenance.source_snapshot_id + ":" + provenance.source_payload_sha256 + ":" + str(observed)).encode("utf-8")
