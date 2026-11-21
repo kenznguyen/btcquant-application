@@ -383,8 +383,19 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
             raise ValueError("CONSUMED_MARK_FIELDS")
         source_window = canonical_mark.get("sourceWindow")
         source_as_of = source_window.get("asOfMs") if isinstance(source_window, dict) else None
+        source_dataset_hash = hashlib.sha256(
+            json.dumps(source_window, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+        ).hexdigest() if isinstance(source_window, dict) else None
         if (canonical_mark.get("sourceId") != source_id
                 or not isinstance(source_window, dict)
+                or set(source_window) != {
+                    "exchange", "marketType", "symbol", "timeframe",
+                    "startMs", "endMs", "asOfMs", "candles",
+                }
+                or source_dataset_hash != mark_dataset.removeprefix("sha256:")
+                or not isinstance(source_window.get("candles"), list)
+                or not source_window["candles"]
+                or consumed_candle != source_window["candles"][-1]
                 or source_window.get("exchange") != "binance"
                 or source_window.get("marketType") != "USDT_PERPETUAL"
                 or source_window.get("symbol") != "BTCUSDT"
