@@ -47,6 +47,7 @@ class SessionOrchestratorTests(unittest.TestCase):
             restore_attestation_provider=self.restore_provider,
             risk_readiness_provider=self.risk_provider,
             clock_ms=lambda: self.now[0],
+            operator_approval_verifier=lambda approval: approval.operator_id == "operator-1",
         )
 
     def session(self, session_id="session-orchestrator"):
@@ -118,12 +119,14 @@ class SessionOrchestratorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.orchestrator.resume(result.fencing_token, None)
         self.now[0] = START + 20
+        fresh_risk = self.orchestrator.prepare_resume(result.fencing_token)
         running = self.orchestrator.resume(
             result.fencing_token,
             OperatorApproval(
                 operator_id="operator-1",
                 confirmation_id="manual-resume-1",
                 confirmed_at_ms=self.now[0],
+                risk_attestation=fresh_risk,
             ),
         )
         self.assertEqual(running.status, SessionStatus.RUNNING)
