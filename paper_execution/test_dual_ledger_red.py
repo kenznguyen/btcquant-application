@@ -2552,6 +2552,62 @@ os._exit(0)
 
 
 
+    def test_account_risk_snapshot_exposes_exact_immutable_consumed_mark_provenance(self):
+        from paper_execution.ledger import read_account_risk_snapshot
+
+        snapshot = read_account_risk_snapshot(self.path, now_ms=self.now)
+        provenance = snapshot["markProvenance"]
+        self.assertEqual(provenance["sourceId"], "T0_CANONICAL_MARKET_DATA")
+        self.assertEqual(provenance["sourceSnapshotId"], "sha256:" + "d" * 64)
+        self.assertEqual(provenance["sourceVersion"], "sha256:" + "d" * 64)
+        self.assertTrue(provenance["sourcePayloadSha256"].startswith("sha256:"))
+        with sqlite3.connect(self.path) as connection:
+            mark_id = connection.execute(
+                "SELECT last_mark_id FROM paper_account_risk_state WHERE account_id=1"
+            ).fetchone()[0]
+            row = connection.execute(
+                "SELECT source_snapshot_id,payload_sha256 FROM paper_account_consumed_market_marks WHERE mark_id=?",
+                (mark_id,),
+            ).fetchone()
+            self.assertEqual(row[0], provenance["sourceSnapshotId"])
+            self.assertEqual(row[1], provenance["sourcePayloadSha256"][7:])
+            with self.assertRaises(sqlite3.IntegrityError):
+                connection.execute(
+                    "UPDATE paper_account_consumed_market_marks SET mark_price='999' WHERE mark_id=?",
+                    (mark_id,),
+                )
+            with self.assertRaises(sqlite3.IntegrityError):
+                connection.execute(
+                    "DELETE FROM paper_account_consumed_market_marks WHERE mark_id=?",
+                    (mark_id,),
+                )
+
+    def test_account_risk_snapshot_fails_closed_when_consumed_mark_pointer_is_missing(self):
+        from paper_execution.ledger import read_account_risk_snapshot
+
+        with sqlite3.connect(self.path) as connection:
+            connection.execute(
+                "UPDATE paper_account_risk_state SET last_mark_id=NULL WHERE account_id=1"
+            )
+        with self.assertRaisesRegex(sqlite3.DatabaseError, "ACCOUNT_RISK_MARK_PROVENANCE_MISSING"):
+            read_account_risk_snapshot(self.path, now_ms=self.now)
+
+    def test_account_risk_snapshot_fails_closed_when_consumed_mark_hash_is_corrupt(self):
+        from paper_execution.ledger import read_account_risk_snapshot
+
+        with sqlite3.connect(self.path) as connection:
+            mark_id = connection.execute(
+                "SELECT last_mark_id FROM paper_account_risk_state WHERE account_id=1"
+            ).fetchone()[0]
+            connection.execute("DROP TRIGGER paper_account_consumed_market_marks_immutable_update")
+            connection.execute(
+                """UPDATE paper_account_consumed_market_marks
+                   SET payload_sha256=?,source_snapshot_id=? WHERE mark_id=?""",
+                ("0" * 64, "sha256:" + "0" * 64, mark_id),
+            )
+        with self.assertRaisesRegex(sqlite3.DatabaseError, "ACCOUNT_RISK_MARK_PROVENANCE_INVALID"):
+            read_account_risk_snapshot(self.path, now_ms=self.now)
+
     def test_cancel_fails_closed_when_active_dual_order_has_no_reservation(self):
         partial = self.core.submit(
             self.intent("core-cancel-missing-reservation", "0.12", "100.1", "cancel-missing"),
