@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — AccountRiskSnapshot-backed Shared Risk Admission implemented
+
+- AccountRiskSnapshot V1 contract remains implemented in `persistent_state/account_risk.py`; exact contract source SHA `4632a032a0f2ca3b336f25e16cfe053ce15cd204`.
+- Added immutable `VersionedRiskPolicy` in `persistent_state/risk_policy.py`. No production thresholds/default policy values are defined. Every policy requires an explicit version, quote asset, snapshot freshness maximum, drawdown cap, daily-loss cap, and gross-exposure cap. Monetary thresholds are exact non-negative decimal strings.
+- `RiskAdmissionContext` now carries account scope, session ID, fencing generation, typed `AccountRiskSnapshot`, versioned policy and evaluation time. The former independent equity and ledger-reconciled booleans were removed from this admission boundary.
+- `RiskProposal` now carries requested incremental gross exposure separately from requested margin for ENTRY/ADD/DCA. The engine does not infer exposure from margin or assume leverage.
+- `SharedRiskEngine` validates snapshot type, account/session/fencing binding, verification, ledger reconciliation, quote asset, source as-of freshness, future timestamps, policy version, and reserved-margin parity with the current risk state. All failures deny admission.
+- ENTRY/ADD/DCA enforce explicit drawdown, daily-loss and gross-exposure caps, existing reserved-margin capacity, and the previously approved 1% order-margin budget. REDUCE/EXIT still require session/Kill Switch/snapshot/policy/freshness/reconciliation gates but are not blocked by new-exposure limits and may request zero new margin.
+- TDD RED: run [44858985565](https://github.com/kenznguyen/btcquant-application/actions/runs/44858985565), source SHA `0577e2204d9a668e34a5ef97e807033224b79505`, failed as expected because the versioned policy module did not exist.
+- Final source SHA tested: `7d2f96f0c924f251f9764399b50af61ffeb28e17`. Workflow [44859221549](https://github.com/kenznguyen/btcquant-application/actions/runs/44859221549), job `136708505455`: **SUCCESS**. Persistent State suite **175 PASS**; adjacent paper-ledger/strategy API regression **160 PASS**.
+- Artifact `persistent-state-contract-test-evidence`: ID `14689466051`, SHA-256 `c26c944f6fe47c42c3b7456d14c7c4835293bb6bb7e92efcc9434e10759d518d`, expires 2026-12-05.
+- Implementation evidence/decision: `docs/decisions/ACCOUNT_RISK_SNAPSHOT_V1_CONTRACT_2026-11-21.md`; integration details and limits are recorded there.
+- B2 remains **BLOCKED**: no authoritative account-level equity/exposure Provider, no trusted production policy configuration source, no production caller/Provider wiring, and no end-to-end runtime admission verification. Pure SharedRiskEngine contract integration is implemented and CI-tested; runtime readiness is **NOT VERIFIED**.
+- No source-of-truth account data was selected or accessed; no legacy PaperLedger adopted; no T0/Feeder/VPS/T1/T2 runtime, exchange credentials, paper/live execution or real orders accessed or enabled.
+- Next: identify and independently verify authoritative account equity/exposure source and trusted policy configuration source. Only then implement the read-only Provider and its caller wiring. Preserve manual/on-demand and paper-first guardrails.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — AccountRiskSnapshot V1 contract increment
 
 - B2 remains **BLOCKED** pending an authoritative account-level equity/exposure source and Shared Risk Engine policy integration.
