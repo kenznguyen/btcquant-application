@@ -10,6 +10,7 @@ from persistent_state.contracts import (
     EventRecord, IdempotencyClaim, SessionRecord, SessionStatus, StrategyId,
     canonical_json, derive_idempotency_key,
 )
+from persistent_state.test_support import ready_evidence_for
 from persistent_state.repository import (
     AggregateMutation, AggregateVersionConflictError, EventSequenceConflictError,
     IdempotencyConflictError, RepositorySchemaError, SQLiteStateRepository,
@@ -37,7 +38,15 @@ def start_running_session(repository, session_id, account_scope_id):
         (SessionStatus.RESTORING, SessionStatus.READY),
         (SessionStatus.READY, SessionStatus.RUNNING),
     ):
-        repository.advance_session(token, expected_status=expected, new_status=target, at_ms=started_at + 1)
+        kwargs = {}
+        if target is SessionStatus.READY:
+            kwargs["readiness_evidence"] = ready_evidence_for(
+                repository.get_session(session_id), token,
+            )
+        repository.advance_session(
+            token, expected_status=expected, new_status=target,
+            at_ms=started_at + 1, **kwargs,
+        )
     return token
 
 
