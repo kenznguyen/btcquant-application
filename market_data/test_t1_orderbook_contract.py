@@ -2,13 +2,14 @@
 
 All fixtures in this module are deterministic and synthetic; they are not exchange evidence.
 """
-import copy
 import hashlib
 import json
 import unittest
 
 from market_data.t1_orderbook.validation import validate_payload
 from market_data.t1_orderbook.errors import ContractError, ErrorCode
+from market_data.t1_orderbook.fixtures import SYNTHETIC_FIXTURE, synthetic_valid_payload
+from market_data.t1_orderbook.adapter import Rejected, Unavailable, consume_payload
 
 
 NOW_MS = 10_000
@@ -23,32 +24,7 @@ def _canonical_bytes(value):
 
 
 def valid_payload():
-    bids = [[f"{100 - i}.25", "1.5"] for i in range(20)]
-    asks = [[f"{101 + i}.25", "2.5"] for i in range(20)]
-    payload = {
-        "contractVersion": "T1_T2_ORDERBOOK_V1",
-        "symbol": "BTCUSDT",
-        "market": "BINANCE_USDM_PERPETUAL",
-        "bids": bids,
-        "asks": asks,
-        "snapshotLastUpdateId": 100,
-        "firstAppliedU": 100,
-        "lastAppliedU": 120,
-        "sourceTimestampMs": NOW_MS - 100,
-        "observedAtMs": NOW_MS - 50,
-        "decisionWatermark": 120,
-        "generation": 1,
-        "snapshotId": "",
-        "continuity": "VERIFIED",
-        "freshness": "FRESH",
-        "depth": {"bids": 20, "asks": 20},
-        "complete": True,
-    }
-    unsigned = dict(payload)
-    unsigned.pop("snapshotId")
-    payload["snapshotId"] = "sha256:" + hashlib.sha256(_canonical_bytes(unsigned)).hexdigest()
-    return payload
-
+    return synthetic_valid_payload(NOW_MS)
 
 def encode(payload):
     return json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
@@ -65,6 +41,7 @@ class T1OrderbookContractTest(unittest.TestCase):
             self.assertEqual(caught.exception.code, code)
 
     def test_accepts_exact_v1_payload_with_all_17_fields(self):
+        self.assertTrue(SYNTHETIC_FIXTURE)
         snapshot = self.accept()
         self.assertEqual(snapshot.symbol, "BTCUSDT")
         self.assertEqual(len(snapshot.bids), 20)
@@ -249,6 +226,19 @@ class T1OrderbookContractTest(unittest.TestCase):
             validate_payload(None, now_ms=NOW_MS)
         with self.assertRaises((TypeError, ValueError)):
             validate_payload(encode(valid_payload()), now_ms=None)
+
+    def test_adapter_returns_typed_unavailable_without_payload(self):
+        result = consume_payload(None, now_ms=NOW_MS)
+        self.assertEqual(result, Unavailable())
+
+    def test_adapter_returns_typed_rejection_for_invalid_payload(self):
+        result = consume_payload(b"not-json", now_ms=NOW_MS)
+        self.assertIsInstance(result, Rejected)
+        self.assertEqual(result.code, ErrorCode.MALFORMED_JSON.value)
+
+    def test_adapter_returns_validated_snapshot_for_valid_payload(self):
+        result = consume_payload(encode(valid_payload()), now_ms=NOW_MS)
+        self.assertEqual(result.symbol, "BTCUSDT")
 
 
 if __name__ == "__main__":
