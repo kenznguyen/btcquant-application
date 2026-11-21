@@ -56,18 +56,30 @@ and stores OHLCV and `available_at_ms`; the reviewed initializer sets `user_vers
 
 The current Candle value object requires:
 - aligned open time;
-- `available_at_ms >= close_time_ms`;
+- `available_at_ms >= close_time_ms` (where the internal Candle close boundary is `open_time_ms + interval_ms`);
 - exact decimal strings for OHLCV;
 - valid OHLC bounds;
 - closed candles only.
 
-The current Candle API describes availability as `FIRST_OBSERVED`. The existing schema does not retain per-candle source-object provenance. Therefore:
-- do not silently equate candle close time, archive period, archive object timestamp, or future materialization time with historical first-observed time;
-- do not invent or backdate `available_at_ms`;
-- retain source-object provenance in a separate immutable reconstruction manifest/evidence set unless a separately approved schema change is justified;
-- do not write archive rows into the current schema until availability semantics and provenance representation are explicitly resolved.
+**Owner decision (2026-11-21): select option B — design an additive availability-kind distinction for the proposed Candle Contract 1.2.0.** This is a design decision only; it does not authorize implementation, schema migration, API rollout, or data import.
 
-This is a design blocker, not permission to extend the schema.
+The proposed semantic variants are:
+- `FIRST_OBSERVED`: `available_at_ms` is the actual timestamp when the ingestion system first observed the closed candle. This remains the live Feeder meaning and must not be fabricated for archive rows.
+- `BAR_CLOSE_BOUNDARY`: for archive-derived candles only, `available_at_ms` is the deterministic exclusive close boundary `open_time_ms + interval_ms`. It means the bar became eligible/complete at its contract close boundary; it does **not** claim when any system first observed it.
+
+The internal close boundary is exclusive. If the source CSV carries Binance's inclusive millisecond `close_time`, validate it against `open_time_ms + interval_ms - 1`; derive the contract boundary as `close_time + 1`. Do not conflate the two timestamp conventions.
+
+Contract 1.2.0 design requirements:
+- represent availability kind explicitly and validate the timestamp according to that kind;
+- preserve `FIRST_OBSERVED` behavior for live Feeder data;
+- permit `BAR_CLOSE_BOUNDARY` only for explicitly identified archive/reconstruction provenance;
+- require consumers that depend on actual observation latency/first-seen semantics to filter for `FIRST_OBSERVED`; they must not silently treat `BAR_CLOSE_BOUNDARY` as first-observed evidence;
+- preserve source-object and source-row provenance in a separate immutable reconstruction manifest/evidence set; the existing candle table does not retain that lineage;
+- define additive/backward-compatible API/schema migration and consumer compatibility before implementation. Existing rows and clients must not be silently reinterpreted.
+
+Do not silently rewrite the existing `Candle.as_dict()` behavior or database schema in this documentation increment. The current implementation emits `FIRST_OBSERVED` unconditionally, so it is not yet compatible with archive-derived `BAR_CLOSE_BOUNDARY` rows. A separately reviewed implementation and migration plan is required.
+
+This decision resolves the semantic design blocker in favor of a proposed Contract 1.2.0 path; it does not establish that archive materialization, Importer implementation, SQLite creation, or import is authorized.
 
 ## 4. New isolated importer boundary
 
@@ -86,34 +98,44 @@ Proposed logical stages:
 
 The importer must not perform network requests, call Binance, access object storage, start a feeder, mutate source archives, clean up inputs, synthesize candles, interpolate, forward-fill, or silently drop malformed/conflicting rows.
 
-## 5. Source-to-Candle mapping — unresolved pending source fixture
+## 5. Source-to-Candle mapping — owner-approved provisional mapping, fixture verification pending
 
-The archive inventory identifies 12-column Binance kline CSV records, but the exact ordered header/field mapping must be confirmed against an approved representative source fixture before implementation. Do not infer it from a generic Binance schema.
+**Owner decision (2026-11-21): approve the proposed semantic mapping below as the working design, but do not freeze the exact parser/header contract until an owner-approved representative archive CSV fixture has been inspected.** This is not approval to access the archive or materialize a fixture.
 
-The mapping specification must record for each source column:
-- exact header/name and ordinal;
-- source type and parser;
-- destination field or explicit disposition;
-- null/empty handling;
-- validation constraints;
-- whether it contributes to provenance or audit output.
+The expected Binance USD-M Kline 12-field order is:
 
-Expected semantic destinations include exchange, market type, symbol, timeframe, open time, OHLC, base-asset volume and derived close boundary. Any additional source fields (for example quote volume, trade count, taker volumes or ignore fields) must have an explicit preserve-or-discard disposition in the reconstruction report; they must not be silently mapped into the existing Candle schema.
+| Ordinal | Expected source field | Destination / disposition | Required handling |
+|---:|---|---|---|
+| 1 | `open_time` | `open_time_ms` | Parse as UTC Unix milliseconds; validate timeframe alignment |
+| 2 | `open` | Candle `open` | Exact decimal text; no binary float |
+| 3 | `high` | Candle `high` | Exact decimal text; validate OHLC bounds |
+| 4 | `low` | Candle `low` | Exact decimal text; validate OHLC bounds |
+| 5 | `close` | Candle `close` | Exact decimal text; validate OHLC bounds |
+| 6 | `volume` | Candle `volume` | Exact decimal text; no binary float |
+| 7 | `close_time` | Validation / derived close boundary | Validate source inclusive close timestamp equals `open_time_ms + interval_ms - 1`; contract exclusive boundary is +1 ms |
+| 8 | `quote_asset_volume` | Audit/provenance | Preserve source value; not mapped to current Candle schema |
+| 9 | `number_of_trades` | Audit/provenance | Parse/validate as an integer; preserve source value |
+| 10 | `taker_buy_base_asset_volume` | Audit/provenance | Preserve source value; not mapped to current Candle schema |
+| 11 | `taker_buy_quote_asset_volume` | Audit/provenance | Preserve source value; not mapped to current Candle schema |
+| 12 | `ignore` | Audit/provenance | Preserve raw source value; no Candle destination |
 
-### 5.1 `available_at_ms` — hard blocker
+Market identity is supplied by verified manifest metadata, not guessed from CSV values: `exchange=BINANCE`, `market_type=USD-M`, `symbol=BTCUSDT`, and timeframe `15m` or `1h`. Each metadata value must be checked against the approved source inventory/partition identity.
 
-The current Candle Contract requires a first-observed availability timestamp no earlier than candle close. The historical archive evidence does not establish when each candle was first observed.
+Fixture verification must establish the exact header presence/absence, ordinal order, encoding, delimiter, row shape, timestamp units/conventions, empty/null behavior, numeric grammar and whether the twelfth field is present as expected. If the archive format differs, stop and return for a mapping decision; do not silently adapt.
 
-Before importer implementation, the owner must select and approve a deterministic meaning for archive-derived availability that is truthful, auditable and compatible with Candle Contract 1.1.0. Candidate semantics must be evaluated explicitly; none is selected by this document.
+The mapping record must retain exact header/name and ordinal, source parser/type, destination or explicit disposition, null/empty handling, validation rules, and audit/provenance retention. Numeric values must be parsed from source text using exact decimal/integer parsing, never binary floating point. No source field may be silently discarded.
 
-Until that decision:
-- no default to candle close time;
-- no backdating;
-- no inference from monthly/daily archive partition names;
-- no claim that future materialization time equals historical first observation;
-- no canonical candle-row import into the current NOT NULL schema.
+### 5.1 `available_at_ms` — owner selected Contract 1.2.0 design path
 
-If no truthful compatible value can be established, the design must return to the owner for a contract/schema decision rather than weaken validation.
+The owner selected option B: distinguish actual first-observation time from archive bar-close eligibility using an explicit availability-kind discriminator.
+
+- Live Feeder rows: `FIRST_OBSERVED`; timestamp is the actual first-observed time.
+- Archive-derived rows: `BAR_CLOSE_BOUNDARY`; timestamp is the exclusive close boundary `open_time_ms + interval_ms`, derived only after validating the source close timestamp convention.
+- `BAR_CLOSE_BOUNDARY` is not a historical first-observation claim and must not be used for first-seen latency analysis.
+- Consumers requiring first-observation semantics must explicitly require `FIRST_OBSERVED`.
+- Source-object/CSV-row lineage remains in a separate immutable reconstruction manifest/evidence set.
+
+The existing implementation emits `FIRST_OBSERVED` unconditionally and the current schema/API do not yet encode this distinction. A Contract 1.2.0 additive schema/API design, migration/backward-compatibility plan, validation rules and consumer impact review are therefore required before implementation. No contract or database changes are made by this decision record.
 
 ## 6. Deterministic duplicate, conflict and gap policy
 
@@ -209,3 +231,12 @@ Until then:
 - Workflow run/job/artifact: none.
 - No archive, object store, host, filesystem, database, VPS, runtime or exchange was accessed.
 - Next: owner review of this specification, especially source-column mapping and `available_at_ms` semantics. Any implementation or data operation requires a separate explicit approval.
+
+
+## 11. Owner decision update — 2026-11-21
+
+- `available_at_ms`: **OPTION B SELECTED**. Design Contract 1.2.0 with explicit `FIRST_OBSERVED` and `BAR_CLOSE_BOUNDARY` semantics as specified in §§3.1 and 5.1. This is design approval only; implementation/schema/API migration remains unapproved.
+- CSV 12 columns: **PROVISIONAL MAPPING APPROVED** as specified in §5; exact header/parser mapping remains **NOT FROZEN** until an owner-approved representative fixture is available and verified. This approval does not authorize archive access or fixture materialization.
+- Importer implementation: **NOT STARTED**.
+- Tests/workflows: **NOT RUN**.
+- No archive/object-store/host/filesystem/database/VPS/runtime/exchange was accessed. No SQLite was created or written. No execution was performed.
