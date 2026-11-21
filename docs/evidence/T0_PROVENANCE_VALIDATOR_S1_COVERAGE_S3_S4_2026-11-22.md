@@ -58,3 +58,23 @@ The synthetic RED file contains targeted cases for these categories, including a
 ## Next step
 
 Complete and self-review a fully valid deterministic S1 synthetic fixture, ensure each of the eleven new codes has an isolated failing test, then execute the RED suite on an exact source snapshot. Only after that should a separate GREEN scope be proposed for owner approval.
+
+
+## Execution update — isolated GitHub Actions run 44940259084
+
+- Workflow: [T0 S4 isolated provenance RED and V1 regression](https://github.com/kenznguyen/btcquant-application/actions/runs/44940259084); run ID `44940259084`, run attempt `1`, job `136955679442`.
+- Trigger: `workflow_dispatch`; branch `main`; workflow path `.github/workflows/t0-s4-provenance-red-isolated.yml`.
+- Exact requested and checked-out source SHA: `6a35462fe4db37c8a09fde3c20260fe6ba84f31a` (match).
+- Exact source blobs logged by the job:
+  - S4 test: `74b9bf8480cfdbf7b539f1d415b31bcc0fe7ae39`.
+  - V1 RED test: `abbaeab16f026757923c679330f124a3d99e0774`.
+  - V1 GREEN test: `da854052564a34c49c1e2f40da1c80315da04182`.
+  - V1 validator: `c2c05dd8e62ebb8d1dce835909e1185a1a67b597`.
+- Runtime: CPython `3.13.18`; GitHub-hosted Ubuntu `26.04.1`.
+- S4 command: `python -B -m unittest -v market_data.test_archive_provenance_validator_s1_red`; **13 tests, 1 PASS, 12 FAIL; exit code 1**. The deterministic 404-object synthetic fixture construction/structure test passed. The 12 negative/aggregate assertions failed against the current V1-only validator: several mutations were accepted (`result.valid == True`); the object-set mutation produced V1 codes `INVENTORY_OBJECT_SET_INCOMPLETE` and `OBJECT_NOT_IN_APPROVED_INVENTORY` rather than S3's `INVENTORY_OBJECT_SET_MISMATCH`; the link mutation produced `ACCEPTED_SOURCE_ROW_LINK_CARDINALITY_INVALID` rather than `CANDLE_PROVENANCE_LINK_INVALID`; aggregate selection returned no S3 codes. This reproduces the expected missing S1 coverage, but **does not yet prove isolated per-code routing or aggregate ordering for the eleven S3 codes**.
+- V1 command: `python -B -m unittest -v market_data.test_archive_provenance_validator_red market_data.test_archive_provenance_validator_green`; **24/24 PASS; exit code 0**.
+- Workflow conclusion is `success` because the workflow deliberately captures each test exit code and continues to write/upload evidence. It is not a claim that S4 passed.
+- Artifact: `t0-s4-v1-verification-44940259084`; ID `14721570797`; 3,498 bytes; expires `2026-12-21T19:19:00Z`; GitHub-reported digest `sha256:3d27361db4f20b924329e85565f1ccb6d9797830bb4d867c25114d853433c75a`. Downloaded ZIP SHA-256 was independently recomputed and matched. Contents inspected: `provenance.txt`, both test logs, both exit-code files and `result-summary.txt`.
+- S4 disposition: **RED REPRODUCED / PARTIAL TEST-SPECIFICATION EVIDENCE**. Fixture construction **PASS**; V1 regression **PASS**; per-code S3 diagnostic isolation and aggregate assertions **NOT VERIFIED / FAIL AGAINST CURRENT IMPLEMENTATION**. Do not treat workflow-level success as S4 PASS.
+- Full repository regression: **NOT RUN**. No archive acquisition, archive/sidecar access, Canonical T0, SQLite/DDL, importer, T1/T2 runtime, VPS, deployment or trading was performed.
+- GREEN implementation remains **NOT AUTHORIZED**. Next step: review/fix only the S4 test fixtures/assertion isolation if needed under the existing bounded test-source scope, rerun at a new exact SHA, then request separate owner approval before any S1 GREEN implementation.
