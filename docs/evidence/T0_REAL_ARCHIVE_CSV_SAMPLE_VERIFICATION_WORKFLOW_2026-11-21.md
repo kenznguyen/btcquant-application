@@ -24,8 +24,8 @@ The workflow:
 - Branch: `main`
 - Workflow creation commit: `d96f5b402ae46d529ad46429a8b760b73c66bde6`
 - Workflow correction commit: `bcae66f9f30dff4eacc742a210fda265c11d7378`
-- Final workflow approval-pin commit: `<FINAL_WORKFLOW_COMMIT>`
-- Final workflow blob: `<FINAL_WORKFLOW_BLOB>`
+- Final workflow approval-pin commit: `b5bd4f7f1f6fb48c5310281a7796c9a5a80ec0b2`
+- Final workflow blob: `44f83168908c7b4c8f7b67383e4cbfaea34b0c09`
 - Approval source commit pinned by workflow: `02b407fe7d90efe184ae11d8b271a7aeb6e23f96`
 - Approved sample inventory blob: `eb251ac0924b46add906123f99b82e054d887a59`
 
