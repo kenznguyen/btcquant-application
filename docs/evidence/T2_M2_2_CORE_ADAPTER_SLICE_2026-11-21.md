@@ -29,7 +29,7 @@ Branch: `main`
 | Superseded RED workflow cleanup | `b54a84aebe21667fa5792f767875be3de05c5e17` |
 | GREEN workflow trigger finalization | `2a30d0da92531f7f520717cb2977c7146f428a9a` |
 
-Final repository HEAD recorded after this slice: `2a30d0da92531f7f520717cb2977c7146f428a9a`.
+Implementation/workflow HEAD after slice finalization: `2a30d0da92531f7f520717cb2977c7146f428a9a`.\nEvidence record commit and final repository HEAD: `3e160c0a144f1a6060eb37b3c3b5f70bd3c6af80`.
 
 Source adapter blob SHA: `9795c346d2eec4c78c22035c32f463af6b40b8f4`  
 Target test blob SHA: `fbe6cc428fd7058a6dbefd9eaec1979a95638474`
