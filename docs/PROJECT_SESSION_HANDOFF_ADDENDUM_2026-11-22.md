@@ -78,16 +78,18 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 ## T0 Provenance Validator Interface V1 — GREEN implementation
 
 - Owner approved the bounded GREEN scope: pure Python validator module plus synthetic-only coverage; preserve original 12 RED tests; no DDL, SQLite staging, importer, archive acquisition, workflow or runtime implementation.
-- Implementation: `market_data/archive_provenance_validator.py`, final blob `8f35c0641d70ff13d3bb79273375b6a989f79e92`.
-- New synthetic tests: `market_data/test_archive_provenance_validator_green.py`, final blob `c1da9b8d2046e1a1234b773be37b517b4396ac68`.
+- Implementation: `market_data/archive_provenance_validator.py`, final blob `c2c05dd8e62ebb8d1dce835909e1185a1a67b597`.
+- New synthetic tests: `market_data/test_archive_provenance_validator_green.py`, final blob `da854052564a34c49c1e2f40da1c80315da04182`.
+- Final source HEAD after this increment: `70f76ef48db9373c42c8436cbb4d490ef51a90ea`.
 - Original RED tests unchanged: `market_data/test_archive_provenance_validator_red.py`, blob `abbaeab16f026757923c679330f124a3d99e0774`.
 - Final source HEAD after this increment: `d4a9b4752928ac07a7c8e869c97097308e6f8557`; final evidence record is `docs/evidence/T0_PROVENANCE_VALIDATOR_V1_GREEN_2026-11-22.md`.
-- Focused command `python -B -m unittest -v market_data.test_archive_provenance_validator_green market_data.test_archive_provenance_validator_red`: **23/23 PASS** (11 new GREEN + 12 original RED).
-- Market-data suite `python -B -m unittest discover -s market_data -p 'test*.py'`: **356/356 PASS** on the supplied source ZIP snapshot.
+- Focused command `python -B -m unittest -v market_data.test_archive_provenance_validator_green market_data.test_archive_provenance_validator_red`: **24/24 PASS** (12 new GREEN + 12 original RED).
+- Market-data suite `python -B -m unittest discover -s market_data -p 'test*.py'`: **357/357 PASS** on the supplied source ZIP snapshot.
 - Full suite `python -B -m unittest discover`: **579 tests; 1 failure; 6 errors** on the supplied ZIP snapshot. All observed failures/errors are in `paper_execution/`; details are in the evidence record. They include a SyntaxError in `paper_execution/test_dual_strategy_api_red.py`, mappingproxy mutation errors, DATASET_VERSION provenance errors and RISK_CONTROL_STATE_UNAVAILABLE.
 - Source identity limitation: user-provided ZIP has no Git metadata; four earlier blobs were matched and the final three relevant implementation/test blobs were matched to GitHub readback, but the whole ZIP tree was not proven identical to final main HEAD. Focused 23-test execution is tied to exact relevant blobs; exact-main full repository regression remains **NOT VERIFIED**.
 - V1 implementation covers the frozen ten-code catalogue and deterministic result/encoding/attempt-ID behavior. It does not authenticate raw inventory bytes against a pinned SHA, recompute candle value digests, or implement the full S1 cross-record/acceptance matrix. These remain **NOT VERIFIED** and are explicitly documented in the evidence record.
 - GitHub Actions workflow run/job/artifact: **NONE**. No workflow was created because workflow implementation was outside the approved scope.
+- Same-session self-review: **PASS WITH KNOWN S1 COVERAGE LIMITATIONS**; not an independent second-person review.
 - Status: **PASS — FROZEN V1 INTERFACE IMPLEMENTED; 23 FOCUSED TESTS PASS; 356 MARKET_DATA TESTS PASS ON PROVIDED ZIP; FULL SUITE PARTIAL/BLOCKED; FULL S1 NOT VERIFIED**.
 - Non-actions preserved: no archive/sidecar access, no Canonical T0/MAY-10/REST tail, no staging DB/DDL/importer, no runtime/VPS, T1/T2 integration, deployment, cleanup/deletion or trading.
 - Next: review the recorded V1 limitations and decide separately whether to approve additional S1 coverage/error-code/interface work. No scope expansion is implied by this GREEN increment.
