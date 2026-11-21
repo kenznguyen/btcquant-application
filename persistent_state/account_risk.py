@@ -161,8 +161,8 @@ class PaperAccountBinding:
     fencing_generation: int
 
     def __post_init__(self) -> None:
-        if type(self.account_id) is not int or self.account_id < 1:
-            raise ValueError("account_id must be a positive integer")
+        if type(self.account_id) is not int or self.account_id != 1:
+            raise ValueError("only the established PAPER account_id=1 is supported")
         if self.account_mode != "PAPER":
             raise ValueError("only PAPER account bindings are supported")
         _nonempty("account_scope_id", self.account_scope_id)
@@ -183,7 +183,7 @@ def validate_paper_account_binding(
     """Fail closed unless DB account identity and current session/fence match exactly."""
     if not isinstance(binding, PaperAccountBinding):
         raise ValueError("typed PAPER account binding is required")
-    if type(account_id) is not int or account_id < 1 or account_mode != "PAPER":
+    if type(account_id) is not int or account_id != 1 or account_mode != "PAPER":
         raise ValueError("requested PAPER account identity is invalid")
     _nonempty("account_scope_id", account_scope_id)
     _nonempty("session_id", session_id)
