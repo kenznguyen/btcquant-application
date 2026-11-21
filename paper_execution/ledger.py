@@ -22,6 +22,9 @@ from paper_execution.account_history import (
     record_account_history_coverage, record_market_mark_history,
     reconstruct_daily_equity_baseline, migrate_cutover_ledger_snapshots,
     migrate_fee_currency_provenance, migrate_daily_baseline_audit,
+    CONSUMED_MARK_PROVENANCE_MIGRATION_VERSION,
+    CONSUMED_MARK_PROVENANCE_MIGRATION_CHECKSUM,
+    migrate_consumed_market_mark_provenance,
 )
 from paper_execution.replay_inputs import load_daily_equity_replay_inputs
 from paper_execution.funding import (
@@ -305,6 +308,11 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
         (RESERVATION_EXPIRY_MIGRATION_VERSION, RESERVATION_EXPIRY_MIGRATION_CHECKSUM),
         (FUNDING_MIGRATION_VERSION, FUNDING_MIGRATION_CHECKSUM),
         (CUTOVER_MIGRATION_VERSION, CUTOVER_MIGRATION_CHECKSUM),
+        (ACCOUNT_HISTORY_MIGRATION_VERSION, ACCOUNT_HISTORY_MIGRATION_CHECKSUM),
+        (CUTOVER_SNAPSHOT_MIGRATION_VERSION, CUTOVER_SNAPSHOT_MIGRATION_CHECKSUM),
+        (FEE_PROVENANCE_MIGRATION_VERSION, FEE_PROVENANCE_MIGRATION_CHECKSUM),
+        (DAILY_BASELINE_AUDIT_MIGRATION_VERSION, DAILY_BASELINE_AUDIT_MIGRATION_CHECKSUM),
+        (CONSUMED_MARK_PROVENANCE_MIGRATION_VERSION, CONSUMED_MARK_PROVENANCE_MIGRATION_CHECKSUM),
     )
     for version, checksum in required_migrations:
         migration = db.execute(
@@ -347,6 +355,32 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
         raise sqlite3.DatabaseError("ACCOUNT_RISK_MARK_STALE_OR_INVALID")
     if not isinstance(risk["dataset_version"], str) or not risk["dataset_version"].strip():
         raise sqlite3.DatabaseError("ACCOUNT_RISK_DATASET_VERSION_MISSING")
+    consumed_mark = db.execute(
+        """SELECT source_id,source_snapshot_id,dataset_version,payload_sha256,
+                  canonical_payload,mark_price,candle_close_ms,observed_at_ms
+           FROM paper_account_consumed_market_marks
+           WHERE account_id=1 AND observed_at_ms=?""",
+        (observed,),
+    ).fetchone()
+    if consumed_mark is None:
+        raise sqlite3.DatabaseError("ACCOUNT_RISK_MARK_PROVENANCE_MISSING")
+    source_id, source_snapshot_id, mark_dataset, payload_hash, canonical_payload, stored_price, stored_candle, stored_observed = consumed_mark
+    try:
+        canonical_mark = json.loads(canonical_payload)
+        expected_payload_hash = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
+        consumed_candle = canonical_mark["consumedCandle"]
+        if (not source_id or source_snapshot_id != "sha256:" + payload_hash
+                or payload_hash != expected_payload_hash
+                or mark_dataset != risk["dataset_version"]
+                or stored_price != text(mark) or stored_candle != candle
+                or stored_observed != observed
+                or canonical_mark.get("sourceId") != source_id
+                or canonical_mark.get("datasetVersion") != mark_dataset
+                or consumed_candle.get("close") != stored_price
+                or consumed_candle.get("closeTimeMs") != stored_candle):
+            raise ValueError
+    except (TypeError, ValueError, KeyError, json.JSONDecodeError):
+        raise sqlite3.DatabaseError("ACCOUNT_RISK_MARK_PROVENANCE_INVALID") from None
 
     if cutover:
         funding_gap = not _funding_provenance_ready(
@@ -461,6 +495,10 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
         "highWaterMarkQuote": text(hwm), "dailyBaselineUtcDayMs": day,
         "markPrice": text(mark), "markObservedAtMs": observed,
         "datasetVersion": risk["dataset_version"],
+        "markProvenance": {
+            "sourceId": source_id, "sourceSnapshotId": source_snapshot_id,
+            "sourceVersion": mark_dataset, "sourcePayloadSha256": "sha256:" + payload_hash,
+        },
         "killSwitch": risk_control.snapshot(db), "positions": positions,
         "updatedAtMs": observed,
     }
@@ -1257,6 +1295,7 @@ def _dual_ledger_migrations_ready(connection):
         (CUTOVER_SNAPSHOT_MIGRATION_VERSION, CUTOVER_SNAPSHOT_MIGRATION_CHECKSUM),
         (FEE_PROVENANCE_MIGRATION_VERSION, FEE_PROVENANCE_MIGRATION_CHECKSUM),
         (DAILY_BASELINE_AUDIT_MIGRATION_VERSION, DAILY_BASELINE_AUDIT_MIGRATION_CHECKSUM),
+        (CONSUMED_MARK_PROVENANCE_MIGRATION_VERSION, CONSUMED_MARK_PROVENANCE_MIGRATION_CHECKSUM),
     )
     for version, checksum in required:
         row = connection.execute(
