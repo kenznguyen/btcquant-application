@@ -80,7 +80,20 @@ def build_market_mark_provenance(window: object, *, source_id: str) -> MarketMar
     coverage = window.get("coverage")
     if exchange != "binance" or market_type != "USDT_PERPETUAL":
         raise ValueError("MARK_SOURCE_VENUE_UNSUPPORTED")
-    if not isinstance(coverage, dict) or coverage.get("complete") is not True:
+    if source != "T0_CANONICAL_MARKET_DATA":
+        raise ValueError("MARK_SOURCE_ID_UNSUPPORTED")
+    start, end, as_of = window.get("startMs"), window.get("endMs"), window.get("asOfMs")
+    if (type(start) is not int or type(end) is not int or start < 0 or end <= start
+            or start % 900_000 or end % 900_000
+            or end - start > 2_000 * 900_000
+            or (as_of is not None and (type(as_of) is not int or as_of < 0))):
+        raise ValueError("MARK_SOURCE_WINDOW_BOUNDS_INVALID")
+    if not isinstance(coverage, dict) or coverage != {
+        "expected": (end-start)//900_000,
+        "returned": len(window.get("candles", [])) if isinstance(window.get("candles"), list) else -1,
+        "complete": True,
+        "gaps": [],
+    }:
         raise ValueError("MARK_SOURCE_COVERAGE_INCOMPLETE")
     dataset = _nonempty("dataset_version", window.get("datasetVersion"))
     if (len(dataset) != 71 or not dataset.startswith("sha256:")
@@ -89,8 +102,35 @@ def build_market_mark_provenance(window: object, *, source_id: str) -> MarketMar
     if symbol != "BTCUSDT" or timeframe != "15m":
         raise ValueError("MARK_SOURCE_WINDOW_UNSUPPORTED")
     candles = window.get("candles")
-    if not isinstance(candles, list) or not candles or not isinstance(candles[-1], dict):
+    expected_count = (end-start)//900_000
+    if (not isinstance(candles, list) or len(candles) != expected_count
+            or not candles or not isinstance(candles[-1], dict)):
         raise ValueError("MARK_SOURCE_CANDLE_MISSING")
+    for index, item in enumerate(candles):
+        if not isinstance(item, dict) or not _json_safe(item):
+            raise ValueError("MARK_SOURCE_CANDLE_NOT_CANONICAL_JSON")
+        expected_open = start + index * 900_000
+        if (type(item.get("openTimeMs")) is not int
+                or item.get("openTimeMs") != expected_open
+                or type(item.get("closeTimeMs")) is not int
+                or item.get("closeTimeMs") != expected_open + 900_000
+                or type(item.get("availableAtMs")) is not int
+                or item.get("availableAtMs") < item.get("closeTimeMs")
+                or (as_of is not None and item.get("availableAtMs") > as_of)):
+            raise ValueError("MARK_SOURCE_CANDLE_SEQUENCE_INVALID")
+    dataset_payload = {
+        key: window[key] for key in (
+            "exchange", "marketType", "symbol", "timeframe",
+            "startMs", "endMs", "asOfMs", "candles",
+        )
+    }
+    if not _json_safe(dataset_payload):
+        raise ValueError("MARK_SOURCE_DATASET_PAYLOAD_INVALID")
+    dataset_digest = hashlib.sha256(
+        json.dumps(dataset_payload, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+    ).hexdigest()
+    if dataset != "sha256:" + dataset_digest:
+        raise ValueError("MARK_SOURCE_DATASET_VERSION_MISMATCH")
     candle = candles[-1]
     if not _json_safe(candle):
         raise ValueError("MARK_SOURCE_CANDLE_NOT_CANONICAL_JSON")
