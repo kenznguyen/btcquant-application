@@ -33,7 +33,7 @@ The six existing adapter-only tests remain in the same focused job. Total: 10 un
 
 ## CI evidence
 
-<badge>PASS</badge>
+**PASS**
 
 - GitHub Actions run [44896160495](https://github.com/kenznguyen/btcquant-application/actions/runs/44896160495)
 - Workflow: T2 Core Adapter GREEN tests
