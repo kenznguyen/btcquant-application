@@ -117,6 +117,40 @@ class ReadyRepositoryBoundaryTests(unittest.TestCase):
             readiness_evidence=self.ready_evidence(),
         )
 
+
+    def test_v1_evidence_extension_requires_explicit_additive_migration(self):
+        with sqlite3.connect(self.repository.database_path) as connection:
+            for name in (
+                "ps_session_attestations_no_update",
+                "ps_session_attestations_no_delete",
+                "ps_session_attestations",
+                "ps_session_operator_actions_no_update",
+                "ps_session_operator_actions_no_delete",
+                "ps_session_operator_actions",
+            ):
+                connection.execute("DROP TRIGGER IF EXISTS " + name) if "no_" in name else connection.execute("DROP TABLE IF EXISTS " + name)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 1)
+        reopened = SQLiteStateRepository(self.repository.database_path)
+        reopened.initialize()
+        with sqlite3.connect(self.repository.database_path) as connection:
+            names = {
+                row[0] for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"
+                )
+            }
+        self.assertNotIn("ps_session_attestations", names)
+        reopened.migrate_v1_session_evidence()
+        reopened.initialize()
+        with sqlite3.connect(self.repository.database_path) as connection:
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 1)
+            names = {
+                row[0] for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"
+                )
+            }
+        self.assertIn("ps_session_attestations", names)
+        self.assertIn("ps_session_operator_actions", names)
+
     def test_repository_rejects_running_transition_without_operator_confirmation(self):
         self.enter_ready()
         with self.assertRaises(SessionTransitionError):
