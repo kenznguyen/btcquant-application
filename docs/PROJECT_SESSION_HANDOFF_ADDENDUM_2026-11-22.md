@@ -91,6 +91,6 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - V1 implementation covers the frozen ten-code catalogue and deterministic result/encoding/attempt-ID behavior. It does not authenticate raw inventory bytes against a pinned SHA, recompute candle value digests, or implement the full S1 cross-record/acceptance matrix. These remain **NOT VERIFIED** and are explicitly documented in the evidence record.
 - GitHub Actions workflow run/job/artifact: **NONE**. No workflow was created because workflow implementation was outside the approved scope.
 - Same-session self-review: **PASS WITH KNOWN S1 COVERAGE LIMITATIONS**; not an independent second-person review.
-- Status: **PASS — FROZEN V1 INTERFACE IMPLEMENTED; 24 FOCUSED TESTS PASS; 356 MARKET_DATA TESTS PASS ON PROVIDED ZIP; FULL SUITE PARTIAL/BLOCKED; FULL S1 NOT VERIFIED**.
+- Status: **PASS — FROZEN V1 INTERFACE IMPLEMENTED; 24 FOCUSED TESTS PASS; 357 MARKET_DATA TESTS PASS ON PROVIDED ZIP; FULL SUITE PARTIAL/BLOCKED; FULL S1 NOT VERIFIED**.
 - Non-actions preserved: no archive/sidecar access, no Canonical T0/MAY-10/REST tail, no staging DB/DDL/importer, no runtime/VPS, T1/T2 integration, deployment, cleanup/deletion or trading.
 - Next: review the recorded V1 limitations and decide separately whether to approve additional S1 coverage/error-code/interface work. No scope expansion is implied by this GREEN increment.
