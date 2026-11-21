@@ -6318,3 +6318,17 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - CI execution for commit `3455d126688b827be4ad4819d1a3695af4997899`: **PENDING / NOT VERIFIED** at handoff update time. The prior 10/10 PASS remains tied to tested SHA `ca9f01902cd1e3b5f22ccecce7cd347077924f90`, not this workflow-only commit.
 - Status: path-filter correction **IMPLEMENTED**; workflow CI verification **PENDING**; self-review closure **PENDING**; independent second-person review **NOT VERIFIED**; full repository regression **NOT RUN**.
 - Next: verify the GitHub Actions run triggered by the workflow-only commit, capture run/job/artifact IDs and SHA256 if available, then update this handoff with exact evidence and final PASS/BLOCKED/NOT VERIFIED status. No runtime or trading action is authorized.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T2 Core Adapter CI path-filter correction verified
+
+- Verification evidence: `docs/evidence/T2_M2_3_CORE_ADAPTER_PATH_FILTER_CI_VERIFICATION_2026-11-21.md`; commit `54946808967fca4fe6c4dedb0293c84fdba655bd`.
+- GitHub Actions run [44899616076](https://github.com/kenznguyen/btcquant-application/actions/runs/44899616076): **SUCCESS**, event `push`, exact HEAD `3455d126688b827be4ad4819d1a3695af4997899`; job `core-adapter-contract` ID `136832564520`.
+- Focused Core Adapter + Validator parity suite: **10/10 PASS**. Exact tested blobs: adapter `9795c346d2eec4c78c22035c32f463af6b40b8f4`; contract tests `fbe6cc428fd7058a6dbefd9eaec1979a95638474`; parity tests `8f3c4dfa29f371334ded3486ca83f9a5ea7f974e`; workflow `88a2ff4c2795e0fffd5977ce21372219952f364a`.
+- Pinned Python image: `python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df`. Test container used no network, read-only workspace, no credentials, no DB mount and no exchange access.
+- Artifact `t2-core-adapter-green-evidence`: ID `14705387230`; SHA-256 `2ae613a169847afad52b8de9a6274a22484ec36adb46aec5dda36db678ea8c4a`; downloaded and local digest independently matched GitHub's digest.
+- Workflow correction commit `3455d126688b827be4ad4819d1a3695af4997899` changes only the two path-filter entries: `pipeline/core_signal.py` and `pipeline/values.py`. Workflow configuration and execution on the workflow-change push: **PASS**.
+- Path-filter behavioral exercise for dependency-only changes: **NOT DIRECTLY VERIFIED**; the successful run was triggered by a push changing the workflow file, not a push changing only either dependency path. Full repository regression: **NOT RUN**.
+- Specific self-review Required finding (missing dependency paths) is closed at source/config level. Genuine independent second-person review remains **NOT VERIFIED**. Optional unhashable-action hardening remains NOT IMPLEMENTED/out of scope.
+- No production behavior, runner, ledger, risk policy, T0/T1, AI, DB, runtime, deployment or trading behavior changed. No execution or real orders authorized.
+- Next: preserve PASS evidence; any separate dependency-only trigger exercise requires bounded approval. Do not expand scope into runtime, ledger, risk policy or trading.
