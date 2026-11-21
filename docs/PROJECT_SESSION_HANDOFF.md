@@ -6617,3 +6617,20 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - Evidence updated: docs/evidence/T0_ARCHIVE_CSV_HEADER_V1_TDD_2026-11-21.md, commit 409bc7a0ea199d818717c94d674ef712e8c965ec.
 - No archive download, Canonical T0 modification, SQLite/import, importer, Contract 1.2.0 implementation, T1/T2 connection, VPS/runtime/deployment, exchange credential or trading action occurred.
 - Next allowed planning step: separately scope staging/import work and its evidence requirements. Full repository regression remains a separate optional verification and has not been run.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 provenance-first staging/importer design scope
+
+- Added documentation-only design: `docs/design/T0_ARCHIVE_STAGING_IMPORTER_PROVENANCE_FIRST_DESIGN_2026-11-21.md`, commit `62b6c2fbe90d073e319605c36ac3c5df79a838f0`.
+- Scope: archive-only staging from exactly the pinned 404-object inventory (202 ZIP + 202 paired .CHECKSUM sidecars); REST tail and MAY-10 excluded. Output, if later approved, is a new disposable SQLite asset labeled `RECONSTRUCTED — PARTIAL COVERAGE`, never recovery or replacement of old Canonical (LOST).
+- Design establishes per-object evidence for every ZIP and sidecar (inventory identity, exact key/pairing, measured byte size/SHA-256, retrieval/run metadata, sidecar's own hash and asserted ZIP digest), per-pair ZIP CRC/member checks, per-member format/header/row-count evidence, and row-level provenance linking inventory → ZIP → sidecar → CSV member → physical/data row ordinal → normalized candle.
+- Importer is designed as deterministic offline processing of already acquired and verified local inputs. It must not make network requests, discover objects, read/write Canonical or MAY-10, access REST tail, mutate runtime, delete inputs, or promote staging.
+- Archive rows use Contract 1.2.0 design semantics `BAR_CLOSE_BOUNDARY`; target schema is SQLite user_version=2. No Contract 1.2.0/schema DDL, importer, workflow, DB or data implementation authorized by this design.
+- Header V1 parser is PASS for 34 focused tests at SHA `54317ad0aaaa8d547889b41336c0aaed4b1d09bc`; real-source header evidence remains only M15 monthly 2022-08. All 202 archives must be independently checked; unsupported format quarantines the complete candidate.
+- Important fail-closed rules: no import without measured provenance for each ZIP and sidecar; sidecar raw hash is distinct from the digest it asserts; no candle without a complete source-row chain; conflicting duplicate identities quarantine; no silent row/object omission.
+- Open design inputs: exact DDL and canonical digest serialization, stable provenance IDs, unverified header variants across remaining archives, decompression/ratio/disk limits, retry policy, exact coverage/gap manifest, artifact retention and source retention.
+- Status: design documentation **COMMITTED**; provenance/schema contracts **NOT FROZEN**; importer **NOT IMPLEMENTED**; workflow creation/acquisition **NOT AUTHORIZED / NOT RUN**; SQLite **NOT CREATED**; Canonical T0 **NOT ACCESSED**.
+- Next gate is owner approval of S1 only: freeze provenance object/row contracts and exact staging schema design. That approval will not authorize importer implementation, archive retrieval, workflow creation, SQLite creation or data operations.
+- No archive/REST request, file materialization, workflow dispatch, SQLite, Canonical T0, MAY-10, T1/T2, VPS/runtime, deployment, exchange or trading operation occurred.
