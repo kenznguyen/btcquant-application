@@ -215,11 +215,11 @@ class T1OrderbookContractTest(unittest.TestCase):
             snapshot.symbol = "ETHUSDT"
 
     def test_preserves_exact_decimal_text_through_dto_round_trip(self):
-        p = valid_payload(); p["bids"][0][0] = "99.123456789012345678"
+        p = valid_payload(); p["bids"][0][0] = "100.123456789012345678"
         p["snapshotId"] = ""
         unsigned = dict(p); unsigned.pop("snapshotId")
         p["snapshotId"] = "sha256:" + hashlib.sha256(_canonical_bytes(unsigned)).hexdigest()
-        self.assertEqual(self.accept(p).bids[0][0], "99.123456789012345678")
+        self.assertEqual(self.accept(p).bids[0][0], "100.123456789012345678")
 
     def test_rejects_non_bytes_input_and_missing_evaluation_time(self):
         with self.assertRaises(ContractError):
