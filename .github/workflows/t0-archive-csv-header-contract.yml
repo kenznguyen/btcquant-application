@@ -1,0 +1,36 @@
+name: T0 archive CSV header contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "market_data/archive_csv_parser.py"
+      - "market_data/test_archive_csv_parser.py"
+      - "market_data/test_archive_csv_header_contract.py"
+      - ".github/workflows/t0-archive-csv-header-contract.yml"
+  pull_request:
+    paths:
+      - "market_data/archive_csv_parser.py"
+      - "market_data/test_archive_csv_parser.py"
+      - "market_data/test_archive_csv_header_contract.py"
+      - ".github/workflows/t0-archive-csv-header-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parser-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.13"
+      - name: Run focused parser tests
+        run: python -B -m unittest -v market_data.test_archive_csv_parser market_data.test_archive_csv_header_contract
