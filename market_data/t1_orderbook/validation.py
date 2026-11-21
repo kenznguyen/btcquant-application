@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import re
 from decimal import Decimal, InvalidOperation
@@ -157,7 +158,7 @@ def validate_payload(payload: bytes, *, now_ms: int) -> OrderbookSnapshot:
     unsigned = dict(decoded)
     unsigned.pop("snapshotId")
     expected_digest = "sha256:" + hashlib.sha256(canonical_snapshot_bytes(unsigned)).hexdigest()
-    if not hashlib.compare_digest(snapshot_id, expected_digest):
+    if not hmac.compare_digest(snapshot_id, expected_digest):
         _fail(ErrorCode.DIGEST_MISMATCH, "snapshot digest does not match canonical payload")
 
     return OrderbookSnapshot(
