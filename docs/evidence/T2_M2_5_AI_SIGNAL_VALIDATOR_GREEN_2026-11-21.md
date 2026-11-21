@@ -35,9 +35,10 @@ Workflow commit / source HEAD: `04820704b88f143575f0ebbb582ac515b2e47aed`
 - Local scratch verification of the 12 added GREEN test methods: **12/12 PASS**.
 - The M2.4 RED suite previously established the missing-module RED baseline at source SHA `6fa66d2855a0d0804da6cee9ed37a723bbaf03d9`; that prior RED run is not a GREEN result.
 - The new GitHub Actions workflow is committed on `main` and is configured to run 22 tests in a pinned container with `--network none`, read-only workspace, non-root user, no database mount and no credentials.
-- GitHub Actions run ID, job conclusion and artifact: **NOT VERIFIED** from the available session evidence. No run ID or artifact is claimed. Combined commit status returned no status entries, and the available commit-workflow lookup did not expose push-triggered runs.
+- GitHub Actions run [44916378593](https://github.com/kenznguyen/btcquant-application/actions/runs/44916378593), job `136882764609`: **SUCCESS** at exact tested source SHA `04820704b88f143575f0ebbb582ac515b2e47aed`. Logs confirm all four pinned blobs (contract, validator, RED tests, GREEN tests), 22/22 tests PASS, `OK`, pinned Python image digest, network disabled inside the test container, read-only source, non-root user, no DB mount and no credentials.
+- Artifact `t2-ai-signal-contract-green-evidence`: ID `14711952424`, SHA-256 `7a94c8cdf9fbc1d73b256e7dd23ecd8d015d59ba001ccfbd001cacaf0f6713bd`, 1,460 bytes, expires 2026-12-05T14:55:01Z. Downloaded ZIP was independently hashed and matched the GitHub digest; archive contents include `metadata.txt` and `test.log`, both inspected. Artifact metadata records run ID and exact workflow head SHA.
 
-M2.5 therefore remains **PARTIAL / CI NOT VERIFIED** until the exact workflow run and artifact are inspected. Do not infer PASS from the workflow file being present or from local scratch tests.
+M2.5 remains **BLOCKED / REQUEST CHANGES** despite focused CI PASS: R1 must be fixed with TDD and rerun at a new exact SHA. Genuine independent second-person review is also still required. Do not mark M2.5 PASS.
 
 ## 4. Explicit exclusions preserved
 
@@ -47,7 +48,7 @@ The validator does not create an order intent, calculate quantity/leverage/margi
 
 ## 5. Review and next gate
 
-- Same-session code review: **NOT YET RECORDED**.
+- Review record: `docs/reviews/T2_M2_5_AI_SIGNAL_VALIDATOR_REVIEW_2026-11-21.md`, commit `445f1b39ef5359f4520fc8a3604c4bda20be89fc`. Adversarial same-session review found R1: unbounded fixed-point Decimal rendering at `pipeline/ai_signal_contract.py:186` can cause resource exhaustion for extreme finite negative exponents; **REQUEST CHANGES**.
 - Genuine independent second-person review: **NOT VERIFIED**.
 - Full repository regression: **NOT RUN**.
 - Next: verify the exact push-triggered GREEN workflow run and artifact; then perform code review against exact tested blobs. Fix only bounded validator defects with TDD and rerun exact-SHA CI.
