@@ -28,3 +28,5 @@ def stamp(value):
 def identity(prefix, value):
     data = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
     return prefix + hashlib.sha256(data).hexdigest()
+
+# CI path-filter probe: dependency-only push; no runtime behavior change.
