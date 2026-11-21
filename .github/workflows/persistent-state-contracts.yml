@@ -78,6 +78,7 @@ jobs:
             python -m unittest -v \
               paper_execution.test_database_paths \
               paper_execution.test_f4_r1_account_contract \
+              paper_execution.test_f4_r3_reset_red \
               paper_execution.test_market_mark_provenance \
               paper_execution.test_versioned_risk_policy_store \
               paper_execution.test_risk_limits \
