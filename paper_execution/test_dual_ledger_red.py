@@ -54,9 +54,9 @@ class DualLedgerRedTest(unittest.TestCase):
                 """UPDATE paper_account_risk_state SET high_water_mark_quote='100',
                    daily_baseline_utc_day_ms=?,daily_baseline_equity_quote='100',
                    last_equity_quote='100',last_mark_price='100',mark_observed_at_ms=?,
-                   mark_candle_close_ms=?,dataset_version='sha256:dual-ledger-seed',
+                   mark_candle_close_ms=?,dataset_version=?,
                    risk_ready=1,unavailable_reason=NULL,updated_at_ms=? WHERE account_id=1""",
-                (day, self.now, self.now-60_000, self.now),
+                (day, self.now, self.now-60_000, "sha256:" + "d" * 64, self.now),
             )
         from paper_execution.mark_provenance import build_market_mark_provenance
         from paper_execution.account_history import record_consumed_market_mark
