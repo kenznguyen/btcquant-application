@@ -4,20 +4,20 @@
 
 **PASS — repository-level preflight/READY gates, durable evidence persistence, explicit operator Resume audit, and SessionOrchestrator contract tests.**
 
-**Runtime integration: BLOCKED / NOT VERIFIED.** This increment prepares sessions to READY and supports an explicitly approved transition to RUNNING. It does not start Core/AI strategy workers, connect T1/T2 runtime, or execute paper orders.
+**Runtime integration: BLOCKED / NOT VERIFIED.** The orchestrator prepares a session to READY and supports an explicitly approved transition to RUNNING. It does not start Core/AI workers or execute paper orders.
 
 ## Exact source and CI evidence
 
 - Repository: `kenznguyen/btcquant-application`
 - Branch: `main`
-- Exact tested source SHA: `e67e98b6fb92eb36b61139d4ac831fdfb8ccce06`
-- Workflow: [44855817663](https://github.com/kenznguyen/btcquant-application/actions/runs/44855817663) — **SUCCESS**
-- Job: `136697656292` — **PASS**
-- Persistent State contract suite: **143 tests PASS**
+- Exact tested source SHA: `64001345c5e41089b4e75f2bb075067386543f35`
+- Workflow: [44856004749](https://github.com/kenznguyen/btcquant-application/actions/runs/44856004749) — **SUCCESS**
+- Job: `136698296005` — **PASS**
+- Persistent State contract suite: **144 tests PASS**
 - Adjacent Paper Ledger / Strategy API regressions: **160 tests PASS**
 - Artifact: `persistent-state-contract-test-evidence`
-  - ID: `14687098658`
-  - SHA-256: `472f1d87932dbc9fee78cfb07974df501231fd0d8528474ccc7e4b29219eaf12`
+  - ID: `14687805995`
+  - SHA-256: `e7ccede1d2ee572ef64d2c135ada41d1fc85fe1813242ca8662c3e9bb03ecc93`
   - Expires: 2026-12-05.
 
 ## Implemented
@@ -28,6 +28,7 @@
 - `RESTORING -> READY` requires a complete `ReadyEvidenceBundle`: preflight, restore and risk readiness attestations.
 - The repository performs validation inside the same SQLite transaction that writes evidence and advances the session. A direct generic transition without evidence is rejected.
 - Validation checks exact session/account/fence/config/snapshot binding, evidence timestamps, event head, Core and AI ledger reconciliation, risk ledger reconciliation and Kill Switch latch.
+- The orchestrator also compares the restore attestation event head, aggregate-version map and checkpoint identity against deterministic replay output before READY.
 
 ### Durable evidence and schema compatibility
 
@@ -41,16 +42,16 @@
 - READY cannot transition to RUNNING without `OperatorResumeConfirmation`, a fresh passing risk attestation, and an append-only operator action record.
 - `SessionOrchestrator.start()` claims a manual session, performs preflight, invokes deterministic repository recovery, obtains restore/risk attestations and stops at READY. It does not auto-resume or start strategy workers.
 - `prepare_resume()` performs the fresh risk check before operator confirmation. `resume()` requires an injected operator-approval verifier and persists the confirmation audit.
-- Tests cover direct READY bypass, preflight bypass, missing/mismatched evidence, evidence persistence/reopen/checksum, additive v1 migration, restart recovery, blocked preflight/restore, unauthenticated Resume and successful audited Resume.
+- Tests cover direct PREFLIGHT/READY bypass, missing/mismatched evidence, evidence persistence/reopen/checksum, additive v1 migration, restart recovery, mismatched replay attestation, blocked preflight/restore, unauthenticated Resume and successful audited Resume.
 
 ## Remaining blockers and limits
 
-- **B1 Evidence gates: PASS at the repository lifecycle boundary** for PREFLIGHT -> RESTORING, RESTORING -> READY and READY -> RUNNING. Independent code review remains **NOT VERIFIED**.
-- **B2 Full risk policy integration: BLOCKED.** This increment verifies the typed risk-readiness attestation; it does not complete drawdown, daily-loss, exposure and margin policy integration end-to-end.
+- **B1 Evidence gates: PASS at repository lifecycle boundaries** for PREFLIGHT -> RESTORING, RESTORING -> READY and READY -> RUNNING. Independent code review remains **NOT VERIFIED**.
+- **B2 Full risk policy integration: BLOCKED.** This increment verifies typed risk-readiness evidence; it does not complete drawdown, daily-loss, exposure and margin policy integration end-to-end.
 - **B3 Kill Switch persistence: BLOCKED.** Latch/reset/audit across real application restarts is not yet verified end-to-end.
 - **B4 Strategy restoration: BLOCKED.** Core/AI reconciliation is represented by attestation fields and provider ports; actual independent Core/AI ledger restoration is not integrated.
-- **B5 Market-data preflight: PARTIAL.** The orchestrator requires a provider-produced attestation, but the production adapter must still calculate feature-specific lookback from the actual strategy configuration. No live T0 data was available or accessed.
-- The operator approval verifier is an injected port. The production authentication/API/UI adapter that supplies verified operator identity is **NOT VERIFIED**.
+- **B5 Market-data preflight: PARTIAL.** The orchestrator requires a provider-produced attestation, but the production adapter must still calculate feature-specific lookback from actual strategy configuration. No live T0 data was available or accessed.
+- The operator approval verifier is an injected port. Production authentication/API/UI wiring is **NOT VERIFIED**; CI uses an isolated test verifier.
 - No Canonical T0 database, reconstructed database, Feeder, VPS, T1/T2 runtime, exchange credentials, account or execution was accessed. All SQLite integration tests use temporary test databases and synthetic fixtures only.
 
 ---
