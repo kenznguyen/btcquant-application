@@ -6585,3 +6585,20 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - Current status: workflow committed; archive retrieval **NOT RUN**; exact 12 header fields **NOT VERIFIED**; header contract freeze **BLOCKED**; TDD implementation **NOT AUTHORIZED**.
 - Next step: inspect the dedicated run's job log and JSON artifact after the user manually dispatches. Then propose exact tuple/normalization policy for separate approval, and request TDD authorization only after the contract decision.
 - No archive/REST request, parser/test change, SQLite/importer/staging, Contract 1.2.0 implementation, Canonical T0, T1/T2, VPS/runtime, deployment, credentials or trading action was performed.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0_ARCHIVE_CSV_HEADER_V1 parser implementation
+
+- Owner approved freezing exact source header tuple as T0_ARCHIVE_CSV_HEADER_V1 with strict exact-match and approved bounded TDD parser implementation.
+- Frozen tuple: open_time,open,high,low,close,volume,close_time,quote_volume,count,taker_buy_volume,taker_buy_quote_volume,ignore. Source evidence is approved M15 monthly archive sample from run [44924695179](https://github.com/kenznguyen/btcquant-application/actions/runs/44924695179).
+- Added immutable ArchiveCsvDocument, parse_archive_csv_document metadata API, and ARCHIVE_CSV_HEADER_V1; preserved legacy parse_archive_csv tuple return.
+- Detection compares the complete ordered tuple only on the first CSV record. No aliases, normalization, fuzzy matching or heuristic skipping. Every other record follows existing strict data validation.
+- Added 15 focused synthetic tests in market_data/test_archive_csv_header_contract.py; original 19 parser tests unchanged.
+- Added focused workflow .github/workflows/t0-archive-csv-header-contract.yml to run both test modules on Python 3.13.
+- Commits: tests 237dbfed3df5c54e8afaaf7516efb6d21f14bb53; parser implementation 5375e2e276ae96c3b82e68cf312bb3591f75b5e3; regex corrections 05484f0c97decf888eab4bc181c3090c6004d592 and 0ee4de390ed5cdd90138136883fb395e2d6ff011; focused workflow 54317ad0aaaa8d547889b41336c0aaed4b1d09bc; evidence update committed immediately before this handoff.
+- Evidence: docs/evidence/T0_ARCHIVE_CSV_HEADER_V1_TDD_2026-11-21.md.
+- Implementation status: COMMITTED. Focused RED/GREEN execution and regression at exact new SHA: NOT VERIFIED because the Actions run/job log has not yet been retrieved. Full repository regression: NOT RUN. Self-review: pending. Do not claim parser PASS until exact-SHA Actions tests pass.
+- No archive workflow, source archive, Canonical T0, SQLite, importer, Contract 1.2.0, T1/T2, VPS/runtime, deployment, exchange credential or trading behavior was changed or invoked.
+- Next: inspect Actions run for the focused workflow at the latest source SHA; verify 34 tests (19 existing + 15 new) and record exact run/job/artifact. Fix any failure only with bounded TDD.
