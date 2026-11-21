@@ -87,7 +87,7 @@ jobs:
               paper_execution.test_ledger \
               paper_execution.test_dual_ledger_red \
               paper_execution.test_dual_ledger_migration_red \
-              pipeline.test_api \
+              pipeline.test_risk_policy_env_provisioning \
               pipeline.test_decision \
             2>&1 | tee "$RUNNER_TEMP/persistent-state-evidence/adjacent-regression.log"
 
