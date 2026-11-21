@@ -6332,3 +6332,17 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Specific self-review Required finding (missing dependency paths) is closed at source/config level. Genuine independent second-person review remains **NOT VERIFIED**. Optional unhashable-action hardening remains NOT IMPLEMENTED/out of scope.
 - No production behavior, runner, ledger, risk policy, T0/T1, AI, DB, runtime, deployment or trading behavior changed. No execution or real orders authorized.
 - Next: preserve PASS evidence; any separate dependency-only trigger exercise requires bounded approval. Do not expand scope into runtime, ledger, risk policy or trading.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T2 dependency-only path-filter behavioral verification
+
+- Owner approved a bounded trigger exercise for both dependencies added to the Core Adapter workflow path filter. Evidence: `docs/evidence/T2_M2_3_DEPENDENCY_PATH_FILTER_TRIGGER_VERIFICATION_2026-11-21.md`; commit `7b5594f64c01928863ca150b8f4359d5589ec518`.
+- `pipeline/core_signal.py` comment-only probe commit `e47a34052ef80548fbff9e19c41d617023c08c17` triggered T2 workflow run [44901618566](https://github.com/kenznguyen/btcquant-application/actions/runs/44901618566), job `136838538409`: **SUCCESS, 10/10 PASS**. Artifact `14706495727`, SHA-256 `ae7d39a9533828eb3194ba3bfd04335c4cbd8cbd528b1f249c30a74e789a863f`; downloaded and local digest matched.
+- `pipeline/values.py` comment-only probe commit `6e1a7e44d555693b38888ca70884dd29c0afb083` triggered T2 workflow run [44901659062](https://github.com/kenznguyen/btcquant-application/actions/runs/44901659062), job `136838660363`: **SUCCESS, 10/10 PASS**. Artifact `14705134527`, SHA-256 `773aebcbb1f97663e3234b4a768f17392251b1d6c7d77ecc78049cc5030c57f1`; downloaded and local digest matched.
+- Probe changes were comments only and each dependency was reverted. `pipeline/core_signal.py` restored to blob `df5fbb59611bdd4fbb8224665f79655dd4433455`; `pipeline/values.py` restored to blob `5576376454af129b944919fb588e26c0657a781e`.
+- T2 cleanup runs: [44901629534](https://github.com/kenznguyen/btcquant-application/actions/runs/44901629534) for core_signal revert and [44901677918](https://github.com/kenznguyen/btcquant-application/actions/runs/44901677918) for values revert: both **SUCCESS**.
+- Path-filter behavioral finding: **CLOSED — PASS** for both dependency-only pushes. This confirms GitHub Actions triggers the focused T2 workflow when either dependency file alone changes.
+- Adjacent F4 workflow was also triggered by the values probe. Probe run [44901659042] failed during an existing immutable source-blob check at `pipeline/test_decision.py`; cleanup run [44901677917] passed source verification but failed tests: 45 run, 2 failures and 5 errors (job `136838719555`). Artifact `14705209340`, SHA-256 `47f0864fd67ce2937c57166dff1c07198063ace26b4c30e9933f40d658c6ff68`. F4 is **BLOCKED / REQUIRES SEPARATE TRIAGE**; no F4 files or application behavior were changed under this approval.
+- T2 Adapter/Validator focused suite: **10/10 PASS** on both dependency probes. Full repository regression remains **NOT RUN**. Independent second-person review remains **NOT VERIFIED**.
+- No functional source changes remain from the probes; no risk policy, runner, ledger, AI, T0/T1, DB, runtime, deployment or trading behavior changed. No orders were placed.
+- Next: preserve T2 path-filter PASS; triage F4 failures separately under a new bounded approval. Do not expand this increment into F4, runtime or risk-policy work.
