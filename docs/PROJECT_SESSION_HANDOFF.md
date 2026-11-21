@@ -2,7 +2,7 @@
 
 - Owner approved D5 implementation. Work is proceeding in small isolated increments on existing branch `main`; do not create a parallel branch or PR without a separate need.
 - D4 remains **APPROVED**. D5 is **APPROVED FOR IMPLEMENTATION**; this does not authorize production DB creation, T0 reconstruction, Feeder, VPS, runtime, T1/T2 runtime, automatic execution or real orders.
-- Repository source HEAD after evidence documentation: `b65210efe37386d7e052f66bc10b3b8f7082c633`.
+- Evidence report commit: `b65210efe37386d7e052f66bc10b3b8f7082c633`; subsequent handoff-only commit: `0eca8814a5613f622f921388c8dd38b242cece6e`.
 - Typed evidence source SHA tested by CI: `bd3ade272a226799e34699e49f3d22de1067bc94`.
 - Added `persistent_state/evidence.py` with immutable `EvidenceBinding`, `PreflightAttestation`, `RestoreAttestation`, `RiskReadinessAttestation`, and pure `validate_ready_evidence`.
 - Added `persistent_state/test_evidence.py` with 7 tests. Persistent State suite **130 PASS**; adjacent Paper Ledger / Strategy API regression **160 PASS**.
