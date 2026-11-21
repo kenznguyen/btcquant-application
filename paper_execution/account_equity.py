@@ -187,10 +187,12 @@ def record_account_mark(
             """UPDATE paper_account_risk_state
                SET last_equity_quote=?,high_water_mark_quote=?,last_mark_price=?,
                    mark_observed_at_ms=?,mark_candle_close_ms=?,dataset_version=?,
-                   risk_ready=?,unavailable_reason=?,updated_at_ms=?,version=version+1
+                   risk_ready=?,unavailable_reason=?,updated_at_ms=?,version=version+1,
+                   last_mark_id=?
                WHERE account_id=1""",
             (text(equity), text(max(hwm, equity)), text(mark), observed_at,
-             candle_at, dataset_version, int(risk_ready), unavailable, observed_at),
+             candle_at, dataset_version, int(risk_ready), unavailable, observed_at,
+             mark_record["markId"]),
         )
         ledger.audit(connection, observed_at, "ACCOUNT_MARK", {
             "markPrice": text(mark), "candleCloseMs": candle_at,
@@ -206,6 +208,12 @@ def record_account_mark(
                 "riskReady": False, "unavailableReason": unavailable,
                 "accountEquityQuote": text(equity), "markPrice": text(mark),
                 "markObservedAtMs": observed_at, "datasetVersion": dataset_version,
+                "markProvenance": {
+                    "sourceId": provenance.source_id,
+                    "sourceSnapshotId": provenance.source_snapshot_id,
+                    "sourceVersion": provenance.dataset_version,
+                    "sourcePayloadSha256": "sha256:" + provenance.source_payload_sha256,
+                },
                 "positions": positions, "reservedNotionalQuote": text(reserved_notional),
                 "reservedMarginQuote": text(reserved_margin), "updatedAtMs": observed_at,
             }
