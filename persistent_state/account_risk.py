@@ -150,9 +150,60 @@ class AccountRiskSnapshotProvider(Protocol):
         ...
 
 
+@dataclass(frozen=True, slots=True)
+class PaperAccountBinding:
+    """Bind the persisted PAPER account identity to one live session fencing tuple."""
+
+    account_id: int
+    account_mode: str
+    account_scope_id: str
+    session_id: str
+    fencing_generation: int
+
+    def __post_init__(self) -> None:
+        if type(self.account_id) is not int or self.account_id < 1:
+            raise ValueError("account_id must be a positive integer")
+        if self.account_mode != "PAPER":
+            raise ValueError("only PAPER account bindings are supported")
+        _nonempty("account_scope_id", self.account_scope_id)
+        _nonempty("session_id", self.session_id)
+        if type(self.fencing_generation) is not int or self.fencing_generation < 1:
+            raise ValueError("fencing_generation must be an integer >= 1")
+
+
+def validate_paper_account_binding(
+    binding: PaperAccountBinding,
+    *,
+    account_id: int,
+    account_mode: str,
+    account_scope_id: str,
+    session_id: str,
+    fencing_generation: int,
+) -> PaperAccountBinding:
+    """Fail closed unless DB account identity and current session/fence match exactly."""
+    if not isinstance(binding, PaperAccountBinding):
+        raise ValueError("typed PAPER account binding is required")
+    if type(account_id) is not int or account_id < 1 or account_mode != "PAPER":
+        raise ValueError("requested PAPER account identity is invalid")
+    _nonempty("account_scope_id", account_scope_id)
+    _nonempty("session_id", session_id)
+    if type(fencing_generation) is not int or fencing_generation < 1:
+        raise ValueError("fencing_generation must be an integer >= 1")
+    expected = (account_id, account_mode, account_scope_id, session_id, fencing_generation)
+    actual = (
+        binding.account_id, binding.account_mode, binding.account_scope_id,
+        binding.session_id, binding.fencing_generation,
+    )
+    if actual != expected:
+        raise ValueError("PAPER_ACCOUNT_SESSION_FENCING_BINDING_MISMATCH")
+    return binding
+
+
 __all__ = [
     "AccountRiskProvenance",
     "AccountRiskSnapshot",
     "AccountRiskSnapshotProvider",
+    "PaperAccountBinding",
+    "validate_paper_account_binding",
     "validate_snapshot_binding",
 ]
