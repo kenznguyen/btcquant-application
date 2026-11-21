@@ -7,7 +7,8 @@ on:
     paths:
       - "persistent_state/**"
       - "paper_execution/**"
-      - "pipeline/**"
+      - "pipeline/api.py"
+      - "pipeline/test_risk_policy_env_provisioning.py"
       - ".github/workflows/persistent-state-contracts.yml"
 
 permissions:
