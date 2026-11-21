@@ -329,7 +329,7 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
         """SELECT high_water_mark_quote,daily_baseline_utc_day_ms,
                   daily_baseline_equity_quote,last_equity_quote,last_mark_price,
                   mark_observed_at_ms,mark_candle_close_ms,dataset_version,
-                  risk_ready,unavailable_reason
+                  risk_ready,unavailable_reason,last_mark_id
            FROM paper_account_risk_state WHERE account_id=1"""
     ).fetchone()
     cutover = db.execute(
