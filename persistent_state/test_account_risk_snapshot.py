@@ -127,6 +127,51 @@ class AccountRiskSnapshotContractTests(unittest.TestCase):
         self.assertFalse(valid_snapshot(verified=False).verified)
         self.assertFalse(valid_snapshot(ledger_reconciled=False).ledger_reconciled)
 
+    def test_snapshot_binding_requires_exact_account_session_and_fence(self):
+        from persistent_state.account_risk import validate_snapshot_binding
+
+        snapshot = valid_snapshot()
+        self.assertIs(
+            validate_snapshot_binding(
+                snapshot, account_scope_id="paper-account",
+                session_id="session-001", fencing_generation=3,
+            ),
+            snapshot,
+        )
+        for changes in (
+            {"account_scope_id": "other-account"},
+            {"session_id": "other-session"},
+            {"fencing_generation": 4},
+        ):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                validate_snapshot_binding(
+                    snapshot, account_scope_id=changes.get("account_scope_id", "paper-account"),
+                    session_id=changes.get("session_id", "session-001"),
+                    fencing_generation=changes.get("fencing_generation", 3),
+                )
+
+    def test_unverified_or_unreconciled_snapshot_is_rejected_by_binding_gate(self):
+        from persistent_state.account_risk import validate_snapshot_binding
+
+        for snapshot in (
+            valid_snapshot(verified=False),
+            valid_snapshot(ledger_reconciled=False),
+        ):
+            with self.subTest(snapshot=snapshot), self.assertRaises(ValueError):
+                validate_snapshot_binding(
+                    snapshot, account_scope_id="paper-account",
+                    session_id="session-001", fencing_generation=3,
+                )
+
+    def test_binding_gate_rejects_untyped_snapshot(self):
+        from persistent_state.account_risk import validate_snapshot_binding
+
+        with self.assertRaises(ValueError):
+            validate_snapshot_binding(
+                object(), account_scope_id="paper-account",
+                session_id="session-001", fencing_generation=3,
+            )
+
     def test_provider_protocol_requires_scoped_snapshot_read(self):
         hints = get_type_hints(AccountRiskSnapshotProvider.read_snapshot)
         self.assertEqual(
