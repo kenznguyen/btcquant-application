@@ -6386,3 +6386,16 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Positive review: synthetic fixture validates a complete test-only PAPER account cutover; snapshot reader checks typed consumed-mark provenance/payload hash, account-equity reconciliation, ledger set and funding coverage. Test contracts align with dual-ledger API. No production or architecture-boundary regression found in the reviewed diff.
 - CI evidence remains exact-SHA evidence: run [44903612650](https://github.com/kenznguyen/btcquant-application/actions/runs/44903612650), job `136844482785`, focused regressions 2/2 PASS, F4 suite 47/47 PASS; artifact `14706609045`, SHA-256 `2f67b27534be42c1fee8697412aea1c50d318e338ceba53b5bdbf8fc35444609`. This review did not independently rerun tests; full repository regression NOT RUN.
 - F4 fixture increment remains PASS within bounded test-only implementation; workflow dependency-trigger completeness is **BLOCKED** pending correction. Independent second-person review remains **NOT VERIFIED**. T2/T0/T1 unchanged; no production/runtime/DB/deployment/trading actions performed or authorized.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — F4 workflow dependency path-filter correction
+
+- Owner approved a bounded workflow-only increment to close the F4 account-risk fixture self-review Required finding.
+- Updated `.github/workflows/f4-pipeline-core-first-isolated.yml` `on.push.paths` with `paper_execution/account_history.py` and `paper_execution/risk_contract.py`.
+- Workflow source commit: `c93f48b617e64ec69aeddc7c3c2c6bda0a7bf22a`; workflow blob: `b425745fde77616e568eccffeb4918bcac603987`. Base SHA: `610d43125f8210a4a0e090306f75b8846a5d88d7`. Commit diff contains exactly one changed path (the F4 workflow).
+- Evidence: `docs/evidence/F4_WORKFLOW_DEPENDENCY_PATH_FILTER_2026-11-21.md`; evidence commit `55e7cf4f8a997345ae0750403d9166316377ca26`.
+- Static path-filter verification **PASS**; workflow-only scope verification **PASS**.
+- GitHub Actions execution on updated workflow SHA **NOT VERIFIED** (no run ID/status/artifact retrievable in this session). Dependency-only push probes for each dependency **NOT RUN**. Previous F4 47/47 run [44903612650](https://github.com/kenznguyen/btcquant-application/actions/runs/44903612650) is historical evidence for source SHA `3a7858f60cd236146407370ca87af6cd902455c5`, not this workflow commit.
+- Increment status: **PARTIAL / NOT VERIFIED**. Required path declarations are corrected; behavioral trigger proof remains outstanding.
+- No production code, tests, Shared Risk Engine, risk policy, T2/T0/T1, runtime, database, VPS, deployment, exchange connection, paper execution or real order behavior was changed.
+- Next: retrieve the Actions run for `c93f48b617e64ec69aeddc7c3c2c6bda0a7bf22a`; then establish dependency-only trigger behavior without modifying production code. Preserve all current scope restrictions.
