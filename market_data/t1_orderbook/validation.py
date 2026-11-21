@@ -23,8 +23,8 @@ TOP_LEVEL_FIELDS = frozenset({
     "sourceTimestampMs", "observedAtMs", "decisionWatermark",
     "generation", "snapshotId", "continuity", "freshness", "depth", "complete",
 })
-DECIMAL_PATTERN = re.compile(r"(?:0|[1-9][0-9]*)(?:\\.[0-9]*[1-9])?\\Z", re.ASCII)
-DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\\Z", re.ASCII)
+DECIMAL_PATTERN = re.compile(r"(?:0|[1-9][0-9]*)(?:\.[0-9]*[1-9])?\Z", re.ASCII)
+DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z", re.ASCII)
 
 
 def _reject_constant(value: str) -> None:
