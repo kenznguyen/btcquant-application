@@ -29,7 +29,7 @@ _REQUIRED_PAYLOAD_KEYS = (
     "inventory", "objects", "pairs", "members", "attempts",
     "source_rows", "candles", "links",
 )
-_SHA256_RE = re.compile(r"[0-9a-f]{64}\\Z")
+_SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 _TIMEFRAME_INTERVAL_MS = {"15m": 900_000, "1h": 3_600_000}
 _VALUE_FIELDS = (
     "open", "high", "low", "close", "volume", "available_at_ms", "availability_kind",
@@ -84,15 +84,15 @@ def encode_t0enc1(domain: str, *fields: str | bytes | int | None) -> bytes:
         else:
             raise TypeError("T0ENC1 fields must be str, bytes, int, or None")
 
-    chunks = [b"T0ENC1\\x00", struct.pack(">I", len(domain_bytes)), domain_bytes,
+    chunks = [b"T0ENC1\x00", struct.pack(">I", len(domain_bytes)), domain_bytes,
               struct.pack(">I", len(encoded_fields))]
     for value in encoded_fields:
         if value is None:
-            chunks.extend((b"\\x00", struct.pack(">Q", 0)))
+            chunks.extend((b"\x00", struct.pack(">Q", 0)))
         else:
             if len(value) > 0xFFFFFFFFFFFFFFFF:
                 raise ValueError("field is too long for T0ENC1")
-            chunks.extend((b"\\x01", struct.pack(">Q", len(value)), value))
+            chunks.extend((b"\x01", struct.pack(">Q", len(value)), value))
     return b"".join(chunks)
 
 
