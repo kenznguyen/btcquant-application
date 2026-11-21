@@ -73,18 +73,11 @@ def book_snapshot(timestamp):
 
 def ledger(strategy_id="MANUAL", *, admitted_leverage=None):
     from paper_execution.ledger import PaperLedger
-    from paper_execution.equity import parse_limits
     path = resolve_paper_db_path(require_exists=True)
-    limits = parse_limits(os.environ)
     if strategy_id in {"STRATEGY_CORE", "AI_FREQAI"}:
         from paper_execution.ledger import dual_ledger_ready
         if not dual_ledger_ready(path):
             raise sqlite3.DatabaseError("DUAL_LEDGER_MIGRATION_NOT_READY")
-    if limits is not None:
-        from paper_execution.risk_contract import provision_account_risk_contract
-        provision_account_risk_contract(
-            path, limits, source="PAPER_ENVIRONMENT_CONFIGURATION", recorded_at_ms=now_ms()
-        )
     from risk_policy import CORE_LEVERAGE
     if strategy_id == "STRATEGY_CORE":
         configured_leverage = str(CORE_LEVERAGE)
