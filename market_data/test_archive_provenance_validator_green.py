@@ -159,6 +159,16 @@ class ProvenanceValidatorGreenTest(unittest.TestCase):
         payload["candles"].append(second)
         self.assertIn("CANDLE_IDENTITY_VALUE_CONFLICT", validate_provenance(payload).error_codes)
 
+    def test_missing_pair_and_source_row_ids_cannot_form_matching_links(self) -> None:
+        payload = _valid_payload()
+        payload["pairs"][0]["pair_id"] = ""  # type: ignore[index]
+        payload["members"][0]["pair_id"] = ""  # type: ignore[index]
+        payload["source_rows"][0]["source_row_id"] = ""  # type: ignore[index]
+        payload["links"][0]["source_row_id"] = ""  # type: ignore[index]
+        result = validate_provenance(payload)
+        self.assertIn("VERIFIED_PAIR_MEMBER_CARDINALITY_INVALID", result.error_codes)
+        self.assertIn("ACCEPTED_SOURCE_ROW_LINK_CARDINALITY_INVALID", result.error_codes)
+
     def test_unhashable_semantic_fields_fail_closed_without_raising(self) -> None:
         payload = _valid_payload()
         payload["objects"][0]["object_key"] = {"unexpected": "mapping"}
