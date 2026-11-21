@@ -60,8 +60,9 @@ class MarketMarkProvenance:
                 or len(self.source_payload_sha256) != 64
                 or any(c not in "0123456789abcdef" for c in self.source_payload_sha256)):
             raise ValueError("MARK_PROVENANCE_HASH_INVALID")
-        if (type(self.source_as_of_ms) is not int or self.source_as_of_ms < self.candle_close_ms
-                or type(self.candle_close_ms) is not int or self.candle_close_ms < 0):
+        if (type(self.candle_close_ms) is not int or self.candle_close_ms < 0
+                or type(self.source_as_of_ms) is not int
+                or self.source_as_of_ms < self.candle_close_ms):
             raise ValueError("MARK_PROVENANCE_TIME_INVALID")
         if _canonical_price(self.mark_price) != self.mark_price:
             raise ValueError("MARK_PROVENANCE_PRICE_NOT_CANONICAL")
