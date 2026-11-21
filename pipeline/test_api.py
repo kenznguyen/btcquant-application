@@ -307,15 +307,14 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["order"]["status"], "FILLED")
         self.assertEqual(self.request("/v1/paper/evaluate", "POST", {"source": "UNKNOWN"})[0], 400)
 
-    def test_equity_endpoint_persists_history_and_returns_drawdown_daily_metrics(self):
+    def test_equity_endpoint_fails_closed_without_dual_ledger_mark_provenance(self):
         code, result = self.request("/v1/equity")
-        self.assertEqual(code,200, result)
-        self.assertTrue(result["available"])
-        self.assertEqual(result["initialCapital"],"100")
-        self.assertEqual(result["latest"]["equity"],"100")
-        self.assertEqual(result["dailyLossUsdt"],"0")
+        self.assertEqual(code, 503, result)
+        self.assertEqual(result["error"], "PAPER_STORE_UNAVAILABLE")
         with sqlite3.connect(self.paper_db) as connection:
-            self.assertEqual(connection.execute("SELECT COUNT(*) FROM paper_equity_history").fetchone()[0],1)
+            self.assertEqual(
+                connection.execute("SELECT COUNT(*) FROM paper_equity_history").fetchone()[0], 0
+            )
             self.assertIsNone(connection.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='paper_schema_migrations'"
             ).fetchone())
