@@ -250,3 +250,27 @@ Next permitted work: obtain owner approval for a specific representative fixture
 - No source/test/workflow/dependency changes.
 - No test or workflow run; no run/job/artifact evidence.
 - No Feeder, T1/T2, VPS, PostgreSQL, deployment, exchange or trading operation.
+
+
+---
+
+## 13. Synthetic CSV fixture availability — 2026-11-21
+
+Owner approved creation of synthetic offline CSV fixtures. The following files are now committed:
+
+- `tests/fixtures/t0/binance_um_btcusdt_m15_synthetic.csv`
+- `tests/fixtures/t0/binance_um_btcusdt_h1_synthetic.csv`
+- `tests/fixtures/t0/README.md`
+
+Each timeframe fixture contains two invented, consecutive rows, headerless, with 12 fields following the provisional mapping. The README records field order, constructed inclusive close-time values and strict limitations.
+
+**What this enables:** offline parser/test development against deterministic examples for row width, field positions, decimal/integer parsing, timeframe alignment, OHLC envelope, non-negative volume, taker-buy bounds and inclusive-close arithmetic.
+
+**What this does not establish:** actual Binance archive CSV header presence/absence, encoding, delimiter behavior, ZIP member name, source numeric grammar, empty/null behavior, or real-source timestamp conventions. No real archive CSV or representative source fixture was supplied or accessed.
+
+Therefore:
+- Synthetic fixture creation: **PASS**.
+- Synthetic fixture content read-back: **PASS**.
+- Real archive format compatibility: **NOT VERIFIED**.
+- Parser contract freeze: **BLOCKED** pending independently approved real-source evidence or a revised owner decision accepting the residual compatibility risk.
+- No parser/importer implementation, test suite, workflow, archive retrieval, SQLite or Canonical T0 operation is authorized by this fixture approval.
