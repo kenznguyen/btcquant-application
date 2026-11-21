@@ -78,3 +78,32 @@ Complete and self-review a fully valid deterministic S1 synthetic fixture, ensur
 - S4 disposition: **RED REPRODUCED / PARTIAL TEST-SPECIFICATION EVIDENCE**. Fixture construction **PASS**; V1 regression **PASS**; per-code S3 diagnostic isolation and aggregate assertions **NOT VERIFIED / FAIL AGAINST CURRENT IMPLEMENTATION**. Do not treat workflow-level success as S4 PASS.
 - Full repository regression: **NOT RUN**. No archive acquisition, archive/sidecar access, Canonical T0, SQLite/DDL, importer, T1/T2 runtime, VPS, deployment or trading was performed.
 - GREEN implementation remains **NOT AUTHORIZED**. Next step: review/fix only the S4 test fixtures/assertion isolation if needed under the existing bounded test-source scope, rerun at a new exact SHA, then request separate owner approval before any S1 GREEN implementation.
+
+
+## S4 test-source correction after run 44940259084 — workflow pending
+
+- Scope: test-source-only correction, based on artifact/log review from run `44940259084`. No validator implementation, V1 tests, workflow YAML, schema, DDL, database, importer or runtime source changed.
+- Final source commit on `main`: `4534904fccc74a57a3a09793dd63e24414ab2cb1`.
+- Final test blob: `08d02470e87e317afe8023ed6d6f14db847f5597`.
+- Fixture corrections:
+  - Added a deterministic importer contract ID and synthetic 40-hex source SHA rather than leaving importer provenance absent.
+  - Made object expected size/SHA agree with measured size/SHA and successful transfer evidence.
+  - Constructed each synthetic CSV member from a deterministic UTF-8 header plus one row, LF-terminated; member size and SHA now describe those exact synthetic bytes.
+  - Expanded fixture shape assertions for exact raw inventory parsing, coverage counts, object/attempt IDs and references, reciprocal pair relations, member digest/size, raw-row digest/identity, candle value digest, link identity and inclusive close time.
+- Negative-case isolation:
+  - raw inventory: invalid UTF-8 with a matching byte digest, isolating strict decoding;
+  - object set: supplied inventory object list differs from the unchanged authenticated raw inventory; expected legacy V1 diagnostics are explicitly retained alongside the new S3 code;
+  - object measurement: unsuccessful HTTP 302 while measured bytes and successful attempt remain aligned;
+  - attempt history: sole attempt starts at ordinal 2, with attempt ID and successful-attempt pointer recomputed, isolating sequence continuity;
+  - pair: CRC evidence alone is false;
+  - member: parser source SHA alone is malformed;
+  - source row: physical/data ordinal offset is invalid while source-row ID and link references are recomputed;
+  - candle digest: forged value ID is propagated consistently to row and link, isolating tuple recomputation;
+  - OHLCV: invalid high/low values with candle digest and row/link value references recomputed;
+  - link: unsupported duplicate disposition with matching recomputed link ID;
+  - run: schema contract ID alone is wrong.
+- Aggregate test uses disjoint records for object measurement, attempt, pair, member, row, candle digest, OHLCV and link mutations. It asserts all eleven S3 codes in catalogue order, no duplicates, and the two expected legacy V1 inventory diagnostics. Individual tests allow only the documented global run-acceptance companion code.
+- Source review: same-session self-review only; no independent second-person review. No Python test execution has yet been performed against this new source SHA.
+- Workflow run/job/artifact for SHA `4534904fccc74a57a3a09793dd63e24414ab2cb1`: **PENDING / NOT RUN**. The previous run `44940259084` is historical evidence for SHA `6a35462fe4db37c8a09fde3c20260fe6ba84f31a` and does not verify this correction.
+- Status: S4 source correction **COMMITTED**; source syntax/runtime and all corrected assertions **NOT VERIFIED**; V1 regression on new SHA **NOT RUN**; GREEN **NOT AUTHORIZED**.
+- Next: manually dispatch the existing isolated workflow with `source_sha=4534904fccc74a57a3a09793dd63e24414ab2cb1`, then inspect the exact run, both test logs, exit codes and artifact before updating status.
