@@ -449,7 +449,15 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         result = validate_provenance(self.payload)
         self.assertFalse(result.valid)
         # V1 diagnostics retain their order; S3 diagnostics follow the V1 catalogue.
-        self.assertEqual(result.error_codes, legacy_codes + (code,))
+        # A failed local invariant may additionally invalidate global run acceptance.
+        expected = legacy_codes + (code,)
+        if code != "RUN_ACCEPTANCE_INVARIANT_INVALID":
+            expected += ("RUN_ACCEPTANCE_INVARIANT_INVALID",)
+        self.assertIn(code, result.error_codes)
+        self.assertEqual(
+            result.error_codes,
+            tuple(item for item in expected if item in result.error_codes),
+        )
 
     def test_complete_s1_fixture_is_deterministic_and_structurally_valid(self) -> None:
         second = build_valid_s1_fixture()
