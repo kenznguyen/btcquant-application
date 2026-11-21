@@ -1,197 +1,374 @@
-"""Synthetic-only S1 coverage RED tests for Provenance Validator S1 amendment.
+"""Deterministic synthetic S1 fixture and RED contract tests.
 
-These tests intentionally target the extended S1 evidence envelope. They do not
-access archive bytes, files, SQLite, network, workflows, Canonical T0 or runtime.
-The validator implementation is not extended by this test-only increment.
+No archive files, filesystem, SQLite, network, Canonical T0, or runtime access.
+The positive fixture check validates fixture construction independently of the
+not-yet-implemented S1 validator extension. The eleven negative tests each
+introduce one S1 defect and require its dedicated stable error code.
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import unittest
+from typing import Any
 
-from market_data.archive_provenance_validator import validate_provenance
-from market_data.test_archive_provenance_validator_green import _valid_payload
+from market_data.archive_provenance_validator import (
+    derive_attempt_id,
+    encode_t0enc1,
+    validate_provenance,
+)
+
+_INVENTORY_ID = "synthetic-s1-inventory-v1"
+_RUN_ID = "synthetic-s1-run-v1"
+_PARSER_SHA = "a" * 40
+_TRIGGER_SHA = "b" * 40
+_CHECKOUT_SHA = "c" * 40
+_ROW_COUNT = 202
+_ZIP_BYTES = b"synthetic deterministic zip evidence"
+_SIDECAR_BYTES = b"synthetic deterministic checksum sidecar"
 
 
-def _s1_payload() -> dict[str, object]:
-    payload = _valid_payload()
-    inventory = payload["inventory"]
-    assert isinstance(inventory, dict)
+def _sha(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _enc_digest(domain: str, *fields: object) -> str:
+    return hashlib.sha256(encode_t0enc1(domain, *fields)).hexdigest()
+
+
+def _object_id(inventory_sha: str, key: str, kind: str) -> str:
+    return "obj1:" + _enc_digest(
+        "T0-ARCHIVE-OBJECT-V1", inventory_sha, key, kind
+    )
+
+
+def _attempt_id(object_id: str, key: str) -> str:
+    return derive_attempt_id(
+        object_id=object_id,
+        attempt_number=1,
+        workflow_run_id="run-1001",
+        workflow_job_id="job-2001",
+        trigger_sha=_TRIGGER_SHA,
+        requested_key=key,
+    )
+
+
+def _decimal(value: int) -> str:
+    return str(value)
+
+
+def build_valid_s1_fixture() -> dict[str, Any]:
+    """Build 404 objects, 202 pairs/members/rows/candles/links and 404 attempts."""
+    inventory_entries: list[dict[str, str]] = []
+    for index in range(_ROW_COUNT):
+        zip_key = f"synthetic/btcusdt/15m/{index:03d}.zip"
+        sidecar_key = zip_key + ".CHECKSUM"
+        inventory_entries.extend((
+            {"object_key": zip_key, "object_kind": "ZIP",
+             "paired_object_key": sidecar_key, "timeframe": "15m",
+             "partition": "synthetic", "period": f"{index:03d}"},
+            {"object_key": sidecar_key, "object_kind": "CHECKSUM_SIDECAR",
+             "paired_object_key": zip_key, "timeframe": "15m",
+             "partition": "synthetic", "period": f"{index:03d}"},
+        ))
+    inventory_entries.sort(key=lambda item: item["object_key"].encode("utf-8"))
     raw_inventory = json.dumps(
-        {"inventory_id": "synthetic-inventory", "objects": inventory["objects"]},
-        ensure_ascii=False,
-        separators=(",", ":"),
-        sort_keys=True,
+        {"inventory_id": _INVENTORY_ID, "objects": inventory_entries},
+        ensure_ascii=False, sort_keys=True, separators=(",", ":"),
     ).encode("utf-8")
-    payload.update({
+    inventory_sha = _sha(raw_inventory)
+
+    objects: list[dict[str, Any]] = []
+    attempts: list[dict[str, Any]] = []
+    pairs: list[dict[str, Any]] = []
+    members: list[dict[str, Any]] = []
+    source_rows: list[dict[str, Any]] = []
+    candles: list[dict[str, Any]] = []
+    links: list[dict[str, Any]] = []
+
+    for index in range(_ROW_COUNT):
+        zip_key = f"synthetic/btcusdt/15m/{index:03d}.zip"
+        sidecar_key = zip_key + ".CHECKSUM"
+        zip_sha, sidecar_sha = _sha(_ZIP_BYTES), _sha(_SIDECAR_BYTES)
+        zip_id = _object_id(inventory_sha, zip_key, "ZIP")
+        sidecar_id = _object_id(inventory_sha, sidecar_key, "CHECKSUM_SIDECAR")
+        pair_id = "pair1:" + _enc_digest(
+            "T0-ARCHIVE-PAIR-V1", zip_id, sidecar_id
+        )
+        member_path = f"data/BTCUSDT-15m-{index:03d}.csv"
+        member_sha = _sha(f"member-{index}".encode())
+        member_id = "mem1:" + _enc_digest(
+            "T0-CSV-MEMBER-V1", pair_id, member_path, bytes.fromhex(member_sha)
+        )
+
+        for key, kind, object_id, body, digest in (
+            (zip_key, "ZIP", zip_id, _ZIP_BYTES, zip_sha),
+            (sidecar_key, "CHECKSUM_SIDECAR", sidecar_id, _SIDECAR_BYTES, sidecar_sha),
+        ):
+            attempt_id = _attempt_id(object_id, key)
+            objects.append({
+                "object_id": object_id, "inventory_id": _INVENTORY_ID,
+                "inventory_blob_sha256": inventory_sha,
+                "inventory_entry_identity": key, "object_key": key,
+                "object_kind": kind, "timeframe": "15m",
+                "partition": "synthetic", "period": f"{index:03d}",
+                "paired_object_key": sidecar_key if kind == "ZIP" else zip_key,
+                "expected_size_bytes": None, "expected_sha256": None,
+                "measured_size_bytes": len(body), "measured_sha256": digest,
+                "retrieval_source": "SYNTHETIC_FIXTURE",
+                "requested_key": key, "workflow_run_id": "run-1001",
+                "workflow_job_id": "job-2001", "workflow_event": "workflow_dispatch",
+                "trigger_sha": _TRIGGER_SHA, "checkout_sha": _CHECKOUT_SHA,
+                "attempt_count": 1, "retrieved_at_utc": "2026-11-22T00:00:00.000Z",
+                "response_bytes_total": len(body), "response_status": 200,
+                "local_relative_path": f"synthetic/{index:03d}/{kind.lower()}",
+                "exclusive_create": 1, "verification_status": "VERIFIED",
+                "successful_attempt_id": attempt_id, "failure_code": None,
+                "failure_detail_code": None,
+            })
+            attempts.append({
+                "attempt_id": attempt_id, "object_id": object_id,
+                "attempt_number": 1, "requested_key": key,
+                "workflow_run_id": "run-1001", "workflow_job_id": "job-2001",
+                "workflow_event": "workflow_dispatch", "trigger_sha": _TRIGGER_SHA,
+                "checkout_sha": _CHECKOUT_SHA,
+                "started_at_utc": "2026-11-22T00:00:00.000Z",
+                "finished_at_utc": "2026-11-22T00:00:01.000Z",
+                "outcome": "TRANSFERRED", "response_status": 200,
+                "response_bytes_received": len(body), "is_complete_object": 1,
+                "partial_body_sha256": None, "complete_object_sha256": digest,
+                "failure_code": None,
+            })
+
+        pairs.append({
+            "pair_id": pair_id, "zip_object_id": zip_id,
+            "sidecar_object_id": sidecar_id,
+            "measured_zip_size_bytes": len(_ZIP_BYTES),
+            "measured_zip_sha256": zip_sha,
+            "measured_sidecar_size_bytes": len(_SIDECAR_BYTES),
+            "measured_sidecar_sha256": sidecar_sha,
+            "sidecar_asserted_zip_sha256": zip_sha,
+            "sidecar_assertion_matches": 1, "zip_crc_ok": 1,
+            "member_count": 1, "structural_ok": 1, "disposition": "VERIFIED",
+            "failure_code": None,
+        })
+        members.append({
+            "member_id": member_id, "pair_id": pair_id,
+            "member_path": member_path, "member_size_bytes": 128,
+            "member_sha256": member_sha, "encoding": "UTF-8",
+            "bom_present": 0, "newline": "LF", "delimiter": ",",
+            "header_present": 1, "header_contract_id": "T0_ARCHIVE_CSV_HEADER_V1",
+            "parser_contract_id": "T0_ARCHIVE_CSV_HEADER_V1",
+            "parser_source_sha": _PARSER_SHA, "data_row_count": 1,
+            "first_open_time_ms": 1767225600000 + index * 900000,
+            "last_open_time_ms": 1767225600000 + index * 900000,
+            "disposition": "VERIFIED", "failure_code": None,
+        })
+
+        open_time = 1767225600000 + index * 900000
+        open_value = _decimal(10000 + index)
+        high_value = _decimal(10002 + index)
+        low_value = _decimal(9999 + index)
+        close_value = _decimal(10001 + index)
+        volume_value = "1"
+        available_at = open_time + 900000
+        raw_fields = [
+            str(open_time), open_value, high_value, low_value, close_value,
+            volume_value, str(available_at), "0", "0", "0", "0", "0",
+        ]
+        raw_digest = _enc_digest("T0-RAW-CSV-ROW-V1", *raw_fields)
+        source_row_id = "row1:" + _enc_digest(
+            "T0-SOURCE-ROW-V1", member_id, 2, bytes.fromhex(raw_digest)
+        )
+        value_fields = (
+            "binance", "usdm", "BTCUSDT", "15m", open_time,
+            open_value, high_value, low_value, close_value, volume_value,
+            available_at, "BAR_CLOSE_BOUNDARY",
+        )
+        candle_value_id = "cv1:" + _enc_digest("T0-CANDLE-VALUE-V1", *value_fields)
+        natural_key = ("binance", "usdm", "BTCUSDT", "15m", open_time)
+        source_rows.append({
+            "source_row_id": source_row_id, "member_id": member_id,
+            "physical_record_ordinal": 2, "data_row_ordinal": 1,
+            "raw_fields": raw_fields, "raw_row_digest": raw_digest,
+            "parser_contract_id": "T0_ARCHIVE_CSV_HEADER_V1",
+            "parser_source_sha": _PARSER_SHA, "importer_source_sha": None,
+            "natural_key": natural_key, "candle_value_id": candle_value_id,
+            "disposition": "ACCEPTED", "rejection_code": None,
+        })
+        candles.append({
+            "exchange": "binance", "market_type": "usdm", "symbol": "BTCUSDT",
+            "timeframe": "15m", "open_time_ms": open_time,
+            "open": open_value, "high": high_value, "low": low_value,
+            "close": close_value, "volume": volume_value,
+            "available_at_ms": available_at,
+            "availability_kind": "BAR_CLOSE_BOUNDARY",
+            "candle_value_id": candle_value_id,
+        })
+        duplicate_disposition = "UNIQUE"
+        link_id = "lnk1:" + _enc_digest(
+            "T0-CANDLE-PROVENANCE-LINK-V1",
+            "binance", "usdm", "BTCUSDT", "15m", open_time,
+            source_row_id, duplicate_disposition,
+        )
+        links.append({
+            "link_id": link_id, "exchange": "binance", "market_type": "usdm",
+            "symbol": "BTCUSDT", "timeframe": "15m", "open_time_ms": open_time,
+            "source_row_id": source_row_id, "candle_value_id": candle_value_id,
+            "duplicate_disposition": duplicate_disposition,
+            "natural_key": natural_key,
+        })
+
+    return {
         "contract_version": "T0_PROVENANCE_VALIDATOR_S1_V1",
+        "inventory": {"inventory_id": _INVENTORY_ID, "objects": inventory_entries},
         "inventory_raw_bytes": raw_inventory,
-        "inventory_expected_sha256": hashlib.sha256(raw_inventory).hexdigest(),
-        "inventory_expected_id": "synthetic-inventory",
-        "coverage_manifest": {"approved_gaps": [], "approved_extras": []},
+        "inventory_expected_sha256": inventory_sha,
+        "inventory_expected_id": _INVENTORY_ID,
+        "coverage_manifest": {
+            "approved_gaps": [], "approved_extras": [],
+            "expected_object_count": 404, "expected_pair_count": 202,
+            "expected_member_count": 202, "expected_row_count": 202,
+        },
         "run": {
-            "run_id": "synthetic-run",
-            "status": "CANDIDATE",
+            "run_id": _RUN_ID, "status": "CANDIDATE",
             "schema_contract_id": "T0_STAGING_SCHEMA_V2",
         },
-    })
-    return payload
+        "objects": objects, "pairs": pairs, "members": members,
+        "attempts": attempts, "source_rows": source_rows,
+        "candles": candles, "links": links,
+    }
+
+
+def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any]) -> None:
+    """Check deterministic fixture completeness without calling the S1 validator."""
+    test.assertEqual(payload["contract_version"], "T0_PROVENANCE_VALIDATOR_S1_V1")
+    test.assertEqual(hashlib.sha256(payload["inventory_raw_bytes"]).hexdigest(),
+                     payload["inventory_expected_sha256"])
+    test.assertEqual(len(payload["inventory"]["objects"]), 404)
+    test.assertEqual(len(payload["objects"]), 404)
+    test.assertEqual(len(payload["attempts"]), 404)
+    test.assertEqual(len(payload["pairs"]), 202)
+    test.assertEqual(len(payload["members"]), 202)
+    test.assertEqual(len(payload["source_rows"]), 202)
+    test.assertEqual(len(payload["candles"]), 202)
+    test.assertEqual(len(payload["links"]), 202)
+    test.assertEqual(len({item["object_id"] for item in payload["objects"]}), 404)
+    test.assertEqual(len({item["pair_id"] for item in payload["pairs"]}), 202)
+    test.assertEqual(len({item["member_id"] for item in payload["members"]}), 202)
+    test.assertEqual(len({item["source_row_id"] for item in payload["source_rows"]}), 202)
+    test.assertEqual(len({item["link_id"] for item in payload["links"]}), 202)
+    object_by_id = {item["object_id"]: item for item in payload["objects"]}
+    attempt_by_id = {item["attempt_id"]: item for item in payload["attempts"]}
+    member_by_id = {item["member_id"]: item for item in payload["members"]}
+    row_by_id = {item["source_row_id"]: item for item in payload["source_rows"]}
+    candle_by_value = {item["candle_value_id"]: item for item in payload["candles"]}
+    for obj in payload["objects"]:
+        attempt = attempt_by_id[obj["successful_attempt_id"]]
+        test.assertEqual(attempt["object_id"], obj["object_id"])
+        test.assertEqual(attempt["outcome"], "TRANSFERRED")
+        test.assertEqual(attempt["complete_object_sha256"], obj["measured_sha256"])
+        test.assertEqual(attempt["response_bytes_received"], obj["measured_size_bytes"])
+    for pair in payload["pairs"]:
+        test.assertEqual(object_by_id[pair["zip_object_id"]]["verification_status"], "VERIFIED")
+        test.assertEqual(object_by_id[pair["sidecar_object_id"]]["verification_status"], "VERIFIED")
+        test.assertEqual(pair["sidecar_asserted_zip_sha256"], pair["measured_zip_sha256"])
+    for member in payload["members"]:
+        test.assertEqual(member["disposition"], "VERIFIED")
+        test.assertEqual(member["data_row_count"], 1)
+    for row, link in zip(payload["source_rows"], payload["links"]):
+        test.assertIn(row["member_id"], member_by_id)
+        test.assertEqual(link["source_row_id"], row["source_row_id"])
+        test.assertEqual(link["candle_value_id"], row["candle_value_id"])
+        test.assertIn(row["candle_value_id"], candle_by_value)
+        test.assertEqual(row["disposition"], "ACCEPTED")
+        test.assertEqual(len(row["raw_fields"]), 12)
+        test.assertEqual(row["physical_record_ordinal"], row["data_row_ordinal"] + 1)
+    for candle in payload["candles"]:
+        test.assertEqual(candle["available_at_ms"], candle["open_time_ms"] + 900000)
+        test.assertEqual(candle["availability_kind"], "BAR_CLOSE_BOUNDARY")
 
 
 class ProvenanceValidatorS1RedTest(unittest.TestCase):
-    def assert_code(self, payload: dict[str, object], code: str) -> None:
-        result = validate_provenance(payload)
+    def setUp(self) -> None:
+        self.payload = build_valid_s1_fixture()
+        assert_valid_fixture_shape(self, self.payload)
+
+    def assert_s1_error(self, code: str) -> None:
+        result = validate_provenance(self.payload)
         self.assertFalse(result.valid)
         self.assertIn(code, result.error_codes)
 
-    def test_v1_fixture_without_complete_s1_evidence_cannot_claim_acceptance(self) -> None:
-        payload = _s1_payload()
-        payload.pop("inventory_raw_bytes")
-        payload.pop("inventory_expected_sha256")
-        payload.pop("coverage_manifest")
-        self.assert_code(payload, "RUN_ACCEPTANCE_INVARIANT_INVALID")
+    def test_complete_s1_fixture_is_deterministic_and_structurally_valid(self) -> None:
+        second = build_valid_s1_fixture()
+        self.assertEqual(self.payload, second)
+        assert_valid_fixture_shape(self, second)
+        self.assertEqual(self.payload["inventory_expected_sha256"],
+                         hashlib.sha256(self.payload["inventory_raw_bytes"]).hexdigest())
 
-    def test_inventory_raw_bytes_digest_is_pinned(self) -> None:
-        payload = _s1_payload()
-        payload["inventory_raw_bytes"] = b'{"inventory_id":"tampered","objects":[]}'
-        self.assert_code(payload, "INVENTORY_RAW_BYTES_INVALID")
+    def test_inventory_raw_bytes_invalid_isolated(self) -> None:
+        self.payload["inventory_raw_bytes"] = b"\xff"
+        self.payload["inventory_expected_sha256"] = hashlib.sha256(b"\xff").hexdigest()
+        self.assert_s1_error("INVENTORY_RAW_BYTES_INVALID")
 
-    def test_inventory_rejects_duplicate_json_keys_and_invalid_utf8(self) -> None:
-        for raw in (
-            b'{"inventory_id":"a","inventory_id":"b","objects":[]}',
-            b'\xff\xfe',
-        ):
-            with self.subTest(raw=raw):
-                payload = _s1_payload()
-                payload["inventory_raw_bytes"] = raw
-                payload["inventory_expected_sha256"] = hashlib.sha256(raw).hexdigest()
-                self.assert_code(payload, "INVENTORY_RAW_BYTES_INVALID")
+    def test_inventory_object_set_mismatch_isolated(self) -> None:
+        self.payload["inventory"]["objects"].pop()
+        self.assert_s1_error("INVENTORY_OBJECT_SET_MISMATCH")
 
-    def test_raw_inventory_and_supplied_inventory_entries_must_match(self) -> None:
-        payload = _s1_payload()
-        payload["inventory_raw_bytes"] = b'{"inventory_id":"synthetic-inventory","objects":[]}'
-        payload["inventory_expected_sha256"] = hashlib.sha256(payload["inventory_raw_bytes"]).hexdigest()
-        self.assert_code(payload, "INVENTORY_OBJECT_SET_MISMATCH")
+    def test_object_measurement_invalid_isolated(self) -> None:
+        self.payload["objects"][0]["measured_size_bytes"] = None
+        self.assert_s1_error("OBJECT_MEASUREMENT_INVALID")
 
-    def test_verified_object_requires_complete_measured_identity(self) -> None:
-        payload = _s1_payload()
-        objects = payload["objects"]
-        assert isinstance(objects, list)
-        objects[0].update({
-            "measured_size_bytes": None,
-            "measured_sha256": None,
-            "response_status": 200,
-            "local_relative_path": "objects/example.zip",
-            "exclusive_create": 1,
-        })
-        self.assert_code(payload, "OBJECT_MEASUREMENT_INVALID")
+    def test_object_attempt_history_invalid_isolated(self) -> None:
+        self.payload["attempts"][0]["attempt_number"] = 2
+        self.assert_s1_error("OBJECT_ATTEMPT_HISTORY_INVALID")
 
-    def test_attempt_history_requires_contiguous_attempt_numbers_and_valid_success_reference(self) -> None:
-        payload = _s1_payload()
-        payload["attempts"] = [{
-            "object_id": "obj1:" + "01" * 32,
-            "attempt_id": "att1:" + "02" * 32,
-            "attempt_number": 2,
-            "outcome": "TRANSFERRED",
-            "response_bytes_received": 10,
-            "is_complete_object": 1,
-            "complete_object_sha256": "ab" * 32,
-            "finished_at_utc": "2026-11-22T00:00:00.000Z",
-        }]
-        self.assert_code(payload, "OBJECT_ATTEMPT_HISTORY_INVALID")
+    def test_archive_pair_evidence_invalid_isolated(self) -> None:
+        self.payload["pairs"][0]["sidecar_asserted_zip_sha256"] = "0" * 64
+        self.assert_s1_error("ARCHIVE_PAIR_EVIDENCE_INVALID")
 
-    def test_pair_requires_sidecar_assertion_crc_and_structure_evidence(self) -> None:
-        payload = _s1_payload()
-        pairs = payload["pairs"]
-        assert isinstance(pairs, list)
-        pairs[0].update({
-            "zip_object_key": "synthetic/000.zip",
-            "sidecar_object_key": "synthetic/000.zip.CHECKSUM",
-            "sidecar_asserted_sha256": "00" * 32,
-            "zip_crc_ok": 0,
-            "structural_ok": 1,
-            "disposition": "VERIFIED",
-        })
-        self.assert_code(payload, "ARCHIVE_PAIR_EVIDENCE_INVALID")
+    def test_csv_member_evidence_invalid_isolated(self) -> None:
+        self.payload["members"][0]["parser_source_sha"] = "not-a-sha"
+        self.assert_s1_error("CSV_MEMBER_EVIDENCE_INVALID")
 
-    def test_verified_member_requires_full_parser_and_header_evidence(self) -> None:
-        payload = _s1_payload()
-        members = payload["members"]
-        assert isinstance(members, list)
-        members[0].update({
-            "member_path": "../unsafe.csv",
-            "member_size_bytes": -1,
-            "member_sha256": "invalid",
-            "encoding": "latin-1",
-            "delimiter": ";",
-            "parser_contract_id": "unknown",
-            "parser_source_sha": "not-a-sha",
-            "header_present": 1,
-            "header_contract_id": "unknown",
-        })
-        self.assert_code(payload, "CSV_MEMBER_EVIDENCE_INVALID")
+    def test_source_row_provenance_invalid_isolated(self) -> None:
+        self.payload["source_rows"][0]["raw_fields"] = ["one"]
+        self.assert_s1_error("SOURCE_ROW_PROVENANCE_INVALID")
 
-    def test_source_rows_require_contiguous_ordinals_raw_fields_and_digest(self) -> None:
-        payload = _s1_payload()
-        rows = payload["source_rows"]
-        assert isinstance(rows, list)
-        rows[0].update({
-            "member_id": "mem1:" + "00" * 32,
-            "physical_record_ordinal": 3,
-            "data_row_ordinal": 1,
-            "header_present": 1,
-            "raw_fields": ["only-one-field"],
-            "raw_row_digest": "invalid",
-            "parser_contract_id": "unknown",
-            "parser_source_sha": "bad",
-            "importer_source_sha": "bad",
-        })
-        self.assert_code(payload, "SOURCE_ROW_PROVENANCE_INVALID")
+    def test_candle_value_digest_invalid_isolated(self) -> None:
+        self.payload["candles"][0]["candle_value_id"] = "cv1:" + "0" * 64
+        self.assert_s1_error("CANDLE_VALUE_DIGEST_INVALID")
 
-    def test_candle_value_id_must_be_recomputed_from_normalized_values(self) -> None:
-        payload = _s1_payload()
-        candles = payload["candles"]
-        assert isinstance(candles, list)
-        candles[0]["candle_value_id"] = "cv1:" + "00" * 32
-        self.assert_code(payload, "CANDLE_VALUE_DIGEST_INVALID")
+    def test_candle_ohlcv_constraint_invalid_isolated(self) -> None:
+        self.payload["candles"][0]["high"] = "1"
+        self.payload["candles"][0]["low"] = "2"
+        self.assert_s1_error("CANDLE_OHLCV_CONSTRAINT_INVALID")
 
-    def test_candle_ohlcv_and_timeframe_semantics_are_enforced(self) -> None:
-        payload = _s1_payload()
-        candles = payload["candles"]
-        assert isinstance(candles, list)
-        candles[0].update({
-            "open": "NaN",
-            "high": "1",
-            "low": "2",
-            "close": "0",
-            "volume": "-1",
-            "open_time_ms": 1,
-            "available_at_ms": 1,
-        })
-        self.assert_code(payload, "CANDLE_OHLCV_CONSTRAINT_INVALID")
+    def test_candle_provenance_link_invalid_isolated(self) -> None:
+        self.payload["links"][0]["source_row_id"] = "row1:" + "0" * 64
+        self.assert_s1_error("CANDLE_PROVENANCE_LINK_INVALID")
 
-    def test_every_candle_and_accepted_row_requires_exact_matching_link(self) -> None:
-        payload = _s1_payload()
-        payload["links"] = []
-        self.assert_code(payload, "CANDLE_PROVENANCE_LINK_INVALID")
+    def test_run_acceptance_invariant_invalid_isolated(self) -> None:
+        self.payload["run"]["schema_contract_id"] = "WRONG_SCHEMA"
+        self.assert_s1_error("RUN_ACCEPTANCE_INVARIANT_INVALID")
 
-    def test_global_run_acceptance_requires_exact_s1_cardinalities_and_candidate_state(self) -> None:
-        payload = _s1_payload()
-        payload["run"] = {
-            "run_id": "synthetic-run",
-            "status": "VALIDATED",
-            "schema_contract_id": "wrong-schema",
-        }
-        self.assert_code(payload, "RUN_ACCEPTANCE_INVARIANT_INVALID")
-
-    def test_all_new_codes_aggregate_once_in_contract_order(self) -> None:
-        payload = _s1_payload()
-        payload["inventory_raw_bytes"] = b'{"bad":'
-        payload["inventory_expected_sha256"] = "0" * 64
-        payload["coverage_manifest"] = {}
-        payload["run"] = {"status": "VALIDATED", "schema_contract_id": "wrong"}
-        result = validate_provenance(payload)
+    def test_aggregate_new_codes_are_ordered_and_deduplicated(self) -> None:
+        self.payload["inventory_raw_bytes"] = b"not-json"
+        self.payload["inventory_expected_sha256"] = "0" * 64
+        self.payload["objects"][0]["measured_size_bytes"] = None
+        self.payload["objects"][1]["measured_size_bytes"] = None
+        self.payload["attempts"][0]["attempt_number"] = 3
+        self.payload["attempts"][1]["attempt_number"] = 3
+        self.payload["pairs"][0]["sidecar_asserted_zip_sha256"] = "0" * 64
+        self.payload["members"][0]["parser_source_sha"] = "invalid"
+        self.payload["source_rows"][0]["raw_fields"] = ["x"]
+        self.payload["candles"][0]["candle_value_id"] = "cv1:" + "0" * 64
+        self.payload["candles"][0]["high"] = "1"
+        self.payload["candles"][0]["low"] = "2"
+        self.payload["links"][0]["source_row_id"] = "row1:" + "0" * 64
+        self.payload["run"]["schema_contract_id"] = "WRONG"
+        result = validate_provenance(self.payload)
         expected = (
             "INVENTORY_RAW_BYTES_INVALID",
             "INVENTORY_OBJECT_SET_MISMATCH",
@@ -205,8 +382,10 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
             "CANDLE_PROVENANCE_LINK_INVALID",
             "RUN_ACCEPTANCE_INVARIANT_INVALID",
         )
+        selected = tuple(code for code in result.error_codes if code in expected)
+        self.assertEqual(selected, expected)
+        self.assertEqual(len(selected), len(set(selected)))
         self.assertFalse(result.valid)
-        self.assertEqual(tuple(code for code in result.error_codes if code in expected), expected)
 
 
 if __name__ == "__main__":
