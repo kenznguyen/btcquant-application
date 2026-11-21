@@ -184,12 +184,16 @@ def _hashable_tuple(values: tuple[object, ...]) -> tuple[object, ...] | None:
 
 def _record_identity(record: Mapping[str, object]) -> tuple[object, ...] | None:
     natural_key = record.get("natural_key")
+    natural_identity = None
     if isinstance(natural_key, (list, tuple)) and len(natural_key) == 5:
-        return _hashable_tuple(tuple(natural_key))
+        natural_identity = _hashable_tuple(tuple(natural_key))
     names = ("exchange", "market_type", "symbol", "timeframe", "open_time_ms")
+    direct_identity = None
     if all(name in record for name in names):
-        return _hashable_tuple(tuple(record[name] for name in names))
-    return None
+        direct_identity = _hashable_tuple(tuple(record[name] for name in names))
+    if natural_identity is not None and direct_identity is not None:
+        return natural_identity if natural_identity == direct_identity else None
+    return natural_identity if natural_identity is not None else direct_identity
 
 
 def _value_signature(record: Mapping[str, object]) -> tuple[object, ...] | None:
@@ -333,7 +337,13 @@ def validate_provenance(payload: Mapping[str, object]) -> ProvenanceValidationRe
     for candle in candles:
         identity = _record_identity(candle)
         signature = _value_signature(candle)
-        if identity is None or signature is None:
+        if identity is None:
+            if "natural_key" in candle or any(
+                name in candle for name in ("exchange", "market_type", "symbol", "timeframe", "open_time_ms")
+            ):
+                errors.add("CANDLE_IDENTITY_VALUE_CONFLICT")
+            continue
+        if signature is None:
             continue
         values_by_identity.setdefault(identity, set()).add(signature)
     if any(len(signatures) > 1 for signatures in values_by_identity.values()):
