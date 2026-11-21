@@ -6472,3 +6472,20 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Status: updated-SHA workflow execution **PASS**; F4 suite **47/47 PASS**; path declarations **PASS**; independent trigger probes **NOT VERIFIED**; overall increment **PARTIAL**.
 - Next: only if separately authorized, create disposable dependency-only probes (one path per push) and remove probe branches after recording evidence. Until then do not claim independent trigger verification.
 - No production code, Shared Risk Engine, risk policy, T2/T0/T1, runtime, DB, VPS, deployment, exchange connection, paper execution or real orders were changed or authorized.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 offline archive CSV parser TDD increment
+
+- Owner approved a bounded TDD increment: implement a pure offline parser and focused tests using only the synthetic M15/H1 fixtures already in the repository.
+- Final source snapshot SHA: `c600e8b3680466241a45b429c76215b538927904`.
+- Parser `market_data/archive_csv_parser.py` blob: `7d59706778a98a18185e0b2fe744c3c43c2eb870`. Test module `market_data/test_archive_csv_parser.py` blob: `df237f495c253c053b29e5ca76c50aad060ba85d` (19 unittest methods).
+- Fixture blobs: M15 `1a616fde511407d90be8894391e783e716908c9d`; H1 `951f26ff4e4a6c330a14f5a515cc27cce8053e1e`. Both remain **SYNTHETIC — NOT SOURCE EVIDENCE**.
+- TDD RED reproduced `ModuleNotFoundError: market_data.archive_csv_parser` before implementation. GREEN focused command `python -B -m unittest -v market_data.test_archive_csv_parser`: **19/19 PASS** in a local isolated Python 3.13 scratch harness using exact Git blob-matched parser, test and fixture files.
+- Evidence: `docs/evidence/T0_ARCHIVE_CSV_PARSER_TDD_2026-11-21.md`, commit `ae45b421d69c15eb62089221cb8384df6a759b93`. Scope index update: commit `fedc92eeed0338a291f304ec0dd2f4b30b495a9c`.
+- GitHub Actions run/job/artifact: **NOT RUN**; workflow YAML was outside the approval. Full repository regression: **NOT RUN**.
+- Parser validates the provisional 12-column, headerless mapping with exact Decimal parsing, immutable output, raw-field retention, signed-int64 timestamps, timeframe alignment, inclusive close-time arithmetic, OHLC/volume/trade-count/taker-buy bounds and strictly increasing opens.
+- Real Binance archive CSV compatibility, header/encoding/delimiter/member name, actual numeric grammar and source timestamp convention remain **NOT VERIFIED**. Parser contract freeze is **BLOCKED** pending approved real-source evidence or a new owner decision.
+- No archive/REST request, host/VPS access, SQLite or Canonical T0 operation, Contract 1.2.0 schema/API change, importer, workflow YAML, runtime, deployment, T1/T2 integration, exchange credential use or trading operation occurred.
+- Next: preserve this as a provisional offline parser utility. Obtain separate approval before source-format verification, Contract 1.2.0 implementation, importer, workflow or staging execution.
