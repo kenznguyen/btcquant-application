@@ -160,6 +160,53 @@ class SQLitePaperAccountRiskProviderTests(unittest.TestCase):
         self.assertFalse(result.allowed)
         self.assertEqual(result.reason_code, "RISK_POLICY_VERSION_MISMATCH")
 
+    def test_provider_reads_real_reconciled_paper_ledger_and_authoritative_session_fence(self):
+        from paper_execution.account_scope_binding import migrate_paper_account_scope_binding
+        from paper_execution.test_dual_ledger_red import DualLedgerRedTest
+        from persistent_state.repository import SQLiteStateRepository
+        from persistent_state.test_session_fencing import start_running
+
+        fixture = DualLedgerRedTest()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        state_path = Path(self.temp.name) / "real-state.sqlite3"
+        state = SQLiteStateRepository(state_path)
+        state.initialize()
+        token = start_running(state, "provider-session")
+        with sqlite3.connect(fixture.path) as db:
+            migrate_paper_account_scope_binding(
+                db, account_scope_id="paper-account", source_sha="a" * 40,
+                applied_at_ms=fixture.now,
+            )
+        with sqlite3.connect(fixture.path) as db:
+            initialize_risk_policy_schema(
+                db, source_sha="a" * 40, applied_at_ms=fixture.now - 500
+            )
+            raw_policy = json.dumps(POLICY, sort_keys=True, separators=(",", ":"))
+            publish_versioned_risk_policy(
+                db, raw_policy, expected_active_hash=None,
+                source_git_commit_sha="b" * 40,
+                source_policy_path="config/risk_policies/paper-risk-provider-v1.json",
+                source_policy_sha256=hashlib.sha256(raw_policy.encode()).hexdigest(),
+                operator_id="operator:test", reason="real provider fixture",
+                published_at_ms=fixture.now - 400,
+            )
+        from paper_execution.account_risk_provider import SQLitePaperAccountRiskSnapshotProvider
+        provider = SQLitePaperAccountRiskSnapshotProvider(
+            fixture.path, state, clock=lambda: fixture.now
+        )
+        bundle = provider.read_bundle(
+            account_scope_id="paper-account", session_id=token.session_id,
+            fencing_generation=token.fencing_generation,
+        )
+        self.assertTrue(bundle.snapshot.verified)
+        self.assertTrue(bundle.snapshot.ledger_reconciled)
+        self.assertEqual(bundle.snapshot.account_scope_id, "paper-account")
+        self.assertEqual(bundle.snapshot.session_id, token.session_id)
+        self.assertEqual(bundle.snapshot.fencing_generation, token.fencing_generation)
+        self.assertEqual(bundle.snapshot.provenance.source_id, "T0_CANONICAL_MARKET_DATA")
+        self.assertEqual(bundle.policy.version, "paper-risk-provider-v1")
+
     def test_provider_protocol_read_snapshot_returns_only_verified_snapshot(self):
         with patch(
             "paper_execution.account_risk_provider.resolve_paper_account_binding",
