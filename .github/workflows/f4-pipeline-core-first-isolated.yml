@@ -6,9 +6,6 @@ on:
       - main
     paths:
       - ".github/workflows/f4-pipeline-core-first-isolated.yml"
-      - "pipeline/api.py"
-      - "pipeline/test_api.py"
-      - "paper_execution/database_paths.py"
       - "pipeline/test_decision.py"
       - "pipeline/values.py"
       - "market_data/store.py"
