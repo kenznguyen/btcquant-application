@@ -1,0 +1,92 @@
+name: T2 AI Signal Contract RED specification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/architecture/AI_STRATEGY_SIGNAL_CONTRACT_V1.md"
+      - "pipeline/test_ai_signal_contract_red.py"
+      - ".github/workflows/t2-ai-signal-contract-red.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t2-ai-signal-contract-red
+  cancel-in-progress: false
+
+jobs:
+  expected-red:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify pinned RED specification
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git hash-object docs/architecture/AI_STRATEGY_SIGNAL_CONTRACT_V1.md)" = "TO_BE_FILLED_DOC"
+          test "$(git hash-object pipeline/test_ai_signal_contract_red.py)" = "TO_BE_FILLED_TEST"
+          mkdir -p "$RUNNER_TEMP/t2-ai-signal-red"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_head_sha=$GITHUB_SHA"
+            echo "python_image=python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df"
+            echo "network=none"
+            echo "credentials=none"
+            echo "database_mount=none"
+          } > "$RUNNER_TEMP/t2-ai-signal-red/metadata.txt"
+
+      - name: Run RED tests and verify the intended missing implementation
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/t2-ai-signal-red/red-test.log"
+          set +e
+          docker run --rm --platform linux/amd64 --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges --pids-limit 64 \
+            --memory 1g --cpus 1 --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=64m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --env PYTHONPATH=/workspace --env PYTHONDONTWRITEBYTECODE=1 \
+            --workdir /workspace "$PYTHON_IMAGE" \
+            python -m unittest -v pipeline.test_ai_signal_contract_red > "$log" 2>&1
+          rc=$?
+          set -e
+          cat "$log"
+          test "$rc" -ne 0
+          grep -F "No module named 'pipeline.ai_signal_contract'" "$log" >/dev/null
+          test "$(grep -c '^ERROR: test_' "$log")" = "10"
+          {
+            echo "red_status=EXPECTED_RED"
+            echo "red_test_count=10"
+            echo "failure_cause=missing pipeline.ai_signal_contract implementation"
+            echo "network=none"
+            echo "database_mount=none"
+          } >> "$RUNNER_TEMP/t2-ai-signal-red/metadata.txt"
+          {
+            echo "## T2 AI Signal Contract — expected RED"
+            echo "- Source SHA: $GITHUB_SHA"
+            echo "- RED tests: 10"
+            echo "- Expected missing module: pipeline.ai_signal_contract"
+            echo "- No implementation, database, network, credentials or execution access"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload RED evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t2-ai-signal-contract-red-evidence
+          path: ${{ runner.temp }}/t2-ai-signal-red/
+          if-no-files-found: error
+          retention-days: 14
