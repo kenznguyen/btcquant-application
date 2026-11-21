@@ -185,7 +185,7 @@ def build_valid_s1_fixture() -> dict[str, Any]:
         available_at = open_time + 900000
         raw_fields = [
             str(open_time), open_value, high_value, low_value, close_value,
-            volume_value, str(available_at), "0", "0", "0", "0", "0",
+            volume_value, str(available_at - 1), "0", "0", "0", "0", "0",
         ]
         raw_digest = _enc_digest("T0-RAW-CSV-ROW-V1", *raw_fields)
         source_row_id = "row1:" + _enc_digest(
