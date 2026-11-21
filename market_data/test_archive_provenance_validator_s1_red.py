@@ -85,6 +85,17 @@ def _refresh_link_id(link: dict[str, Any]) -> None:
     )
 
 
+def _refresh_source_row_identity(payload: dict[str, Any], index: int) -> None:
+    row = payload["source_rows"][index]
+    row["source_row_id"] = "row1:" + _enc_digest(
+        "T0-SOURCE-ROW-V1", row["member_id"], row["physical_record_ordinal"],
+        bytes.fromhex(row["raw_row_digest"]),
+    )
+    link = payload["links"][index]
+    link["source_row_id"] = row["source_row_id"]
+    _refresh_link_id(link)
+
+
 def _renumber_attempt_and_reference(payload: dict[str, Any], index: int, number: int) -> None:
     attempt = payload["attempts"][index]
     obj = next(item for item in payload["objects"] if item["object_id"] == attempt["object_id"])
@@ -462,6 +473,7 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
     def test_source_row_provenance_invalid_isolated(self) -> None:
         # Isolate the physical/data ordinal offset for a header-present CSV.
         self.payload["source_rows"][0]["physical_record_ordinal"] = 1
+        _refresh_source_row_identity(self.payload, 0)
         self.assert_s1_error("SOURCE_ROW_PROVENANCE_INVALID")
 
     def test_candle_value_digest_invalid_isolated(self) -> None:
@@ -497,6 +509,7 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.payload["pairs"][0]["zip_crc_ok"] = 0
         self.payload["members"][0]["parser_source_sha"] = "invalid"
         self.payload["source_rows"][0]["physical_record_ordinal"] = 1
+        _refresh_source_row_identity(self.payload, 0)
 
         self.payload["candles"][1]["candle_value_id"] = "cv1:" + "0" * 64
         _sync_candle_value_id(self.payload, 1)
