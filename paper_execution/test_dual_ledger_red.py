@@ -58,6 +58,28 @@ class DualLedgerRedTest(unittest.TestCase):
                    risk_ready=1,unavailable_reason=NULL,updated_at_ms=? WHERE account_id=1""",
                 (day, self.now, self.now-60_000, self.now),
             )
+        from paper_execution.mark_provenance import build_market_mark_provenance
+        from paper_execution.account_history import record_consumed_market_mark
+        seed_mark = build_market_mark_provenance(
+            {
+                "symbol": "BTCUSDT", "timeframe": "15m",
+                "datasetVersion": "sha256:dual-ledger-seed",
+                "candles": [{
+                    "openTimeMs": self.now-960_000, "closeTimeMs": self.now-60_000,
+                    "open": "100", "high": "101", "low": "99",
+                    "close": "100", "volume": "1",
+                }],
+            },
+            source_id="T0_CANONICAL_MARKET_DATA",
+        )
+        with sqlite3.connect(path) as connection:
+            consumed = record_consumed_market_mark(
+                connection, seed_mark, observed_at_ms=self.now
+            )
+            connection.execute(
+                "UPDATE paper_account_risk_state SET last_mark_id=? WHERE account_id=1",
+                (consumed["markId"],),
+            )
         if establish_cutover:
             self.core, self.ai = core, ai
             ledger.record_funding_coverage(
