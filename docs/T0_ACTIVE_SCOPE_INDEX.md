@@ -587,3 +587,12 @@
 - Real archive format/parser compatibility: **NOT VERIFIED**; exact source CSV header/encoding/member/delimiter/numeric grammar/close-time convention remain unfrozen. Parser contract freeze is **BLOCKED** pending approved real-source evidence or a new owner decision.
 - No archive/REST access, host/VPS, SQLite, Canonical data, importer, Contract 1.2.0 schema/API, workflow, runtime, deployment, T1/T2 integration, exchange credentials or trading was accessed or changed.
 - Next: preserve this parser as a provisional offline test utility. Request separate approval before any source-format verification, Contract 1.2.0 work, importer, workflow or staging execution.
+
+
+## 2026-11-21 — Real archive CSV sample verification approved, execution gated
+
+- Owner approved exactly 6 ZIP + 6 paired .CHECKSUM objects (M15/H1, first/middle/latest sample periods) for real-source CSV format inspection on a GitHub-hosted ephemeral runner.
+- Decision: docs/decisions/T0_ARCHIVE_CSV_REAL_FORMAT_SAMPLE_VERIFICATION_APPROVAL_2026-11-21.md, commit f46f1b2e76c0fcdc38ecde6c45c8fee52e76f904.
+- Inventory blob: eb251ac0924b46add906123f99b82e054d887a59. Exact sidecars are resolved only through each selected ZIP's paired_sidecar_key in that inventory.
+- BLOCKED — NOT EXECUTED: workflow YAML creation was explicitly excluded; obtain separate approval for a one-purpose manual workflow. No archive object was fetched.
+- Parser contract freeze, importer, SQLite and Contract 1.2.0 implementation remain unauthorized pending real-source evidence and separate decisions.
