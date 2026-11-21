@@ -140,7 +140,8 @@ class DualStrategyApiScopeRedTest(unittest.TestCase):
         from unittest.mock import Mock
 
         window = {
-            "candles": [{"close": "105", "closeTimeMs": 1_799_999_940_000}],
+            "symbol": "BTCUSDT", "timeframe": "15m",
+            "candles": [{"openTimeMs": 1_799_999_040_000, "close": "105", "closeTimeMs": 1_799_999_940_000}],
             "coverage": {"complete": True},
             "datasetVersion": "sha256:" + "e" * 64,
         }
@@ -153,6 +154,9 @@ class DualStrategyApiScopeRedTest(unittest.TestCase):
         account.record_account_mark.assert_called_once_with(
             "105", 1_799_999_940_000, 1_800_000_000_000,
             "sha256:" + "e" * 64, "100",
+            mark_provenance=__import__("paper_execution.mark_provenance", fromlist=["build_market_mark_provenance"]).build_market_mark_provenance(
+                window, source_id="T0_CANONICAL_MARKET_DATA"
+            ),
         )
         account.record_equity.assert_not_called()
 
@@ -163,8 +167,20 @@ class DualStrategyApiScopeRedTest(unittest.TestCase):
         self.activate_dual_schema()
         account = api.ledger()
         observed = 1_800_000_000_000
+        from paper_execution.mark_provenance import build_market_mark_provenance
+        mark_window = {
+            "symbol": "BTCUSDT", "timeframe": "15m",
+            "datasetVersion": "sha256:" + "f" * 64,
+            "candles": [{
+                "openTimeMs": observed-900_000, "closeTimeMs": observed-60_000,
+                "open": "99", "high": "101", "low": "98", "close": "100", "volume": "1",
+            }],
+        }
         result = account.record_account_mark(
-            "100", observed-60_000, observed, "sha256:" + "f"*64, "100",
+            "100", observed-60_000, observed, mark_window["datasetVersion"], "100",
+            mark_provenance=build_market_mark_provenance(
+                mark_window, source_id="T0_CANONICAL_MARKET_DATA"
+            ),
         )
 
         self.assertTrue(result["available"])
