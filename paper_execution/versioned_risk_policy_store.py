@@ -73,7 +73,7 @@ def _require_schema(connection):
         "SELECT checksum,status FROM paper_risk_policy_schema_migrations WHERE version=?",
         (MIGRATION_VERSION,),
     ).fetchone()
-    if migration != (MIGRATION_CHECKSUM, "APPLIED"):
+    if migration is None or tuple(migration) != (MIGRATION_CHECKSUM, "APPLIED"):
         raise sqlite3.DatabaseError("RISK_POLICY_SCHEMA_MIGRATION_INVALID")
     triggers = {row[0] for row in connection.execute(
         "SELECT name FROM sqlite_master WHERE type='trigger'"
