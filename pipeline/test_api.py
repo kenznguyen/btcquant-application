@@ -96,6 +96,12 @@ class FiveLayerApiTest(unittest.TestCase):
         return int(status.split()[0]), json.loads(data)
 
     def enable_dual_ledger(self):
+        from paper_execution import equity as paper_equity
+        with sqlite3.connect(self.paper_db) as connection:
+            paper_equity.ensure(connection)
+            connection.execute(
+                "INSERT OR IGNORE INTO paper_account_config (id, initial_capital) VALUES (1, '100')"
+            )
         PaperLedger(self.paper_db, strategy_id="STRATEGY_CORE", source_sha="a" * 40)
 
     def valid_ai_decision(self):
