@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
+import hashlib
 import json
 import sqlite3
 import subprocess
@@ -12,6 +13,27 @@ from paper_execution import ledger
 from paper_execution.replay_reconciliation import reconcile_daily_equity_replay
 from paper_execution.ledger import PaperLedger
 from paper_execution.risk_contract import provision_account_risk_contract, read_account_risk_contract, update_account_risk_contract
+
+def canonical_t0_window(start_ms, as_of_ms, close_price="100"):
+    end_ms = start_ms + 900_000
+    payload = {
+        "exchange": "binance", "marketType": "USDT_PERPETUAL",
+        "symbol": "BTCUSDT", "timeframe": "15m",
+        "startMs": start_ms, "endMs": end_ms, "asOfMs": as_of_ms,
+        "candles": [{
+            "openTimeMs": start_ms, "closeTimeMs": end_ms,
+            "availableAtMs": end_ms,
+            "open": "100", "high": "101", "low": "99",
+            "close": close_price, "volume": "1",
+        }],
+    }
+    digest = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return {
+        **payload, "datasetVersion": "sha256:" + digest,
+        "coverage": {"expected": 1, "returned": 1, "complete": True, "gaps": []},
+    }
 
 
 class DualLedgerRedTest(unittest.TestCase):
@@ -34,6 +56,8 @@ class DualLedgerRedTest(unittest.TestCase):
         bootstrap.record_equity(
             "100", self.now - 60_000, self.now, "sha256:" + "d" * 64, "100"
         )
+        seed_window = canonical_t0_window(self.now - 900_000, self.now, "100")
+        self.dataset_version = seed_window["datasetVersion"]
         limits = {"maxDrawdownPct": "50", "maxDailyLossUsdt": "50", "maxExposureUsdt": "1000"}
         provision_account_risk_contract(
             path, limits, source="DUAL_LEDGER_TEST_FIXTURE", recorded_at_ms=self.now
@@ -56,23 +80,12 @@ class DualLedgerRedTest(unittest.TestCase):
                    last_equity_quote='100',last_mark_price='100',mark_observed_at_ms=?,
                    mark_candle_close_ms=?,dataset_version=?,
                    risk_ready=1,unavailable_reason=NULL,updated_at_ms=? WHERE account_id=1""",
-                (day, self.now, self.now-60_000, "sha256:" + "d" * 64, self.now),
+                (day, self.now, self.now, self.dataset_version, self.now),
             )
         from paper_execution.mark_provenance import build_market_mark_provenance
         from paper_execution.account_history import record_consumed_market_mark
         seed_mark = build_market_mark_provenance(
-            {
-                "exchange": "binance", "marketType": "USDT_PERPETUAL",
-                "symbol": "BTCUSDT", "timeframe": "15m",
-                "datasetVersion": "sha256:" + "d" * 64,
-                "coverage": {"complete": True},
-                "candles": [{
-                    "openTimeMs": self.now-960_000, "closeTimeMs": self.now-60_000,
-                    "open": "100", "high": "101", "low": "99",
-                    "close": "100", "volume": "1",
-                }],
-            },
-            source_id="T0_CANONICAL_MARKET_DATA",
+            seed_window, source_id="T0_CANONICAL_MARKET_DATA"
         )
         with sqlite3.connect(path) as connection:
             consumed = record_consumed_market_mark(
@@ -97,9 +110,9 @@ class DualLedgerRedTest(unittest.TestCase):
                 expected_initial_capital_quote="100",
                 expected_realized_pnl_quote="0", expected_fees_quote="0",
                 expected_funding_quote="0", expected_account_equity_quote="100",
-                mark_price="100", mark_candle_close_ms=self.now-60_000,
+                mark_price="100", mark_candle_close_ms=self.now,
                 mark_observed_at_ms=self.now,
-                dataset_version="sha256:" + "d" * 64,
+                dataset_version=self.dataset_version,
                 funding_coverage_start_at_ms=self.now-86_400_000,
                 source="FIXTURE_RECONCILED_HISTORY",
                 source_snapshot_id="fixture:account-cutover",
