@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — AccountRiskSnapshot V1 contract increment
+
+- B2 remains **BLOCKED** pending an authoritative account-level equity/exposure source and Shared Risk Engine policy integration.
+- Owner-approved direction: immutable, verified account-level `AccountRiskSnapshot`; Provider → contract → Shared Risk Engine. The Provider owns source acquisition, consistent snapshot construction, provenance and reconciliation. Shared Risk Engine must not query a database or depend directly on legacy PaperLedger.
+- Decision record: `docs/decisions/ACCOUNT_RISK_SNAPSHOT_V1_CONTRACT_2026-11-21.md`, commit `4759cc3bdf88f5e163a97249b48dce7e7b8ddfe8`.
+- Contract module: `persistent_state/account_risk.py`; final source commit for this increment: `57802e4014afb3789baa8e1906928ded8df6402a`; blob SHA `9bf2e8d7f824d653e2bead660a4563b5f791dd96`.
+- Contract is immutable and versioned; binds snapshot to account scope, session and fencing generation; captures generated/as-of times, quote asset, exact decimal equity, gross exposure, reserved margin, drawdown and daily-loss magnitudes; provenance includes provider/source/source snapshot/version and exact payload SHA-256; carries explicit verification and ledger-reconciliation flags.
+- Gross exposure is absolute LONG + SHORT exposure (not netted). Reserved margin is a separate amount. Contract rejects binary floats, noncanonical/negative monetary values, invalid provenance/hash, invalid binding/timestamps, and unsupported schema version. Freshness thresholds are intentionally policy-configured, not hardcoded here.
+- Contract tests: `persistent_state/test_account_risk_snapshot.py`, commit `006b33765eb4a49067a10a16551fc43eb73a3183`; 14 test methods authored. Workflow updated to include the suite, commit `2389e1995460a269b39e38c5f87c1178d727f325`.
+- Verification: GitHub Actions run ID/result and artifact are **NOT VERIFIED** in this increment. Do not claim test PASS until exact run evidence is retrieved. Combined commit status endpoint returned no status records; the available workflow-run listing did not expose push runs. No local execution evidence was recorded.
+- Provider protocol is only a typed port; no concrete Provider, authoritative source, data-source selection, or SharedRiskEngine integration has been implemented. Existing RiskAdmissionContext still accepts account equity and ledger reconciliation separately. Full drawdown/daily-loss/gross-exposure policy checks remain **NOT IMPLEMENTED**.
+- No database/source was accessed, no legacy PaperLedger adopted, no T0/Feeder/VPS/T1/T2/runtime/exchange credentials accessed, no paper/live execution or orders.
+- Next: obtain exact isolated CI run evidence; then implement Provider-side structural binding validation and connect AccountRiskSnapshot into RiskAdmissionContext/SharedRiskEngine in a separate tested increment. B2 must remain BLOCKED until the authoritative source and versioned thresholds are selected and independently reviewed.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — D5 repository evidence gates and SessionOrchestrator CI PASS
 
 - D4 remains **APPROVED**. D5 is **APPROVED FOR IMPLEMENTATION**.
