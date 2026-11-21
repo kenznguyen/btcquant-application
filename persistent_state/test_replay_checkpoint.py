@@ -16,6 +16,7 @@ from persistent_state.repository import (
     CheckpointIntegrityError, SQLiteStateRepository,
 )
 from persistent_state.test_support import ready_evidence_for
+from persistent_state.test_support import ready_evidence_for
 from persistent_state.replay import (
     ReplayValidationError, replay_events, replay_from_checkpoint,
 )
@@ -110,8 +111,14 @@ class CheckpointRepositoryTests(unittest.TestCase):
             (SessionStatus.RESTORING, SessionStatus.READY),
             (SessionStatus.READY, SessionStatus.RUNNING),
         ):
+            kwargs = {}
+            if target is SessionStatus.READY:
+                kwargs["readiness_evidence"] = ready_evidence_for(
+                    self.repository.get_session("session-1"), self.token,
+                )
             self.repository.advance_session(
-                self.token, expected_status=expected, new_status=target, at_ms=1_800_000_000_001,
+                self.token, expected_status=expected, new_status=target,
+                at_ms=1_800_000_000_001, **kwargs,
             )
 
     def test_publishes_verified_checkpoint_and_advances_active_pointer(self):
