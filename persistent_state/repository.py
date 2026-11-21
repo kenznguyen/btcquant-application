@@ -193,6 +193,7 @@ class StateRepository(Protocol):
         self, fencing_token: FencingToken, *, expected_status: SessionStatus,
         new_status: SessionStatus, at_ms: int,
         readiness_evidence: ReadyEvidenceBundle | None = None,
+        resume_confirmation: OperatorResumeConfirmation | None = None,
     ) -> SessionRecord: ...
 
     def read_ready_evidence(self, session_id: str) -> ReadyEvidenceBundle: ...
@@ -942,6 +943,7 @@ class SQLiteStateRepository:
         new_status: SessionStatus,
         at_ms: int,
         readiness_evidence: ReadyEvidenceBundle | None = None,
+        resume_confirmation: OperatorResumeConfirmation | None = None,
     ) -> SessionRecord:
         try:
             validate_session_transition(expected_status, new_status)
@@ -991,6 +993,41 @@ class SQLiteStateRepository:
             elif readiness_evidence is not None:
                 raise SessionTransitionError(
                     "readiness evidence is accepted only for RESTORING -> READY"
+                )
+            if new_status is SessionStatus.RUNNING:
+                if not isinstance(resume_confirmation, OperatorResumeConfirmation):
+                    raise SessionTransitionError(
+                        "READY -> RUNNING requires explicit operator Resume confirmation"
+                    )
+                self._require_operator_action_schema(connection)
+                ready_session = SessionRecord(
+                    session_id=session["session_id"],
+                    account_scope_id=session["account_scope_id"],
+                    status=SessionStatus(session["status"]),
+                    started_at_ms=session["started_at_ms"],
+                    initiator=session["initiator"],
+                    source_snapshot_id=session["source_snapshot_id"],
+                    config_hash=session["config_hash"],
+                    code_version=session["code_version"],
+                    last_committed_event_sequence=session["last_committed_event_sequence"],
+                    ended_at_ms=session["ended_at_ms"],
+                    stop_requested_at_ms=session["stop_requested_at_ms"],
+                    schema_version=session["schema_version"],
+                )
+                try:
+                    validate_resume_confirmation(
+                        ready_session,
+                        fencing_generation=fencing_token.fencing_generation,
+                        confirmation=resume_confirmation,
+                    )
+                except ValueError as exc:
+                    raise SessionTransitionError(str(exc)) from exc
+                if resume_confirmation.confirmed_at_ms > at_ms:
+                    raise SessionTransitionError("operator Resume confirmation cannot be in the future")
+                self._persist_resume_confirmation(connection, fencing_token, resume_confirmation)
+            elif resume_confirmation is not None:
+                raise SessionTransitionError(
+                    "operator Resume confirmation is accepted only for READY -> RUNNING"
                 )
             effective_status = new_status
             stop_requested_at_ms = session["stop_requested_at_ms"]
