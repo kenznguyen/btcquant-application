@@ -6,6 +6,7 @@ import hmac
 import json
 import re
 import sqlite3
+from decimal import Decimal
 
 
 SCHEMA_VERSION = 1
@@ -47,7 +48,7 @@ def _validate_policy(document):
         value = drawdown[name]
         if not isinstance(value, str) or not _DECIMAL.fullmatch(value):
             raise ValueError("RISK_POLICY_DRAWDOWN_VALUE_INVALID")
-    if drawdown["mode"] == "PERCENT_HWM" and float(drawdown["value"]) > 100:
+    if drawdown["mode"] == "PERCENT_HWM" and Decimal(drawdown["value"]) > Decimal("100"):
         raise ValueError("RISK_POLICY_DRAWDOWN_VALUE_INVALID")
     for name in ("maxDailyLossQuote", "maxGrossExposureQuote"):
         value = document[name]
@@ -80,6 +81,9 @@ def _require_schema(connection):
         "paper_risk_policy_versions_immutable_delete",
         "paper_risk_policy_publication_audit_immutable_update",
         "paper_risk_policy_publication_audit_immutable_delete",
+        "paper_risk_policy_active_audit_insert",
+        "paper_risk_policy_active_audit_update",
+        "paper_risk_policy_active_no_delete",
     }.issubset(triggers):
         raise sqlite3.DatabaseError("RISK_POLICY_IMMUTABILITY_GUARD_MISSING")
 
@@ -159,6 +163,33 @@ def initialize_risk_policy_schema(connection, *, source_sha, applied_at_ms):
                 f"""CREATE TRIGGER {table}_immutable_delete BEFORE DELETE ON {table}
                     BEGIN SELECT RAISE(ABORT,'RISK_POLICY_HISTORY_IMMUTABLE'); END"""
             )
+        connection.execute("""CREATE TRIGGER paper_risk_policy_active_audit_insert
+            BEFORE INSERT ON paper_risk_policy_active
+            WHEN NOT EXISTS (
+                SELECT 1 FROM paper_risk_policy_publication_audit a
+                WHERE a.account_id=NEW.account_id
+                  AND a.activation_sequence=NEW.activation_sequence
+                  AND a.previous_payload_sha256 IS NULL
+                  AND a.policy_version=NEW.policy_version
+                  AND a.payload_sha256=NEW.payload_sha256
+                  AND a.published_at_ms=NEW.activated_at_ms
+            )
+            BEGIN SELECT RAISE(ABORT,'RISK_POLICY_ACTIVE_REQUIRES_AUDIT'); END""")
+        connection.execute("""CREATE TRIGGER paper_risk_policy_active_audit_update
+            BEFORE UPDATE ON paper_risk_policy_active
+            WHEN NOT EXISTS (
+                SELECT 1 FROM paper_risk_policy_publication_audit a
+                WHERE a.account_id=NEW.account_id
+                  AND a.activation_sequence=NEW.activation_sequence
+                  AND a.previous_payload_sha256=OLD.payload_sha256
+                  AND a.policy_version=NEW.policy_version
+                  AND a.payload_sha256=NEW.payload_sha256
+                  AND a.published_at_ms=NEW.activated_at_ms
+            )
+            BEGIN SELECT RAISE(ABORT,'RISK_POLICY_ACTIVE_REQUIRES_AUDIT'); END""")
+        connection.execute("""CREATE TRIGGER paper_risk_policy_active_no_delete
+            BEFORE DELETE ON paper_risk_policy_active
+            BEGIN SELECT RAISE(ABORT,'RISK_POLICY_ACTIVE_DELETE_FORBIDDEN'); END""")
         connection.execute(
             """INSERT INTO paper_risk_policy_schema_migrations
                (version,checksum,source_sha,applied_at_ms,status)
@@ -233,6 +264,7 @@ def publish_versioned_risk_policy(
 
     if connection.in_transaction:
         raise sqlite3.DatabaseError("RISK_POLICY_PUBLICATION_REQUIRES_IDLE_CONNECTION")
+    connection.execute("PRAGMA foreign_keys=ON")
     connection.execute("BEGIN IMMEDIATE")
     try:
         active = connection.execute(
@@ -260,6 +292,15 @@ def publish_versioned_risk_policy(
              source_policy_path, source_policy_sha256, published_at_ms, operator_id,
              reason, previous_version, previous_hash),
         )
+        connection.execute(
+            """INSERT INTO paper_risk_policy_publication_audit
+               (account_id,activation_sequence,previous_policy_version,previous_payload_sha256,
+                policy_version,payload_sha256,source_git_commit_sha,source_policy_path,
+                operator_id,reason,published_at_ms)
+               VALUES (1,?,?,?,?,?,?,?,?,?,?)""",
+            (sequence, previous_version, previous_hash, document["policyVersion"], payload_hash,
+             source_git_commit_sha, source_policy_path, operator_id, reason, published_at_ms),
+        )
         if active:
             changed = connection.execute(
                 """UPDATE paper_risk_policy_active
@@ -276,15 +317,6 @@ def publish_versioned_risk_policy(
                    VALUES (1,?,?,?,?)""",
                 (document["policyVersion"], payload_hash, sequence, published_at_ms),
             )
-        connection.execute(
-            """INSERT INTO paper_risk_policy_publication_audit
-               (account_id,activation_sequence,previous_policy_version,previous_payload_sha256,
-                policy_version,payload_sha256,source_git_commit_sha,source_policy_path,
-                operator_id,reason,published_at_ms)
-               VALUES (1,?,?,?,?,?,?,?,?,?,?)""",
-            (sequence, previous_version, previous_hash, document["policyVersion"], payload_hash,
-             source_git_commit_sha, source_policy_path, operator_id, reason, published_at_ms),
-        )
         connection.commit()
         return {
             "policyVersion": document["policyVersion"],
