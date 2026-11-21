@@ -1,0 +1,204 @@
+name: T0 Approved Single Archive Header Inspection
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t0-approved-single-archive-header-inspection
+  cancel-in-progress: false
+
+jobs:
+  inspect-one-approved-archive:
+    name: Inspect exact header record from one approved archive
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout approved source snapshot
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.13"
+
+      - name: Verify provenance and extract only the first CSV record
+        shell: bash
+        env:
+          APPROVAL_SOURCE_SHA: 02b407fe7d90efe184ae11d8b271a7aeb6e23f96
+          INVENTORY_BLOB_SHA: eb251ac0924b46add906123f99b82e054d887a59
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor "$APPROVAL_SOURCE_SHA" HEAD
+          python - <<'PY'
+          import csv
+          import hashlib
+          import io
+          import json
+          import os
+          import re
+          import subprocess
+          import tempfile
+          import zipfile
+          from pathlib import Path, PurePosixPath
+
+          ROOT = Path.cwd()
+          INVENTORY = "docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json"
+          INVENTORY_BLOB = os.environ["INVENTORY_BLOB_SHA"]
+          ZIP_KEY = "data/futures/um/monthly/klines/BTCUSDT/15m/BTCUSDT-15m-2022-08.zip"
+          ZIP_SIZE = 143927
+          ZIP_SHA256 = "517e241a31c2062c50ca9861eb832fa9b3505b0ae67350135d5a74d812228eab"
+          EXPECTED_DATA_ROWS = 2976
+          BASE = "https://data.binance.vision/"
+          REPORT = ROOT / "t0-approved-single-archive-header-inspection.json"
+
+          def sha256(data: bytes) -> str:
+              return hashlib.sha256(data).hexdigest()
+
+          inventory_blob = subprocess.check_output(
+              ["git", "rev-parse", f"HEAD:{INVENTORY}"], text=True
+          ).strip()
+          if inventory_blob != INVENTORY_BLOB:
+              raise SystemExit("approved inventory blob SHA mismatch")
+
+          inventory = json.loads((ROOT / INVENTORY).read_text(encoding="utf-8"))
+          matches = [x for x in inventory["objects"] if x.get("object_key") == ZIP_KEY]
+          if len(matches) != 1:
+              raise SystemExit("exact approved ZIP key is not unique in inventory")
+          entry = matches[0]
+          sidecar_key = ZIP_KEY + ".CHECKSUM"
+          if (entry.get("byte_size") != ZIP_SIZE or entry.get("sha256") != ZIP_SHA256
+                  or entry.get("paired_sidecar_key") != sidecar_key):
+              raise SystemExit("approved object metadata or sidecar pairing mismatch")
+
+          report = {
+              "status": "RUNNING",
+              "source_commit_sha": os.environ["GITHUB_SHA"],
+              "approval_source_sha": os.environ["APPROVAL_SOURCE_SHA"],
+              "inventory_blob_sha": INVENTORY_BLOB,
+              "zip_key": ZIP_KEY,
+              "expected_zip_size_bytes": ZIP_SIZE,
+              "expected_zip_sha256": ZIP_SHA256,
+              "sidecar_key": sidecar_key,
+              "scope": "one exact ZIP and its one paired CHECKSUM sidecar; first CSV record metadata only",
+              "raw_zip_csv_or_data_rows_uploaded": False,
+              "sqlite_created": False,
+              "importer_created": False,
+              "canonical_t0_modified": False,
+              "rest_tail_requested": False,
+          }
+
+          with tempfile.TemporaryDirectory(prefix="t0-header-inspection-") as tmp:
+              tmpdir = Path(tmp)
+              zip_path = tmpdir / "approved-sample.zip"
+              sidecar_path = tmpdir / "approved-sample.zip.CHECKSUM"
+              for key, target in ((ZIP_KEY, zip_path), (sidecar_key, sidecar_path)):
+                  subprocess.run(
+                      ["curl", "--fail", "--location", "--silent", "--show-error",
+                       "--proto", "=https", "--tlsv1.2", "--max-time", "90",
+                       "--max-filesize", "200000", "--output", str(target), BASE + key],
+                      check=True,
+                  )
+
+              zip_bytes = zip_path.read_bytes()
+              sidecar_bytes = sidecar_path.read_bytes()
+              actual_zip_sha = sha256(zip_bytes)
+              if len(zip_bytes) != ZIP_SIZE or actual_zip_sha != ZIP_SHA256:
+                  raise SystemExit("downloaded ZIP size or SHA-256 does not match approved inventory")
+
+              sidecar_text = sidecar_bytes.decode("ascii", errors="strict").strip()
+              sidecar_match = re.fullmatch(r"([0-9a-fA-F]{64})(?:[ \t]+\*?[^\r\n]+)?", sidecar_text)
+              if not sidecar_match or sidecar_match.group(1).lower() != ZIP_SHA256:
+                  raise SystemExit("paired CHECKSUM sidecar does not assert the approved ZIP SHA-256")
+
+              with zipfile.ZipFile(zip_path, "r") as archive:
+                  bad_member = archive.testzip()
+                  if bad_member is not None:
+                      raise SystemExit(f"ZIP CRC failure: {bad_member}")
+                  members = [x for x in archive.infolist() if not x.is_dir()]
+                  if len(members) != 1:
+                      raise SystemExit("expected exactly one non-directory ZIP member")
+                  member = members[0]
+                  member_path = PurePosixPath(member.filename)
+                  if member_path.is_absolute() or ".." in member_path.parts or member_path.suffix.lower() != ".csv":
+                      raise SystemExit("unsafe or non-CSV ZIP member")
+                  csv_bytes = archive.read(member)
+
+              if b"\x00" in csv_bytes:
+                  raise SystemExit("NUL byte in CSV member")
+              has_bom = csv_bytes.startswith(b"\xef\xbb\xbf")
+              csv_text = csv_bytes.decode("utf-8-sig", errors="strict")
+              if not csv_text:
+                  raise SystemExit("empty CSV member")
+              has_crlf = b"\r\n" in csv_bytes
+              without_crlf = csv_bytes.replace(b"\r\n", b"")
+              if b"\r" in without_crlf or (has_crlf and b"\n" in without_crlf):
+                  raise SystemExit("mixed or unsupported newline convention")
+              newline = "CRLF" if has_crlf else ("LF" if b"\n" in csv_bytes else "NONE")
+
+              reader = csv.reader(io.StringIO(csv_text, newline=""), strict=True)
+              first_record = next(reader, None)
+              if first_record is None or len(first_record) != 12:
+                  raise SystemExit("first CSV record is not exactly 12 fields")
+              if any(not field.strip() for field in first_record):
+                  raise SystemExit("first CSV record contains an empty field")
+
+              # The first record is reported verbatim as ordered fields. This check only
+              # labels it a candidate; a human must review the complete 12-field schema.
+              first_field_candidate = first_record[0].strip().casefold() in {"open_time", "open time"}
+              if not first_field_candidate:
+                  raise SystemExit("first record does not match the previously observed header indicator")
+
+              data_rows = 0
+              for row in reader:
+                  if len(row) != 12:
+                      raise SystemExit(f"record {data_rows + 2} does not contain exactly 12 fields")
+                  if any(not field.strip() for field in row):
+                      raise SystemExit(f"blank field in data record {data_rows + 2}")
+                  data_rows += 1
+              if data_rows != EXPECTED_DATA_ROWS:
+                  raise SystemExit(f"data row count mismatch: got {data_rows}, expected {EXPECTED_DATA_ROWS}")
+
+              report.update({
+                  "status": "PASS_SOURCE_SAMPLE_CAPTURED",
+                  "zip_size_bytes": len(zip_bytes),
+                  "zip_sha256": actual_zip_sha,
+                  "sidecar_size_bytes": len(sidecar_bytes),
+                  "sidecar_sha256": sha256(sidecar_bytes),
+                  "sidecar_asserted_zip_sha256": sidecar_match.group(1).lower(),
+                  "zip_crc": "PASS",
+                  "csv_member": member.filename,
+                  "csv_member_size_bytes": len(csv_bytes),
+                  "csv_member_sha256": sha256(csv_bytes),
+                  "csv_encoding": "UTF-8",
+                  "utf8_bom_present": has_bom,
+                  "delimiter": "comma",
+                  "newline": newline,
+                  "first_record_field_count": len(first_record),
+                  "first_record_fields_in_source_order": first_record,
+                  "first_record_classification": "HEADER_CANDIDATE_REQUIRES_MANUAL_SCHEMA_REVIEW",
+                  "first_field_indicator": first_record[0],
+                  "data_record_count_after_first_record": data_rows,
+                  "expected_data_record_count_from_inventory": EXPECTED_DATA_ROWS,
+                  "header_contract_frozen": False,
+              })
+
+          REPORT.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print(json.dumps(report, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload header metadata report only
+        if: always() && hashFiles('t0-approved-single-archive-header-inspection.json') != ''
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        with:
+          name: t0-approved-single-archive-header-inspection
+          path: t0-approved-single-archive-header-inspection.json
+          if-no-files-found: error
+          retention-days: 14
