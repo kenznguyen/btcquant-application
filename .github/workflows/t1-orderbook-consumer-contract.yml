@@ -1,0 +1,104 @@
+name: T1 Orderbook Consumer Contract V1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - market_data/t1_orderbook/**
+      - market_data/test_t1_orderbook_contract.py
+      - .github/workflows/t1-orderbook-consumer-contract.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t1-orderbook-consumer-contract
+  cancel-in-progress: false
+
+jobs:
+  consumer-contract:
+    name: Offline T1 orderbook consumer contract tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify source and test files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -s market_data/test_t1_orderbook_contract.py
+          mkdir -p "$RUNNER_TEMP/t1-orderbook-evidence"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_commit=$GITHUB_SHA"
+            echo "test_blob_sha=$(git rev-parse HEAD:market_data/test_t1_orderbook_contract.py)"
+            echo "network_in_test_container=none"
+            echo "provider_runtime=not_connected"
+            echo "t0_data=not_mounted"
+            echo "credentials=none"
+          } > "$RUNNER_TEMP/t1-orderbook-evidence/metadata.txt"
+
+      - name: Run tests in isolated network-disabled Python container
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          docker pull --platform linux/amd64 "$PYTHON_IMAGE"
+          artifacts="$RUNNER_TEMP/t1-orderbook-evidence"
+          log="$artifacts/unittest.log"
+          if docker run --rm \
+            --platform linux/amd64 \
+            --network none \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --pids-limit 128 \
+            --memory 1g \
+            --cpus 2 \
+            --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --mount "type=bind,src=$artifacts,dst=/artifacts" \
+            --env HOME=/tmp \
+            --env TMPDIR=/tmp \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/workspace \
+            --workdir /workspace \
+            "$PYTHON_IMAGE" \
+            bash -euc 'python -B -m unittest -v market_data.test_t1_orderbook_contract' \
+            > "$log" 2>&1; then
+            test_status=0
+          else
+            test_status=$?
+          fi
+          cat "$log"
+          test_count="$(grep -E '^Ran [0-9]+ tests?' "$log" | tail -n 1 | awk '{print $2}' || true)"
+          {
+            echo "test_count=${test_count:-NOT_REPORTED}"
+            echo "test_exit_code=$test_status"
+          } >> "$artifacts/metadata.txt"
+          {
+            echo "## T1 Orderbook Consumer Contract V1"
+            echo "- Exact source SHA: $GITHUB_SHA"
+            echo "- Test count: ${test_count:-NOT_REPORTED}"
+            echo "- Test container network: disabled"
+            echo "- T1 Provider/T0 data/runtime: not connected or mounted"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$test_status"
+
+      - name: Upload test evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t1-orderbook-consumer-contract-evidence
+          path: ${{ runner.temp }}/t1-orderbook-evidence/
+          if-no-files-found: warn
+          retention-days: 14
