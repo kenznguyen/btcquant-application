@@ -6569,3 +6569,19 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - Next gate: owner must separately approve one narrowly scoped inspection of the exact allowlisted M15 monthly 2022-08 ZIP that validates ZIP/sidecar provenance and emits only the first CSV record as 12 ordered fields plus member/hash/encoding metadata. Prior three-dispatch approval is consumed; this audit does not authorize another archive request or workflow dispatch.
 - After obtaining source evidence, propose exact header tuple(s) and normalization policy for separate contract approval. Only then request separate TDD implementation approval.
 - No archive/REST request, workflow dispatch/rerun/edit, parser/test edit, SQLite/importer/staging, Contract 1.2.0 implementation, Canonical T0, T1/T2, VPS/runtime, deployment, credentials or trading operation was performed.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — approved one-archive header inspection workflow
+
+- Owner affirmatively approved one narrow inspection of only `data/futures/um/monthly/klines/BTCUSDT/15m/BTCUSDT-15m-2022-08.zip` and its exact paired `.CHECKSUM` sidecar, to capture the complete first CSV record (12 ordered fields) plus provenance/encoding metadata. This is separate from and does not rerun the exhausted six-archive workflow.
+- Dedicated manual-only workflow created: `.github/workflows/t0-approved-single-archive-header-inspection.yml`.
+- Workflow commit `8332f9e10c1844f40f92273134724bb65aa184e1`; blob `c40ed95b707e6a67165d6b2007fc2001e2e38225`; parent was prior main `b56bd519501711f463662353a43e6579d7b92494`.
+- Pinned inventory blob `eb251ac0924b46add906123f99b82e054d887a59`; exact ZIP size 143,927 bytes; SHA-256 `517e241a31c2062c50ca9861eb832fa9b3505b0ae67350135d5a74d812228eab`; expected subsequent data rows 2,976.
+- Workflow is restricted to one ZIP + one sidecar, checks provenance/CRC/member/encoding/BOM/newline/12-field rows/row count, and emits only a JSON artifact containing the exact ordered first record and metadata. It does not upload raw archive/sidecar/CSV/data rows, does not use parser, and does not create SQLite/importer/staging.
+- Evidence: `docs/evidence/T0_APPROVED_SINGLE_ARCHIVE_HEADER_INSPECTION_2026-11-21.md`, commit `2822a8b90bb9941d2d31ead0990ac3824a05661d`.
+- Owner approval appended to `docs/decisions/T0_REAL_ARCHIVE_CSV_SAMPLE_VERIFICATION_WORKFLOW_APPROVAL_2026-11-21.md`, commit `bea8f0488acb076ca1f68831c8404c24f3e63b88`.
+- Static source-scope inspection: one ZIP key/one paired sidecar and ordered first-record capture **PASS**. YAML/actionlint validation **NOT RUN**.
+- Dispatch **NOT RUN**: the connected GitHub toolset in this session has no new workflow_dispatch operation. User must manually dispatch this dedicated workflow exactly once from GitHub Actions on `main`; do not rerun the old six-archive workflow.
+- Current status: workflow committed; archive retrieval **NOT RUN**; exact 12 header fields **NOT VERIFIED**; header contract freeze **BLOCKED**; TDD implementation **NOT AUTHORIZED**.
+- Next step: inspect the dedicated run's job log and JSON artifact after the user manually dispatches. Then propose exact tuple/normalization policy for separate approval, and request TDD authorization only after the contract decision.
+- No archive/REST request, parser/test change, SQLite/importer/staging, Contract 1.2.0 implementation, Canonical T0, T1/T2, VPS/runtime, deployment, credentials or trading action was performed.
