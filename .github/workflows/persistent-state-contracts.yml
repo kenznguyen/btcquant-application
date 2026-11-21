@@ -7,6 +7,7 @@ on:
     paths:
       - "persistent_state/**"
       - "paper_execution/**"
+      - "pipeline/**"
       - ".github/workflows/persistent-state-contracts.yml"
 
 permissions:
@@ -80,6 +81,7 @@ jobs:
               paper_execution.test_f4_r1_account_contract \
               paper_execution.test_f4_r3_reset_red \
               paper_execution.test_market_mark_provenance \
+              paper_execution.test_dual_strategy_api_red \
               paper_execution.test_versioned_risk_policy_store \
               paper_execution.test_risk_limits \
               paper_execution.test_ledger \
