@@ -15,6 +15,7 @@ from persistent_state.repository import (
     AggregateMutation, CheckpointConflictError, CheckpointCoverageError,
     CheckpointIntegrityError, SQLiteStateRepository,
 )
+from persistent_state.test_support import ready_evidence_for
 from persistent_state.replay import (
     ReplayValidationError, replay_events, replay_from_checkpoint,
 )
