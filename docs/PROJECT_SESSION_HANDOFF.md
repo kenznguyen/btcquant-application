@@ -6235,3 +6235,17 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Real Binance REST tail remains NOT VERIFIED and closed by owner decision; no further retrieval. Former Canonical DB remains LOST; reconstructed DB NOT CREATED.
 - T0 overall readiness/data reconstruction/runtime/deployment/production: **NOT VERIFIED**.
 - No source/test/workflow/dependency changes, DB/data changes, PostgreSQL activation, Feeder runtime, VPS, T1/T2 integration or trading actions occurred. Do not activate PostgreSQL or runtime without separate approval.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — Canonical reconstruction reuse architecture and specification
+
+- Owner approved architecture: reuse the reviewed T0 SQLite-first Core and design a new isolated Canonical Reconstruction Importer. Decision record: `docs/decisions/T0_CANONICAL_RECONSTRUCTION_REUSE_SQLITE_CORE_2026-11-21.md`; commit `829327cf16c11db82280328eeb786a8f3629f910`; blob `0655250f0d6f50c5bce1416b0959d3e70c7fb787`.
+- Design specification added: `docs/specs/T0_CANONICAL_RECONSTRUCTION_SPEC_2026-11-21.md`; commit `2def86de147305a3e3cea49186019d19677a24b7`.
+- Specification reuses existing SQLite Candle/store/initializer, Candle Contract 1.1.0, API contract, storage and write-gateway components only subject to compatibility checks. New work is limited to importer-specific inventory/integrity/normalization/reconciliation/provenance/reporting and isolated acceptance-test design.
+- Important blocker recorded: existing Candle contract requires `available_at_ms` >= close time and describes FIRST_OBSERVED, but archive evidence does not establish historical first-observation time. No default/backdating/inference is allowed. Owner decision is required before importer implementation or row import.
+- Exact 12-column CSV header mapping must be verified against an approved representative fixture; not inferred from generic Binance schema.
+- Current controlling archive baseline is 202 ZIP + 202 paired sidecars, partial observed M15/H1 coverage, metadata-partial sidecars and unresolved 11,277-byte aggregate discrepancy. Older draft REST-tail claims are stale; current controlling status remains REST-tail closed by owner decision, no further retrieval.
+- Former Canonical SQLite remains LOST; new reconstructed database NOT CREATED. No archive/object store/host/filesystem/database was accessed. No importer/source/tests/workflows/dependencies changed or executed. No PostgreSQL, Feeder/runtime, VPS, T1/T2, deployment or trading operation.
+- Status: architecture **OWNER APPROVED**; specification **DRAFTED FOR OWNER REVIEW**; implementation **NOT STARTED**; archive materialization/database creation/import **NOT AUTHORIZED**; PostgreSQL **PARKED**.
+- No tests/workflows were run; no workflow run/job/artifact. Documentation-only commits on existing `main`.
+- Next: owner review of the specification, particularly `available_at_ms` semantics and exact CSV mapping. Any implementation or data operation requires separate explicit approval.
