@@ -126,9 +126,9 @@ class ArchiveCsvParserTest(unittest.TestCase):
         with self.assertRaisesRegex(ArchiveCsvError, "strictly increasing"):
             parse_archive_csv("\n".join([lines[1], lines[0]]) + "\n", timeframe="15m")
 
-    def test_rejects_exclusive_close_boundary_overflow(self):
+    def test_rejects_timestamp_outside_signed_64_bit_range(self):
         text = (FIXTURES / "binance_um_btcusdt_m15_synthetic.csv").read_text(encoding="utf-8")
-        # Keep the timestamp aligned but make the exclusive boundary exceed signed int64.
+        # The supplied open/close timestamps exceed the signed int64 contract.
         overflow_row = "9223372036854000000,1,2,1,2,1,9223372036854899999,2,1,1,1,0"
         with self.assertRaises(ArchiveCsvError):
             parse_archive_csv(overflow_row, timeframe="15m")
