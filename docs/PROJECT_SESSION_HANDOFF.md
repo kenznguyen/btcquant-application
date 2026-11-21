@@ -6513,3 +6513,8 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Implementation/static scope review: **PASS**. YAML/actionlint validation: **NOT RUN**. Workflow dispatch: **NOT RUN**. Workflow run/job/artifact: **NOT AVAILABLE**. Real archive format compatibility: **NOT VERIFIED**.
 - No source archive or REST request has been made. No SQLite/database, importer, Contract 1.2.0 implementation, Canonical T0, T1/T2, VPS/runtime, deployment, exchange credentials or trading behavior was changed or invoked.
 - Next gate: obtain separate explicit approval to dispatch this workflow once. After a successful run, review the diagnostic report before any parser contract freeze decision. Importer and staging remain unauthorized.
+
+
+## Dispatch outcome override — 2026-11-21
+
+The single owner-approved dispatch occurred: workflow run `44922866259`, source SHA `69c29e6a29c2d46e465465b15394a4122df4505d`, job `136902479488`. Run conclusion **FAILURE** at `Set up Python`: `Caching for 'false' is not supported`. Archive verification, parser tests and artifact upload were skipped. No archive/sidecar request was made; there is no report or artifact. 12-object verification and real CSV compatibility remain **NOT VERIFIED**; parser contract freeze remains **BLOCKED**. The one approved dispatch has been consumed. No rerun or corrected workflow dispatch is authorized by that approval. A workflow correction and second dispatch require separate owner approval. No SQLite, importer, Canonical T0, REST tail, T1/T2, VPS/runtime or trading changes.
