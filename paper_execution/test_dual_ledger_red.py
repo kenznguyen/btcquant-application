@@ -2629,8 +2629,8 @@ os._exit(0)
             connection.execute("DROP TRIGGER paper_account_consumed_market_marks_immutable_update")
             connection.execute(
                 """UPDATE paper_account_consumed_market_marks
-                   SET payload_sha256=?,source_snapshot_id=? WHERE mark_id=?""",
-                ("0" * 64, "sha256:" + "0" * 64, mark_id),
+                   SET payload_sha256=? WHERE mark_id=?""",
+                ("0" * 64, mark_id),
             )
         with self.assertRaisesRegex(sqlite3.DatabaseError, "ACCOUNT_RISK_MARK_PROVENANCE_INVALID"):
             read_account_risk_snapshot(self.path, now_ms=self.now)
