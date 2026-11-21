@@ -74,9 +74,10 @@ class SessionOrchestrator:
             raise ValueError("operator_approval_verifier must be callable")
         self.operator_approval_verifier = operator_approval_verifier
 
-    def _advance(self, token, expected, target):
+    def _advance(self, token, expected, target, **kwargs):
         return self.repository.advance_session(
-            token, expected_status=expected, new_status=target, at_ms=self.clock_ms(),
+            token, expected_status=expected, new_status=target,
+            at_ms=self.clock_ms(), **kwargs,
         )
 
     def start(self, session: SessionRecord) -> SessionStartResult:
@@ -102,7 +103,7 @@ class SessionOrchestrator:
                 blocked_reason=f"PREFLIGHT_BLOCKED:{type(exc).__name__}",
             )
 
-        self._advance(token, SessionStatus.PREFLIGHT, SessionStatus.RESTORING)
+        self._advance(\n            token, SessionStatus.PREFLIGHT, SessionStatus.RESTORING,\n            preflight_attestation=preflight,\n        )
         current = self.repository.get_session(session.session_id)
         try:
             recovery = recover_repository_state(
