@@ -117,3 +117,23 @@ No numeric risk thresholds are proposed in this audit.
 No database was opened or mutated. No Provider, source adapter, policy loader, migration, test, workflow, runtime caller or exchange connector was implemented. No T0/T1/T2 runtime, VPS, exchange credentials, paper execution, live execution or real orders were accessed or enabled.
 
 Next gate: owner approval of (a) PAPER ledger as the PAPER source candidate subject to provenance/binding remediation, and (b) Git-reviewed policy authoring plus explicit SQLite active-policy publication. LIVE source remains out of scope and unresolved.
+
+
+## 8. Owner approval — 2026-11-21
+
+The owner explicitly approved both governance decisions:
+
+1. **PAPER accounting authority:** the application-owned Paper Account Ledger is the official equity/exposure source for PAPER, conditional on closing and verifying exact consumed market-mark provenance and account/session/fencing binding. This approval does not authorize `verified=true` until those conditions are implemented and proven. It does not designate a LIVE source.
+2. **Risk policy governance:** GitHub-reviewed, versioned policy documents are the authoring/approval source; an explicit manual publication operation materializes the selected immutable policy into the application SQLite active-policy store. SQLite retains full published policy versions and audit history, with transactional compare-and-swap activation. Runtime reads the active persisted policy; environment variables must not automatically provision or override this policy, and runtime must not fetch mutable policy from GitHub.
+
+### Implementation gates still open
+
+- Mark provenance must bind the exact source snapshot ID, source/version, dataset version and payload hash to the precise mark consumed by account-equity calculation, with integrity and atomic-consistency evidence.
+- Provider must bind the local PAPER account identity to the requested account scope, session ID and fencing generation and reject mismatches/stale ownership. The snapshot must be built from one consistent read and emitted as typed AccountRiskSnapshot V1 only after every verification gate passes.
+- Policy schema reconciliation remains unresolved: existing persisted contract v1 uses percentage drawdown while VersionedRiskPolicy V1 uses absolute quote drawdown. No implicit conversion or numeric thresholds are approved. Snapshot freshness remains an explicit required policy field. Define and test the migration before publication implementation; preserve old history and disable environment-based initial provisioning for the new governed path.
+- Actual PAPER database identity/cutover/population/readiness remains NOT VERIFIED. No database was opened or modified as part of this approval record.
+- Provider implementation and production caller wiring are NOT STARTED. B2 remains BLOCKED until provenance, binding, policy publication, Provider and caller tests pass and receive the required review.
+
+### Scope boundary
+
+This approval authorizes recording the decisions and proceeding with isolated, application-code-only design/implementation and deterministic tests for the listed gates. It does not authorize opening/mutating any operational database, accessing VPS/T0/T1/T2 runtime, starting services, enabling automatic execution, connecting a live exchange account, or placing paper/live orders. PAPER remains paper-first and on-demand; LIVE remains out of scope.
