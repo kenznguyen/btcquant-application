@@ -86,3 +86,107 @@ These are source-inspection observations, not a substitute for execution or prod
 - T0 overall readiness/runtime/data reconstruction: **NOT VERIFIED**.
 
 No source, tests, workflows, dependencies, database/data, Feeder, VPS/runtime, T1/T2 connection, deployment, exchange credentials or trading behavior were changed or activated in this review.
+
+
+---
+
+## Expanded review completion — remaining T0 modules, tests and workflows
+
+### Exact source parity
+
+- Review source snapshot: `4d41294a7b82566666e50a79b87f62b668672077`.
+- Current main before this documentation update: `71fd8bcef1e891472f635eb594b1bd183512d595`.
+- Recursive Git tree comparison for all `market_data/**` and `.github/workflows/t0-*` paths: **51/51 files identical; 0 changed blobs**.
+- Therefore the expanded static review below applies to the current T0 source on `main`; only documentation commits followed the tested source snapshot.
+
+### Additional modules and tests reviewed
+
+Additional source:
+- `market_data/README.md`
+- `market_data/initialize_sqlite.py`
+- `market_data/migrations.py`
+- `market_data/postgres.py`
+- `market_data/rest_tail_validator.py`
+- `market_data/runtime_smoke.py`
+- `market_data/uvicorn_nginx_smoke.py`
+
+Additional test modules:
+- `market_data/test_initialize_sqlite.py`
+- `market_data/test_store.py`
+- `market_data/test_sync.py`
+- `market_data/test_feeder_health.py`
+- `market_data/test_feeder_retry.py`
+- `market_data/test_feeder_scheduler.py`
+- `market_data/test_feeder_lifecycle.py`
+- `market_data/test_controlled_ingestion_acceptance.py`
+- `market_data/test_t0_controlled_ingestion_acceptance.py`
+- `market_data/test_rest_tail_validator.py`
+- `market_data/test_wsgi_retirement.py`
+- previously inspected API, lease, recovery, write-gateway, storage, FastAPI and service lifecycle tests.
+
+Additional workflows reviewed:
+- `.github/workflows/t0-dependency-compatibility.yml`
+- `.github/workflows/t0-f1-regression-parity.yml`
+- `.github/workflows/t0-feeder-lifecycle-unit.yml`
+- `.github/workflows/t0-rest-tail-validator.yml`
+- `.github/workflows/t0-sqlite-api-isolated.yml`
+- `.github/workflows/t0-sqlite-feeder-sync-recovery.yml`
+- previously inspected FastAPI and SQLite aggregate workflows.
+
+The `market_data/t1_orderbook/**` subtree is a separate T1 consumer contract, not part of this T0 review.
+
+### Expanded review observations
+
+- Empty-only SQLite initializer uses exclusive file creation, refuses an existing target, verifies the expected tables/integrity/empty counts, and removes only the newly created DB/WAL/SHM files after initialization failure. Its tests use temporary directories.
+- SQLite candle schema and read path preserve decimal strings, validate candle values when reconstructing rows, use read-only URI mode for reads, enforce bounded/aligned windows and compute explicit gaps/dataset hashes.
+- Sync path validates Binance USD-M market identity, exchange/local clocks, page/row shape, ordered timestamps, closed-candle eligibility and bounded pagination. It passes only through the injected writer and propagates upstream errors; partial page commits are explicitly retryable and coverage checks prevent watermark advancement on gaps.
+- Retry/scheduler/lifecycle tests cover transient classification, Retry-After, deterministic backoff, M15/H1 independent progress, stop/drain, lease loss, recovery ordering, startup failure and cleanup using fakes/disposable state.
+- Offline REST-tail validator performs no network or DB access; tests cover forming/closed separation, counts, duplicates, gaps, OHLC, close boundary, finite numbers, alignment and volume/trade constraints.
+- Runtime smoke is in-process ASGI only. Uvicorn/Nginx smoke is an isolated loopback integration harness with temporary synthetic SQLite; it is not VPS/runtime evidence.
+- Workflow definitions pin exact checkout SHA, immutable Python image and upload action, use read-only source mounts/non-root containers/resource bounds and disable network inside test containers where applicable. Manual-only workflow is explicitly `workflow_dispatch`; the CI allowlists deliberately separate API tests, SQLite tests and PostgreSQL exclusions.
+
+### Additional required finding — PostgreSQL qualification gate
+
+**Finding PG-REQ-01 — REQUIRED before any PostgreSQL/TimescaleDB activation; no blocker to the currently selected SQLite-first path.**
+
+Evidence:
+- `market_data/migrations.py` sets `MIGRATIONS = Path(__file__).with_name("migrations")` and applies only files matching `[0-9][0-9][0-9]_*.sql`.
+- The reviewed Git tree contains no tracked `market_data/migrations/` directory or SQL migration assets.
+- With an empty migration directory, `migrate()` can create the schema-migration bookkeeping table, apply zero SQL migrations and return `(0, 0)` without an explicit “no migration assets” failure.
+- The reviewed test inventory has no PostgreSQL migration, schema, SECURITY DEFINER function, role/grant, lease or write-gateway integration suite. Existing PostgreSQL-specific `test_storage.py` cases only check factory construction and patched failure behavior; the SQLite aggregate intentionally excludes PostgreSQL cases.
+- PostgreSQL is already PARKED by owner decision, so no connection, migration, DB startup or runtime test was attempted.
+
+Required before reconsidering PostgreSQL:
+1. Commit and review the complete immutable SQL migration set expected by the runner.
+2. Make the migration runner fail closed when the expected migration set is absent/empty (or define and test an explicit zero-migration mode).
+3. Add isolated PostgreSQL qualification for schema constraints, migration checksum drift, reserved role membership/privileges, SECURITY DEFINER function ownership/search_path, lease fencing, transaction rollback and candle conflict semantics.
+4. Verify exact dependency/runtime compatibility and TLS/hostname verification in a separately approved isolated environment.
+5. Obtain separate owner approval before any PostgreSQL service/connection/migration/runtime action.
+
+### Existing test evidence reconciliation
+
+These are existing historical CI records, not new runs from this review. Each result remains tied to its own exact source SHA:
+
+| Scope | Result | Exact source SHA | Workflow run |
+|---|---:|---|---|
+| FastAPI/API contract | 69/69 PASS | `4d41294a7b82566666e50a79b87f62b668672077` | `44861746989` |
+| SQLite aggregate after WSGI retirement | 174/174 PASS | `c77ab92b621b2e79167d6b8eb910be015b428f62` | `44546084972` |
+| Feeder lifecycle suite | 91/91 PASS | `2668dd538a99d6021921432b3485f4ed84198364` | `44447104778` |
+| REST-tail offline validator | 10/10 PASS | `265268c0b527c4a323493c4643a67a46ee15a223` | `44723882441` |
+| SQLite aggregate earlier allowlist | 123/123 PASS | `ccf8348e86b637d42343982d306f65c14cf4aaa5` | `44506768218` |
+| Dependency compatibility | PASS | `215cf14c621a63b5e000198fb3a0caf70f1bc081` | `44504927709` |
+| Uvicorn/Nginx isolated CI | PASS | `65661cd4a2492f9552fe05186581c66d14fbe293` | `44550458804` |
+
+No new workflow run was started in this expanded review. The table is retained as historical exact-SHA evidence and is not represented as a fresh full-suite run on the current documentation HEAD.
+
+### Final expanded disposition
+
+- SQLite-first T0 inspected source: **NO CRITICAL / REQUIRED FINDINGS IDENTIFIED** in the reviewed implementation scope.
+- T0 source/test/workflow static review: **COMPLETE for the in-scope T0 modules listed above**; T1 orderbook consumer subtree excluded.
+- PostgreSQL/TimescaleDB qualification: **BLOCKED / PARKED** by PG-REQ-01; no activation.
+- Real Binance REST-tail payload validity: **NOT VERIFIED / owner-closed; no further retrieval**.
+- Canonical reconstructed database: **NOT CREATED**; former canonical asset remains **LOST**.
+- Fresh full CI rerun on current main: **NOT RUN**.
+- T0 overall readiness, data reconstruction, runtime, deployment and production operation: **NOT VERIFIED**.
+
+No source, test, workflow, dependency, database/data, PostgreSQL service, Feeder runtime, VPS, T1/T2 integration or trading behavior was changed or activated by this review.
