@@ -42,7 +42,9 @@ def _validate_policy(document):
     drawdown = document["drawdownLimit"]
     if not isinstance(drawdown, dict) or set(drawdown) != {"mode", "value"}:
         raise ValueError("RISK_POLICY_DRAWDOWN_INVALID")
-    if drawdown["mode"] not in {"ABSOLUTE_QUOTE", "PERCENT_HWM"}:
+    # SharedRiskEngine V1 currently evaluates absolute quote drawdown only.
+    # Do not publish a policy the active engine cannot enforce exactly.
+    if drawdown["mode"] != "ABSOLUTE_QUOTE":
         raise ValueError("RISK_POLICY_DRAWDOWN_MODE_UNSUPPORTED")
     for name in ("value",):
         value = drawdown[name]
