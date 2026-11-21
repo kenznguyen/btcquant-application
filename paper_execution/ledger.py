@@ -371,7 +371,7 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
         canonical_mark = json.loads(canonical_payload)
         expected_payload_hash = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
         consumed_candle = canonical_mark["consumedCandle"]
-        if (not source_id or source_snapshot_id != "sha256:" + payload_hash
+        if (not source_id or source_snapshot_id != mark_dataset
                 or payload_hash != expected_payload_hash
                 or mark_dataset != risk["dataset_version"]
                 or stored_price != text(mark) or stored_candle != candle
