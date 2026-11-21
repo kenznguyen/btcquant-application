@@ -7,6 +7,11 @@ on:
     paths:
       - ".github/workflows/f4-pipeline-core-first-isolated.yml"
       - "pipeline/test_decision.py"
+      - "pipeline/test_api.py"
+      - "pipeline/api.py"
+      - "paper_execution/ledger.py"
+      - "paper_execution/account_equity.py"
+      - "paper_execution/mark_provenance.py"
       - "pipeline/values.py"
       - "market_data/store.py"
       - "market_data/test_support.py"
@@ -62,12 +67,18 @@ jobs:
             echo "runner_image=ubuntu-24.04"
             echo "python_image=python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df"
             echo "test_modules=pipeline.test_api,pipeline.test_decision"
-            echo "expected_test_count=44"
+            expected_test_count=46
+            echo "expected_test_count=$expected_test_count"
             echo "network_mode=none (Docker test container)"
             echo "credentials=none"
             echo "canonical_database_mount=none"
           } > "$RUNNER_TEMP/f4-test-artifacts/runner_metadata.txt"
           verify_blob pipeline/test_decision.py 6781f26d66635f56662a627bdd3b4a63f26c1f28
+          verify_blob pipeline/test_api.py 8840ecac06d8542cfda702d8044f7ca0458c7030
+          verify_blob pipeline/api.py 47e0be41e8507c3c5464756d8ced4ad80a347aa5
+          verify_blob paper_execution/ledger.py a90db5b1ca20a11eea06aaec18872bc2678a9a08
+          verify_blob paper_execution/account_equity.py e466182b32d4f2686ac5320c81cac51dbbcb4da4
+          verify_blob paper_execution/mark_provenance.py 5f5ea7c7316ac5d839d0cb9068ded97b0b1cd809
           verify_blob pipeline/values.py 5576376454af129b944919fb588e26c0657a781e
           verify_blob market_data/store.py 4e1b0c54bd56455abe5be0e5c7d0807e63e0bc78
           verify_blob market_data/test_support.py 64b99a858eb4ddc9d6275957cbb048a1cfc1843d
@@ -102,7 +113,7 @@ jobs:
             | tee "$RUNNER_TEMP/f4-test-artifacts/network_isolation.txt"
           grep -qx 'Python 3.12.16' "$RUNNER_TEMP/f4-test-artifacts/python_version.txt"
 
-      - name: Run import verification and 42 regression tests
+      - name: Run import verification and focused regression tests
         shell: bash
         env:
           PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
@@ -155,8 +166,8 @@ jobs:
               "- Tests discovered: ${test_count:-NOT_REPORTED} (expected 44)" \
               "- Test process exit code: $test_status"
           } >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$test_status" -eq 0 && "$test_count" != "44" ]]; then
-            echo "Expected 42 tests; observed ${test_count:-no test summary}." >&2
+          if [[ "$test_status" -eq 0 && "$test_count" != "$expected_test_count" ]]; then
+            echo "Expected $expected_test_count tests; observed ${test_count:-no test summary}." >&2
             exit 1
           fi
           exit "$test_status"
