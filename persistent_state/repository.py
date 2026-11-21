@@ -903,7 +903,11 @@ class SQLiteStateRepository:
                     "WHERE session_id=? AND attestation_type='preflight'",
                     (token.session_id,),
                 ).fetchone()
-                if existing is None or existing["payload_json"] != payload_json or existing["payload_checksum"] != checksum:
+                if (
+                    existing is None
+                    or existing["payload_json"] != payload_json
+                    or existing["payload_checksum"] != checksum
+                ):
                     raise EvidenceIntegrityError(
                         "READY preflight evidence differs from durable PREFLIGHT evidence"
                     )
@@ -921,6 +925,7 @@ class SQLiteStateRepository:
                     attestation.binding.checked_at_ms,
                 ),
             )
+
 
     def read_ready_evidence(self, session_id: str) -> ReadyEvidenceBundle:
         if not isinstance(session_id, str) or not session_id.strip():
