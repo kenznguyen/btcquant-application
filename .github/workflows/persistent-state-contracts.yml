@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "persistent_state/**"
+      - "paper_execution/**"
       - ".github/workflows/persistent-state-contracts.yml"
 
 permissions:
@@ -51,7 +52,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m unittest -v persistent_state.test_contracts persistent_state.test_repository persistent_state.test_replay_checkpoint persistent_state.test_session_fencing persistent_state.test_recovery persistent_state.test_preflight persistent_state.test_risk_admission persistent_state.test_lifecycle persistent_state.test_evidence persistent_state.test_ready_repository_gate persistent_state.test_orchestrator persistent_state.test_account_risk_snapshot persistent_state.test_account_risk_admission 2>&1 | tee "$RUNNER_TEMP/persistent-state-evidence/unittest.log"
+          python3 -m unittest -v persistent_state.test_contracts persistent_state.test_repository persistent_state.test_replay_checkpoint persistent_state.test_session_fencing persistent_state.test_recovery persistent_state.test_preflight persistent_state.test_risk_admission persistent_state.test_lifecycle persistent_state.test_evidence persistent_state.test_ready_repository_gate persistent_state.test_orchestrator persistent_state.test_account_risk_snapshot persistent_state.test_account_risk_admission persistent_state.test_account_risk_binding 2>&1 | tee "$RUNNER_TEMP/persistent-state-evidence/unittest.log"
 
       - name: Run adjacent paper ledger and strategy API regressions in isolated container
         shell: bash
@@ -77,6 +78,8 @@ jobs:
             python -m unittest -v \
               paper_execution.test_database_paths \
               paper_execution.test_f4_r1_account_contract \
+              paper_execution.test_market_mark_provenance \
+              paper_execution.test_versioned_risk_policy_store \
               paper_execution.test_risk_limits \
               paper_execution.test_ledger \
               paper_execution.test_dual_ledger_red \
