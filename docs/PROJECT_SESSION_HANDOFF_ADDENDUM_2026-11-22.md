@@ -61,3 +61,16 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - Status: **PASS — DOCUMENTATION CONTRACT COMMITTED; IMPLEMENTATION NOT AUTHORIZED**.
 - Next: owner review of the committed contract. Any GREEN implementation, RED test edits/additions, DDL, SQLite, importer, archive retrieval or workflow requires separate explicit approval.
 - All exclusions remain: Canonical T0, MAY-10, REST tail, VPS/runtime, T1/T2, deployment, cleanup/deletion and trading.
+
+## T0 Provenance Validator Interface V1 — self-review
+
+- Owner requested a read-only self-review of the frozen Interface V1 and a code-by-code crosswalk against the 12 S2 RED test methods before proposing GREEN scope.
+- Review record: `docs/evidence/T0_PROVENANCE_VALIDATOR_INTERFACE_V1_SELF_REVIEW_2026-11-22.md`.
+- Sources re-read from `main`: Interface blob `632eb6d38461ea3c65638ca073abc5fe4ae98729`; RED test blob `abbaeab16f026757923c679330f124a3d99e0774`; S1 amended design blob `af7c90af0f0bcfa8d0b2143578222619af620197`; S2 execution evidence blob `5a66bdf605d882a0ad8716d89f6b00ea533ce0d5`.
+- Crosswalk: nine of ten catalogue codes have a direct RED assertion; `PROVENANCE_INPUT_SHAPE_INVALID` is additional and currently untested. Three other tests cover T0ENC1 and attempt-ID behavior.
+- Review: no blocking contradiction found between the frozen interface and RED source. Coverage limitations include no executed business assertions (12 errors in `setUp()`), incomplete synthetic inventory fixtures, no tests for aggregation/order, malformed input, broader encoder/attempt-ID boundaries, normalized candle tuple digest consistency, DTO immutability/purity, or the full S1 acceptance matrix.
+- Proposed next GREEN scope is bounded to one pure Python module implementing the frozen DTO and three functions, plus synthetic tests for uncovered interface contracts. Existing RED tests remain unchanged unless separately approved.
+- Out of scope remains DDL, SQLite, importer, archives, workflows, Canonical T0, MAY-10, REST tail, VPS/runtime, T1/T2, deployment, cleanup/deletion and trading.
+- Status: **INTERFACE REVIEW PASS WITH COVERAGE LIMITATIONS; RED ASSERTIONS NOT VERIFIED; GREEN NOT AUTHORIZED**.
+- Workflow run/job/artifact: **NONE**. No executable code or runtime/data operation changed.
+- Next gate: owner approval or rejection of the proposed bounded GREEN scope. No implementation begins before explicit approval.
