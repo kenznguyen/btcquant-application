@@ -1,6 +1,6 @@
 """Synthetic-only helpers for isolated persistent-state contract tests."""
 from persistent_state.evidence import (
-    EvidenceBinding, PreflightAttestation, ReadyEvidenceBundle,
+    EvidenceBinding, OperatorResumeConfirmation, PreflightAttestation, ReadyEvidenceBundle,
     RestoreAttestation, RiskReadinessAttestation,
 )
 
@@ -46,4 +46,31 @@ def ready_evidence_for(session, fencing_token, *, checked_at_ms=None):
             ledger_reconciled=True,
             passed=True,
         ),
+    )
+
+def resume_confirmation_for(session, fencing_token, *, confirmed_at_ms=None):
+    checked_at = session.started_at_ms + 1
+    confirmed = checked_at + 1 if confirmed_at_ms is None else confirmed_at_ms
+    binding = EvidenceBinding(
+        session_id=session.session_id,
+        account_scope_id=session.account_scope_id,
+        fencing_generation=fencing_token.fencing_generation,
+        config_hash=session.config_hash,
+        source_snapshot_id=session.source_snapshot_id,
+        checked_at_ms=checked_at,
+    )
+    risk = RiskReadinessAttestation(
+        binding=binding,
+        risk_policy_version="test-only-risk-v1",
+        kill_switch_latched=False,
+        account_equity_quote="10000",
+        ledger_reconciled=True,
+        passed=True,
+    )
+    return OperatorResumeConfirmation(
+        binding=binding,
+        operator_id="test-operator",
+        confirmation_id="resume-" + session.session_id,
+        confirmed_at_ms=max(confirmed, checked_at),
+        risk_attestation=risk,
     )
