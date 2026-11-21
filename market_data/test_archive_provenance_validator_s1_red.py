@@ -58,6 +58,16 @@ def _decimal(value: int) -> str:
     return str(value)
 
 
+def _refresh_candle_value_id(candle: dict[str, Any]) -> None:
+    fields = (
+        candle["exchange"], candle["market_type"], candle["symbol"],
+        candle["timeframe"], candle["open_time_ms"], candle["open"],
+        candle["high"], candle["low"], candle["close"], candle["volume"],
+        candle["available_at_ms"], candle["availability_kind"],
+    )
+    candle["candle_value_id"] = "cv1:" + _enc_digest("T0-CANDLE-VALUE-V1", *fields)
+
+
 def build_valid_s1_fixture() -> dict[str, Any]:
     """Build 404 objects, 202 pairs/members/rows/candles/links and 404 attempts."""
     inventory_entries: list[dict[str, str]] = []
@@ -262,7 +272,6 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
     object_by_id = {item["object_id"]: item for item in payload["objects"]}
     attempt_by_id = {item["attempt_id"]: item for item in payload["attempts"]}
     member_by_id = {item["member_id"]: item for item in payload["members"]}
-    row_by_id = {item["source_row_id"]: item for item in payload["source_rows"]}
     candle_by_value = {item["candle_value_id"]: item for item in payload["candles"]}
     for obj in payload["objects"]:
         attempt = attempt_by_id[obj["successful_attempt_id"]]
@@ -288,6 +297,14 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
     for candle in payload["candles"]:
         test.assertEqual(candle["available_at_ms"], candle["open_time_ms"] + 900000)
         test.assertEqual(candle["availability_kind"], "BAR_CLOSE_BOUNDARY")
+        value_fields = (
+            candle["exchange"], candle["market_type"], candle["symbol"],
+            candle["timeframe"], candle["open_time_ms"], candle["open"],
+            candle["high"], candle["low"], candle["close"], candle["volume"],
+            candle["available_at_ms"], candle["availability_kind"],
+        )
+        expected_value_id = "cv1:" + _enc_digest("T0-CANDLE-VALUE-V1", *value_fields)
+        test.assertEqual(candle["candle_value_id"], expected_value_id)
 
 
 class ProvenanceValidatorS1RedTest(unittest.TestCase):
@@ -343,6 +360,7 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
     def test_candle_ohlcv_constraint_invalid_isolated(self) -> None:
         self.payload["candles"][0]["high"] = "1"
         self.payload["candles"][0]["low"] = "2"
+        _refresh_candle_value_id(self.payload["candles"][0])
         self.assert_s1_error("CANDLE_OHLCV_CONSTRAINT_INVALID")
 
     def test_candle_provenance_link_invalid_isolated(self) -> None:
@@ -356,6 +374,7 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
     def test_aggregate_new_codes_are_ordered_and_deduplicated(self) -> None:
         self.payload["inventory_raw_bytes"] = b"not-json"
         self.payload["inventory_expected_sha256"] = "0" * 64
+        self.payload["inventory"]["objects"].pop()
         self.payload["objects"][0]["measured_size_bytes"] = None
         self.payload["objects"][1]["measured_size_bytes"] = None
         self.payload["attempts"][0]["attempt_number"] = 3
@@ -366,6 +385,7 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.payload["candles"][0]["candle_value_id"] = "cv1:" + "0" * 64
         self.payload["candles"][0]["high"] = "1"
         self.payload["candles"][0]["low"] = "2"
+        _refresh_candle_value_id(self.payload["candles"][0])
         self.payload["links"][0]["source_row_id"] = "row1:" + "0" * 64
         self.payload["run"]["schema_contract_id"] = "WRONG"
         result = validate_provenance(self.payload)
