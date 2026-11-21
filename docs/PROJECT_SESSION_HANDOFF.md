@@ -6005,3 +6005,20 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - SQLite aggregate workflow was not rerun for this test-only file change; prior 174/174 evidence is tied to its earlier exact SHA and is not relabeled. FastAPI CI is current for the R1 source SHA.
 - Runtime/production readiness remains **NOT VERIFIED**. No VPS, canonical SQLite, T1/T2, PostgreSQL activation, exchange, deployment, or live trading was accessed or enabled. `ai_execution_enabled=false` remains unchanged.
 - Next: preserve this review outcome; no further code changes are required for R1. Any work on advisory A1 or other scope requires separate approval.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T1 Orderbook Consumer Contract V1 design approved
+
+- Owner approval: design and acceptance-test specification only; documentation-only. No source implementation or test code creation/execution authorized.
+- Design document: `docs/contracts/T1_ORDERBOOK_CONSUMER_CONTRACT_V1_DESIGN_2026-11-21.md`.
+- Documentation commit: `2148805e755598859feecaa065d1d0f1393c0945`.
+- Application parent/source baseline before this documentation commit: `d0fb85f0711b7459306bf0fbe63737c0086d5ca6`.
+- T1 producer snapshot reviewed read-only: `main` SHA `c91a8c22d3b6236c98ab9a4d4d69b25d47f7f738`; Provider contract blob `fcf45baff1707aa839f6294493e963b1e774c6e8`; publisher module blob `1a17f60f3b0a960ac5cb67ddee1dafc57dd718b2`; OrderbookManager blob `d18d047c1f7cdddd03cea60b02de54b656ad4edf`.
+- Scope: consumer-side BTCUSDT Binance USD-M orderbook V1 DTO/schema, strict validation, typed errors, proposed adapter boundary and deterministic synthetic acceptance-test specification. T0 M15/H1 remains independent; orderbook is optional market context, not a candle source, signal, or execution instruction.
+- Key producer compatibility blockers recorded: existing OrderbookManager uses `f64` and discards exact decimal text; required snapshot provenance fields are not retained together; strict `pu == previous u` continuity is not enforced in the normal manager update path; receipt-time pairing needs proof; publisher bridge-boundary validation may reject a valid initial bridge event; no HTTP route/runtime integration exists.
+- Open contract issue: T1 design bridge semantics allow `U <= snapshotLastUpdateId + 1 <= u`, but current publisher validation rejects `firstAppliedU <= snapshotLastUpdateId`. Must reconcile producer contract, publisher validation, and fixtures before provider work resumes. Application consumer validation must not be weakened to mask producer incompatibility.
+- Acceptance suite specified (46 named checks / gates across schema, decimal/book invariants, sequence/freshness/digest, adapter isolation, regression/evidence). These are specifications only; no tests were written or run.
+- Status: **DESIGN BASELINE RECORDED**; implementation **NOT STARTED**; acceptance tests **SPECIFIED / NOT EXECUTED**; producer compatibility **BLOCKED BY OPEN ITEMS**; T1 Provider **PAUSED**; T1 → T2 runtime **NOT APPROVED**.
+- Verification: documentation-only commit; no Actions run, jobs or artifacts. No T1 source change, provider activation, collector start, network/exchange, VPS, T0 data/database/runtime, transport, T1 → T2 integration, strategy activation, or trading action.
+- Next: preserve this design baseline. Any implementation of DTO/validator/fixtures/tests, T1 producer correction, transport design, provider activation, or runtime connection requires a separately bounded approval.
