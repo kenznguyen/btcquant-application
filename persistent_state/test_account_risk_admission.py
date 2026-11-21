@@ -135,7 +135,7 @@ class AccountRiskAdmissionIntegrationTests(unittest.TestCase):
         context = replace(self.context, account_risk_snapshot=snapshot)
         for action in ("REDUCE", "EXIT"):
             result = self.engine.evaluate(
-                self.proposal(action=action, exposure=None), context,
+                self.proposal(action=action, margin="0", exposure=None), context,
             )
             self.assertTrue(result.allowed, result.reason_code)
 
