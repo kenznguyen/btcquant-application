@@ -41,6 +41,10 @@ class PaperAccountScopeFencingBindingTests(unittest.TestCase):
                 "paper-account",
             )
             with self.assertRaises(sqlite3.IntegrityError):
+                db.execute("UPDATE paper_account_scope_binding_migrations SET source_sha=? WHERE version=1", ("b" * 40,))
+            with self.assertRaises(sqlite3.IntegrityError):
+                db.execute("DELETE FROM paper_account_scope_binding_migrations WHERE version=1")
+            with self.assertRaises(sqlite3.IntegrityError):
                 db.execute(
                     "UPDATE paper_accounts SET account_scope_id='other' WHERE account_id=1"
                 )
