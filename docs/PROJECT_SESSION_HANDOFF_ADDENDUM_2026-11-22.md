@@ -115,3 +115,19 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - S4 quality limitation: current fixture extends the V1 fixture and is not yet a complete valid S1 fixture containing all 404 measured object records, attempt histories, full pair/member/row/candle/link graph and recomputed S1 identifiers. Positive full-envelope acceptance and isolated execution of every new error code remain **NOT VERIFIED**.
 - Status: S3 **PASS — DESIGN COMMITTED/READ BACK**; S4 **PARTIAL — TEST SOURCE COMMITTED/READ BACK, EXECUTION NOT RUN**; GREEN **NOT AUTHORIZED**.
 - Next: complete/self-review the full valid synthetic fixture and isolated negative cases, then execute tests on an exact source snapshot. Request separate GREEN approval only after RED evidence is reproducible.
+
+
+## T0 S4 isolated RED + V1 regression — execution result
+
+- Owner authorized one isolated GitHub Actions workflow for S4 RED + V1 regression. No S1 GREEN, validator changes, DDL/SQLite, importer, archive acquisition, Canonical T0 access, T1/T2 runtime, VPS, deployment or trading was authorized.
+- Workflow run: [44940259084](https://github.com/kenznguyen/btcquant-application/actions/runs/44940259084); job `136955679442`; run attempt `1`; workflow `.github/workflows/t0-s4-provenance-red-isolated.yml`.
+- Exact source SHA requested and checked out: `6a35462fe4db37c8a09fde3c20260fe6ba84f31a`.
+- Exact blobs: S4 test `74b9bf8480cfdbf7b539f1d415b31bcc0fe7ae39`; V1 RED `abbaeab16f026757923c679330f124a3d99e0774`; V1 GREEN `da854052564a34c49c1e2f40da1c80315da04182`; validator `c2c05dd8e62ebb8d1dce835909e1185a1a67b597`.
+- Runtime: CPython 3.13.18 on GitHub-hosted Ubuntu 26.04.1.
+- S4: `python -B -m unittest -v market_data.test_archive_provenance_validator_s1_red` — 13 tests; 1 PASS (deterministic synthetic fixture structure); 12 FAIL; exit 1. Failures show current V1 validator does not enforce most S1 mutations. Two cases currently return different V1 error codes than the intended S3 codes; aggregate S3 code assertion returns empty. Thus RED is reproduced, but isolated routing/aggregate semantics for all eleven S3 codes are **NOT VERIFIED**.
+- V1: `python -B -m unittest -v market_data.test_archive_provenance_validator_red market_data.test_archive_provenance_validator_green` — **24/24 PASS**, exit 0.
+- Workflow-level conclusion `success` means the wrapper completed and uploaded evidence; it intentionally captures nonzero test exit codes and must not be read as S4 PASS.
+- Artifact: `t0-s4-v1-verification-44940259084`, ID `14721570797`, 3,498 bytes, expiry 2026-12-21T19:19:00Z, SHA-256 `3d27361db4f20b924329e85565f1ccb6d9797830bb4d867c25114d853433c75a`. ZIP downloaded and SHA-256 independently matched.
+- Updated evidence: `docs/evidence/T0_PROVENANCE_VALIDATOR_S1_COVERAGE_S3_S4_2026-11-22.md`, commit `0d477e6d2a3b9e521254e9265d46fca1a15fa4bf`, blob `e5c80fcd315898ba9abc582288696dbee6244776`.
+- Status: S4 fixture construction **PASS**; S4 RED reproduction **PASS WITH COVERAGE/DIAGNOSTIC LIMITATIONS**; per-code isolated S3 diagnostics and aggregate order **NOT VERIFIED**; V1 regression **PASS 24/24**; full repository regression **NOT RUN**; S1 GREEN **NOT AUTHORIZED**.
+- Next: inspect and, if required, correct only S4 test-source isolation/expected diagnostic assertions under the existing test-only approval; rerun exact-SHA workflow. Obtain separate owner approval before any S1 GREEN implementation. All prior exclusions remain.
