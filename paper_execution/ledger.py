@@ -355,12 +355,14 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
         raise sqlite3.DatabaseError("ACCOUNT_RISK_MARK_STALE_OR_INVALID")
     if not isinstance(risk["dataset_version"], str) or not risk["dataset_version"].strip():
         raise sqlite3.DatabaseError("ACCOUNT_RISK_DATASET_VERSION_MISSING")
+    if not isinstance(risk["last_mark_id"], str) or not risk["last_mark_id"].strip():
+        raise sqlite3.DatabaseError("ACCOUNT_RISK_MARK_PROVENANCE_MISSING")
     consumed_mark = db.execute(
         """SELECT source_id,source_snapshot_id,dataset_version,payload_sha256,
                   canonical_payload,mark_price,candle_close_ms,observed_at_ms
            FROM paper_account_consumed_market_marks
-           WHERE account_id=1 AND observed_at_ms=?""",
-        (observed,),
+           WHERE account_id=1 AND mark_id=?""",
+        (risk["last_mark_id"],),
     ).fetchone()
     if consumed_mark is None:
         raise sqlite3.DatabaseError("ACCOUNT_RISK_MARK_PROVENANCE_MISSING")
