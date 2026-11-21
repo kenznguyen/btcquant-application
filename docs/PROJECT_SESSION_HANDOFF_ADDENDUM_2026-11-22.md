@@ -131,3 +131,15 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - Updated evidence: `docs/evidence/T0_PROVENANCE_VALIDATOR_S1_COVERAGE_S3_S4_2026-11-22.md`, commit `0d477e6d2a3b9e521254e9265d46fca1a15fa4bf`, blob `e5c80fcd315898ba9abc582288696dbee6244776`.
 - Status: S4 fixture construction **PASS**; S4 RED reproduction **PASS WITH COVERAGE/DIAGNOSTIC LIMITATIONS**; per-code isolated S3 diagnostics and aggregate order **NOT VERIFIED**; V1 regression **PASS 24/24**; full repository regression **NOT RUN**; S1 GREEN **NOT AUTHORIZED**.
 - Next: inspect and, if required, correct only S4 test-source isolation/expected diagnostic assertions under the existing test-only approval; rerun exact-SHA workflow. Obtain separate owner approval before any S1 GREEN implementation. All prior exclusions remain.
+
+
+## S4 RED test-source correction — new exact SHA awaits workflow
+
+- Owner requested review/correction of S4 test source only, then rerun of the existing isolated workflow. No S1 GREEN or validator changes are authorized.
+- Final test-source commit on `main`: `4534904fccc74a57a3a09793dd63e24414ab2cb1`; source blob `08d02470e87e317afe8023ed6d6f14db847f5597`.
+- Corrections make the 202 synthetic CSV members internally consistent (LF-terminated header+row bytes, exact size/SHA), supply synthetic importer provenance, align object expected/measured evidence, and strengthen deterministic identity/reference/coverage assertions.
+- Each negative test now changes one primary invariant while recomputing dependent IDs/references where needed. Aggregate defects use disjoint records; assertions require the intended S3 code, retain expected legacy V1 diagnostics and allow only the derived global run-acceptance companion.
+- Validator, original V1 tests, workflow YAML and all runtime/data components are unchanged.
+- New-SHA Python execution and V1 regression: **NOT RUN / NOT VERIFIED**. Previous workflow run 44940259084 is tied to old SHA `6a35462fe4db37c8a09fde3c20260fe6ba84f31a`.
+- Status: test-source correction **COMMITTED**; test verification **PENDING**; S1 GREEN **NOT AUTHORIZED**.
+- Next: dispatch `.github/workflows/t0-s4-provenance-red-isolated.yml` with `source_sha=4534904fccc74a57a3a09793dd63e24414ab2cb1`. Record new run/job/artifact and inspect complete logs before making any PASS/BLOCKED decision.
