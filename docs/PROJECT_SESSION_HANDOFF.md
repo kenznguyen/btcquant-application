@@ -6489,3 +6489,13 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Real Binance archive CSV compatibility, header/encoding/delimiter/member name, actual numeric grammar and source timestamp convention remain **NOT VERIFIED**. Parser contract freeze is **BLOCKED** pending approved real-source evidence or a new owner decision.
 - No archive/REST request, host/VPS access, SQLite or Canonical T0 operation, Contract 1.2.0 schema/API change, importer, workflow YAML, runtime, deployment, T1/T2 integration, exchange credential use or trading operation occurred.
 - Next: preserve this as a provisional offline parser utility. Obtain separate approval before source-format verification, Contract 1.2.0 implementation, importer, workflow or staging execution.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 real archive CSV sample verification approval
+
+- Owner approved bounded verification of exactly 6 real Binance USD-M BTCUSDT ZIP archives plus their 6 paired .CHECKSUM sidecars (12 objects total), using a GitHub-hosted ephemeral runner. Purpose: inspect real CSV format before parser contract freeze.
+- Decision record: docs/decisions/T0_ARCHIVE_CSV_REAL_FORMAT_SAMPLE_VERIFICATION_APPROVAL_2026-11-21.md; commit f46f1b2e76c0fcdc38ecde6c45c8fee52e76f904.
+- Exact sample: M15 2019-12-31, 2022-08, 2026-10; H1 2019-12-31, 2022-08, 2026-10. Sidecar keys must be taken from paired entries in inventory docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json, blob eb251ac0924b46add906123f99b82e054d887a59.
+- Approval is limited to source-byte/ZIP/CSV inspection and diagnostic parser comparison. No full 404-object materialization, REST, personal host/VPS, database/SQLite, importer, Contract 1.2.0 implementation, Canonical T0, T1/T2, runtime, deployment, trading or raw artifact upload.
+- EXECUTION BLOCKED: creating/modifying GitHub Actions workflow YAML was explicitly excluded from this approval. No existing workflow has been verified as authorized for this exact retrieval. Obtain separate approval for one narrowly scoped manually dispatched workflow before fetching any object.
+- Parser contract freeze and importer remain NOT AUTHORIZED pending review of real-source evidence and a further owner decision.
