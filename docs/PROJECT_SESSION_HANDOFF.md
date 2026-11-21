@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — Account source and policy governance audit
+
+- Read-only audit record: docs/decisions/ACCOUNT_RISK_SOURCE_AND_POLICY_GOVERNANCE_2026-11-21.md; decision/evidence commit a73078067456b6b3fa3424775b3e74418fd16107.
+- PAPER source candidate conditionally identified: current application-owned account ledger, specifically paper_execution/account_equity.py blob 9971dae4592f07fe7bd2315c0f1ec1daf97af8d1 and paper_execution/ledger.py blob 9cc03db8b7506543f9eef2835eb5cb7cda701d6c. It reconciles Core, AI and LEGACY_UNATTRIBUTED ledgers, realized/unrealized PnL, fees, funding, active reservations, gross exposure and reserved margin. read_account_risk_snapshot() is SQLite read-only and performs one consistent read transaction with migration, cutover, mark freshness, funding and ledger reconciliation checks.
+- PAPER source is not yet verified for Provider output: actual DB identity/cutover/readiness was not inspected; record_account_mark() does not bind the consumed mark to a source snapshot ID/payload hash; the available account_history mark provenance writer is not proven to be atomically linked to the consumed mark; typed snapshot does not yet receive account/session/fencing binding from a Provider.
+- LIVE account equity/exposure connector was not found in current application repository; LIVE remains NOT FOUND / NOT VERIFIED and outside scope.
+- Existing policy store: paper_execution/risk_contract.py blob 7ae74740568e3bcad78acd928896ee363cc62613. It has canonical JSON + SHA-256 validation, read-only load, explicit CAS revision, incrementing contract_version and audit records. Historical F4-R1 run 44469872186 at source HEAD 12a2f53a21a0a9637d264d49f372e7dcf89fc730, job 135376446850, 151/151 PASS; current risk_contract.py blob matches the recorded blob. This is bounded historical evidence, not current full-HEAD verification.
+- Existing risk contract v1 fields (maxDrawdownPct, maxDailyLossUsdt, maxExposureUsdt) do not match VersionedRiskPolicy fields (absolute drawdown quote, daily-loss quote, gross-exposure quote, max snapshot age). No implicit percentage conversion or thresholds are approved. pipeline.api.ledger() still has environment-based initial provisioning; do not treat env as a new governed publication path.
+- Proposed PAPER policy governance: Git-reviewed immutable policy documents under config/risk_policies with exact version/schema/SHA and an active manifest; explicit manual operator publication to an application-owned SQLite active policy copy with full immutable version history, source commit/hash, CAS active pointer and append-only audit. Runtime reads only the published active copy; no environment override or runtime GitHub fetch. Proposal is NOT YET OWNER APPROVED.
+- No code/tests/workflows/runtime/database were changed or run in this audit. No DB/VPS/T0/T1/T2/exchange access, credentials, paper/live execution or orders.
+- B2 remains BLOCKED pending owner approval of PAPER source candidate and policy governance/schema semantics, then mark provenance/binding remediation and isolated validation. Provider and production caller wiring remain NOT IMPLEMENTED.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — AccountRiskSnapshot-backed Shared Risk Admission implemented
 
 - AccountRiskSnapshot V1 contract remains implemented in `persistent_state/account_risk.py`; exact contract source SHA `4632a032a0f2ca3b336f25e16cfe053ce15cd204`.
