@@ -30,11 +30,14 @@ class VersionedRiskPolicyStoreTests(unittest.TestCase):
         self.db.close()
 
     def publish(self, policy=None, expected=None, **metadata):
+        document = self.policy if policy is None else policy
+        raw = json.dumps(document, sort_keys=True, separators=(",", ":"))
         return publish_versioned_risk_policy(
             self.db,
-            self.policy if policy is None else policy,
+            raw,
             expected_active_hash=expected,
             source_git_commit_sha="b" * 40,
+            source_policy_sha256=hashlib.sha256(raw.encode()).hexdigest(),
             source_policy_path="config/risk_policies/paper-risk-v1.json",
             operator_id="operator:test",
             reason="Owner-approved test publication",
@@ -110,9 +113,9 @@ class VersionedRiskPolicyStoreTests(unittest.TestCase):
         try:
             with self.assertRaises(sqlite3.DatabaseError):
                 publish_versioned_risk_policy(
-                    empty, self.policy, expected_active_hash=None,
+                    empty, json.dumps(self.policy, sort_keys=True, separators=(",", ":")), expected_active_hash=None,
                     source_git_commit_sha="b" * 40,
-                    source_policy_path="config/risk_policies/paper-risk-v1.json",
+                    source_policy_path="config/risk_policies/paper-risk-v1.json", source_policy_sha256=hashlib.sha256(json.dumps(self.policy, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
                     operator_id="operator:test", reason="no schema",
                     published_at_ms=1_800_000_000_100,
                 )
