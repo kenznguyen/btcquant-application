@@ -24,7 +24,7 @@ The validator returns only a signal DTO for valid LONG/SHORT reports; otherwise 
 | `pipeline/ai_signal_contract.py` | `efb43ba777097e261c32671b9b37c24efad1a2e3` |
 | `pipeline/test_ai_signal_contract_red.py` | `bd4c6325739a7d1eadf5ced64c71e7e4742e7a31` |
 | `pipeline/test_ai_signal_contract_green.py` | `71dcffa586ce785472f2c88e753e755cfe742bfc` |
-| `.github/workflows/t2-ai-signal-contract-green.yml` | recorded in GitHub; workflow source read-back pending final evidence capture |
+| `.github/workflows/t2-ai-signal-contract-green.yml` | `4fd7e23d9e12f97bc01940873267824aeafc651c` |
 
 Implementation commit: `ae11175bdb61880bb5351fd129428c40d8ec0071`  
 GREEN test commit: `aba767e27cc728e6c83e9b3abf734cab1bf6e113`  
