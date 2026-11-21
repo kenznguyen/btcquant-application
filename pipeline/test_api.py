@@ -157,6 +157,21 @@ class FiveLayerApiTest(unittest.TestCase):
                 "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
             ).fetchall()
         self.assertEqual(after_tables, before_tables)
+    def test_paper_evaluate_records_typed_canonical_mark_provenance(self):
+        with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
+            code, result = self.request("/v1/paper/evaluate", "POST", {"source": "CORE"})
+
+        self.assertEqual(code, 200, result)
+        self.assertEqual(result["decision"]["source"], "STRATEGY_CORE")
+        self.assertEqual(result["order"]["status"], "FILLED")
+        with sqlite3.connect(self.paper_db) as connection:
+            rows = connection.execute(
+                "SELECT source_id, dataset_version FROM paper_account_consumed_market_marks"
+            ).fetchall()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0][0], "T0_CANONICAL_MARKET_DATA")
+        self.assertTrue(rows[0][1].startswith("sha256:"))
+
     def test_core_retries_do_not_duplicate_positions_or_fees(self):
         with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
             _, first = self.request("/v1/paper/evaluate", "POST", {"source": "CORE"})
