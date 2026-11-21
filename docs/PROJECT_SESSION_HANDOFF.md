@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T2 M2.3 Core Adapter → Validator parity tests PASS
+
+- Owner approved a bounded TDD increment for adapter-to-validator parity tests only.
+- New test: `core_runtime/test_adapter_validator_parity.py`, blob `8f3c4dfa29f371334ded3486ca83f9a5ea7f974e`; covers BUY/SELL/CLOSE canonical acceptance, WAIT non-intent, expired-intent denial and wrong-symbol denial.
+- Existing adapter implementation and six original contract tests unchanged: adapter blob `9795c346d2eec4c78c22035c32f463af6b40b8f4`; original test blob `fbe6cc428fd7058a6dbefd9eaec1979a95638474`. Canonical validator unchanged: `pipeline/core_signal.py` blob `df5fbb59611bdd4fbb8224665f79655dd4433455`.
+- Workflow updated to pin the new parity test and run both focused modules; workflow blob `5a5b70d244debcf8f5eb55733eef14d6e9661e38`.
+- Final tested source SHA: `ca9f01902cd1e3b5f22ccecce7cd347077924f90`. Commits: test `50856abeb900a0bb1b0bf346ba7fea8aaee25a5b`; workflow `ca9f01902cd1e3b5f22ccecce7cd347077924f90`.
+- GitHub Actions [44896160495](https://github.com/kenznguyen/btcquant-application/actions/runs/44896160495), job `136822153930`: **SUCCESS**, 10/10 tests. Artifact `14703678692`, SHA-256 `1ce726534fe995a3b0061a50d35a98618213135b2f12e1e84471df88a0d37ebe`.
+- Isolated test container: pinned Python 3.12.16 image, network none, read-only workspace, no DB mount, no exchange connection and no credentials.
+- Evidence: `docs/evidence/T2_M2_3_CORE_ADAPTER_VALIDATOR_PARITY_2026-11-21.md`; latest evidence update commit `a40f908030646325d4bb15afe2fdd42834731162`.
+- M2.3 verdict: **PASS — focused adapter/validator parity coverage and CI**. Full repository regression suite **NOT RUN**. Optional malformed/unhashable action hardening not implemented.
+- Technical review finding requiring parity tests is closed by test coverage. Genuine independent second-person review remains **NOT VERIFIED**; this ChatGPT review does not qualify as second-person review.
+- Core leverage/sizing semantics remain **BLOCKED**. Runner, Ledger, Shared Risk Engine integration, AI Strategy, T0/T1 integration, DB, runtime, deployment and trading remain outside scope and unauthorized.
+- Next: obtain a genuine second-person review of exact tested blobs. Any additional behavior changes require separate bounded approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — T0 independent-review PRs #3 and #4 opened
 
 - Both PRs target the immutable source snapshot `b79c7e5d0bc7cf5e6beee0d4e05505a1b1aa6556` (main at PR creation). They add review-request documents only; no application source/test/workflow implementation changes.
