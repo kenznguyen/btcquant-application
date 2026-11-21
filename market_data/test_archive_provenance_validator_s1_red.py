@@ -45,10 +45,12 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.assertFalse(result.valid)
         self.assertIn(code, result.error_codes)
 
-    def test_valid_s1_synthetic_envelope_is_accepted(self) -> None:
-        result = validate_provenance(_s1_payload())
-        self.assertTrue(result.valid, result.error_codes)
-        self.assertEqual(result.error_codes, ())
+    def test_v1_fixture_without_complete_s1_evidence_cannot_claim_acceptance(self) -> None:
+        payload = _s1_payload()
+        payload.pop("inventory_raw_bytes")
+        payload.pop("inventory_expected_sha256")
+        payload.pop("coverage_manifest")
+        self.assert_code(payload, "RUN_ACCEPTANCE_INVARIANT_INVALID")
 
     def test_inventory_raw_bytes_digest_is_pinned(self) -> None:
         payload = _s1_payload()
