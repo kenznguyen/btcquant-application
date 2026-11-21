@@ -188,88 +188,13 @@ class StateRepository(Protocol):
         *, fencing_token: FencingToken,
     ) -> CommitResult: ...
 
-    @staticmethod
-    def _persist_ready_evidence(
-        connection: sqlite3.Connection,
-        token: FencingToken,
-        bundle: ReadyEvidenceBundle,
-    ) -> None:
-        for kind, attestation in (
-            ("preflight", bundle.preflight),
-            ("restore", bundle.restore),
-            ("risk", bundle.risk),
-        ):
-            payload = asdict(attestation)
-            payload["reason_codes"] = list(payload["reason_codes"])
-            payload_json = canonical_json(payload)
-            checksum = "sha256:" + hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
-            connection.execute(
-                """
-                INSERT INTO ps_session_attestations (
-                    session_id, account_scope_id, attestation_type,
-                    fencing_generation, payload_json, payload_checksum, recorded_at_ms
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    token.session_id, token.account_scope_id, kind,
-                    token.fencing_generation, payload_json, checksum,
-                    attestation.binding.checked_at_ms,
-                ),
-            )
-
-    def read_ready_evidence(self, session_id: str) -> ReadyEvidenceBundle:
-        if not isinstance(session_id, str) or not session_id.strip():
-            raise ValueError("session_id must be a non-empty string")
-        connection = self._connect_existing()
-        try:
-            self._require_evidence_schema(connection)
-            rows = connection.execute(
-                "SELECT * FROM ps_session_attestations WHERE session_id=?",
-                (session_id,),
-            ).fetchall()
-            if not rows:
-                raise KeyError(session_id)
-            if {row["attestation_type"] for row in rows} != {"preflight", "restore", "risk"} or len(rows) != 3:
-                raise EvidenceIntegrityError("READY evidence set is incomplete or duplicated")
-            decoded = {}
-            for row in rows:
-                payload_json = row["payload_json"]
-                checksum = "sha256:" + hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
-                if checksum != row["payload_checksum"]:
-                    raise EvidenceIntegrityError("persisted readiness evidence checksum mismatch")
-                try:
-                    payload = json.loads(payload_json)
-                    if not isinstance(payload, dict) or canonical_json(payload) != payload_json:
-                        raise ValueError("non-canonical evidence payload")
-                    binding = EvidenceBinding(**payload.pop("binding"))
-                    payload["reason_codes"] = tuple(payload.get("reason_codes", ()))
-                    kind = row["attestation_type"]
-                    model = {
-                        "preflight": PreflightAttestation,
-                        "restore": RestoreAttestation,
-                        "risk": RiskReadinessAttestation,
-                    }[kind]
-                    decoded[kind] = model(binding=binding, **payload)
-                except (KeyError, TypeError, ValueError) as exc:
-                    raise EvidenceIntegrityError("persisted readiness evidence is malformed") from exc
-                if (
-                    row["account_scope_id"] != decoded[kind].binding.account_scope_id
-                    or row["fencing_generation"] != decoded[kind].binding.fencing_generation
-                    or row["recorded_at_ms"] != decoded[kind].binding.checked_at_ms
-                ):
-                    raise EvidenceIntegrityError("evidence row metadata does not match its payload")
-            return ReadyEvidenceBundle(
-                preflight=decoded["preflight"],
-                restore=decoded["restore"],
-                risk=decoded["risk"],
-            )
-        finally:
-            connection.close()
-
     def advance_session(
         self, fencing_token: FencingToken, *, expected_status: SessionStatus,
         new_status: SessionStatus, at_ms: int,
+        readiness_evidence: ReadyEvidenceBundle | None = None,
     ) -> SessionRecord: ...
+
+    def read_ready_evidence(self, session_id: str) -> ReadyEvidenceBundle: ...
 
     def publish_checkpoint(
         self, checkpoint: Checkpoint, *, fencing_token: FencingToken,
@@ -753,6 +678,84 @@ class SQLiteStateRepository:
             if row is None:
                 return None
             return FencingToken(account_scope_id, row["owner_session_id"], row["fencing_generation"])
+        finally:
+            connection.close()
+
+    @staticmethod
+    def _persist_ready_evidence(
+        connection: sqlite3.Connection,
+        token: FencingToken,
+        bundle: ReadyEvidenceBundle,
+    ) -> None:
+        for kind, attestation in (
+            ("preflight", bundle.preflight),
+            ("restore", bundle.restore),
+            ("risk", bundle.risk),
+        ):
+            payload = asdict(attestation)
+            payload["reason_codes"] = list(payload["reason_codes"])
+            payload_json = canonical_json(payload)
+            checksum = "sha256:" + hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+            connection.execute(
+                """
+                INSERT INTO ps_session_attestations (
+                    session_id, account_scope_id, attestation_type,
+                    fencing_generation, payload_json, payload_checksum, recorded_at_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    token.session_id, token.account_scope_id, kind,
+                    token.fencing_generation, payload_json, checksum,
+                    attestation.binding.checked_at_ms,
+                ),
+            )
+
+    def read_ready_evidence(self, session_id: str) -> ReadyEvidenceBundle:
+        if not isinstance(session_id, str) or not session_id.strip():
+            raise ValueError("session_id must be a non-empty string")
+        connection = self._connect_existing()
+        try:
+            self._require_evidence_schema(connection)
+            rows = connection.execute(
+                "SELECT * FROM ps_session_attestations WHERE session_id=?",
+                (session_id,),
+            ).fetchall()
+            if not rows:
+                raise KeyError(session_id)
+            if {row["attestation_type"] for row in rows} != {"preflight", "restore", "risk"} or len(rows) != 3:
+                raise EvidenceIntegrityError("READY evidence set is incomplete or duplicated")
+            decoded = {}
+            for row in rows:
+                payload_json = row["payload_json"]
+                checksum = "sha256:" + hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+                if checksum != row["payload_checksum"]:
+                    raise EvidenceIntegrityError("persisted readiness evidence checksum mismatch")
+                try:
+                    payload = json.loads(payload_json)
+                    if not isinstance(payload, dict) or canonical_json(payload) != payload_json:
+                        raise ValueError("non-canonical evidence payload")
+                    binding = EvidenceBinding(**payload.pop("binding"))
+                    payload["reason_codes"] = tuple(payload.get("reason_codes", ()))
+                    kind = row["attestation_type"]
+                    model = {
+                        "preflight": PreflightAttestation,
+                        "restore": RestoreAttestation,
+                        "risk": RiskReadinessAttestation,
+                    }[kind]
+                    decoded[kind] = model(binding=binding, **payload)
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise EvidenceIntegrityError("persisted readiness evidence is malformed") from exc
+                if (
+                    row["account_scope_id"] != decoded[kind].binding.account_scope_id
+                    or row["fencing_generation"] != decoded[kind].binding.fencing_generation
+                    or row["recorded_at_ms"] != decoded[kind].binding.checked_at_ms
+                ):
+                    raise EvidenceIntegrityError("evidence row metadata does not match its payload")
+            return ReadyEvidenceBundle(
+                preflight=decoded["preflight"],
+                restore=decoded["restore"],
+                risk=decoded["risk"],
+            )
         finally:
             connection.close()
 
