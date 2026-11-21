@@ -76,6 +76,12 @@ def build_market_mark_provenance(window: object, *, source_id: str) -> MarketMar
     if not isinstance(window, dict):
         raise ValueError("MARK_SOURCE_WINDOW_INVALID")
     symbol, timeframe = window.get("symbol"), window.get("timeframe")
+    exchange, market_type = window.get("exchange"), window.get("marketType")
+    coverage = window.get("coverage")
+    if exchange != "binance" or market_type != "USDT_PERPETUAL":
+        raise ValueError("MARK_SOURCE_VENUE_UNSUPPORTED")
+    if not isinstance(coverage, dict) or coverage.get("complete") is not True:
+        raise ValueError("MARK_SOURCE_COVERAGE_INCOMPLETE")
     dataset = _nonempty("dataset_version", window.get("datasetVersion"))
     if (len(dataset) != 71 or not dataset.startswith("sha256:")
             or any(c not in "0123456789abcdef" for c in dataset[7:])):
@@ -94,6 +100,8 @@ def build_market_mark_provenance(window: object, *, source_id: str) -> MarketMar
     price = _canonical_price(candle.get("close"))
     payload = {
         "sourceId": source,
+        "exchange": exchange,
+        "marketType": market_type,
         "symbol": symbol,
         "timeframe": timeframe,
         "datasetVersion": dataset,
