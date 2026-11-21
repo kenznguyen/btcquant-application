@@ -113,6 +113,53 @@ class SQLitePaperAccountRiskProviderTests(unittest.TestCase):
         self.assertEqual(bundle.policy.max_drawdown_quote, "100")
         self.assertEqual(bundle.binding, self.binding)
 
+    def test_core_and_ai_can_share_the_exact_same_provider_bundle_and_policy(self):
+        from persistent_state.contracts import RiskState, StrategyId
+        from persistent_state.risk_admission import RiskProposal, SharedRiskEngine
+
+        bundle = self.run_provider()
+        risk_state = RiskState(
+            account_scope_id="paper-account", kill_switch_latched=False,
+            kill_switch_reason=None, risk_policy_version=bundle.policy.version,
+            reserved_margin_quote="20", aggregate_version=1,
+        )
+        context = bundle.admission_context(risk_state, now_ms=NOW)
+        core = RiskProposal(
+            proposal_id="core-1", account_scope_id="paper-account",
+            strategy_id=StrategyId.CORE, action_kind="ENTRY", direction="LONG",
+            requested_margin_quote="5", requested_gross_exposure_quote="10",
+        )
+        ai = RiskProposal(
+            proposal_id="ai-1", account_scope_id="paper-account",
+            strategy_id=StrategyId.AI, action_kind="ENTRY", direction="SHORT",
+            requested_margin_quote="5", requested_gross_exposure_quote="10",
+        )
+        engine = SharedRiskEngine()
+        self.assertTrue(engine.evaluate(core, context).allowed)
+        self.assertTrue(engine.evaluate(ai, context).allowed)
+        self.assertIs(context.account_risk_snapshot, bundle.snapshot)
+        self.assertIs(context.risk_policy, bundle.policy)
+
+    def test_shared_admission_context_keeps_policy_version_fail_closed(self):
+        from persistent_state.contracts import RiskState, StrategyId
+        from persistent_state.risk_admission import RiskProposal, SharedRiskEngine
+
+        bundle = self.run_provider()
+        risk_state = RiskState(
+            account_scope_id="paper-account", kill_switch_latched=False,
+            kill_switch_reason=None, risk_policy_version="stale-policy",
+            reserved_margin_quote="20", aggregate_version=1,
+        )
+        context = bundle.admission_context(risk_state, now_ms=NOW)
+        proposal = RiskProposal(
+            proposal_id="core-stale-policy", account_scope_id="paper-account",
+            strategy_id=StrategyId.CORE, action_kind="ENTRY", direction="LONG",
+            requested_margin_quote="5", requested_gross_exposure_quote="10",
+        )
+        result = SharedRiskEngine().evaluate(proposal, context)
+        self.assertFalse(result.allowed)
+        self.assertEqual(result.reason_code, "RISK_POLICY_VERSION_MISMATCH")
+
     def test_provider_protocol_read_snapshot_returns_only_verified_snapshot(self):
         with patch(
             "paper_execution.account_risk_provider.resolve_paper_account_binding",
