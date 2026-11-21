@@ -50,8 +50,13 @@ def migrate_paper_account_scope_binding(
             (MIGRATION_VERSION,),
         ).fetchone()
         columns = {row[1] for row in connection.execute("PRAGMA table_info(paper_accounts)")}
+        triggers = {row[0] for row in connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='trigger'"
+        )}
         if migration:
-            if migration != (MIGRATION_CHECKSUM, "APPLIED") or "account_scope_id" not in columns:
+            if (migration != (MIGRATION_CHECKSUM, "APPLIED")
+                    or "account_scope_id" not in columns
+                    or "paper_account_scope_id_immutable" not in triggers):
                 raise sqlite3.DatabaseError("PAPER_ACCOUNT_SCOPE_MIGRATION_INVALID")
             row = connection.execute(
                 "SELECT account_scope_id,mode FROM paper_accounts WHERE account_id=1"
@@ -81,7 +86,7 @@ def migrate_paper_account_scope_binding(
             """INSERT INTO paper_account_scope_binding_migrations
                (version,checksum,source_sha,applied_at_ms,status)
                VALUES (?,?,?,?, 'APPLIED')""",
-            (MIGRATION_CHECKSUM, applied_at_ms, source_sha.lower()),
+            (MIGRATION_VERSION, MIGRATION_CHECKSUM, source_sha.lower(), applied_at_ms),
         )
         connection.commit()
     except Exception:
@@ -116,7 +121,12 @@ def resolve_paper_account_binding(
             (MIGRATION_VERSION,),
         ).fetchone()
         columns = {row[1] for row in db.execute("PRAGMA table_info(paper_accounts)")}
-        if migration != (MIGRATION_CHECKSUM, "APPLIED") or "account_scope_id" not in columns:
+        triggers = {row[0] for row in db.execute(
+            "SELECT name FROM sqlite_master WHERE type='trigger'"
+        )}
+        if (migration != (MIGRATION_CHECKSUM, "APPLIED")
+                or "account_scope_id" not in columns
+                or "paper_account_scope_id_immutable" not in triggers):
             raise sqlite3.DatabaseError("PAPER_ACCOUNT_SCOPE_BINDING_MISSING")
         row = db.execute(
             "SELECT account_id,mode,account_scope_id FROM paper_accounts WHERE account_id=?",
