@@ -6022,3 +6022,21 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Status: **DESIGN BASELINE RECORDED**; implementation **NOT STARTED**; acceptance tests **SPECIFIED / NOT EXECUTED**; producer compatibility **BLOCKED BY OPEN ITEMS**; T1 Provider **PAUSED**; T1 → T2 runtime **NOT APPROVED**.
 - Verification: documentation-only commit; no Actions run, jobs or artifacts. No T1 source change, provider activation, collector start, network/exchange, VPS, T0 data/database/runtime, transport, T1 → T2 integration, strategy activation, or trading action.
 - Next: preserve this design baseline. Any implementation of DTO/validator/fixtures/tests, T1 producer correction, transport design, provider activation, or runtime connection requires a separately bounded approval.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T1 Orderbook Consumer V1 implementation PASS; producer remains blocked
+
+- Owner approval: implemented only the Application-owned DTO, strict consumer validator, deterministic synthetic fixture builder, and transport-neutral adapter; focused tests and adjacent offline T0 REST-tail regression authorized. No provider, transport, runtime, T0 data, VPS, exchange, or trading operation authorized.
+- Design baseline: `docs/contracts/T1_ORDERBOOK_CONSUMER_CONTRACT_V1_DESIGN_2026-11-21.md`; implementation evidence: `docs/evidence/T1_ORDERBOOK_CONSUMER_V1_IMPLEMENTATION_2026-11-21.md`.
+- Implemented package: `market_data/t1_orderbook/` with immutable `OrderbookSnapshot`, typed `ContractError/ErrorCode`, bounded strict JSON/schema/decimal/book/sequence/freshness/digest validation, deterministic synthetic fixtures, and pure transport-neutral `consume_payload` returning validated / unavailable / rejected results.
+- Tests: `market_data/test_t1_orderbook_contract.py` — **43 focused T1 tests**; adjacent `market_data.test_rest_tail_validator` — **10 tests**. Total **53/53 PASS**.
+- Exact tested source SHA: `3d85f19e36807f3b7eed1eb8a9057b4a77173a6d`.
+- TDD RED evidence: test-first SHA `4b7f9326a6bf1c8d658a0a0c0c87ae683a9db877`; run [44849764243](https://github.com/kenznguyen/btcquant-application/actions/runs/44849764243) failed as expected because the consumer module did not yet exist.
+- Final GitHub Actions run [44850261269](https://github.com/kenznguyen/btcquant-application/actions/runs/44850261269), workflow `T1 Orderbook Consumer Contract V1`, job `136679697952`, exact SHA above: **SUCCESS / 53 tests PASS**.
+- Artifact `t1-orderbook-consumer-contract-evidence`: ID `14684123969`, SHA-256 `d160586bbaff3187ffdfdfa6d4bb0a27c64e1924e09202b537b647281e6d2e6b`.
+- CI isolation: immutable CPython 3.12.16 test image, network disabled in test container, read-only source mount, no credentials, no T1 Provider process, no T0 data/database mounted.
+- Consumer boundary: no HTTP, sockets, retries, cache, scheduler, background task, T0 fallback, strategy signal generation or execution. SHA-256 snapshot digest is integrity-only, not authentication. Caller supplies one fixed `now_ms`.
+- Producer compatibility remains **BLOCKED**: T1 OrderbookManager `f64` loses exact decimal source text; snapshot metadata is incomplete; strict continuity/reconnect evidence is missing; receipt-time provenance is unproven; initial REST/WS bridge rule conflicts between T1 contract and publisher validator. Bridge-specific consumer test intentionally not implemented until producer semantics are reconciled.
+- Independent review: **NOT PERFORMED**. Provider remains **PAUSED**. T1 → T2 runtime **NOT APPROVED**. Production readiness **NOT VERIFIED**.
+- Next permitted work: preserve this bounded consumer implementation and request independent review if needed. Any T1 producer correction, HTTP transport, provider activation, T1 → T2 runtime connection, T0 data/runtime access, or strategy feature activation requires separate explicit approval.
