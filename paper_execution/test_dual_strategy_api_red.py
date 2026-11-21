@@ -150,6 +150,7 @@ class DualStrategyApiScopeRedTest(unittest.TestCase):
         from unittest.mock import Mock
 
         window = {
+            "exchange": "binance", "marketType": "USDT_PERPETUAL",
             "symbol": "BTCUSDT", "timeframe": "15m",
             "candles": [{"openTimeMs": 1_799_999_040_000, "close": "105", "closeTimeMs": 1_799_999_940_000}],
             "coverage": {"complete": True},
