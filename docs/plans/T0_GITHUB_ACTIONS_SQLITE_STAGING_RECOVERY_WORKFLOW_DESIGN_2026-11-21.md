@@ -71,16 +71,23 @@ The workflow must be created only after separate owner approval. It must not be 
 ### 4.1 Dispatch contract
 
 Required inputs should be explicit and narrow:
-- `phase`: `preflight_only`, `archive_materialize_validate`, or `sqlite_build_validate`.
-- `approval_record_sha`: exact commit SHA containing the owner approval for that phase.
+- `mode`: `preflight_only` or `full_staging`.
+- `workflow_approval_record_sha`: exact commit SHA containing approval to create/run this workflow.
+- `preflight_run_approval_record_sha`: required only for `preflight_only`.
+- `archive_materialization_approval_record_sha`: required for `full_staging`.
+- `sqlite_build_approval_record_sha`: required for `full_staging`.
+- `validation_artifact_approval_record_sha`: required for `full_staging`.
 - `inventory_blob_sha`: exact approved 404-object inventory blob SHA.
+- `importer_source_sha` and dependency-lock hashes: required for `full_staging`.
 - `run_id`: owner-supplied unique immutable run identifier.
 - `include_rest_tail`: default false; true is rejected unless a separate payload-transfer approval and exact payload manifest are supplied.
+
+Approval records for each full-staging operation must already exist and be verified before the job starts. A prior preflight run is advisory only: every `full_staging` run repeats the preflight on its own runner before any source request or write. The runner is ephemeral; no temporary path is expected to persist between workflow runs.
 
 The workflow must reject:
 - any ref other than `refs/heads/main`;
 - any missing or malformed SHA/run identifier;
-- a phase whose specific owner approval is absent or does not match the exact source, destination, inventory, importer and limits;
+- any missing phase-specific owner approval or approval that does not match the exact source, destination, inventory, importer and limits;
 - a changed inventory blob or unexpected object key;
 - `include_rest_tail=true` without the separate payload approval and verified payload hashes.
 
@@ -88,7 +95,11 @@ Dispatch inputs are assertions, not proof of approval. The job must fetch and ve
 
 ### 4.2 Execution shape
 
-Use one job on one GitHub-hosted runner for all steps in a given data-execution phase. This keeps preflight and subsequent writes in the same ephemeral environment and avoids passing intermediate raw data between jobs through artifacts.
+Use one job on one GitHub-hosted runner for the entire `full_staging` invocation: preflight, source acquisition, normalization, SQLite construction, read-only validation and evidence packaging. This keeps every gate and all intermediate files in the same ephemeral filesystem and avoids passing raw data between jobs through artifacts.
+
+A `preflight_only` invocation is a separate, read-only run. Its report does not reserve the runner, filesystem or path for a later run. The later `full_staging` invocation must repeat all preflight checks before any network request or write.
+
+Do not split materialization and SQLite construction into separate jobs or separate workflow runs unless a new design explicitly defines secure, hash-verified artifact handoff, retention and approval gates. Separate runs use separate ephemeral runners and cannot see prior `RUNNER_TEMP` files.
 
 - Runner: pinned supported image, initially `ubuntu-24.04`; record actual image/OS/kernel/architecture and filesystem identity at runtime.
 - Job timeout: bounded; proposed maximum 30 minutes for the 404-object batch, subject to a dry-run performance estimate before implementation.
@@ -99,7 +110,7 @@ Use one job on one GitHub-hosted runner for all steps in a given data-execution 
 - No secrets or exchange credentials.
 - No self-hosted runner, persistent volume, Canonical mount, VPS access, Dropbox mount or shared cache containing market data.
 
-A GitHub-hosted runner has outbound network capability by default. YAML alone does not prove egress isolation. The preflight phase must not make network requests. Any later source-transfer phase must constrain its own code to the exact allowlisted public object URLs, and must document that runner-level network isolation is not guaranteed by this design.
+A GitHub-hosted runner has outbound network capability by default. YAML alone does not prove egress isolation. The `preflight_only` mode must not make network requests. In `full_staging`, the same-run preflight must complete before the source-transfer step; that step must constrain its own code to the exact allowlisted public object URLs and document that runner-level network isolation is not guaranteed by this design.
 
 ## 5. Phase gates
 
@@ -114,9 +125,11 @@ Required before creating the YAML:
 
 Result if approved: workflow may be created, but no data operation is implied.
 
-### Gate 1 — preflight-only run
+### Gate 1 — runner preflight
 
-Purpose: prove the GitHub-hosted runner environment is suitable. This phase must not download, resolve, list or contact Binance objects and must not create a database.
+For `mode=preflight_only`, purpose is to prove the GitHub-hosted runner environment is suitable without data access. For `mode=full_staging`, the exact same checks run again as the first step in the same job, before any network request or write.
+
+Preflight must not download, resolve, list or contact Binance objects and must not create a database.
 
 Checks:
 1. Exact triggering SHA and checked-out SHA match.
@@ -132,7 +145,7 @@ Preflight is read-only: do not `mkdir`, `touch`, write-test, download, list buck
 
 ### Gate 2 — source acquisition and raw preservation
 
-Requires a new explicit owner approval naming GitHub-hosted runner temporary staging as the destination, the exact 404-key allowlist revision, source, byte ceiling, retry policy and retention/output behavior.
+In `full_staging` mode, this gate runs only after the same-run preflight has passed and the job has verified a separate explicit owner approval naming GitHub-hosted runner temporary staging as the destination, the exact 404-key allowlist revision, source, byte ceiling, retry policy and retention/output behavior.
 
 - Fetch only the 404 exact allowlisted object keys (202 ZIP + 202 sidecars); no bucket listing, wildcard discovery, REST tail call, fallback object, or additional date.
 - Enforce cumulative response-body cap of 104,857,600 bytes across all objects and all attempts, counting partial/error response bodies and retries. Count chunks before writing; abort before a chunk would exceed the cap. Do not trust Content-Length as the enforcement mechanism.
@@ -148,7 +161,7 @@ The existing historical payload validation report is not a substitute for fresh 
 
 ### Gate 3 — normalization and source reconciliation
 
-Requires explicit owner approval of the importer source SHA, dependency lock hashes, schema mapping, coverage acceptance, gap policy and `available_at_ms` semantics.
+In `full_staging` mode, this gate runs after Gate 2 and requires explicit owner approval of the importer source SHA, dependency lock hashes, schema mapping, coverage acceptance, gap policy and `available_at_ms` semantics.
 
 - Parse the exact Binance USD-M 12-column order. Header recognition must be exact; no heuristic header detection.
 - Parse timestamps/trade counts as integers and decimal fields with exact decimal arithmetic; never convert through binary float.
@@ -163,7 +176,7 @@ Requires explicit owner approval of the importer source SHA, dependency lock has
 
 ### Gate 4 — disposable SQLite build
 
-Requires a separate explicit owner approval naming:
+In `full_staging` mode, this gate runs in the same job after Gate 3 and requires a separate explicit owner approval naming:
 - exact importer commit SHA and dependency lock hashes;
 - exact schema contract and destination file path;
 - exact normalized dataset manifest hash;
@@ -180,7 +193,7 @@ Requirements:
 
 ### Gate 5 — read-only SQLite validation
 
-After import commits and all writer connections are closed:
+In `full_staging` mode, after import commits and all writer connections are closed:
 - `PRAGMA integrity_check` must return exactly `ok`.
 - Verify `user_version`, exact schema, indexes, constraints and primary key.
 - Independently query counts and min/max open times for each timeframe.
@@ -194,7 +207,7 @@ Validation code must open the staging DB read-only (SQLite URI `mode=ro` or equi
 
 ### Gate 6 — evidence artifact and owner acceptance
 
-Generate one run evidence bundle containing:
+In `full_staging` mode, generate one run evidence bundle containing:
 - workflow run URL/ID, job ID, event, triggering SHA and checked-out SHA;
 - all source, importer, validator, workflow and dependency-lock blob SHAs;
 - approval-record commit/blob SHAs and inventory blob SHA;
