@@ -65,3 +65,15 @@ Owner may separately authorize one manual dispatch of this workflow. Review the 
 - Parser contract freeze: **BLOCKED**.
 - SQLite/importer/Canonical T0: untouched.
 - This was the single approved dispatch. Do not rerun or dispatch a corrected workflow without separate owner approval. A workflow correction is also a separate change requiring approval before a second run.
+
+
+## Approved workflow correction — 2026-11-21
+
+- Owner explicitly approved removal of the invalid `cache: "false"` input and one second dispatch.
+- Changed only `.github/workflows/t0-real-archive-csv-sample-verification.yml`: removed that single input from the existing `actions/setup-python` step. No other workflow line changed.
+- Workflow correction commit: `c4c01ec96395ee204a311b29b5cd9c198038ff6e`; workflow blob: `0812cae7389eb5d328a200a4b590cd99bc195ef7`.
+- Static correction check: **PASS** — exactly one invalid input removed; remaining workflow content byte-for-byte unchanged apart from that line.
+- Second dispatch: **APPROVED, NOT YET DISPATCHED**. The available GitHub connection exposes GET/read operations and rerun operations, but no new workflow_dispatch action. Rerunning the failed prior job would use the old source SHA and would not apply this correction; it is not an acceptable substitute.
+- Required dispatch target: corrected workflow commit `c4c01ec96395ee204a311b29b5cd9c198038ff6e` (or a descendant with the same workflow blob). Use the Actions page and click **Run workflow** once on `main`.
+- Until a second run completes, 12-object verification and real CSV compatibility remain **NOT VERIFIED**; parser contract freeze remains **BLOCKED**. No archive requests have been made by this corrected workflow yet.
+- All previous exclusions remain: exactly six ZIPs + six sidecars only; no REST, full 404-object materialization, SQLite, importer, Contract 1.2.0 freeze, Canonical T0, T1/T2, VPS/runtime, deployment, credentials or trading. No third dispatch is authorized.
