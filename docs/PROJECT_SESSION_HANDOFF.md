@@ -6533,3 +6533,15 @@ Run [44923263069](https://github.com/kenznguyen/btcquant-application/actions/run
 ## T0 archive sample workflow — ancestry fix approved; third dispatch pending
 
 Owner approved both the narrow workflow correction and one third dispatch. Run 2 (`44923263069`) failed before any Binance request because the checkout was shallow and approval commit `02b407fe7d90efe184ae11d8b271a7aeb6e23f96` was unavailable to `git merge-base`. Corrected only the checkout setting to `fetch-depth: 0`; all other workflow logic and six-object allowlist remain unchanged. Correction commit `82c1e8c1e20d7df335936a53005d84cc1756c075`; workflow blob `9edb0e4cf74c22f82c38f107c730e73abf04de44`. Static verification PASS. Third dispatch is approved but NOT DISPATCHED: current GitHub connector exposes no new workflow_dispatch action. Do not rerun old run 2; it uses the prior source SHA. 12-object verification remains NOT VERIFIED; parser contract freeze BLOCKED. No archive request, SQLite/importer, Canonical T0, REST tail, T1/T2, VPS/runtime or trading action has occurred.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 real archive sample run 3
+
+- Third approved run [44923634320](https://github.com/kenznguyen/btcquant-application/actions/runs/44923634320), run 3, attempt 1, exact source SHA `ab2ae82c12f858492128528d52b01c4455f43083`, job `136904830969`: **FAILURE**.
+- Ancestry check and source blob pins now **PASS**; Python 3.13.18 setup **PASS**.
+- Real archive check stopped at `data/futures/um/monthly/klines/BTCUSDT/15m/BTCUSDT-15m-2022-08.zip`: `unexpected CSV header row`. The preceding M15 daily 2019-12-31 sample passed sufficiently to advance; remaining four ZIPs and paired sidecars are **NOT VERIFIED**.
+- Parser unit tests **SKIPPED**; artifact upload **SKIPPED**; no artifact/report.
+- Evidence detail: `docs/evidence/T0_REAL_ARCHIVE_CSV_SAMPLE_VERIFICATION_WORKFLOW_2026-11-21.md`, commit `953fa726b2e23d07751231e8daf0179b5c89ae89`.
+- Status: source/ancestry **PASS**; one observed archive format contradicts universal headerless assumption; full 12-object verification **NOT VERIFIED**; parser contract freeze **BLOCKED**.
+- Third dispatch consumed. No fourth dispatch or workflow/parser correction authorized. Do not silently skip headers or change parser based on this single sample. Next step requires separate owner decision on format handling and any further verification.
+- No SQLite/importer/staging, Contract 1.2.0 implementation, Canonical T0, REST tail, T1/T2, VPS/runtime, deployment, credentials or trading action.
