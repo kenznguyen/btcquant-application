@@ -14,7 +14,7 @@ MIGRATION_VERSION = 1
 MIGRATION_CHECKSUM = hashlib.sha256(
     b"paper-risk-policy-store-v1:immutable-history-audited-active-pointer-cas"
 ).hexdigest()
-_DECIMAL = re.compile(r"^(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$")
+_DECIMAL = re.compile(r"^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$")
 _ASSET = re.compile(r"^[A-Z][A-Z0-9]{1,11}$")
 _VERSION = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 _SHA = re.compile(r"^[0-9a-f]{40}$")
