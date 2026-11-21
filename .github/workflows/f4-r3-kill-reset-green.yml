@@ -6,19 +6,8 @@ on:
       - main
     paths:
       - ".github/workflows/f4-r3-kill-reset-green.yml"
-      - "paper_execution/ledger.py"
       - "paper_execution/risk_control.py"
-      - "paper_execution/risk_contract.py"
       - "paper_execution/test_f4_r3_reset_red.py"
-      - "paper_execution/test_ledger.py"
-      - "paper_execution/test_risk_control.py"
-      - "paper_execution/test_dual_ledger_red.py"
-      - "paper_execution/test_daily_baseline_persistence.py"
-      - "pipeline/api.py"
-      - "pipeline/test_api.py"
-      - "paper_execution/database_paths.py"
-      - "paper_execution/test_database_paths.py"
-      - "pipeline/CONTRACTS.md"
 
 permissions:
   contents: read
