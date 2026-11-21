@@ -1,3 +1,50 @@
+# Session readiness evidence contract increment — 2026-11-21
+
+## Status
+
+**PASS — typed evidence contracts and isolated contract tests.**
+
+**B1 Evidence gates: PARTIAL / NOT CLOSED.** This increment adds immutable typed attestations and a pure validator for matching session, account, config, source snapshot and fencing generation. The repository's generic `advance_session` method still permits direct status transitions; repository-level enforcement and the SessionOrchestrator are not yet implemented. Do not treat this increment as proof that callers cannot bypass the validator.
+
+## Exact source and CI evidence
+
+- Repository: `kenznguyen/btcquant-application`
+- Branch: `main`
+- Exact tested source SHA: `bd3ade272a226799e34699e49f3d22de1067bc94`
+- Commits in this increment:
+  - `ca858faa73659a493bd6c2e61f9cd6a8779ab7ca` — add RED contract tests.
+  - `0e3cf13e9ff0017c5a37da3241e041bae3d7cc51` — include the new test module in the isolated workflow.
+  - `bd3ade272a226799e34699e49f3d22de1067bc94` — implement typed evidence contracts.
+- Workflow run: [44853569768](https://github.com/kenznguyen/btcquant-application/actions/runs/44853569768) — **SUCCESS**
+- Job: `136690345154` — **PASS**
+- Persistent State tests: **130 tests PASS** (7 new evidence contract tests).
+- Adjacent Paper Ledger / Strategy API regressions: **160 tests PASS**.
+- Artifact: `persistent-state-contract-test-evidence`
+  - ID: `14686312334`
+  - SHA-256: `d213583eb6280a8e139a870138fc2499968026ba2666c231155e0ae45181968d`
+  - Expires: 2026-12-05.
+
+## Implemented
+
+- `persistent_state/evidence.py`: immutable `EvidenceBinding`, `PreflightAttestation`, `RestoreAttestation`, `RiskReadinessAttestation`, and `validate_ready_evidence`.
+- Enforces successful outcomes, exact config/source binding, session/account/fencing-generation binding, timestamps not preceding session start, preflight M15/H1 lookback shape, restore event-head match, Core + AI ledger reconciliation, and unlatched Kill Switch.
+- `persistent_state/test_evidence.py`: 7 deterministic tests for success, missing evidence, stale session/fence, config/snapshot mismatch, failed attestations, Kill Switch latch and Core/AI reconciliation.
+- `.github/workflows/persistent-state-contracts.yml` now includes the new test module.
+
+## Isolation
+
+- CI uses isolated Python 3.12 contract tests and the existing no-network disposable container for adjacent regressions.
+- No Canonical T0 database, reconstructed T0 database, T0 provider, Feeder, VPS, T1/T2 runtime, account credentials, exchange or order execution accessed.
+- No production database created and no runtime started.
+
+## Remaining work
+
+1. Enforce evidence requirements at the repository transition boundary so generic callers cannot bypass READY gates.
+2. Implement SessionOrchestrator with explicit preflight, restore, evidence verification and operator-only Resume.
+3. Close full risk-policy, Kill Switch persistence/audit and strategy-specific restoration blockers with dedicated tests and review.
+
+---
+
 # Persistent State recovery, preflight, risk admission and lifecycle evidence — 2026-11-20
 
 ## Status
