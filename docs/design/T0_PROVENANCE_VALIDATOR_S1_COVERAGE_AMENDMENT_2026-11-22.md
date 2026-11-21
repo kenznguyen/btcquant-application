@@ -85,9 +85,9 @@ Require raw fields to be exactly 12 strings, compact JSON representation to matc
 
 ### 5.2 Candle identity and normalized value digest
 
-Each ACCEPTED source row maps to exactly one candle natural key and one normalized value. Recompute `candle_value_id` from the exact normalized tuple:
-`exchange, market_type, symbol, timeframe, open_time_ms, open, high, low, close, volume`
-using the frozen `T0-CANDLE-VALUE-V1` T0ENC1 domain and `cv1:` + lowercase SHA-256. Decimal strings must be canonical plain decimal strings; no float coercion, exponent notation, NaN or Infinity.
+Each ACCEPTED source row maps to exactly one candle natural key and one normalized value. Recompute `candle_value_id` from the exact S1 tuple and order:
+`exchange, market_type, symbol, timeframe, open_time_ms, open, high, low, close, volume, available_at_ms, availability_kind`
+using the frozen `T0-CANDLE-VALUE-V1` T0ENC1 domain and `cv1:` + lowercase SHA-256. The tuple includes availability boundary and kind; it is not permissible to omit either field. Decimal strings must be canonical plain decimal strings; no float coercion, exponent notation, NaN or Infinity.
 
 Require supported identity values (Binance USD-M BTCUSDT, 15m/1h), non-negative aligned open time, finite positive OHLC, valid OHLC envelope, non-negative volume, and BAR_CLOSE_BOUNDARY availability exactly `open_time_ms + interval_ms`. Source close time is inclusive `open_time_ms + interval_ms - 1`.
 
