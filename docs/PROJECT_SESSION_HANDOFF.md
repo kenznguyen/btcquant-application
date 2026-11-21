@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T2 M2.4 AI Strategy Signal Contract RED complete
+
+- Owner approved M2.4 only: define the independent AI Strategy signal contract and prepare/run test-only RED evidence. No GREEN implementation was authorized.
+- Contract: `docs/architecture/AI_STRATEGY_SIGNAL_CONTRACT_V1.md`, blob `e5df7ec59c04a4f08b6ec0fc98e7e5702b3543dc`.
+- RED tests: `pipeline/test_ai_signal_contract_red.py`, blob `bd4c6325739a7d1eadf5ced64c71e7e4742e7a31`; 10 unittest methods, 27 expected error cases from subtests. All fail for the intended missing module `pipeline.ai_signal_contract`.
+- RED workflow: `.github/workflows/t2-ai-signal-contract-red.yml`, blob `d8323caa1bc96f909219afd1028923971a247ad4`.
+- Final exact tested SHA: `6fa66d2855a0d0804da6cee9ed37a723bbaf03d9`.
+- GitHub Actions run [44914696468](https://github.com/kenznguyen/btcquant-application/actions/runs/44914696468), job `136877715288`: **SUCCESS**. This is an expected-RED verification wrapper, not a GREEN test result.
+- Artifact `t2-ai-signal-contract-red-evidence`: ID `14711520763`; SHA-256 `822c74c766555c60e1f0f2c88af4f325aba8e7dafba3bd8d1b613287314018f0`; expires 2026-12-05.
+- Evidence: `docs/evidence/T2_M2_4_AI_SIGNAL_CONTRACT_RED_2026-11-21.md`; commit `e9b0724b8678188d17ab66645531c17aab7e0173`.
+- M2.4 disposition: **PASS — contract + RED specification**. AI signal validator GREEN implementation **NOT IMPLEMENTED / NOT AUTHORIZED**; full repository regression **NOT RUN**; genuine independent second-person review **NOT VERIFIED**.
+- Signal DTO is independent of Core and contains no order/intent/quantity/leverage/margin/reservation/ledger fields. Any future ENTRY or exposure-increasing DCA still requires separately approved Shared Risk Engine + Kill Switch admission.
+- Next: obtain separate owner approval for M2.5 pure validator GREEN implementation against these exact tests. Calibration registry, AI paper admission, dual ledger, runner, runtime, DB, T0/T1 integration, deployment and trading remain excluded.
+- No Strategy Core, risk policy, leverage/sizing, T0/T1, database, VPS/runtime, dependency, exchange or execution behavior was changed.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — T2 Core Adapter same-session self-review
 
 - Owner asked for a self-review of the M2.3 Core Adapter → Validator parity increment.
