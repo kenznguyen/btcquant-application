@@ -45,5 +45,3 @@ def validate(report, now_ms):
                 "reason": str(report.get("reason") or "CORE_SIGNAL_VALIDATED")[:160], "intent": intent}
     except (KeyError, TypeError, ValueError, OverflowError):
         return {"source": "STRATEGY_CORE", "action": "WAIT", "reason": "CORE_SIGNAL_INVALID", "intent": None}
-
-# CI path-filter probe: dependency-only push; no runtime behavior change.
