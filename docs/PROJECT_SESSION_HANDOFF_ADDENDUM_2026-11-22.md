@@ -94,3 +94,24 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - Status: **PASS — FROZEN V1 INTERFACE IMPLEMENTED; 24 FOCUSED TESTS PASS; 357 MARKET_DATA TESTS PASS ON PROVIDED ZIP; FULL SUITE PARTIAL/BLOCKED; FULL S1 NOT VERIFIED**.
 - Non-actions preserved: no archive/sidecar access, no Canonical T0/MAY-10/REST tail, no staging DB/DDL/importer, no runtime/VPS, T1/T2 integration, deployment, cleanup/deletion or trading.
 - Next: review the recorded V1 limitations and decide separately whether to approve additional S1 coverage/error-code/interface work. No scope expansion is implied by this GREEN increment.
+
+
+## T0 Provenance Validator S1 coverage — S3/S4
+
+- Owner approved S3 contract amendment and S4 synthetic-only RED tests. Approval excludes GREEN implementation, V1 source changes, DDL/SQLite, importer, archive retrieval, workflow creation/dispatch, Canonical T0, MAY-10, REST tail, T1/T2, VPS/runtime, deployment, cleanup and trading.
+- S3 contract: `docs/design/T0_PROVENANCE_VALIDATOR_S1_COVERAGE_AMENDMENT_2026-11-22.md`.
+  - Initial commit: `a9e291bcf97e63558452cd895f148eaec8229263`.
+  - Candle digest tuple consistency correction: `232fa7a474a7b2185dc87878cd5e40ad667abfea`.
+  - Final blob: `43719373949c0c2d553b463ab5ac66aadd64da2b`.
+- S4 test source: `market_data/test_archive_provenance_validator_s1_red.py`.
+  - Initial commit: `9a0f5016d29ffedb43b08fc15046343c597d17d9`.
+  - Follow-up fixture-gate correction: `caa4162d2f1940523c11c2d86bb61ea4667588bb`.
+  - Final blob: `4a35c34ad6dc3341db03fffe9d804443db033972`.
+- Evidence: `docs/evidence/T0_PROVENANCE_VALIDATOR_S1_COVERAGE_S3_S4_2026-11-22.md`, commit `92e3c4066ddea604798ba75f7c339639e60eb48a`.
+- S3 defines eleven appended stable error codes for inventory raw-byte authentication, object measurements, attempt history, pair/member evidence, source-row provenance, candle digest/OHLCV, links and global run acceptance. V1 codes and public function names remain unchanged.
+- S4 adds targeted synthetic negative cases and aggregate-order coverage. Existing V1 implementation and original RED/GREEN tests were not modified.
+- GitHub readback confirms final S3 blob `43719373949c0c2d553b463ab5ac66aadd64da2b` and S4 blob `4a35c34ad6dc3341db03fffe9d804443db033972`.
+- Test execution: **NOT RUN**; no RED count or runtime failure trace is claimed. Actions run/job/artifact: **NONE**. Full regression: **NOT RUN**.
+- S4 quality limitation: current fixture extends the V1 fixture and is not yet a complete valid S1 fixture containing all 404 measured object records, attempt histories, full pair/member/row/candle/link graph and recomputed S1 identifiers. Positive full-envelope acceptance and isolated execution of every new error code remain **NOT VERIFIED**.
+- Status: S3 **PASS — DESIGN COMMITTED/READ BACK**; S4 **PARTIAL — TEST SOURCE COMMITTED/READ BACK, EXECUTION NOT RUN**; GREEN **NOT AUTHORIZED**.
+- Next: complete/self-review the full valid synthetic fixture and isolated negative cases, then execute tests on an exact source snapshot. Request separate GREEN approval only after RED evidence is reproducible.
