@@ -22,6 +22,7 @@ from market_data.archive_provenance_validator import (
 _INVENTORY_ID = "synthetic-s1-inventory-v1"
 _RUN_ID = "synthetic-s1-run-v1"
 _PARSER_SHA = "a" * 40
+_IMPORTER_SHA = "d" * 40
 _TRIGGER_SHA = "b" * 40
 _CHECKOUT_SHA = "c" * 40
 _ROW_COUNT = 202
@@ -66,6 +67,34 @@ def _refresh_candle_value_id(candle: dict[str, Any]) -> None:
         candle["available_at_ms"], candle["availability_kind"],
     )
     candle["candle_value_id"] = "cv1:" + _enc_digest("T0-CANDLE-VALUE-V1", *fields)
+
+
+def _sync_candle_value_id(payload: dict[str, Any], index: int) -> None:
+    value_id = payload["candles"][index]["candle_value_id"]
+    payload["source_rows"][index]["candle_value_id"] = value_id
+    payload["links"][index]["candle_value_id"] = value_id
+
+
+def _refresh_link_id(link: dict[str, Any]) -> None:
+    link["link_id"] = "lnk1:" + _enc_digest(
+        "T0-CANDLE-PROVENANCE-LINK-V1",
+        link["exchange"], link["market_type"], link["symbol"],
+        link["timeframe"], link["open_time_ms"], link["source_row_id"],
+        link["duplicate_disposition"],
+    )
+
+
+def _renumber_attempt_and_reference(payload: dict[str, Any], index: int, number: int) -> None:
+    attempt = payload["attempts"][index]
+    obj = next(item for item in payload["objects"] if item["object_id"] == attempt["object_id"])
+    attempt["attempt_number"] = number
+    attempt["attempt_id"] = derive_attempt_id(
+        object_id=attempt["object_id"], attempt_number=number,
+        workflow_run_id=attempt["workflow_run_id"],
+        workflow_job_id=attempt["workflow_job_id"],
+        trigger_sha=attempt["trigger_sha"], requested_key=attempt["requested_key"],
+    )
+    obj["successful_attempt_id"] = attempt["attempt_id"]
 
 
 def build_valid_s1_fixture() -> dict[str, Any]:
@@ -124,7 +153,7 @@ def build_valid_s1_fixture() -> dict[str, Any]:
                 "object_kind": kind, "timeframe": "15m",
                 "partition": "synthetic", "period": f"{index:03d}",
                 "paired_object_key": sidecar_key if kind == "ZIP" else zip_key,
-                "expected_size_bytes": None, "expected_sha256": None,
+                "expected_size_bytes": len(body), "expected_sha256": digest,
                 "measured_size_bytes": len(body), "measured_sha256": digest,
                 "retrieval_source": "SYNTHETIC_FIXTURE",
                 "requested_key": key, "workflow_run_id": "run-1001",
@@ -203,7 +232,9 @@ def build_valid_s1_fixture() -> dict[str, Any]:
             "physical_record_ordinal": 2, "data_row_ordinal": 1,
             "raw_fields": raw_fields, "raw_row_digest": raw_digest,
             "parser_contract_id": "T0_ARCHIVE_CSV_HEADER_V1",
-            "parser_source_sha": _PARSER_SHA, "importer_source_sha": None,
+            "parser_source_sha": _PARSER_SHA,
+            "importer_contract_id": "T0_ARCHIVE_IMPORTER_V1",
+            "importer_source_sha": _IMPORTER_SHA,
             "natural_key": natural_key, "candle_value_id": candle_value_id,
             "disposition": "ACCEPTED", "rejection_code": None,
         })
@@ -240,6 +271,7 @@ def build_valid_s1_fixture() -> dict[str, Any]:
             "approved_gaps": [], "approved_extras": [],
             "expected_object_count": 404, "expected_pair_count": 202,
             "expected_member_count": 202, "expected_row_count": 202,
+            "expected_candle_count": 202, "expected_link_count": 202,
         },
         "run": {
             "run_id": _RUN_ID, "status": "CANDIDATE",
@@ -312,10 +344,13 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.payload = build_valid_s1_fixture()
         assert_valid_fixture_shape(self, self.payload)
 
-    def assert_s1_error(self, code: str) -> None:
+    def assert_s1_error(
+        self, code: str, *, legacy_codes: tuple[str, ...] = (),
+    ) -> None:
         result = validate_provenance(self.payload)
         self.assertFalse(result.valid)
-        self.assertIn(code, result.error_codes)
+        # V1 diagnostics retain their order; S3 diagnostics follow the V1 catalogue.
+        self.assertEqual(result.error_codes, legacy_codes + (code,))
 
     def test_complete_s1_fixture_is_deterministic_and_structurally_valid(self) -> None:
         second = build_valid_s1_fixture()
@@ -331,18 +366,25 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
 
     def test_inventory_object_set_mismatch_isolated(self) -> None:
         self.payload["inventory"]["objects"].pop()
-        self.assert_s1_error("INVENTORY_OBJECT_SET_MISMATCH")
+        self.assert_s1_error(
+            "INVENTORY_OBJECT_SET_MISMATCH",
+            legacy_codes=("INVENTORY_OBJECT_SET_INCOMPLETE", "OBJECT_NOT_IN_APPROVED_INVENTORY"),
+        )
 
     def test_object_measurement_invalid_isolated(self) -> None:
-        self.payload["objects"][0]["measured_size_bytes"] = None
+        # Isolate HTTP response validity; measured bytes and successful attempt stay aligned.
+        self.payload["objects"][0]["response_status"] = 302
         self.assert_s1_error("OBJECT_MEASUREMENT_INVALID")
 
     def test_object_attempt_history_invalid_isolated(self) -> None:
-        self.payload["attempts"][0]["attempt_number"] = 2
+        # Keep the ID and successful-attempt pointer internally valid; only sequence
+        # contiguity is broken because the sole attempt begins at ordinal 2.
+        _renumber_attempt_and_reference(self.payload, 0, 2)
         self.assert_s1_error("OBJECT_ATTEMPT_HISTORY_INVALID")
 
     def test_archive_pair_evidence_invalid_isolated(self) -> None:
-        self.payload["pairs"][0]["sidecar_asserted_zip_sha256"] = "0" * 64
+        # Isolate CRC evidence; sidecar assertion and measured hashes remain aligned.
+        self.payload["pairs"][0]["zip_crc_ok"] = 0
         self.assert_s1_error("ARCHIVE_PAIR_EVIDENCE_INVALID")
 
     def test_csv_member_evidence_invalid_isolated(self) -> None:
@@ -350,21 +392,28 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.assert_s1_error("CSV_MEMBER_EVIDENCE_INVALID")
 
     def test_source_row_provenance_invalid_isolated(self) -> None:
-        self.payload["source_rows"][0]["raw_fields"] = ["one"]
+        # Isolate the physical/data ordinal offset for a header-present CSV.
+        self.payload["source_rows"][0]["physical_record_ordinal"] = 1
         self.assert_s1_error("SOURCE_ROW_PROVENANCE_INVALID")
 
     def test_candle_value_digest_invalid_isolated(self) -> None:
+        # Propagate the forged ID through row and link so only tuple recomputation
+        # can detect the mismatch.
         self.payload["candles"][0]["candle_value_id"] = "cv1:" + "0" * 64
+        _sync_candle_value_id(self.payload, 0)
         self.assert_s1_error("CANDLE_VALUE_DIGEST_INVALID")
 
     def test_candle_ohlcv_constraint_invalid_isolated(self) -> None:
         self.payload["candles"][0]["high"] = "1"
         self.payload["candles"][0]["low"] = "2"
         _refresh_candle_value_id(self.payload["candles"][0])
+        _sync_candle_value_id(self.payload, 0)
         self.assert_s1_error("CANDLE_OHLCV_CONSTRAINT_INVALID")
 
     def test_candle_provenance_link_invalid_isolated(self) -> None:
-        self.payload["links"][0]["source_row_id"] = "row1:" + "0" * 64
+        # Keep row/candle references connected; isolate an unsupported disposition.
+        self.payload["links"][0]["duplicate_disposition"] = "UNCLASSIFIED"
+        _refresh_link_id(self.payload["links"][0])
         self.assert_s1_error("CANDLE_PROVENANCE_LINK_INVALID")
 
     def test_run_acceptance_invariant_invalid_isolated(self) -> None:
@@ -372,23 +421,29 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.assert_s1_error("RUN_ACCEPTANCE_INVARIANT_INVALID")
 
     def test_aggregate_new_codes_are_ordered_and_deduplicated(self) -> None:
+        # Disjoint records prevent one mutation from masking another.
         self.payload["inventory_expected_sha256"] = "0" * 64
         self.payload["inventory"]["objects"].pop()
-        self.payload["objects"][0]["measured_size_bytes"] = None
-        self.payload["objects"][1]["measured_size_bytes"] = None
-        self.payload["attempts"][0]["attempt_number"] = 3
-        self.payload["attempts"][1]["attempt_number"] = 3
-        self.payload["pairs"][0]["sidecar_asserted_zip_sha256"] = "0" * 64
+        self.payload["objects"][0]["response_status"] = 302
+        _renumber_attempt_and_reference(self.payload, 2, 2)
+        self.payload["pairs"][0]["zip_crc_ok"] = 0
         self.payload["members"][0]["parser_source_sha"] = "invalid"
-        self.payload["source_rows"][0]["raw_fields"] = ["x"]
-        self.payload["candles"][0]["candle_value_id"] = "cv1:" + "0" * 64
-        self.payload["candles"][0]["high"] = "1"
-        self.payload["candles"][0]["low"] = "2"
-        _refresh_candle_value_id(self.payload["candles"][0])
-        self.payload["links"][0]["source_row_id"] = "row1:" + "0" * 64
+        self.payload["source_rows"][0]["physical_record_ordinal"] = 1
+
+        self.payload["candles"][1]["candle_value_id"] = "cv1:" + "0" * 64
+        _sync_candle_value_id(self.payload, 1)
+
+        self.payload["candles"][2]["high"] = "1"
+        self.payload["candles"][2]["low"] = "2"
+        _refresh_candle_value_id(self.payload["candles"][2])
+        _sync_candle_value_id(self.payload, 2)
+
+        self.payload["links"][3]["duplicate_disposition"] = "UNCLASSIFIED"
+        _refresh_link_id(self.payload["links"][3])
         self.payload["run"]["schema_contract_id"] = "WRONG"
+
         result = validate_provenance(self.payload)
-        expected = (
+        expected_s3 = (
             "INVENTORY_RAW_BYTES_INVALID",
             "INVENTORY_OBJECT_SET_MISMATCH",
             "OBJECT_MEASUREMENT_INVALID",
@@ -401,9 +456,17 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
             "CANDLE_PROVENANCE_LINK_INVALID",
             "RUN_ACCEPTANCE_INVARIANT_INVALID",
         )
-        selected = tuple(code for code in result.error_codes if code in expected)
-        self.assertEqual(selected, expected)
+        selected = tuple(code for code in result.error_codes if code in expected_s3)
+        self.assertEqual(selected, expected_s3)
         self.assertEqual(len(selected), len(set(selected)))
+        self.assertEqual(
+            result.error_codes,
+            (
+                "INVENTORY_OBJECT_SET_INCOMPLETE",
+                "OBJECT_NOT_IN_APPROVED_INVENTORY",
+                *expected_s3,
+            ),
+        )
         self.assertFalse(result.valid)
 
 
