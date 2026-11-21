@@ -37,3 +37,9 @@ All prices/volumes are invented deterministic values. The open timestamps are al
 - Do not use these rows to build a dataset, populate SQLite, calculate strategy performance, or claim market-history coverage.
 
 No network access, archive retrieval, REST request, host access, SQLite operation or Canonical T0 access is required or permitted for tests using these fixtures.
+
+## Offline parser implementation
+
+The provisional mapping is consumed by `market_data.archive_csv_parser.parse_archive_csv(text, timeframe=...)`. The parser is pure/offline and returns immutable typed rows with exact `Decimal` values, all 12 raw source fields, the inclusive source close timestamp and its derived exclusive bar-close boundary. It rejects headers, malformed/blank rows, wrong field counts, unsupported timeframes, non-integer/out-of-range timestamps, unaligned opens, close-time mismatches, invalid decimals, invalid OHLC, negative volume fields, invalid trade counts, taker-buy values above their totals, duplicate/out-of-order opens and malformed CSV syntax.
+
+Focused tests: `python -B -m unittest -v market_data.test_archive_csv_parser`. Tests are designed only for these synthetic fixtures and malformed synthetic variants. They do not freeze or validate a real Binance archive parser contract.
