@@ -11,7 +11,7 @@ from persistent_state.account_risk import PaperAccountBinding, validate_paper_ac
 
 MIGRATION_VERSION = 1
 MIGRATION_CHECKSUM = hashlib.sha256(
-    b"paper-account-scope-binding-v1:explicit-immutable-scope-map"
+    b"paper-account-scope-binding-v1:immutable-map-and-migration-audit"
 ).hexdigest()
 
 
@@ -56,7 +56,9 @@ def migrate_paper_account_scope_binding(
         if migration:
             if (migration != (MIGRATION_CHECKSUM, "APPLIED")
                     or "account_scope_id" not in columns
-                    or "paper_account_scope_id_immutable" not in triggers):
+                    or not {"paper_account_scope_id_immutable",
+                             "paper_account_scope_migrations_immutable_update",
+                             "paper_account_scope_migrations_immutable_delete"}.issubset(triggers)):
                 raise sqlite3.DatabaseError("PAPER_ACCOUNT_SCOPE_MIGRATION_INVALID")
             row = connection.execute(
                 "SELECT account_scope_id,mode FROM paper_accounts WHERE account_id=1"
@@ -77,6 +79,12 @@ def migrate_paper_account_scope_binding(
             "UPDATE paper_accounts SET account_scope_id=? WHERE account_id=1 AND account_scope_id IS NULL",
             (account_scope_id,),
         )
+        connection.execute("""CREATE TRIGGER paper_account_scope_migrations_immutable_update
+            BEFORE UPDATE ON paper_account_scope_binding_migrations
+            BEGIN SELECT RAISE(ABORT,'PAPER_ACCOUNT_SCOPE_MIGRATION_IMMUTABLE'); END""")
+        connection.execute("""CREATE TRIGGER paper_account_scope_migrations_immutable_delete
+            BEFORE DELETE ON paper_account_scope_binding_migrations
+            BEGIN SELECT RAISE(ABORT,'PAPER_ACCOUNT_SCOPE_MIGRATION_IMMUTABLE'); END""")
         connection.execute("""CREATE TRIGGER paper_account_scope_id_immutable
             BEFORE UPDATE OF account_scope_id ON paper_accounts
             WHEN OLD.account_scope_id IS NOT NULL
@@ -126,7 +134,9 @@ def resolve_paper_account_binding(
         )}
         if (migration != (MIGRATION_CHECKSUM, "APPLIED")
                 or "account_scope_id" not in columns
-                or "paper_account_scope_id_immutable" not in triggers):
+                or not {"paper_account_scope_id_immutable",
+                         "paper_account_scope_migrations_immutable_update",
+                         "paper_account_scope_migrations_immutable_delete"}.issubset(triggers)):
             raise sqlite3.DatabaseError("PAPER_ACCOUNT_SCOPE_BINDING_MISSING")
         row = db.execute(
             "SELECT account_id,mode,account_scope_id FROM paper_accounts WHERE account_id=?",
