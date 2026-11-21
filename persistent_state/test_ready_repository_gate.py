@@ -50,7 +50,7 @@ class ReadyRepositoryBoundaryTests(unittest.TestCase):
         binding = EvidenceBinding(
             session_id="session-ready-gate", account_scope_id="paper-account",
             fencing_generation=generation, config_hash="sha256:" + "a" * 64,
-            source_snapshot_id="snapshot-1", checked_at_ms=1_800_000_000_010,
+            source_snapshot_id="snapshot-1", checked_at_ms=1_800_000_000_002,
         )
         return ReadyEvidenceBundle(
             preflight=PreflightAttestation(
