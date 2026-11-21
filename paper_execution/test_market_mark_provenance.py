@@ -87,6 +87,29 @@ class MarketMarkProvenanceTests(unittest.TestCase):
                 changed, source_id="T0_CANONICAL_MARKET_DATA"
             )
 
+    def test_direct_typed_provenance_cannot_bypass_upstream_dataset_hash_validation(self):
+        import hashlib
+        import json
+
+        original = build_market_mark_provenance(
+            self.window(), source_id="T0_CANONICAL_MARKET_DATA"
+        )
+        payload = json.loads(original.canonical_payload)
+        payload["sourceWindow"]["candles"][0]["close"] = "101.26"
+        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        forged = MarketMarkProvenance(
+            source_id=original.source_id,
+            source_snapshot_id=original.source_snapshot_id,
+            dataset_version=original.dataset_version,
+            source_as_of_ms=original.source_as_of_ms,
+            mark_price="101.26",
+            candle_close_ms=original.candle_close_ms,
+            source_payload_sha256=hashlib.sha256(canonical.encode()).hexdigest(),
+            canonical_payload=canonical,
+        )
+        with self.assertRaisesRegex(ValueError, "MARK_PROVENANCE_DATASET_HASH_MISMATCH"):
+            forged
+
     def test_noncanonical_source_id_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "MARK_SOURCE_ID_UNSUPPORTED"):
             build_market_mark_provenance(self.window(), source_id="OTHER_SOURCE")
