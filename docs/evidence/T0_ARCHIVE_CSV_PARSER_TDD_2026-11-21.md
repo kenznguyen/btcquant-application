@@ -4,7 +4,7 @@
 **Repository:** `kenznguyen/btcquant-application`  
 **Branch:** `main`  
 **Status:** **PASS — BOUNDED OFFLINE PARSER + FOCUSED SYNTHETIC TESTS**  
-**Source commit / tested snapshot:** `c600e8b3680466241a45b429c76215b538927904`
+**Source commit / tested snapshot:** `59fbc79d7df33da09c8e483923dc64964003d31e`
 
 ## 1. Approved scope
 
@@ -15,7 +15,7 @@ Owner approved a separate TDD increment to implement a pure offline parser and t
 | File | Blob SHA | Role |
 |---|---|---|
 | `market_data/archive_csv_parser.py` | `7d59706778a98a18185e0b2fe744c3c43c2eb870` | Pure CSV parser and immutable typed row |
-| `market_data/test_archive_csv_parser.py` | `df237f495c253c053b29e5ca76c50aad060ba85d` | 19 focused unittest methods |
+| `market_data/test_archive_csv_parser.py` | `50199cd168fd52314a846760cc4baf51a8cd5e9a` | 19 focused unittest methods |
 | `tests/fixtures/t0/binance_um_btcusdt_m15_synthetic.csv` | `1a616fde511407d90be8894391e783e716908c9d` | Synthetic M15 input |
 | `tests/fixtures/t0/binance_um_btcusdt_h1_synthetic.csv` | `951f26ff4e4a6c330a14f5a515cc27cce8053e1e` | Synthetic H1 input |
 | `tests/fixtures/t0/README.md` | `576cfd619af0ead0c3b864b4fe9e0ddcb33e08ae` | Fixture/parser limitations and usage |
@@ -25,6 +25,7 @@ Source commits:
 - Parser implementation: `2413d4f94c8f85d619190897d8236ba6e32896fe`
 - Numeric edge-case tests: `c64545bd8ec371b2c1cd3e612697c25e1cbd2c3a`
 - Final test naming/clarity: `c600e8b3680466241a45b429c76215b538927904`
+- Final comment-only test clarification: `59fbc79d7df33da09c8e483923dc64964003d31e`
 - Fixture documentation: `0d9ec85591d0826e5f0e9c43bfb43b41f7698ac3`
 
 ## 3. TDD evidence
