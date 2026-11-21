@@ -12,7 +12,7 @@ from decimal import Decimal
 SCHEMA_VERSION = 1
 MIGRATION_VERSION = 1
 MIGRATION_CHECKSUM = hashlib.sha256(
-    b"paper-risk-policy-store-v1:immutable-version-history-cas-active-pointer"
+    b"paper-risk-policy-store-v1:immutable-history-audited-active-pointer-cas"
 ).hexdigest()
 _DECIMAL = re.compile(r"^(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$")
 _ASSET = re.compile(r"^[A-Z][A-Z0-9]{1,11}$")
@@ -96,6 +96,7 @@ def initialize_risk_policy_schema(connection, *, source_sha, applied_at_ms):
         raise ValueError("RISK_POLICY_MIGRATION_TIME_INVALID")
     if connection.in_transaction:
         raise sqlite3.DatabaseError("RISK_POLICY_MIGRATION_REQUIRES_IDLE_CONNECTION")
+    connection.execute("PRAGMA foreign_keys=ON")
     connection.execute("BEGIN IMMEDIATE")
     try:
         connection.execute("""CREATE TABLE IF NOT EXISTS paper_risk_policy_schema_migrations (
