@@ -6,7 +6,8 @@ directories only. This module has no T0, market-data, network or exchange client
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -22,6 +23,10 @@ from persistent_state.contracts import (
     SessionStatus,
     StrategyId,
     canonical_json,
+)
+from persistent_state.evidence import (
+    EvidenceBinding, PreflightAttestation, ReadyEvidenceBundle,
+    RestoreAttestation, RiskReadinessAttestation, validate_ready_evidence,
 )
 from persistent_state.lifecycle import is_terminal_session_status, validate_session_transition
 
@@ -79,6 +84,14 @@ class SessionStateConflictError(RepositoryError):
 
 class SessionTransitionError(RepositoryError):
     """The requested session lifecycle transition is not permitted."""
+
+
+class EvidenceIntegrityError(RepositoryError):
+    """Persisted readiness evidence is missing, malformed or has a bad checksum."""
+
+
+class EvidenceSchemaMigrationRequiredError(RepositoryError):
+    """An existing v1 database needs the explicit additive evidence-table migration."""
 
 
 class CheckpointRequiredForCloseError(RepositoryError):
@@ -174,6 +187,84 @@ class StateRepository(Protocol):
         self, event: EventRecord, claim: IdempotencyClaim, mutation: AggregateMutation,
         *, fencing_token: FencingToken,
     ) -> CommitResult: ...
+
+    @staticmethod
+    def _persist_ready_evidence(
+        connection: sqlite3.Connection,
+        token: FencingToken,
+        bundle: ReadyEvidenceBundle,
+    ) -> None:
+        for kind, attestation in (
+            ("preflight", bundle.preflight),
+            ("restore", bundle.restore),
+            ("risk", bundle.risk),
+        ):
+            payload = asdict(attestation)
+            payload["reason_codes"] = list(payload["reason_codes"])
+            payload_json = canonical_json(payload)
+            checksum = "sha256:" + hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+            connection.execute(
+                """
+                INSERT INTO ps_session_attestations (
+                    session_id, account_scope_id, attestation_type,
+                    fencing_generation, payload_json, payload_checksum, recorded_at_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    token.session_id, token.account_scope_id, kind,
+                    token.fencing_generation, payload_json, checksum,
+                    attestation.binding.checked_at_ms,
+                ),
+            )
+
+    def read_ready_evidence(self, session_id: str) -> ReadyEvidenceBundle:
+        if not isinstance(session_id, str) or not session_id.strip():
+            raise ValueError("session_id must be a non-empty string")
+        connection = self._connect_existing()
+        try:
+            self._require_evidence_schema(connection)
+            rows = connection.execute(
+                "SELECT * FROM ps_session_attestations WHERE session_id=?",
+                (session_id,),
+            ).fetchall()
+            if not rows:
+                raise KeyError(session_id)
+            if {row["attestation_type"] for row in rows} != {"preflight", "restore", "risk"} or len(rows) != 3:
+                raise EvidenceIntegrityError("READY evidence set is incomplete or duplicated")
+            decoded = {}
+            for row in rows:
+                payload_json = row["payload_json"]
+                checksum = "sha256:" + hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+                if checksum != row["payload_checksum"]:
+                    raise EvidenceIntegrityError("persisted readiness evidence checksum mismatch")
+                try:
+                    payload = json.loads(payload_json)
+                    if not isinstance(payload, dict) or canonical_json(payload) != payload_json:
+                        raise ValueError("non-canonical evidence payload")
+                    binding = EvidenceBinding(**payload.pop("binding"))
+                    payload["reason_codes"] = tuple(payload.get("reason_codes", ()))
+                    kind = row["attestation_type"]
+                    model = {
+                        "preflight": PreflightAttestation,
+                        "restore": RestoreAttestation,
+                        "risk": RiskReadinessAttestation,
+                    }[kind]
+                    decoded[kind] = model(binding=binding, **payload)
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise EvidenceIntegrityError("persisted readiness evidence is malformed") from exc
+                if (
+                    row["account_scope_id"] != decoded[kind].binding.account_scope_id
+                    or row["fencing_generation"] != decoded[kind].binding.fencing_generation
+                    or row["recorded_at_ms"] != decoded[kind].binding.checked_at_ms
+                ):
+                    raise EvidenceIntegrityError("evidence row metadata does not match its payload")
+            return ReadyEvidenceBundle(
+                preflight=decoded["preflight"],
+                restore=decoded["restore"],
+                risk=decoded["risk"],
+            )
+        finally:
+            connection.close()
 
     def advance_session(
         self, fencing_token: FencingToken, *, expected_status: SessionStatus,
@@ -316,6 +407,32 @@ _SCHEMA_STATEMENTS = (
     )
     """,
     """
+    CREATE TABLE ps_session_attestations (
+        session_id TEXT NOT NULL REFERENCES ps_sessions(session_id),
+        account_scope_id TEXT NOT NULL,
+        attestation_type TEXT NOT NULL CHECK (attestation_type IN ('preflight','restore','risk')),
+        fencing_generation INTEGER NOT NULL CHECK (fencing_generation > 0),
+        payload_json TEXT NOT NULL,
+        payload_checksum TEXT NOT NULL,
+        recorded_at_ms INTEGER NOT NULL CHECK (recorded_at_ms >= 0),
+        PRIMARY KEY (session_id, attestation_type)
+    )
+    """,
+    """
+    CREATE TRIGGER ps_session_attestations_no_update
+    BEFORE UPDATE ON ps_session_attestations
+    BEGIN
+        SELECT RAISE(ABORT, 'ps_session_attestations is append-only');
+    END
+    """,
+    """
+    CREATE TRIGGER ps_session_attestations_no_delete
+    BEFORE DELETE ON ps_session_attestations
+    BEGIN
+        SELECT RAISE(ABORT, 'ps_session_attestations is append-only');
+    END
+    """,
+    """
     CREATE TRIGGER ps_checkpoints_no_update
     BEFORE UPDATE ON ps_checkpoint_generations
     BEGIN
@@ -400,6 +517,73 @@ class SQLiteStateRepository:
         if missing:
             raise RepositorySchemaError(
                 "database schema is incomplete: " + ", ".join(sorted(missing))
+            )
+
+    def migrate_v1_session_evidence(self) -> None:
+        """Explicitly add the append-only evidence table to an existing v1 database.
+
+        The additive table keeps user_version=1 and does not rewrite existing rows.
+        This method is never called implicitly by initialization or application startup.
+        """
+        path = Path(self.database_path)
+        if not path.is_file():
+            raise FileNotFoundError(f"persistent-state database does not exist: {path}")
+        connection = sqlite3.connect(self.database_path, timeout=5, isolation_level=None)
+        try:
+            connection.execute("PRAGMA foreign_keys = ON")
+            connection.execute("PRAGMA busy_timeout = 5000")
+            version = connection.execute("PRAGMA user_version").fetchone()[0]
+            if version != CONTRACT_SCHEMA_VERSION:
+                raise RepositorySchemaError(
+                    f"evidence migration supports schema {CONTRACT_SCHEMA_VERSION} only"
+                )
+            found = {
+                row[0] for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"
+                )
+            }
+            missing_base = _REQUIRED_SCHEMA_OBJECTS - found
+            if missing_base:
+                raise RepositorySchemaError(
+                    "cannot migrate incomplete v1 schema: " + ", ".join(sorted(missing_base))
+                )
+            evidence_objects = {
+                "ps_session_attestations",
+                "ps_session_attestations_no_update",
+                "ps_session_attestations_no_delete",
+            }
+            if evidence_objects <= found:
+                return
+            if found & evidence_objects:
+                raise RepositorySchemaError("partial session evidence schema requires manual inspection")
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                for statement in _EVIDENCE_SCHEMA_STATEMENTS:
+                    connection.execute(statement)
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+        finally:
+            connection.close()
+
+    @staticmethod
+    def _require_evidence_schema(connection: sqlite3.Connection) -> None:
+        found = {
+            row[0] for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"
+            )
+        }
+        required = {
+            "ps_session_attestations",
+            "ps_session_attestations_no_update",
+            "ps_session_attestations_no_delete",
+        }
+        missing = required - found
+        if missing:
+            raise EvidenceSchemaMigrationRequiredError(
+                "explicit migrate_v1_session_evidence() required before READY: "
+                + ", ".join(sorted(missing))
             )
 
     def _connect_existing(self) -> sqlite3.Connection:
@@ -579,6 +763,7 @@ class SQLiteStateRepository:
         expected_status: SessionStatus,
         new_status: SessionStatus,
         at_ms: int,
+        readiness_evidence: ReadyEvidenceBundle | None = None,
     ) -> SessionRecord:
         try:
             validate_session_transition(expected_status, new_status)
@@ -594,6 +779,41 @@ class SQLiteStateRepository:
             )
             if at_ms < session["started_at_ms"]:
                 raise ValueError("session transition timestamp cannot precede session start")
+            if new_status is SessionStatus.READY:
+                if not isinstance(readiness_evidence, ReadyEvidenceBundle):
+                    raise SessionTransitionError(
+                        "RESTORING -> READY requires a complete typed readiness evidence bundle"
+                    )
+                self._require_evidence_schema(connection)
+                session_record = SessionRecord(
+                    session_id=session["session_id"],
+                    account_scope_id=session["account_scope_id"],
+                    status=SessionStatus(session["status"]),
+                    started_at_ms=session["started_at_ms"],
+                    initiator=session["initiator"],
+                    source_snapshot_id=session["source_snapshot_id"],
+                    config_hash=session["config_hash"],
+                    code_version=session["code_version"],
+                    last_committed_event_sequence=session["last_committed_event_sequence"],
+                    ended_at_ms=session["ended_at_ms"],
+                    stop_requested_at_ms=session["stop_requested_at_ms"],
+                    schema_version=session["schema_version"],
+                )
+                try:
+                    validate_ready_evidence(
+                        session_record,
+                        fencing_generation=fencing_token.fencing_generation,
+                        preflight=readiness_evidence.preflight,
+                        restore=readiness_evidence.restore,
+                        risk=readiness_evidence.risk,
+                    )
+                except ValueError as exc:
+                    raise SessionTransitionError(str(exc)) from exc
+                self._persist_ready_evidence(connection, fencing_token, readiness_evidence)
+            elif readiness_evidence is not None:
+                raise SessionTransitionError(
+                    "readiness evidence is accepted only for RESTORING -> READY"
+                )
             effective_status = new_status
             stop_requested_at_ms = session["stop_requested_at_ms"]
             if new_status is SessionStatus.CHECKPOINTING:
