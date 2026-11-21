@@ -95,6 +95,18 @@ class FiveLayerApiTest(unittest.TestCase):
         provenance = build_market_mark_provenance(
             mark_window, source_id="T0_CANONICAL_MARKET_DATA"
         )
+        with sqlite3.connect(self.paper_db) as connection:
+            day = self.now // 86_400_000 * 86_400_000
+            connection.execute(
+                """UPDATE paper_account_risk_state
+                   SET high_water_mark_quote='100',daily_baseline_utc_day_ms=?,
+                       daily_baseline_equity_quote='100',last_equity_quote='100',
+                       last_mark_price='100',mark_observed_at_ms=?,mark_candle_close_ms=?,
+                       dataset_version=?,risk_ready=0,unavailable_reason='ACCOUNT_EQUITY_CUTOVER_NOT_ESTABLISHED',
+                       updated_at_ms=?
+                   WHERE account_id=1""",
+                (day, self.now, mark["closeTimeMs"], mark_window["datasetVersion"], self.now),
+            )
         manual_ledger = PaperLedger(self.paper_db)
         manual_ledger.record_account_mark(
             mark["close"], mark["closeTimeMs"], self.now,
