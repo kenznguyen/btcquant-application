@@ -120,6 +120,22 @@ class FiveLayerApiTest(unittest.TestCase):
                     "decisionAtMs": timestamp, "validUntilMs": self.now+20_000,
                     "inputSnapshotId": "sha256:"+"d"*64, "mode": "PAPER",
                 }}
+    def test_ledger_factory_never_provisions_risk_limits_from_environment(self):
+        with sqlite3.connect(self.paper_db) as connection:
+            connection.execute("DELETE FROM paper_account_risk_contract_audit")
+            connection.execute("DELETE FROM paper_account_risk_contract")
+        from paper_execution import ledger as ledger_module
+        with patch.object(ledger_module, "PaperLedger") as constructor, \\
+             patch("paper_execution.risk_contract.provision_account_risk_contract") as provision:
+            api.ledger()
+        provision.assert_not_called()
+        constructor.assert_called_once()
+        with sqlite3.connect(self.paper_db) as connection:
+            self.assertEqual(
+                connection.execute("SELECT COUNT(*) FROM paper_account_risk_contract").fetchone()[0],
+                0,
+            )
+
     def test_ai_research_decision_waits_without_trusted_calibration_context(self):
         code, intelligence = self.request("/v1/intelligence")
         self.assertEqual(code, 200, intelligence)
