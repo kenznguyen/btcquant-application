@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 independent-review PRs #3 and #4 opened
+
+- Both PRs target the immutable source snapshot `b79c7e5d0bc7cf5e6beee0d4e05505a1b1aa6556` (main at PR creation). They add review-request documents only; no application source/test/workflow implementation changes.
+- PR #3: https://github.com/kenznguyen/btcquant-application/pull/3 — `INDEPENDENT REVIEW ONLY — T0 Candle Contract, FastAPI & Application Adapter`; branch `review/t0-candle-fastapi-adapter-20261121`; head `5aa49ee34031e11db2563776ee204b8dc0d4d38e`; scope document `docs/reviews/requests/T0_CANDLE_FASTAPI_APPLICATION_ADAPTER_INDEPENDENT_REVIEW_2026-11-21.md`.
+- PR #4: https://github.com/kenznguyen/btcquant-application/pull/4 — `INDEPENDENT REVIEW ONLY — T0 SQLite Storage, Write Gateway, Lease/Fencing & Recovery`; branch `review/t0-sqlite-storage-fencing-recovery-20261121`; head `52784c94c5cec58601ecb5767262b385653878bf`; scope document `docs/reviews/requests/T0_SQLITE_STORAGE_FENCING_RECOVERY_INDEPENDENT_REVIEW_2026-11-21.md`.
+- Both PRs are open and unmerged. No reviewer identity was supplied; no review request could be assigned to a specific GitHub user/team. They are awaiting independent reviewers.
+- PR #3 review includes Candle Contract 1.1.0, shared envelope/query/freshness/provenance, FastAPI read-only/auth/limits/errors/lifecycle/dependencies/CI, and Application Common API adapter parity.
+- PR #4 review includes SQLite backend/schema/migrations/explicit initializer/read-only behavior, Write Gateway, lease TTL/heartbeat/fencing atomicity, Feeder/Scheduler/Recovery, cursor/gap/backfill/retry/idempotency and fail-closed behavior.
+- Reviewer must verify the immutable source commit and blob SHAs, report Critical/Required/Optional findings with exact path/line/reproduction/impact/remediation, and submit APPROVE / REQUEST CHANGES / NOT VERIFIED. A genuine second-person review must be distinct from the implementation author.
+- Review PRs are documentation-only and must not be merged as implementation changes. Fixes, if any, require separate bounded implementation PRs, exact-SHA CI and follow-up review.
+- No Canonical SQLite/data was opened or changed; no Feeder/Scheduler/VPS/runtime/deployment was started; no REST 451 retry/bypass, PostgreSQL activation, T1/T2 runtime connection, exchange credentials or trading was performed.
+- T0 overall independent-validation status remains **NOT VERIFIED / AWAITING REVIEW** until both independent review verdicts are recorded.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — T0 Application Foundation exact-source audit and independent-review gate
 
 - Current repository HEAD at audit start: `d6e7516e0cdbcde58d4b78327c18c22aa3a4c2a0`; documentation record commits: review package `7cf9e3a4e51bd5b395d8ee968852777d6defc18c`, T0 scope index `b9cc5782551c2bfee7ba74343722bad163075ddc`.
