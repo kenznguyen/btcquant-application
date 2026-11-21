@@ -11,6 +11,7 @@ from persistent_state.contracts import (
 )
 from persistent_state.repository import AggregateMutation, SQLiteStateRepository
 from persistent_state.recovery import RecoveryValidationError, recover_repository_state
+from persistent_state.test_support import ready_evidence_for
 
 
 def digest(value):
@@ -47,9 +48,14 @@ class PersistentRecoveryTests(unittest.TestCase):
             (SessionStatus.RESTORING, SessionStatus.READY),
             (SessionStatus.READY, SessionStatus.RUNNING),
         ):
+            kwargs = {}
+            if target is SessionStatus.READY:
+                kwargs["readiness_evidence"] = ready_evidence_for(
+                    self.repository.get_session("session-1"), self.token,
+                )
             self.repository.advance_session(
                 self.token, expected_status=expected, new_status=target,
-                at_ms=1_800_000_000_001,
+                at_ms=1_800_000_000_001, **kwargs,
             )
 
     def commit(self, sequence):
