@@ -14,7 +14,7 @@ from paper_execution.replay_reconciliation import reconcile_daily_equity_replay
 from paper_execution.ledger import PaperLedger
 from paper_execution.risk_contract import provision_account_risk_contract, read_account_risk_contract, update_account_risk_contract
 
-def canonical_t0_window(start_ms, as_of_ms, close_price="100"):
+def canonical_t0_window(start_ms, as_of_ms, close_price="100", volume="1"):
     end_ms = start_ms + 900_000
     payload = {
         "exchange": "binance", "marketType": "USDT_PERPETUAL",
@@ -24,7 +24,7 @@ def canonical_t0_window(start_ms, as_of_ms, close_price="100"):
             "openTimeMs": start_ms, "closeTimeMs": end_ms,
             "availableAtMs": end_ms,
             "open": "100", "high": "101", "low": "99",
-            "close": close_price, "volume": "1",
+            "close": close_price, "volume": volume,
         }],
     }
     digest = hashlib.sha256(
@@ -160,21 +160,13 @@ class DualLedgerRedTest(unittest.TestCase):
         from paper_execution.mark_provenance import build_market_mark_provenance
         from paper_execution.account_history import record_consumed_market_mark
 
-        dataset_version = "sha256:" + dataset_suffix
-        candle_close_ms = observed_at_ms - 60_000
+        end_ms = observed_at_ms // 900_000 * 900_000
+        start_ms = end_ms - 900_000
+        volume = str(int(dataset_suffix[:8], 16) + 1)
+        window = canonical_t0_window(start_ms, observed_at_ms, mark_price, volume)
+        candle_close_ms = end_ms
         provenance = build_market_mark_provenance(
-            {
-                "exchange": "binance", "marketType": "USDT_PERPETUAL",
-                "symbol": "BTCUSDT", "timeframe": "15m",
-                "datasetVersion": dataset_version, "coverage": {"complete": True},
-                "candles": [{
-                    "openTimeMs": observed_at_ms - 960_000,
-                    "closeTimeMs": candle_close_ms,
-                    "open": mark_price, "high": mark_price, "low": mark_price,
-                    "close": mark_price, "volume": "1",
-                }],
-            },
-            source_id="T0_CANONICAL_MARKET_DATA",
+            window, source_id="T0_CANONICAL_MARKET_DATA"
         )
         with sqlite3.connect(db_path) as connection:
             consumed = record_consumed_market_mark(
@@ -186,8 +178,8 @@ class DualLedgerRedTest(unittest.TestCase):
                        dataset_version=?,updated_at_ms=?,last_mark_id=?
                    WHERE account_id=1""",
                 (
-                    mark_price, observed_at_ms, candle_close_ms, dataset_version,
-                    observed_at_ms, consumed["markId"],
+                    mark_price, observed_at_ms, candle_close_ms,
+                    window["datasetVersion"], observed_at_ms, consumed["markId"],
                 ),
             )
         return provenance
@@ -2519,22 +2511,12 @@ os._exit(0)
             source_sha="a" * 40,
         )
         from paper_execution.mark_provenance import build_market_mark_provenance
-        mark_window = {
-            "exchange": "binance", "marketType": "USDT_PERPETUAL",
-            "symbol": "BTCUSDT", "timeframe": "15m",
-            "datasetVersion": "sha256:" + "a" * 64,
-            "coverage": {"complete": True},
-            "candles": [{
-                "openTimeMs": self.now-900_000, "closeTimeMs": self.now-60_000,
-                "open": "109", "high": "111", "low": "108",
-                "close": "110", "volume": "1",
-            }],
-        }
+        mark_window = canonical_t0_window(self.now - 900_000, self.now, "110")
         provenance = build_market_mark_provenance(
             mark_window, source_id="T0_CANONICAL_MARKET_DATA"
         )
         account_result = account.record_account_mark(
-            mark_price="110", candle_close_ms=self.now-60_000,
+            mark_price="110", candle_close_ms=self.now,
             observed_at_ms=self.now, dataset_version=mark_window["datasetVersion"],
             mark_provenance=provenance,
         )
@@ -2574,7 +2556,7 @@ os._exit(0)
         legacy_fees = sum((Decimal(amount) for kind, amount in adjustments if kind == "LEGACY_FEES"), Decimal(0))
         expected = Decimal(capital) + realized + legacy_pnl + unrealized - fees - legacy_fees - funding
         self.assertEqual(risk[0], str(expected))
-        self.assertEqual(risk[1:5], ("110", self.now, self.now-60_000, mark_window["datasetVersion"]))
+        self.assertEqual(risk[1:5], ("110", self.now, self.now, mark_window["datasetVersion"]))
         self.assertEqual(risk[5], 1)
         self.assertIsNone(risk[6])
         reserved_notional = sum((Decimal(row[0]) for row in active_reservations), Decimal(0))
