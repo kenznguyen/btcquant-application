@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T2 M2.5 AI Strategy Signal Validator GREEN implementation
+
+- Owner approved M2.5 bounded to the pure validator GREEN implementation against M2.4 AI Strategy Signal Contract V1 and its existing RED tests.
+- Implementation: `pipeline/ai_signal_contract.py`, blob `efb43ba777097e261c32671b9b37c24efad1a2e3`, commit `ae11175bdb61880bb5351fd129428c40d8ec0071`.
+- Additional GREEN tests: `pipeline/test_ai_signal_contract_green.py`, blob `71dcffa586ce785472f2c88e753e755cfe742bfc`, commit `aba767e27cc728e6c83e9b3abf734cab1bf6e113`. 12 test methods cover policy, market/time, provenance, calibration temporal and minimum requirements, evidence envelope, malformed input, immutability and determinism.
+- Existing M2.4 RED tests remain unchanged: `pipeline/test_ai_signal_contract_red.py`, blob `bd4c6325739a7d1eadf5ced64c71e7e4742e7a31`.
+- Isolated GREEN workflow: `.github/workflows/t2-ai-signal-contract-green.yml`, blob `4fd7e23d9e12f97bc01940873267824aeafc651c`, commit `04820704b88f143575f0ebbb582ac515b2e47aed`. It pins contract, implementation and test blobs and is configured to run 22 tests with network disabled, read-only source, non-root user, no DB mount and no credentials.
+- Evidence record: `docs/evidence/T2_M2_5_AI_SIGNAL_VALIDATOR_GREEN_2026-11-21.md`, latest evidence update commit `b347788d3a34672df3920b71e77f32328eb64963`.
+- Local scratch test result: 12/12 added GREEN test methods PASS. The previous M2.4 RED run at SHA `6fa66d2855a0d0804da6cee9ed37a723bbaf03d9` is historical RED evidence, not GREEN evidence.
+- GitHub Actions run ID/job/artifact for M2.5: **NOT VERIFIED**. Combined status returned no entries; the available workflow-run lookup did not expose push-triggered runs. Do not claim CI PASS until exact run and artifact are inspected.
+- M2.5 status: **PARTIAL — implementation and focused tests committed; CI NOT VERIFIED**. Full repository regression **NOT RUN**. Same-session code review and genuine independent second-person review **NOT VERIFIED**.
+- Validator emits only LONG/SHORT signal DTOs or WAIT diagnostic output. It does not create order intent, sizing, leverage, margin, reservation, ledger mutation or exchange instruction.
+- No Core strategy, risk policy, Shared Risk Engine, Kill Switch, calibration cryptographic verifier, ledgers, runner, runtime, DB, T0/T1, VPS, deployment, exchange or execution behavior was changed or invoked.
+- Next: retrieve and inspect the exact push-triggered workflow run and artifact, then perform code review against exact blobs. Any validator fix requires bounded TDD and exact-SHA CI. Calibration Registry, risk admission, ledgers, runtime, DB, T0/T1 integration and execution require separate approvals.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — T2 M2.4 AI Strategy Signal Contract RED complete
 
 - Owner approved M2.4 only: define the independent AI Strategy signal contract and prepare/run test-only RED evidence. No GREEN implementation was authorized.
