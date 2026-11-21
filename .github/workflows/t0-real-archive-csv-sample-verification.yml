@@ -31,7 +31,7 @@ jobs:
       - name: Verify exact source pins and run real archive checks
         shell: bash
         env:
-          APPROVAL_SOURCE_SHA: f46f1b2e76c0fcdc38ecde6c45c8fee52e76f904
+          APPROVAL_SOURCE_SHA: 02b407fe7d90efe184ae11d8b271a7aeb6e23f96
           INVENTORY_BLOB_SHA: eb251ac0924b46add906123f99b82e054d887a59
           PARSER_BLOB_SHA: 7d59706778a98a18185e0b2fe744c3c43c2eb870
           PARSER_TEST_BLOB_SHA: 50199cd168fd52314a846760cc4baf51a8cd5e9a
