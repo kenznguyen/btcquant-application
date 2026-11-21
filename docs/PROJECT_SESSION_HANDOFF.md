@@ -6545,3 +6545,15 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - Status: source/ancestry **PASS**; one observed archive format contradicts universal headerless assumption; full 12-object verification **NOT VERIFIED**; parser contract freeze **BLOCKED**.
 - Third dispatch consumed. No fourth dispatch or workflow/parser correction authorized. Do not silently skip headers or change parser based on this single sample. Next step requires separate owner decision on format handling and any further verification.
 - No SQLite/importer/staging, Contract 1.2.0 implementation, Canonical T0, REST tail, T1/T2, VPS/runtime, deployment, credentials or trading action.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 optional-header parser design
+
+- Owner separately approved evaluation of a strict parser design supporting both header-present and headerless archive CSV while preventing false header detection.
+- Design: `docs/design/T0_ARCHIVE_CSV_OPTIONAL_HEADER_PARSER_DESIGN_2026-11-21.md`; commit `e22928cebd05202ef24d7f22a78eded78681b736`.
+- Design verdict: **PASS WITH REQUIRED INPUT GATE**. Detect a header only when the entire first 12-field record exactly matches one frozen, ordered canonical schema tuple. Otherwise parse the first record as data and let existing strict field validation reject malformed input. Never skip based on first-column text, parse failure, partial labels, later-row scanning, blank rows or heuristics.
+- Preserve `parse_archive_csv(...)` tuple return for compatibility; a future additive document-result API may expose `header_present`, accepted header fields and data-row count.
+- Required gate: exact header labels/order must be taken from an approved real-source sample; no header tuple or alias normalization is frozen by this design. Run 3 only established a header discrepancy in one M15 monthly sample; the remaining four ZIPs were not verified and no artifact exists.
+- Existing parser blob `7d59706778a98a18185e0b2fe744c3c43c2eb870`, tests blob `50199cd168fd52314a846760cc4baf51a8cd5e9a`, workflow blob `9edb0e4cf74c22f82c38f107c730e73abf04de44` remain unchanged.
+- Status: design **PASS WITH REQUIRED INPUT GATE**; header tuple **NOT VERIFIED / NOT FROZEN**; implementation **NOT AUTHORIZED**; parser tests **NOT CHANGED / NOT RUN**; workflow **UNCHANGED**; six-object verification **NOT VERIFIED**; parser contract freeze **BLOCKED**.
+- No fourth dispatch, archive retrieval, workflow correction, parser/test implementation, importer, SQLite/staging, Contract 1.2.0 implementation, Canonical T0, REST tail, T1/T2, VPS/runtime, deployment, credentials or trading action is authorized by this design decision.
