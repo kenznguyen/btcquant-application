@@ -139,6 +139,23 @@ class SessionFencingTests(unittest.TestCase):
         with self.assertRaises(SessionStateConflictError):
             commit_one(self.repository, token)
 
+
+    def test_repository_rejects_restore_transition_without_durable_preflight_evidence(self):
+        token = self.repository.claim_writer(make_session("missing-preflight"))
+        self.repository.advance_session(
+            token, expected_status=SessionStatus.START_REQUESTED,
+            new_status=SessionStatus.PREFLIGHT, at_ms=1_800_000_000_001,
+        )
+        with self.assertRaises(SessionTransitionError):
+            self.repository.advance_session(
+                token, expected_status=SessionStatus.PREFLIGHT,
+                new_status=SessionStatus.RESTORING, at_ms=1_800_000_000_002,
+            )
+        self.assertEqual(
+            self.repository.get_session("missing-preflight").status,
+            SessionStatus.PREFLIGHT,
+        )
+
     def test_valid_state_machine_requires_preflight_restore_ready_running_order(self):
         token = self.repository.claim_writer(make_session("session-1"))
         with self.assertRaises(SessionTransitionError):
