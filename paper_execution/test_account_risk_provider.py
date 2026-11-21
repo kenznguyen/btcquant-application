@@ -76,10 +76,10 @@ class SQLitePaperAccountRiskProviderTests(unittest.TestCase):
         )
         values = [self.binding, self.binding] if bindings is None else bindings
         with patch(
-            "paper_execution.account_scope_binding.resolve_paper_account_binding",
+            "paper_execution.account_risk_provider.resolve_paper_account_binding",
             side_effect=values,
         ) as resolve, patch(
-            "paper_execution.ledger._read_account_risk_snapshot_connection",
+            "paper_execution.account_risk_provider._read_account_risk_snapshot_connection",
             side_effect=lambda db, now_ms: self.assert_read_only_snapshot(db, raw or self.raw),
         ):
             result = provider.read_bundle(
@@ -115,10 +115,10 @@ class SQLitePaperAccountRiskProviderTests(unittest.TestCase):
 
     def test_provider_protocol_read_snapshot_returns_only_verified_snapshot(self):
         with patch(
-            "paper_execution.account_scope_binding.resolve_paper_account_binding",
+            "paper_execution.account_risk_provider.resolve_paper_account_binding",
             side_effect=[self.binding, self.binding],
         ), patch(
-            "paper_execution.ledger._read_account_risk_snapshot_connection",
+            "paper_execution.account_risk_provider._read_account_risk_snapshot_connection",
             side_effect=lambda db, now_ms: self.assert_read_only_snapshot(db, self.raw),
         ):
             snapshot = self.provider.read_snapshot(
@@ -153,18 +153,25 @@ class SQLitePaperAccountRiskProviderTests(unittest.TestCase):
             self.run_provider(bindings=[self.binding, newer])
 
     def test_provider_fails_closed_when_active_policy_is_missing(self):
-        with sqlite3.connect(self.paper_db) as db:
-            db.execute("DROP TRIGGER paper_risk_policy_active_no_delete")
-            db.execute("DELETE FROM paper_risk_policy_active WHERE account_id=1")
+        empty_db = Path(self.temp.name) / "paper-no-policy.sqlite3"
+        with sqlite3.connect(empty_db) as db:
+            db.execute("CREATE TABLE provider_fixture (id INTEGER PRIMARY KEY)")
+            initialize_risk_policy_schema(
+                db, source_sha="a" * 40, applied_at_ms=NOW - 500
+            )
+        from paper_execution.account_risk_provider import SQLitePaperAccountRiskSnapshotProvider
+        provider = SQLitePaperAccountRiskSnapshotProvider(
+            empty_db, self.state_repository, clock=lambda: NOW
+        )
         with patch(
-            "paper_execution.account_scope_binding.resolve_paper_account_binding",
+            "paper_execution.account_risk_provider.resolve_paper_account_binding",
             side_effect=[self.binding, self.binding],
         ), patch(
-            "paper_execution.ledger._read_account_risk_snapshot_connection",
+            "paper_execution.account_risk_provider._read_account_risk_snapshot_connection",
             side_effect=lambda db, now_ms: self.assert_read_only_snapshot(db, self.raw),
         ):
             with self.assertRaisesRegex(sqlite3.DatabaseError, "RISK_POLICY_ACTIVE_UNAVAILABLE"):
-                self.provider.read_bundle(
+                provider.read_bundle(
                     account_scope_id="paper-account", session_id="session-1",
                     fencing_generation=7,
                 )
