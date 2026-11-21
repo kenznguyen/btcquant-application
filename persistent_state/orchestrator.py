@@ -25,6 +25,7 @@ class OperatorApproval:
     operator_id: str
     confirmation_id: str
     confirmed_at_ms: int
+    risk_attestation: RiskReadinessAttestation
 
     def __post_init__(self) -> None:
         if not isinstance(self.operator_id, str) or not self.operator_id.strip():
@@ -61,6 +62,7 @@ class SessionOrchestrator:
         restore_attestation_provider: RestoreAttestationProvider,
         risk_readiness_provider: RiskReadinessProvider,
         clock_ms: Clock,
+        operator_approval_verifier: Callable[[OperatorApproval], bool],
     ) -> None:
         self.repository = repository
         self.reducer = reducer
@@ -68,6 +70,9 @@ class SessionOrchestrator:
         self.restore_attestation_provider = restore_attestation_provider
         self.risk_readiness_provider = risk_readiness_provider
         self.clock_ms = clock_ms
+        if not callable(operator_approval_verifier):
+            raise ValueError("operator_approval_verifier must be callable")
+        self.operator_approval_verifier = operator_approval_verifier
 
     def _advance(self, token, expected, target):
         return self.repository.advance_session(
@@ -127,22 +132,32 @@ class SessionOrchestrator:
                 blocked_reason=reason,
             )
 
-    def resume(self, fencing_token: FencingToken, approval: OperatorApproval) -> SessionRecord:
-        """Enter RUNNING only after explicit operator approval and a fresh risk check."""
-        if not isinstance(approval, OperatorApproval):
-            raise ValueError("explicit OperatorApproval is required; restart never resumes automatically")
+    def prepare_resume(self, fencing_token: FencingToken) -> RiskReadinessAttestation:
+        """Run a fresh risk check before presenting a Resume confirmation to the operator."""
         session = self.repository.get_session(fencing_token.session_id)
         if session.status is not SessionStatus.READY:
-            raise ValueError("only a READY session can be resumed")
+            raise ValueError("only a READY session can prepare Resume")
         risk = self.risk_readiness_provider(session, fencing_token)
-        if not isinstance(risk, RiskReadinessAttestation):
+        if not isinstance(risk, RiskReadinessAttestation) or not risk.passed:
             raise ValueError("fresh risk readiness attestation is required for Resume")
+        if risk.kill_switch_latched or not risk.ledger_reconciled:
+            raise ValueError("Kill Switch or unreconciled risk state blocks Resume")
+        return risk
+
+    def resume(self, fencing_token: FencingToken, approval: OperatorApproval) -> SessionRecord:
+        """Enter RUNNING only after verified operator approval of a fresh risk check."""
+        if not isinstance(approval, OperatorApproval):
+            raise ValueError("explicit OperatorApproval is required; restart never resumes automatically")
+        if not isinstance(approval.risk_attestation, RiskReadinessAttestation):
+            raise ValueError("OperatorApproval must include the fresh risk attestation shown before confirmation")
+        if not self.operator_approval_verifier(approval):
+            raise PermissionError("operator approval was not authenticated")
         confirmation = OperatorResumeConfirmation(
-            binding=risk.binding,
+            binding=approval.risk_attestation.binding,
             operator_id=approval.operator_id,
             confirmation_id=approval.confirmation_id,
             confirmed_at_ms=approval.confirmed_at_ms,
-            risk_attestation=risk,
+            risk_attestation=approval.risk_attestation,
         )
         return self.repository.advance_session(
             fencing_token, expected_status=SessionStatus.READY,
