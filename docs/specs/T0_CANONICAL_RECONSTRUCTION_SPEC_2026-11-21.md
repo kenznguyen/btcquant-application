@@ -240,3 +240,18 @@ Until then:
 - Importer implementation: **NOT STARTED**.
 - Tests/workflows: **NOT RUN**.
 - No archive/object-store/host/filesystem/database/VPS/runtime/exchange was accessed. No SQLite was created or written. No execution was performed.
+
+
+## 12. Contract 1.2.0 detailed design and review — 2026-11-21
+
+Detailed design, schema/API/migration/backward-compatibility proposal and AI-assisted static design review are recorded in:
+
+`docs/design/T0_CANDLE_CONTRACT_1_2_0_DESIGN_2026-11-21.md`
+
+Design commit: `b3e3a2ca55a67d0b4295d3dec8afc065694e4da8`.
+
+Review verdict: **PASS WITH REQUIRED GATES / NOT IMPLEMENTATION-READY**. Important gates include confirmation that existing v1 rows genuinely mean FIRST_OBSERVED; kind-aware freshness/evaluability; identical FastAPI/WSGI version negotiation; migration behavior/rollback on the pinned SQLite runtime; and an approved representative CSV fixture before exact parser/header mapping is frozen.
+
+No representative CSV fixture was supplied or accessed in this increment. Therefore the 12-column semantic mapping remains provisionally approved but exact header/order/parser/timestamp conventions are **NOT VERIFIED / NOT FROZEN**. Do not access or materialize an archive fixture without separate owner approval.
+
+Contract 1.2.0 schema/API implementation, migration SQL, acceptance tests and Importer remain **NOT STARTED / NOT AUTHORIZED**. No code, tests, workflows, schema, API, database or runtime was changed or executed.
