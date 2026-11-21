@@ -1022,6 +1022,8 @@ class SQLiteStateRepository:
                         fencing_generation=fencing_token.fencing_generation,
                         preflight=preflight_attestation,
                     )
+                    if preflight_attestation.binding.checked_at_ms > at_ms:
+                        raise ValueError("preflight evidence cannot be from the future")
                 except ValueError as exc:
                     raise SessionTransitionError(str(exc)) from exc
                 self._persist_one_attestation(
@@ -1059,6 +1061,15 @@ class SQLiteStateRepository:
                         restore=readiness_evidence.restore,
                         risk=readiness_evidence.risk,
                     )
+                    if any(
+                        item.binding.checked_at_ms > at_ms
+                        for item in (
+                            readiness_evidence.preflight,
+                            readiness_evidence.restore,
+                            readiness_evidence.risk,
+                        )
+                    ):
+                        raise ValueError("readiness evidence cannot be from the future")
                 except ValueError as exc:
                     raise SessionTransitionError(str(exc)) from exc
                 self._persist_ready_evidence(connection, fencing_token, readiness_evidence)
