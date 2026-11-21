@@ -71,7 +71,7 @@ class MarketMarkProvenance:
         try:
             payload = json.loads(self.canonical_payload)
             if (not isinstance(payload, dict)
-                    or set(payload) != {"sourceId", "sourceWindow", "consumedCandle"}
+                    or set(payload) != {"sourceId", "datasetVersion", "sourceWindow", "consumedCandle"}
                     or json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False)
                     != self.canonical_payload):
                 raise ValueError("MARK_PROVENANCE_PAYLOAD_NOT_CANONICAL")
@@ -117,7 +117,8 @@ class MarketMarkProvenance:
                     source_window, sort_keys=True, separators=(",", ":"), allow_nan=False
                 ).encode("utf-8")
             ).hexdigest()
-            if self.dataset_version != "sha256:" + dataset_digest:
+            if (payload["datasetVersion"] != self.dataset_version
+                    or self.dataset_version != "sha256:" + dataset_digest):
                 raise ValueError("MARK_PROVENANCE_DATASET_HASH_MISMATCH")
             consumed = candles[-1]
             if (payload["consumedCandle"] != consumed
@@ -203,6 +204,7 @@ def build_market_mark_provenance(window: object, *, source_id: str) -> MarketMar
     price = _canonical_price(candle.get("close"))
     payload = {
         "sourceId": source,
+        "datasetVersion": dataset,
         "sourceWindow": dataset_payload,
         "consumedCandle": candle,
     }
