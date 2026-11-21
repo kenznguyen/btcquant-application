@@ -6360,3 +6360,18 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Compare from prior main `76e32a0d07ce82732218a72c2bb1b8a0b2316d7e` to tested SHA: 13 commits ahead / 0 behind; exactly three implementation paths changed: `pipeline/api.py`, `pipeline/test_api.py`, and `.github/workflows/f4-pipeline-core-first-isolated.yml`. No T2 files changed.
 - Status: API propagation **IMPLEMENTED**; focused regression **PASS**; F4 workflow correction **IMPLEMENTED / SOURCE VERIFICATION PASS**; full F4 suite **BLOCKED**; full repository regression **NOT RUN**; T2 **UNCHANGED**.
 - Next: obtain separate approval to diagnose and correct only the F4 account-risk readiness fixture (verified cutover/funding provenance) or revise affected test contracts. No Shared Risk Engine bypass, risk-policy change, T0/T1/T2 integration, DB/runtime, deployment, exchange or trading operation is authorized.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — F4 account-risk fixture TDD increment
+
+- Owner approved a separate bounded increment to correct F4's isolated test fixture account-risk readiness. Evidence: `docs/evidence/F4_ACCOUNT_RISK_FIXTURE_TDD_2026-11-21.md`; evidence commit `2b00f4e79cdb94ef17f973044924726ddbbbb87d`.
+- Tested implementation/workflow source SHA: `3a7858f60cd236146407370ca87af6cd902455c5`. Changed source blobs: `pipeline/test_api.py` `a7db4e1f2a4693f9bf60cd7ed574b96f0f550111`; `.github/workflows/f4-pipeline-core-first-isolated.yml` `e11ff55b6ef15351dc7c900aa496e5b851df8574`.
+- The test fixture now seeds a complete synthetic PAPER account state using a canonical consumed T0 M15 mark, typed mark provenance, funding coverage, and account-equity cutover. It asserts `read_account_risk_snapshot(...)` is available and `riskReady=true`.
+- Corrected F4 test contracts to match the existing dual-ledger API: `RISK_PAUSED`, account/strategy snapshot fields, and drawdown loss reflected in `paper_strategy_ledgers` then reconciled through the equity endpoint. No Shared Risk Engine behavior or risk limits changed.
+- Final F4 run [44903612650](https://github.com/kenznguyen/btcquant-application/actions/runs/44903612650), job `136844482785`: immutable source verification **PASS**; focused regressions **2/2 PASS**; full F4 API/decision suite **47/47 PASS**. Python 3.12.16; immutable container image; isolated network; no credentials or canonical DB mounted.
+- Artifact `14706609045`, SHA-256 `2f67b27534be42c1fee8697412aea1c50d318e338ceba53b5bdbf8fc35444609`. Downloaded artifact digest independently recomputed and matched.
+- TDD RED: run [44903282774](https://github.com/kenznguyen/btcquant-application/actions/runs/44903282774) showed the new fixture test fail because the prior helper lacked a canonical account mark (`ACCOUNT_RISK_MARK_PRICE_INVALID`). Subsequent GREEN evidence is the final run above.
+- Workflow expected test count is 47 in the execution-step guard and metadata; targeted test output is retained on failure. Blob pin and source verification passed.
+- Compare from pre-increment main `298a4ece5c0c1bba1834e4996e597b87fa73dbc7` to tested source: 11 commits ahead / 0 behind; exactly two changed paths: `pipeline/test_api.py` and `.github/workflows/f4-pipeline-core-first-isolated.yml`. No production code and no T2 files changed.
+- Status: F4 fixture readiness **PASS**; focused tests **2/2 PASS**; F4 suite **47/47 PASS**; full repository regression **NOT RUN**; independent second-person review **NOT VERIFIED**; T2 **UNCHANGED**.
+- Important limitation: fixture funding/cutover evidence is synthetic and test-only; never reuse it in runtime or for a real account. No DB migration, runtime integration, T0/T1 connection, T2 change, deployment, exchange connection or order execution is authorized.
