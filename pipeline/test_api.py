@@ -300,7 +300,7 @@ class FiveLayerApiTest(unittest.TestCase):
         with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
             _, result = self.request("/v1/paper/evaluate", "POST", {"source": "CORE"})
         self.assertEqual(result["order"]["status"], "REJECTED")
-        self.assertEqual(result["order"]["reason"], "PAUSED")
+        self.assertEqual(result["order"]["reason"], "RISK_PAUSED")
         self.assertEqual(self.request("/v1/paper")[1]["positionBase"], "0")
     def test_controls_never_accept_user_provided_predictions_or_books(self):
         for body in ({"prediction": self.prediction}, {"book": self.book}, {"mode": "LIVE"}):
@@ -472,9 +472,14 @@ class FiveLayerApiTest(unittest.TestCase):
 
     def test_risk_limit_breach_auto_kills_new_core_paper_intents(self):
         self.enable_dual_ledger()
-        self.request("/v1/equity")
+        # Shared Risk Engine reconciles the strategy-scoped account ledger,
+        # not the legacy aggregate paper_state compatibility row.
         with sqlite3.connect(self.paper_db) as connection:
-            connection.execute("UPDATE paper_state SET realized='-25' WHERE id=1")
+            connection.execute(
+                "UPDATE paper_strategy_ledgers SET realized_pnl_quote='-25' "
+                "WHERE account_id=1 AND strategy_id='STRATEGY_CORE'"
+            )
+        self.request("/v1/equity")
         contract = read_account_risk_contract(self.paper_db)
         update_account_risk_contract(
             self.paper_db,
