@@ -107,7 +107,7 @@ class ReadyRepositoryBoundaryTests(unittest.TestCase):
             self.repository.get_session("session-ready-gate").status,
             SessionStatus.RESTORING,
         )
-        with self.assertRaises(KeyError):
+        with self.assertRaises(EvidenceIntegrityError):
             self.repository.read_ready_evidence("session-ready-gate")
 
 
