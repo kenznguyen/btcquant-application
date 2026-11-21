@@ -162,6 +162,31 @@ class ReadyEvidenceBundle:
             raise ValueError("risk readiness attestation is required")
 
 
+
+@dataclass(frozen=True, slots=True)
+class OperatorResumeConfirmation:
+    """Explicit operator approval plus a fresh risk attestation for Resume."""
+
+    binding: EvidenceBinding
+    operator_id: str
+    confirmation_id: str
+    confirmed_at_ms: int
+    risk_attestation: RiskReadinessAttestation
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.binding, EvidenceBinding):
+            raise ValueError("operator confirmation binding is required")
+        _nonempty("operator_id", self.operator_id)
+        _nonempty("confirmation_id", self.confirmation_id)
+        _timestamp("confirmed_at_ms", self.confirmed_at_ms)
+        if not isinstance(self.risk_attestation, RiskReadinessAttestation):
+            raise ValueError("fresh risk readiness attestation is required")
+        if self.risk_attestation.binding != self.binding:
+            raise ValueError("operator confirmation and risk evidence bindings must match")
+        if self.confirmed_at_ms < self.binding.checked_at_ms:
+            raise ValueError("operator confirmation cannot precede its risk check")
+
+
 def _validate_outcome(passed: object, reason_codes: object) -> None:
     if type(passed) is not bool:
         raise ValueError("passed must be boolean")
@@ -233,7 +258,32 @@ def validate_ready_evidence(
         raise ValueError("risk ledger is not reconciled")
 
 
+
+def validate_resume_confirmation(
+    session: SessionRecord,
+    *,
+    fencing_generation: int,
+    confirmation: OperatorResumeConfirmation | None,
+) -> None:
+    """Require explicit operator approval and a fresh passing risk check."""
+    if not isinstance(session, SessionRecord) or session.status is not SessionStatus.READY:
+        raise ValueError("Resume is permitted only for a READY session")
+    if not isinstance(confirmation, OperatorResumeConfirmation):
+        raise ValueError("explicit operator Resume confirmation is required")
+    _validate_binding("operator confirmation", confirmation.binding, session, fencing_generation)
+    risk = confirmation.risk_attestation
+    _validate_binding("resume risk", risk.binding, session, fencing_generation)
+    if not risk.passed:
+        raise ValueError("fresh risk readiness check did not pass")
+    if risk.kill_switch_latched:
+        raise ValueError("Kill Switch is latched")
+    if not risk.ledger_reconciled:
+        raise ValueError("risk ledger is not reconciled")
+    if confirmation.confirmed_at_ms < risk.binding.checked_at_ms:
+        raise ValueError("operator confirmation predates the fresh risk check")
+
+
 __all__ = [
     "EvidenceBinding", "PreflightAttestation", "RestoreAttestation",
-    "RiskReadinessAttestation", "ReadyEvidenceBundle", "validate_ready_evidence",
+    "RiskReadinessAttestation", "ReadyEvidenceBundle", "OperatorResumeConfirmation", "validate_ready_evidence", "validate_resume_confirmation",
 ]
