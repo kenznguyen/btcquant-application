@@ -89,6 +89,39 @@ class VersionedRiskPolicyStoreTests(unittest.TestCase):
             with self.subTest(statement=statement), self.assertRaises(sqlite3.IntegrityError):
                 self.db.execute(statement)
 
+    def test_active_pointer_requires_matching_audit_and_cannot_be_deleted_directly(self):
+        self.publish()
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                "UPDATE paper_risk_policy_active SET payload_sha256=? WHERE account_id=1",
+                ("0" * 64,),
+            )
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute("DELETE FROM paper_risk_policy_active WHERE account_id=1")
+
+    def test_source_file_hash_must_match_exact_published_bytes(self):
+        raw = json.dumps(self.policy, sort_keys=True, separators=(",", ":"))
+        with self.assertRaises(ValueError):
+            publish_versioned_risk_policy(
+                self.db, raw, expected_active_hash=None,
+                source_git_commit_sha="b" * 40,
+                source_policy_path="config/risk_policies/paper-risk-v1.json",
+                source_policy_sha256="0" * 64,
+                operator_id="operator:test", reason="hash mismatch",
+                published_at_ms=1_800_000_000_100,
+            )
+
+    def test_percent_high_water_drawdown_is_explicit_but_not_implicitly_converted(self):
+        percent_policy = dict(
+            self.policy,
+            drawdownLimit={"mode": "PERCENT_HWM", "value": "12.5"},
+        )
+        result = self.publish(percent_policy)
+        loaded = load_active_versioned_risk_policy(self.db)
+        self.assertEqual(result["policyVersion"], "paper-risk-v1")
+        self.assertEqual(loaded["payload"]["drawdownLimit"]["mode"], "PERCENT_HWM")
+        self.assertEqual(loaded["payload"]["drawdownLimit"]["value"], "12.5")
+
     def test_invalid_policy_schema_and_git_provenance_are_rejected(self):
         invalid = [
             dict(self.policy, schemaVersion=2),
