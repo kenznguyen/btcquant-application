@@ -25,8 +25,9 @@ from persistent_state.contracts import (
     canonical_json,
 )
 from persistent_state.evidence import (
-    EvidenceBinding, PreflightAttestation, ReadyEvidenceBundle,
+    EvidenceBinding, OperatorResumeConfirmation, PreflightAttestation, ReadyEvidenceBundle,
     RestoreAttestation, RiskReadinessAttestation, validate_ready_evidence,
+    validate_resume_confirmation,
 )
 from persistent_state.lifecycle import is_terminal_session_status, validate_session_transition
 
@@ -358,6 +359,33 @@ _SCHEMA_STATEMENTS = (
     END
     """,
     """
+    CREATE TABLE ps_session_operator_actions (
+        session_id TEXT NOT NULL REFERENCES ps_sessions(session_id),
+        account_scope_id TEXT NOT NULL,
+        action_id TEXT NOT NULL,
+        action_type TEXT NOT NULL CHECK (action_type IN ('RESUME')),
+        fencing_generation INTEGER NOT NULL CHECK (fencing_generation > 0),
+        payload_json TEXT NOT NULL,
+        payload_checksum TEXT NOT NULL,
+        recorded_at_ms INTEGER NOT NULL CHECK (recorded_at_ms >= 0),
+        PRIMARY KEY (session_id, action_id)
+    )
+    """,
+    """
+    CREATE TRIGGER ps_session_operator_actions_no_update
+    BEFORE UPDATE ON ps_session_operator_actions
+    BEGIN
+        SELECT RAISE(ABORT, 'ps_session_operator_actions is append-only');
+    END
+    """,
+    """
+    CREATE TRIGGER ps_session_operator_actions_no_delete
+    BEFORE DELETE ON ps_session_operator_actions
+    BEGIN
+        SELECT RAISE(ABORT, 'ps_session_operator_actions is append-only');
+    END
+    """,
+    """
     CREATE TRIGGER ps_checkpoints_no_update
     BEFORE UPDATE ON ps_checkpoint_generations
     BEGIN
@@ -382,6 +410,61 @@ _REQUIRED_SCHEMA_OBJECTS = {
 }
 
 
+_EVIDENCE_SCHEMA_STATEMENTS = (
+    """
+    CREATE TABLE ps_session_attestations (
+        session_id TEXT NOT NULL REFERENCES ps_sessions(session_id),
+        account_scope_id TEXT NOT NULL,
+        attestation_type TEXT NOT NULL CHECK (attestation_type IN ('preflight','restore','risk')),
+        fencing_generation INTEGER NOT NULL CHECK (fencing_generation > 0),
+        payload_json TEXT NOT NULL,
+        payload_checksum TEXT NOT NULL,
+        recorded_at_ms INTEGER NOT NULL CHECK (recorded_at_ms >= 0),
+        PRIMARY KEY (session_id, attestation_type)
+    )
+    """,
+    """
+    CREATE TRIGGER ps_session_attestations_no_update
+    BEFORE UPDATE ON ps_session_attestations
+    BEGIN
+        SELECT RAISE(ABORT, 'ps_session_attestations is append-only');
+    END
+    """,
+    """
+    CREATE TRIGGER ps_session_attestations_no_delete
+    BEFORE DELETE ON ps_session_attestations
+    BEGIN
+        SELECT RAISE(ABORT, 'ps_session_attestations is append-only');
+    END
+    """,
+    """
+    CREATE TABLE ps_session_operator_actions (
+        session_id TEXT NOT NULL REFERENCES ps_sessions(session_id),
+        account_scope_id TEXT NOT NULL,
+        action_id TEXT NOT NULL,
+        action_type TEXT NOT NULL CHECK (action_type IN ('RESUME')),
+        fencing_generation INTEGER NOT NULL CHECK (fencing_generation > 0),
+        payload_json TEXT NOT NULL,
+        payload_checksum TEXT NOT NULL,
+        recorded_at_ms INTEGER NOT NULL CHECK (recorded_at_ms >= 0),
+        PRIMARY KEY (session_id, action_id)
+    )
+    """,
+    """
+    CREATE TRIGGER ps_session_operator_actions_no_update
+    BEFORE UPDATE ON ps_session_operator_actions
+    BEGIN
+        SELECT RAISE(ABORT, 'ps_session_operator_actions is append-only');
+    END
+    """,
+    """
+    CREATE TRIGGER ps_session_operator_actions_no_delete
+    BEFORE DELETE ON ps_session_operator_actions
+    BEGIN
+        SELECT RAISE(ABORT, 'ps_session_operator_actions is append-only');
+    END
+    """,
+)
 class SQLiteStateRepository:
     """Explicit-path SQLite repository; constructor is side-effect free."""
 
