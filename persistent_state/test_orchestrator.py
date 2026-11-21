@@ -1,4 +1,5 @@
 import tempfile
+from dataclasses import replace
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -165,6 +166,18 @@ class SessionOrchestratorTests(unittest.TestCase):
         result = self.orchestrator.start(self.session("blocked-preflight"))
         self.assertEqual(result.session.status, SessionStatus.BLOCKED_PREFLIGHT)
         self.assertEqual(self.restore_calls, 0)
+
+
+    def test_restore_attestation_must_match_replay_event_head_and_aggregate_versions(self):
+        self.orchestrator.restore_attestation_provider = (
+            lambda session, token, recovery: replace(
+                self.restore_provider(session, token, recovery),
+                aggregate_versions_json='{"forged-ledger":1}',
+            )
+        )
+        result = self.orchestrator.start(self.session("restore-mismatch"))
+        self.assertEqual(result.session.status, SessionStatus.BLOCKED_RESTORE)
+        self.assertEqual(result.blocked_reason, "RESTORE_BLOCKED:RECOVERY_VALIDATION")
 
     def test_recovery_failure_blocks_restore_and_never_reaches_ready(self):
         with patch(
