@@ -373,3 +373,25 @@ The initial workflow scope is **ARCHIVE-ONLY**:
 5. For the eventual workflow-creation request, approve exact workflow path/inputs, ubuntu-24.04 runner, action full SHAs, timeout/concurrency, permissions, artifact contents and retention, and the explicit phase approval model.
 
 Passing or approving this design does not authorize any of those implementation or execution steps. No workflow, test, runner, archive, REST endpoint, personal-host file, SQLite database, Canonical T0 asset, VPS/runtime, T1/T2, deployment or trading operation was accessed or changed in recording this design resolution.
+
+
+---
+
+## 13. Synthetic fixture update — 2026-11-21
+
+Owner approved synthetic offline CSV fixture creation because no real CSV fixture is available. Three files were committed:
+
+- `tests/fixtures/t0/binance_um_btcusdt_m15_synthetic.csv`
+- `tests/fixtures/t0/binance_um_btcusdt_h1_synthetic.csv`
+- `tests/fixtures/t0/README.md`
+
+The fixtures contain invented deterministic rows in the provisional 12-field mapping. They can support future offline parser unit tests, including row shape, provisional field positions, decimal/integer parsing, timestamp grid, OHLC/volume invariants and inclusive close-time arithmetic.
+
+They do NOT prove actual Binance archive format, header behavior, encoding, ZIP member naming, delimiter, numeric grammar, null handling or source close-time convention. No representative real archive CSV exists in the repository and none was fetched.
+
+Updated disposition:
+- Synthetic fixture creation and read-back: **PASS**.
+- Real-source CSV compatibility/parser freeze: **NOT VERIFIED / BLOCKED**.
+- Workflow implementation and all data execution gates: **NOT AUTHORIZED / NOT RUN**.
+
+The fixtures are test-only and must never be used to create a staging dataset, populate SQLite, claim historical coverage or substitute for source-object verification. No test suite was executed in this fixture-only increment.
