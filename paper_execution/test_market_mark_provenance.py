@@ -116,9 +116,18 @@ class MarketMarkProvenanceTests(unittest.TestCase):
                 mark_price="101.25",
                 candle_close_ms=1_800_000_900_000,
                 dataset_version=self.window()["datasetVersion"],
+                observed_at_ms=1_800_000_900_000,
             ),
             provenance,
         )
+        with self.assertRaisesRegex(ValueError, "CONSUMED_MARK_PROVENANCE_MISMATCH"):
+            validate_consumed_mark(
+                provenance,
+                mark_price="101.25",
+                candle_close_ms=1_800_000_900_000,
+                dataset_version=self.window()["datasetVersion"],
+                observed_at_ms=1_800_000_899_999,
+            )
         for changes in (
             {"mark_price": "101.26"},
             {"candle_close_ms": 1_800_000_900_001},
@@ -128,6 +137,7 @@ class MarketMarkProvenanceTests(unittest.TestCase):
                 "mark_price": "101.25",
                 "candle_close_ms": 1_800_000_900_000,
                 "dataset_version": self.window()["datasetVersion"],
+                "observed_at_ms": 1_800_000_900_000,
             }
             values.update(changes)
             with self.subTest(changes=changes), self.assertRaises(ValueError):
