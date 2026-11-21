@@ -301,7 +301,9 @@ class FiveLayerApiTest(unittest.TestCase):
             _, result = self.request("/v1/paper/evaluate", "POST", {"source": "CORE"})
         self.assertEqual(result["order"]["status"], "REJECTED")
         self.assertEqual(result["order"]["reason"], "RISK_PAUSED")
-        self.assertEqual(self.request("/v1/paper")[1]["positionBase"], "0")
+        paper = self.request("/v1/paper")[1]
+        self.assertEqual(paper["strategyCore"]["positionBase"], "0")
+        self.assertTrue(paper["account"]["riskReady"])
     def test_controls_never_accept_user_provided_predictions_or_books(self):
         for body in ({"prediction": self.prediction}, {"book": self.book}, {"mode": "LIVE"}):
             with self.subTest(body=body):
@@ -494,7 +496,8 @@ class FiveLayerApiTest(unittest.TestCase):
                 code, result = self.request("/v1/paper/evaluate","POST",{"source":"CORE"})
         self.assertEqual(code,200)
         self.assertEqual(result["order"]["reason"],"MAX_DRAWDOWN_LIMIT")
-        self.assertTrue(self.request("/v1/paper")[1]["riskControl"]["killed"])
+        paper = self.request("/v1/paper")[1]
+        self.assertTrue(paper["account"]["killSwitch"]["killed"])
     def test_unconfigured_risk_limits_fail_closed_for_core(self):
         self.enable_dual_ledger()
         with sqlite3.connect(self.paper_db) as connection:
