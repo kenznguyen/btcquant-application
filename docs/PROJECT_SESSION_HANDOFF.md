@@ -6375,3 +6375,14 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Compare from pre-increment main `298a4ece5c0c1bba1834e4996e597b87fa73dbc7` to tested source: 11 commits ahead / 0 behind; exactly two changed paths: `pipeline/test_api.py` and `.github/workflows/f4-pipeline-core-first-isolated.yml`. No production code and no T2 files changed.
 - Status: F4 fixture readiness **PASS**; focused tests **2/2 PASS**; F4 suite **47/47 PASS**; full repository regression **NOT RUN**; independent second-person review **NOT VERIFIED**; T2 **UNCHANGED**.
 - Important limitation: fixture funding/cutover evidence is synthetic and test-only; never reuse it in runtime or for a real account. No DB migration, runtime integration, T0/T1 connection, T2 change, deployment, exchange connection or order execution is authorized.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — F4 account-risk fixture self-review
+
+- Self-review record: `docs/reviews/F4_ACCOUNT_RISK_FIXTURE_SELF_REVIEW_2026-11-21.md`; review commit `ad3c41d68b00f954c395bf70171d93b79b3ae6a3`.
+- Reviewed exact tested source SHA: `3a7858f60cd236146407370ca87af6cd902455c5`; exact changed blobs: `pipeline/test_api.py` `a7db4e1f2a4693f9bf60cd7ed574b96f0f550111`, F4 workflow `e11ff55b6ef15351dc7c900aa496e5b851df8574`.
+- Verdict: **REQUEST CHANGES**. Required finding: `.github/workflows/f4-pipeline-core-first-isolated.yml` omits direct test dependencies `paper_execution/account_history.py` (consumed mark fixture writer) and `paper_execution/risk_contract.py` (risk-contract fixture and assertions) from `on.push.paths`. Dependency-only changes to either file can bypass F4 CI.
+- Required next step: separately approve a bounded workflow-only change adding both paths, then verify dependency-only pushes trigger F4 and preserve the 47-test guard. Do not change production code or risk policy to address this finding.
+- Positive review: synthetic fixture validates a complete test-only PAPER account cutover; snapshot reader checks typed consumed-mark provenance/payload hash, account-equity reconciliation, ledger set and funding coverage. Test contracts align with dual-ledger API. No production or architecture-boundary regression found in the reviewed diff.
+- CI evidence remains exact-SHA evidence: run [44903612650](https://github.com/kenznguyen/btcquant-application/actions/runs/44903612650), job `136844482785`, focused regressions 2/2 PASS, F4 suite 47/47 PASS; artifact `14706609045`, SHA-256 `2f67b27534be42c1fee8697412aea1c50d318e338ceba53b5bdbf8fc35444609`. This review did not independently rerun tests; full repository regression NOT RUN.
+- F4 fixture increment remains PASS within bounded test-only implementation; workflow dependency-trigger completeness is **BLOCKED** pending correction. Independent second-person review remains **NOT VERIFIED**. T2/T0/T1 unchanged; no production/runtime/DB/deployment/trading actions performed or authorized.
