@@ -77,3 +77,19 @@ Owner may separately authorize one manual dispatch of this workflow. Review the 
 - Required dispatch target: corrected workflow commit `c4c01ec96395ee204a311b29b5cd9c198038ff6e` (or a descendant with the same workflow blob). Use the Actions page and click **Run workflow** once on `main`.
 - Until a second run completes, 12-object verification and real CSV compatibility remain **NOT VERIFIED**; parser contract freeze remains **BLOCKED**. No archive requests have been made by this corrected workflow yet.
 - All previous exclusions remain: exactly six ZIPs + six sidecars only; no REST, full 404-object materialization, SQLite, importer, Contract 1.2.0 freeze, Canonical T0, T1/T2, VPS/runtime, deployment, credentials or trading. No third dispatch is authorized.
+
+
+## Second approved dispatch — 2026-11-21
+
+- Workflow run: [44923263069](https://github.com/kenznguyen/btcquant-application/actions/runs/44923263069)
+- Run number: 2; event: `workflow_dispatch`; attempt: 1; conclusion: **FAILURE**.
+- Exact source SHA checked out: `2410f87f8917bd0d615b50e8393ad6aa7f15183f`.
+- Job: `136903674953`; runner: `ubuntu-24.04`; Python 3.13.18 setup: **PASS**.
+- Failure step: `Verify exact source pins and run real archive checks`.
+- Exact error: `fatal: Not a valid commit name 02b407fe7d90efe184ae11d8b271a7aeb6e23f96`.
+- Cause: checkout uses `fetch-depth: 1`; the approval source commit `02b407fe7d90efe184ae11d8b271a7aeb6e23f96` is not present in the shallow checkout. The subsequent `git merge-base --is-ancestor "$APPROVAL_SOURCE_SHA" HEAD` cannot resolve that commit.
+- No archive download occurred: failure was before the first `curl` call. Parser unit tests and artifact upload were skipped. Artifacts: none.
+- 12-object verification: **NOT VERIFIED**. Real archive CSV compatibility: **NOT VERIFIED**. Parser contract freeze: **BLOCKED**.
+- This run consumed the separately approved second dispatch. The approval covered only removal of invalid `cache: "false"` and one second dispatch; it did not authorize further workflow changes or a third dispatch.
+- A narrowly scoped next correction would need to make the approved ancestor commit available to the ancestry check (e.g. explicitly fetch that exact SHA before `merge-base`, or use sufficient checkout history). This is a proposal only, not implemented or authorized.
+- No SQLite, importer, Contract 1.2.0 implementation/freeze, Canonical T0, REST tail, T1/T2, VPS/runtime, deployment, exchange credentials or trading was changed or invoked.
