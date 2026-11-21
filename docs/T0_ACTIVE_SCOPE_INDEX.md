@@ -571,3 +571,19 @@
 - Application API parity: shared `candle_envelope()`, strict query parser, matching error behavior, cache/content headers and freshness fields. Adjacent F4 tests also PASS; see evidence report for exact runs and digests.
 - Internal review PASS; independent second-person review **PENDING**. Cross-layer runtime connection remains **BLOCKED / NOT AUTHORIZED**.
 - Original M15/H1 REST files were not accessed; integrity remains **NOT VERIFIED** pending independent hash recomputation from the exact source files.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 offline archive CSV parser TDD increment
+
+- Owner approved a bounded TDD increment: pure offline parser plus tests using only the synthetic M15/H1 fixtures. No real archive/REST, host/VPS, SQLite, Canonical T0, Contract 1.2.0, importer, workflow YAML, runtime or deployment work was authorized.
+- Parser: `market_data/archive_csv_parser.py`, blob `7d59706778a98a18185e0b2fe744c3c43c2eb870`.
+- Tests: `market_data/test_archive_csv_parser.py`, blob `df237f495c253c053b29e5ca76c50aad060ba85d`; 19 unittest methods.
+- Fixtures: M15 blob `1a616fde511407d90be8894391e783e716908c9d`; H1 blob `951f26ff4e4a6c330a14f5a515cc27cce8053e1e`. Both are explicitly SYNTHETIC — NOT SOURCE EVIDENCE.
+- Final source snapshot SHA: `c600e8b3680466241a45b429c76215b538927904`. Evidence record: `docs/evidence/T0_ARCHIVE_CSV_PARSER_TDD_2026-11-21.md`, commit `ae45b421d69c15eb62089221cb8384df6a759b93`.
+- TDD RED reproduced missing module import before implementation. GREEN focused test command `python -B -m unittest -v market_data.test_archive_csv_parser`: **19/19 PASS** in an isolated local Python 3.13 scratch harness using byte-for-byte blob-matched parser, test and fixture files.
+- GitHub Actions run/job/artifact: **NOT RUN**; workflow YAML was explicitly outside this approval. Full repository regression: **NOT RUN**.
+- Real archive format/parser compatibility: **NOT VERIFIED**; exact source CSV header/encoding/member/delimiter/numeric grammar/close-time convention remain unfrozen. Parser contract freeze is **BLOCKED** pending approved real-source evidence or a new owner decision.
+- No archive/REST access, host/VPS, SQLite, Canonical data, importer, Contract 1.2.0 schema/API, workflow, runtime, deployment, T1/T2 integration, exchange credentials or trading was accessed or changed.
+- Next: preserve this parser as a provisional offline test utility. Request separate approval before any source-format verification, Contract 1.2.0 work, importer, workflow or staging execution.
