@@ -85,6 +85,11 @@ class T1OrderbookContractTest(unittest.TestCase):
         with self.assertRaises(ContractError):
             validate_payload(b'{"contractVersion":', now_ms=NOW_MS)
 
+    def test_rejects_extremely_nested_json_without_leaking_parser_error(self):
+        raw = b"[" * 2000 + b"0" + b"]" * 2000
+        with self.assertRaises(ContractError):
+            validate_payload(raw, now_ms=NOW_MS)
+
     def test_rejects_payload_over_65536_bytes_before_decode(self):
         with self.assertRaises(ContractError) as caught:
             validate_payload(b" " * 65537, now_ms=NOW_MS)
@@ -130,7 +135,7 @@ class T1OrderbookContractTest(unittest.TestCase):
             self.reject(p)
 
     def test_rejects_zero_or_negative_price_and_quantity(self):
-        for field, value in (("price", "0"), ("quantity", "0"), ("quantity", "-1")):
+        for field, value in (("price", "0"), ("price", "-1"), ("quantity", "0"), ("quantity", "-1")):
             p = valid_payload()
             p["bids"][0][0 if field == "price" else 1] = value
             self.reject(p)
@@ -188,13 +193,20 @@ class T1OrderbookContractTest(unittest.TestCase):
             self.reject(p)
 
     def test_uses_one_fixed_evaluation_time_for_all_freshness_checks(self):
-        self.assertTrue(self.accept().symbol == "BTCUSDT")
+        p = valid_payload()
+        p["sourceTimestampMs"] = NOW_MS - 2000
+        p["observedAtMs"] = NOW_MS - 2000
+        p["snapshotId"] = ""
+        unsigned = dict(p); unsigned.pop("snapshotId")
+        p["snapshotId"] = "sha256:" + hashlib.sha256(_canonical_bytes(unsigned)).hexdigest()
+        self.assertEqual(self.accept(p).symbol, "BTCUSDT")
 
     def test_rejects_snapshot_digest_mismatch(self):
         p = valid_payload(); p["bids"][0][1] = "9.5"
         self.reject(p, ErrorCode.DIGEST_MISMATCH)
 
     def test_matches_canonical_snapshot_digest_golden_vectors(self):
+        self.assertEqual(valid_payload()["snapshotId"], "sha256:7aae6cf204f5a3aaeffcdd5a2569812339187c3e19567beef8b72ecd9b18473e")
         self.assertEqual(self.accept().snapshot_id, valid_payload()["snapshotId"])
 
     def test_rejects_non_verified_continuity_and_non_fresh_label(self):
