@@ -9,7 +9,7 @@ from pathlib import Path
 from persistent_state.account_risk import PaperAccountBinding, validate_paper_account_binding
 
 
-MIGRATION_VERSION = 11
+MIGRATION_VERSION = 1
 MIGRATION_CHECKSUM = hashlib.sha256(
     b"paper-account-scope-binding-v1:explicit-immutable-scope-map"
 ).hexdigest()
@@ -38,10 +38,15 @@ def migrate_paper_account_scope_binding(
         tables = {row[0] for row in connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table'"
         )}
-        if not {"paper_accounts", "paper_schema_migrations"}.issubset(tables):
+        if "paper_accounts" not in tables:
             raise sqlite3.DatabaseError("PAPER_ACCOUNT_SCOPE_SCHEMA_NOT_READY")
+        connection.execute("""CREATE TABLE IF NOT EXISTS paper_account_scope_binding_migrations (
+            version INTEGER PRIMARY KEY, checksum TEXT NOT NULL,
+            source_sha TEXT NOT NULL, applied_at_ms INTEGER NOT NULL,
+            status TEXT NOT NULL CHECK(status='APPLIED')
+        )""")
         migration = connection.execute(
-            "SELECT checksum,status FROM paper_schema_migrations WHERE version=?",
+            "SELECT checksum,status FROM paper_account_scope_binding_migrations WHERE version=?",
             (MIGRATION_VERSION,),
         ).fetchone()
         columns = {row[1] for row in connection.execute("PRAGMA table_info(paper_accounts)")}
@@ -73,9 +78,9 @@ def migrate_paper_account_scope_binding(
              AND NEW.account_scope_id != OLD.account_scope_id
             BEGIN SELECT RAISE(ABORT,'PAPER_ACCOUNT_SCOPE_BINDING_IMMUTABLE'); END""")
         connection.execute(
-            """INSERT INTO paper_schema_migrations
-               (version,name,checksum,applied_at_ms,source_sha,status)
-               VALUES (11,'paper_account_scope_binding_v11',?,?,?,'APPLIED')""",
+            """INSERT INTO paper_account_scope_binding_migrations
+               (version,checksum,source_sha,applied_at_ms,status)
+               VALUES (?,?,?,?, 'APPLIED')""",
             (MIGRATION_CHECKSUM, applied_at_ms, source_sha.lower()),
         )
         connection.commit()
@@ -104,10 +109,10 @@ def resolve_paper_account_binding(
         tables = {row[0] for row in db.execute(
             "SELECT name FROM sqlite_master WHERE type='table'"
         )}
-        if "paper_schema_migrations" not in tables:
-            raise sqlite3.DatabaseError("PAPER_ACCOUNT_SCOPE_SCHEMA_NOT_READY")
+        if "paper_account_scope_binding_migrations" not in tables:
+            raise sqlite3.DatabaseError("PAPER_ACCOUNT_SCOPE_BINDING_MISSING")
         migration = db.execute(
-            "SELECT checksum,status FROM paper_schema_migrations WHERE version=?",
+            "SELECT checksum,status FROM paper_account_scope_binding_migrations WHERE version=?",
             (MIGRATION_VERSION,),
         ).fetchone()
         columns = {row[1] for row in db.execute("PRAGMA table_info(paper_accounts)")}
