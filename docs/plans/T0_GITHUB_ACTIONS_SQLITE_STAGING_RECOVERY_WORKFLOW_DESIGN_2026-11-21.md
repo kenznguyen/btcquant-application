@@ -153,6 +153,7 @@ In `full_staging` mode, this gate runs only after the same-run preflight has pas
 - Use exclusive create/no-follow file creation; reject existing files, symlinks and unexpected directory entries. Never overwrite.
 - Preserve exact response bytes. Record per-attempt and cumulative bytes, status, retrieval time, object key, expected/measured size, SHA-256 and file identity.
 - Verify each ZIP against the committed expected size and SHA-256; verify CRC, exactly one CSV member and strict 12-column contract.
+- Enforce approved per-object and aggregate uncompressed-byte limits and a maximum compression-ratio limit while streaming extraction. These limits must be measured/selected and explicitly approved before implementation; ZIP metadata alone is not trusted. Abort and quarantine on limit breach or unexpected expansion.
 - Parse each sidecar strictly and compare its asserted digest with the paired ZIP digest. Separately record sidecar raw byte size and SHA-256.
 - Enforce exact allowlist cardinality: 202 ZIP + 202 sidecars = 404. Any missing, extra, duplicate, malformed or mismatched object quarantines the entire run.
 - The historical 11,277-byte discrepancy remains documented; recompute new aggregates from the fresh 404 measured objects without changing the historical report.
@@ -275,9 +276,9 @@ Before workflow creation:
 6. Confirm exact SQLite schema definitions and expected archive-only acceptance counts.
 7. Approve a bounded retry/backoff policy and confirm the cumulative 100 MiB response-body ceiling remains applicable to this new runner destination.
 8. After implementation, separately approve a preflight-only run.
-9. After preflight PASS, separately approve source materialization.
-10. Separately approve normalization/import and SQLite creation.
-11. Separately approve read-only validation and artifact retention/owner review.
+9. After preflight PASS, separately approve source materialization and its exact source/destination/byte/decompression/retry limits.
+10. Separately approve normalization/importer identity, coverage/gap policy and `available_at_ms` semantics; separately approve creation/write of the disposable SQLite file.
+11. Separately approve read-only validation, evidence artifact contents/retention and owner review.
 
 These approvals are intentionally distinct. The architecture decision alone does not satisfy any execution gate.
 
