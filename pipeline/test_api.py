@@ -95,6 +95,9 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertIn(("X-Content-Type-Options", "nosniff"), headers)
         return int(status.split()[0]), json.loads(data)
 
+    def enable_dual_ledger(self):
+        PaperLedger(self.paper_db, strategy_id="STRATEGY_CORE")
+
     def valid_ai_decision(self):
         """Build an AI research candidate; it must never be submitted to the paper Ledger."""
         return {"source": "AI_FREQAI", "action": "BUY", "reason": "ALIGNED_PAPER_SIGNAL",
@@ -158,6 +161,7 @@ class FiveLayerApiTest(unittest.TestCase):
             ).fetchall()
         self.assertEqual(after_tables, before_tables)
     def test_paper_evaluate_records_typed_canonical_mark_provenance(self):
+        self.enable_dual_ledger()
         with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
             code, result = self.request("/v1/paper/evaluate", "POST", {"source": "CORE"})
 
@@ -173,6 +177,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertTrue(rows[0][1].startswith("sha256:"))
 
     def test_core_retries_do_not_duplicate_positions_or_fees(self):
+        self.enable_dual_ledger()
         with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
             _, first = self.request("/v1/paper/evaluate", "POST", {"source": "CORE"})
             _, before = self.request("/v1/paper")
@@ -209,6 +214,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["reason"], "PREDICTION_UNAVAILABLE")
 
     def test_pause_is_persistent_and_distinct_auth_is_required(self):
+        self.enable_dual_ledger()
         self.assertEqual(self.request("/v1/paper/pause", "POST", {"paused": True}, token="read-token")[0], 401)
         code, result = self.request("/v1/paper/pause", "POST", {"paused": True})
         self.assertEqual(code, 200)
@@ -301,6 +307,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(self.request("/v1/candles", query=query)[0], 503)
 
     def test_core_and_ai_signals_are_independent_and_share_the_risk_gate(self):
+        self.enable_dual_ledger()
         core_intent = {"intentId":"core-test-intent","symbol":"BTCUSDT","exchange":"binance",
             "marketType":"USDT_PERPETUAL","strategyVersion":"rsi-adx-smart-dca-v1",
             "modelVersion":"strategy-core","datasetVersion":"sha256:"+"c"*64,
@@ -386,6 +393,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(intelligence["status"], "DEGRADED")
 
     def test_risk_limit_breach_auto_kills_new_core_paper_intents(self):
+        self.enable_dual_ledger()
         self.request("/v1/equity")
         with sqlite3.connect(self.paper_db) as connection:
             connection.execute("UPDATE paper_state SET realized='-25' WHERE id=1")
@@ -405,6 +413,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["order"]["reason"],"MAX_DRAWDOWN_LIMIT")
         self.assertTrue(self.request("/v1/paper")[1]["riskControl"]["killed"])
     def test_unconfigured_risk_limits_fail_closed_for_core(self):
+        self.enable_dual_ledger()
         with sqlite3.connect(self.paper_db) as connection:
             connection.execute("DELETE FROM paper_account_risk_contract WHERE account_id=1")
         with patch.dict(os.environ,{"PAPER_MAX_DRAWDOWN_PCT":"","PAPER_MAX_DAILY_LOSS_USDT":"","PAPER_MAX_EXPOSURE_USDT":""}):
@@ -432,6 +441,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertIsNone(signals["aiStrategy"]["intent"])
 
     def test_api_kill_switch_requires_control_token_and_blocks_core_paper_evaluation(self):
+        self.enable_dual_ledger()
         self.assertEqual(self.request("/v1/paper/kill", "POST", {"enabled": True}, token="read-token")[0], 401)
         code, state = self.request("/v1/paper/kill", "POST", {"enabled": True})
         self.assertEqual(code, 200)
@@ -466,6 +476,7 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertTrue(self.request("/v1/paper")[1]["riskControl"]["killed"])
 
     def test_kill_switch_cannot_be_cleared_by_generic_resume_or_malformed_reset(self):
+        self.enable_dual_ledger()
         self.request("/v1/paper/kill", "POST", {"enabled": True})
         self.request("/v1/paper/pause", "POST", {"paused": False})
         with patch.object(api, "core_decide", return_value=self.valid_core_decision()):
