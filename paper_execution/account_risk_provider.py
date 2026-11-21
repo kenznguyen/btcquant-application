@@ -190,7 +190,10 @@ class SQLitePaperAccountRiskSnapshotProvider(AccountRiskSnapshotProvider):
             snapshot = self._snapshot(raw, before, policy, policy_hash, now_ms)
             db.execute("COMMIT")
 
-        after = self._binding(account_scope_id, session_id, fencing_generation)
+        try:
+            after = self._binding(account_scope_id, session_id, fencing_generation)
+        except (OSError, sqlite3.Error, TypeError, ValueError):
+            raise ValueError("PAPER_SESSION_FENCE_CHANGED_DURING_SNAPSHOT") from None
         if before != after:
             raise ValueError("PAPER_SESSION_FENCE_CHANGED_DURING_SNAPSHOT")
         return PaperAccountRiskBundle(
