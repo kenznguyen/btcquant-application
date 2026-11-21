@@ -41,9 +41,23 @@ Related S1 design commit: ee30e4bcb1e1118901e372f642f368e4f4578649
 - GitHub Actions run/job/artifact: **NONE**. Full repository regression: **NOT RUN**.
 - Bounded interface review found S1 does not independently freeze the validator result DTO (`valid`, `error_codes`), complete validator-level error-code catalogue, or deterministic error ordering/aggregation. Individual codes embedded in tests do not constitute a reviewed complete interface contract.
 - S2 disposition: **PARTIAL — expected RED reproduced; validator assertions NOT VERIFIED; GREEN BLOCKED pending API/error-code contract freeze**.
-- Next: define and review the exact result shape and stable error-code catalogue as a documentation-only interface decision. A separate owner approval is required before GREEN validator implementation.
 - No production code, DDL, SQLite, importer, archive retrieval, workflow, Canonical T0/MAY-10/REST tail, VPS/runtime, T1/T2, deployment, cleanup or trading operation occurred.
 
 ## Handoff correction
 
 This section supersedes the earlier S2 statements in this addendum that said RED execution was NOT RUN. The test execution described above occurred after the exact-source ZIP was supplied. The older wording is retained only as historical state before execution.
+
+## T0 Provenance Validator Interface V1 — documentation-only freeze
+
+- Owner approved only the design and freeze of the Python-facing validator interface; no implementation or test modification was authorized.
+- Source reviewed directly from `main`: S2 RED test blob `abbaeab16f026757923c679330f124a3d99e0774`; amended S1 design blob `af7c90af0f0bcfa8d0b2143578222619af620197`; S2 execution evidence blob `5a66bdf605d882a0ad8716d89f6b00ea533ce0d5`.
+- Added `docs/design/T0_PROVENANCE_VALIDATOR_INTERFACE_V1_2026-11-22.md`.
+- Interface contract commit: `e4af4c346c1d1b4090b5097901d369ab18070142`.
+- Contract freezes module `market_data.archive_provenance_validator`; functions `encode_t0enc1`, `derive_attempt_id`, `validate_provenance`; immutable `ProvenanceValidationResult(valid: bool, error_codes: tuple[str, ...])`; input shape; side-effect boundary; S1 framing/attempt-ID behavior; 10 stable V1 error codes; deduplicated error aggregation and catalogue-defined deterministic ordering.
+- The nine codes currently asserted in the RED test are retained exactly. One additional `PROVENANCE_INPUT_SHAPE_INVALID` code is defined for deterministic malformed top-level payload handling.
+- Explicit limitation: this catalogue covers the current S2 V1 interface surface and is not a claim that all S1 invariants have dedicated codes or are tested. Additional invariants and test coverage remain NOT VERIFIED and require separate review/amendment.
+- Verification: source-level design consistency review only. No executable tests, code, workflows, SQL, SQLite, archive or runtime operations.
+- Workflow run/job/artifact: **NONE**.
+- Status: **PASS — DOCUMENTATION CONTRACT COMMITTED; IMPLEMENTATION NOT AUTHORIZED**.
+- Next: owner review of the committed contract. Any GREEN implementation, RED test edits/additions, DDL, SQLite, importer, archive retrieval or workflow requires separate explicit approval.
+- All exclusions remain: Canonical T0, MAY-10, REST tail, VPS/runtime, T1/T2, deployment, cleanup/deletion and trading.
