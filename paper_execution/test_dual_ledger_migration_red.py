@@ -118,7 +118,7 @@ class DualLedgerMigrationRedTest(unittest.TestCase):
         self.assertEqual(ai, ("0",))
         self.assertEqual(risk[0], 0)
         self.assertIsNotNone(risk[1])
-        self.assertEqual(migration, [(1, "APPLIED"), (2, "APPLIED"), (3, "APPLIED"), (4, "APPLIED"), (5, "APPLIED"), (6, "APPLIED"), (7, "APPLIED"), (8, "APPLIED"), (9, "APPLIED")])
+        self.assertEqual(migration, [(1, "APPLIED"), (2, "APPLIED"), (3, "APPLIED"), (4, "APPLIED"), (5, "APPLIED"), (6, "APPLIED"), (7, "APPLIED"), (8, "APPLIED"), (9, "APPLIED"), (10, "APPLIED")])
         self.assertEqual(legacy_after, legacy_state)
         self.assertEqual(owner_after, legacy_owner)
 
@@ -157,7 +157,7 @@ class DualLedgerMigrationRedTest(unittest.TestCase):
             "paper_schema_migrations", "paper_accounts", "paper_strategy_ledgers",
             "paper_account_risk_state", "paper_risk_reservations",
             "paper_book_level_reservations", "paper_funding_events",
-            "paper_legacy_book_consumptions",
+            "paper_legacy_book_consumptions", "paper_account_consumed_market_marks",
         }.issubset(required_tables))
 
     def test_corrupt_legacy_state_stops_migration_without_rewriting_legacy_data(self):
@@ -334,6 +334,7 @@ class DualLedgerMigrationRedTest(unittest.TestCase):
             (7, "account_cutover_ledger_snapshots_v7", "APPLIED"),
             (8, "account_history_fee_provenance_v8", "APPLIED"),
             (9, "daily_equity_baseline_audit_v9", "APPLIED"),
+            (10, "consumed_market_mark_provenance_v10", "APPLIED"),
         ])
         self.assertIn("expires_at_ms", columns)
         self.assertIn("paper_risk_reservations_expiry", indexes)
