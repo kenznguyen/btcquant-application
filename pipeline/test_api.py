@@ -77,62 +77,6 @@ class FiveLayerApiTest(unittest.TestCase):
             {"maxDrawdownPct": "95", "maxDailyLossUsdt": "95", "maxExposureUsdt": "1000"},
             source="API_TEST_FIXTURE", recorded_at_ms=self.now,
         )
-        # The API test fixture explicitly prepares the dual PAPER ledger and a
-        # reconciled account mark; production startup never performs this migration.
-        PaperLedger(
-            self.paper_db, strategy_id="STRATEGY_CORE", source_sha="a" * 40,
-        )
-        PaperLedger(
-            self.paper_db, strategy_id="AI_FREQAI", source_sha="a" * 40, leverage="3",
-        )
-        from paper_execution.mark_provenance import build_market_mark_provenance
-        from paper_execution.funding import record_funding_coverage, record_account_equity_cutover
-        mark_window = read_window(
-            self.db, "BTCUSDT", "15m", self.end - 900_000, self.end,
-            as_of_ms=self.now,
-        )
-        mark = mark_window["candles"][-1]
-        provenance = build_market_mark_provenance(
-            mark_window, source_id="T0_CANONICAL_MARKET_DATA"
-        )
-        with sqlite3.connect(self.paper_db) as connection:
-            day = self.now // 86_400_000 * 86_400_000
-            connection.execute(
-                """UPDATE paper_account_risk_state
-                   SET high_water_mark_quote='100',daily_baseline_utc_day_ms=?,
-                       daily_baseline_equity_quote='100',last_equity_quote='100',
-                       last_mark_price='100',mark_observed_at_ms=?,mark_candle_close_ms=?,
-                       dataset_version=?,risk_ready=0,unavailable_reason='ACCOUNT_EQUITY_CUTOVER_NOT_ESTABLISHED',
-                       updated_at_ms=?
-                   WHERE account_id=1""",
-                (day, self.now, mark["closeTimeMs"], mark_window["datasetVersion"], self.now),
-            )
-        manual_ledger = PaperLedger(self.paper_db)
-        manual_ledger.record_account_mark(
-            mark["close"], mark["closeTimeMs"], self.now,
-            mark_window["datasetVersion"], "100", mark_provenance=provenance,
-        )
-        record_funding_coverage(
-            self.paper_db, coverage_id="api-fixture-funding-coverage",
-            start_at_ms=self.now - 86_400_000, end_at_ms=self.now,
-            status="VERIFIED", source="RECONCILED_ACCOUNT_STATEMENT",
-            source_snapshot_id="api-fixture:funding-window",
-            payload_hash="sha256:" + "e" * 64,
-            config_version="api-fixture-funding-v1", recorded_at_ms=self.now,
-        )
-        record_account_equity_cutover(
-            self.paper_db, cutover_id="api-fixture-account-cutover",
-            expected_initial_capital_quote="100",
-            expected_realized_pnl_quote="0", expected_fees_quote="0",
-            expected_funding_quote="0", expected_account_equity_quote="100",
-            mark_price=mark["close"], mark_candle_close_ms=mark["closeTimeMs"],
-            mark_observed_at_ms=self.now, dataset_version=mark_window["datasetVersion"],
-            funding_coverage_start_at_ms=self.now - 86_400_000,
-            source="T0_CANONICAL_MARKET_DATA",
-            source_snapshot_id=provenance.source_snapshot_id,
-            payload_hash="sha256:" + provenance.source_payload_sha256,
-            config_version="api-fixture-account-risk-v1", recorded_at_ms=self.now,
-        )
         self.clock = patch.object(api, "now_ms", return_value=self.now)
         self.clock.start()
         self.addCleanup(self.clock.stop)
@@ -363,38 +307,18 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["order"]["status"], "FILLED")
         self.assertEqual(self.request("/v1/paper/evaluate", "POST", {"source": "UNKNOWN"})[0], 400)
 
-    def test_equity_endpoint_returns_verified_mark_provenance(self):
+    def test_equity_endpoint_fails_closed_without_provenance_migration(self):
         code, result = self.request("/v1/equity")
-        self.assertEqual(code, 200, result)
-        self.assertTrue(result["available"])
-        self.assertTrue(result["riskReady"], result)
-        self.assertEqual(result["initialCapital"], "100")
-        self.assertEqual(result["accountEquityQuote"], "100")
-        provenance = result["markProvenance"]
-        self.assertEqual(provenance["sourceId"], "T0_CANONICAL_MARKET_DATA")
-        self.assertEqual(provenance["sourceSnapshotId"], provenance["sourceVersion"])
-        self.assertTrue(provenance["sourcePayloadSha256"].startswith("sha256:"))
+        self.assertEqual(code, 503, result)
+        self.assertEqual(result["error"], "EQUITY_UNAVAILABLE")
         with sqlite3.connect(self.paper_db) as connection:
             self.assertEqual(
-                connection.execute(
-                    "SELECT COUNT(*) FROM paper_account_consumed_market_marks"
-                ).fetchone()[0],
-                1,
+                connection.execute("SELECT COUNT(*) FROM paper_equity_history").fetchone()[0],
+                0,
             )
-            self.assertEqual(
-                connection.execute(
-                    "SELECT last_mark_id FROM paper_account_risk_state WHERE account_id=1"
-                ).fetchone()[0],
-                connection.execute(
-                    "SELECT mark_id FROM paper_account_consumed_market_marks"
-                ).fetchone()[0],
-            )
-            self.assertEqual(
-                connection.execute(
-                    "SELECT version FROM paper_schema_migrations WHERE version=10"
-                ).fetchone()[0],
-                10,
-            )
+            self.assertIsNone(connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='paper_schema_migrations'"
+            ).fetchone())
 
     def test_audit_and_data_quality_endpoints_return_real_store_state(self):
         self.request("/v1/paper/pause","POST",{"paused":True})
