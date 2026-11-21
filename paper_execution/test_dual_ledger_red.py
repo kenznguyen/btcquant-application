@@ -32,7 +32,7 @@ class DualLedgerRedTest(unittest.TestCase):
         path = Path(self.temp.name) / filename
         bootstrap = PaperLedger(path, max_position_base="1", fee_rate="0.001")
         bootstrap.record_equity(
-            "100", self.now - 60_000, self.now, "sha256:dual-ledger-seed", "100"
+            "100", self.now - 60_000, self.now, "sha256:" + "d" * 64, "100"
         )
         limits = {"maxDrawdownPct": "50", "maxDailyLossUsdt": "50", "maxExposureUsdt": "1000"}
         provision_account_risk_contract(
@@ -63,7 +63,7 @@ class DualLedgerRedTest(unittest.TestCase):
         seed_mark = build_market_mark_provenance(
             {
                 "symbol": "BTCUSDT", "timeframe": "15m",
-                "datasetVersion": "sha256:dual-ledger-seed",
+                "datasetVersion": "sha256:" + "d" * 64,
                 "candles": [{
                     "openTimeMs": self.now-960_000, "closeTimeMs": self.now-60_000,
                     "open": "100", "high": "101", "low": "99",
@@ -97,7 +97,7 @@ class DualLedgerRedTest(unittest.TestCase):
                 expected_funding_quote="0", expected_account_equity_quote="100",
                 mark_price="100", mark_candle_close_ms=self.now-60_000,
                 mark_observed_at_ms=self.now,
-                dataset_version="sha256:dual-ledger-seed",
+                dataset_version="sha256:" + "d" * 64,
                 funding_coverage_start_at_ms=self.now-86_400_000,
                 source="FIXTURE_RECONCILED_HISTORY",
                 source_snapshot_id="fixture:account-cutover",
@@ -958,7 +958,7 @@ class DualLedgerRedTest(unittest.TestCase):
                 mark_price="100",
                 mark_candle_close_ms=self.now - 60_000,
                 mark_observed_at_ms=self.now,
-                dataset_version="sha256:dual-ledger-seed",
+                dataset_version="sha256:" + "d" * 64,
                 funding_coverage_start_at_ms=self.now - 86_400_000,
                 source="RECONCILED_ACCOUNT_STATEMENT",
                 source_snapshot_id="account-cutover:unknown-funding",
@@ -1052,7 +1052,7 @@ class DualLedgerRedTest(unittest.TestCase):
             "mark_price": "100",
             "mark_candle_close_ms": self.now - 60_000,
             "mark_observed_at_ms": self.now,
-            "dataset_version": "sha256:dual-ledger-seed",
+            "dataset_version": "sha256:" + "d" * 64,
             "funding_coverage_start_at_ms": self.now - 86_400_000,
             "source": "RECONCILED_ACCOUNT_STATEMENT",
             "source_snapshot_id": "account-cutover:verified-001",
@@ -1183,7 +1183,7 @@ class DualLedgerRedTest(unittest.TestCase):
                 mark_price="100",
                 mark_candle_close_ms=self.now - 60_000,
                 mark_observed_at_ms=self.now,
-                dataset_version="sha256:dual-ledger-seed",
+                dataset_version="sha256:" + "d" * 64,
                 funding_coverage_start_at_ms=self.now - 86_400_000,
                 source="RECONCILED_ACCOUNT_STATEMENT",
                 source_snapshot_id="account-cutover:statement-mismatch",
@@ -1262,7 +1262,7 @@ class DualLedgerRedTest(unittest.TestCase):
                 expected_fees_quote="0", expected_funding_quote="0",
                 expected_account_equity_quote="100", mark_price="100",
                 mark_candle_close_ms=self.now - 60_000, mark_observed_at_ms=self.now,
-                dataset_version="sha256:dual-ledger-seed",
+                dataset_version="sha256:" + "d" * 64,
                 funding_coverage_start_at_ms=self.now - 86_400_000,
                 source="RECONCILED_ACCOUNT_STATEMENT",
                 source_snapshot_id="account-cutover:funding-gap",
@@ -1289,7 +1289,7 @@ class DualLedgerRedTest(unittest.TestCase):
                 expected_account_equity_quote="100", mark_price="100",
                 mark_candle_close_ms=self.now - 60_000,
                 mark_observed_at_ms=self.now + 1,
-                dataset_version="sha256:dual-ledger-seed",
+                dataset_version="sha256:" + "d" * 64,
                 funding_coverage_start_at_ms=self.now - 86_400_000,
                 source="RECONCILED_ACCOUNT_STATEMENT",
                 source_snapshot_id="account-cutover:future-mark",
@@ -1316,7 +1316,7 @@ class DualLedgerRedTest(unittest.TestCase):
                 expected_account_equity_quote="100", mark_price="100",
                 mark_candle_close_ms=self.now - 30 * 60_000 - 1,
                 mark_observed_at_ms=self.now,
-                dataset_version="sha256:dual-ledger-seed",
+                dataset_version="sha256:" + "d" * 64,
                 funding_coverage_start_at_ms=self.now - 86_400_000,
                 source="RECONCILED_ACCOUNT_STATEMENT",
                 source_snapshot_id="account-cutover:stale-candle",
@@ -1355,7 +1355,7 @@ class DualLedgerRedTest(unittest.TestCase):
                 expected_fees_quote="0", expected_funding_quote="0.25",
                 expected_account_equity_quote="99.75", mark_price="100",
                 mark_candle_close_ms=self.now - 60_000, mark_observed_at_ms=self.now,
-                dataset_version="sha256:dual-ledger-seed",
+                dataset_version="sha256:" + "d" * 64,
                 funding_coverage_start_at_ms=self.now - 86_400_000,
                 source="RECONCILED_ACCOUNT_STATEMENT",
                 source_snapshot_id="account-cutover:corrupt-funding-event",
@@ -1389,7 +1389,7 @@ class DualLedgerRedTest(unittest.TestCase):
             "mark_price": "100",
             "mark_candle_close_ms": self.now - 60_000,
             "mark_observed_at_ms": self.now,
-            "dataset_version": "sha256:dual-ledger-seed",
+            "dataset_version": "sha256:" + "d" * 64,
             "funding_coverage_start_at_ms": self.now - 86_400_000,
             "source": "RECONCILED_ACCOUNT_STATEMENT",
             "source_snapshot_id": "restart-replay:account-cutover",
@@ -1571,7 +1571,7 @@ os._exit(0)
                     "mark_price": "100",
                     "mark_candle_close_ms": self.now - 60_000,
                     "mark_observed_at_ms": self.now,
-                    "dataset_version": "sha256:dual-ledger-seed",
+                    "dataset_version": "sha256:" + "d" * 64,
                     "funding_coverage_start_at_ms": self.now - 86_400_000,
                     "source": "RECONCILED_ACCOUNT_STATEMENT",
                     "source_snapshot_id": f"crash:{crash_point}:account",
@@ -1708,7 +1708,7 @@ os._exit(0)
             "mark_price": "100",
             "mark_candle_close_ms": self.now - 60_000,
             "mark_observed_at_ms": self.now,
-            "dataset_version": "sha256:dual-ledger-seed",
+            "dataset_version": "sha256:" + "d" * 64,
             "funding_coverage_start_at_ms": self.now - 86_400_000,
             "source": "RECONCILED_ACCOUNT_STATEMENT",
             "source_snapshot_id": "post-commit-crash:account",
