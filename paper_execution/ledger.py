@@ -381,8 +381,14 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
             raise ValueError("DATASET_VERSION")
         if stored_price != text(mark) or stored_candle != candle or stored_observed != observed:
             raise ValueError("CONSUMED_MARK_FIELDS")
+        source_as_of = canonical_mark.get("sourceAsOfMs")
         if (canonical_mark.get("sourceId") != source_id
+                or canonical_mark.get("exchange") != "binance"
+                or canonical_mark.get("marketType") != "USDT_PERPETUAL"
+                or canonical_mark.get("symbol") != "BTCUSDT"
+                or canonical_mark.get("timeframe") != "15m"
                 or canonical_mark.get("datasetVersion") != mark_dataset
+                or type(source_as_of) is not int or source_as_of > stored_observed
                 or consumed_candle.get("close") != stored_price
                 or consumed_candle.get("closeTimeMs") != stored_candle):
             raise ValueError("CANONICAL_PAYLOAD_FIELDS")
