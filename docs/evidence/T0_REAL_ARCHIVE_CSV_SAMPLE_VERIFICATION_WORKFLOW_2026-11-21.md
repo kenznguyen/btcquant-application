@@ -46,3 +46,22 @@ No archive or REST request was made. No SQLite/database was created or changed. 
 ## Next step
 
 Owner may separately authorize one manual dispatch of this workflow. Review the resulting 12-object report before deciding whether the provisional parser contract should be amended or frozen. The workflow does not itself authorize importer or staging work.
+
+
+## Dispatch attempt 1 — 2026-11-21
+
+- Workflow run: [44922866259](https://github.com/kenznguyen/btcquant-application/actions/runs/44922866259)
+- Event: `workflow_dispatch`; run number: 1; attempt: 1.
+- Source SHA: `69c29e6a29c2d46e465465b15394a4122df4505d`.
+- Job: `136902479488`; conclusion: **FAILURE**.
+- Runner: GitHub-hosted `ubuntu-24.04`, Python 3.13.18 successfully installed.
+- Failure step: `Set up Python`; exact error: `Caching for 'false' is not supported`.
+- Root cause: workflow passes `cache: "false"` to `actions/setup-python`; this action does not accept the string `false` as a cache mode. Remove the `cache` input (or use a supported cache value) in a separately approved workflow correction.
+- Checkout and Python installation completed. Archive verification, parser unit tests and artifact upload were skipped.
+- Artifacts: none.
+- Source requests: **NOT MADE**; the failure occurred before the archive-verification step.
+- 12-object verification: **NOT VERIFIED**.
+- CSV format compatibility: **NOT VERIFIED**.
+- Parser contract freeze: **BLOCKED**.
+- SQLite/importer/Canonical T0: untouched.
+- This was the single approved dispatch. Do not rerun or dispatch a corrected workflow without separate owner approval. A workflow correction is also a separate change requiring approval before a second run.
