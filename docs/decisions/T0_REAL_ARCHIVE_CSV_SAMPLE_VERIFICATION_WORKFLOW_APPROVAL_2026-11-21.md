@@ -33,3 +33,12 @@ The workflow file is:
 `.github/workflows/t0-real-archive-csv-sample-verification.yml`
 
 Creating the workflow does not run it. Dispatch remains a separate explicit action; no archive request is made until a manual run is started. Parser contract freeze and importer remain blocked pending review of the resulting real-source evidence and a separate owner decision.
+
+
+## Owner approval — bounded correction and second dispatch
+
+On 2026-11-21, the owner separately approved:
+1. Remove only the invalid `cache: "false"` input from the existing `actions/setup-python` step.
+2. Dispatch the corrected workflow exactly once, retaining the same six ZIP + six paired sidecar allowlist and all prior exclusions.
+
+No other workflow logic, source allowlist, parser behavior, artifact contents, permissions, trigger, or execution scope is approved to change. The correction commit is `c4c01ec96395ee204a311b29b5cd9c198038ff6e`; workflow blob `0812cae7389eb5d328a200a4b590cd99bc195ef7`. The second dispatch must target this corrected source SHA or a descendant containing the exact same workflow blob. This approval does not authorize a third dispatch, parser contract freeze, importer, SQLite, or Canonical T0 modification.
