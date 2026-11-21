@@ -97,7 +97,7 @@ def record_account_mark(
     # Late import avoids a cycle because PaperLedger delegates to this module.
     from paper_execution.ledger import (
         _dual_ledger_migrations_ready, _funding_provenance_ready,
-        read_account_risk_snapshot, stored_state, text,
+        read_account_risk_snapshot, text,
     )
     if ledger.strategy_id != "MANUAL":
         raise ValueError("ACCOUNT_MARK_REQUIRES_ACCOUNT_SCOPE")
@@ -107,17 +107,15 @@ def record_account_mark(
         raise ValueError("Invalid or stale account mark")
     if not isinstance(dataset_version, str) or not dataset_version.strip():
         raise ValueError("ACCOUNT_MARK_DATASET_VERSION_REQUIRED")
+    provenance = validate_consumed_mark(
+        mark_provenance, mark_price=format(mark, "f"),
+        candle_close_ms=candle_at, dataset_version=dataset_version,
+    )
 
     with closing(ledger.connect()) as connection, connection:
         connection.execute("BEGIN IMMEDIATE")
         if not _dual_ledger_migrations_ready(connection):
-            position, average, realized, fees, _ = stored_state(connection)
-            return equity_history.record(
-                connection, initial_capital=initial_capital, position=position, average=average,
-                realized=realized, fees=fees, mark_price=mark,
-                candle_close_ms=candle_at, observed_at_ms=observed_at,
-                dataset_version=dataset_version,
-            )
+            raise sqlite3.DatabaseError("DUAL_LEDGER_MARK_PROVENANCE_SCHEMA_NOT_READY")
 
         risk = connection.execute(
             """SELECT high_water_mark_quote,daily_baseline_utc_day_ms,
@@ -182,7 +180,9 @@ def record_account_mark(
         elif not risk_ready and not unavailable:
             unavailable = "ACCOUNT_RISK_NOT_READY"
 
-        record_consumed_market_mark(connection, provenance, observed_at_ms=observed)
+        mark_record = record_consumed_market_mark(
+            connection, provenance, observed_at_ms=observed_at
+        )
         connection.execute(
             """UPDATE paper_account_risk_state
                SET last_equity_quote=?,high_water_mark_quote=?,last_mark_price=?,
