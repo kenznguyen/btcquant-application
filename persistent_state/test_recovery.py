@@ -50,10 +50,10 @@ class PersistentRecoveryTests(unittest.TestCase):
         ):
             kwargs = {}
             if target is SessionStatus.RESTORING:
-            kwargs["preflight_attestation"] = ready_evidence_for(
-                repository.get_session(session_id), token,
-            ).preflight
-        if target is SessionStatus.READY:
+                kwargs["preflight_attestation"] = ready_evidence_for(
+                    self.repository.get_session("session-1"), self.token,
+                ).preflight
+            if target is SessionStatus.READY:
                 kwargs["readiness_evidence"] = ready_evidence_for(
                     self.repository.get_session("session-1"), self.token,
                 )
