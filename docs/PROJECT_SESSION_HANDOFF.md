@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — M2.5 GREEN CI PASS; validator review REQUEST CHANGES
+
+- Verified GitHub Actions workflow [44916378593](https://github.com/kenznguyen/btcquant-application/actions/runs/44916378593), job `136882764609`: SUCCESS at exact workflow/tested HEAD SHA `04820704b88f143575f0ebbb582ac515b2e47aed`.
+- CI logs confirm pinned blob hashes: contract `e5df7ec59c04a4f08b6ec0fc98e7e5702b3543dc`, validator `efb43ba777097e261c32671b9b37c24efad1a2e3`, RED tests `bd4c6325739a7d1eadf5ced64c71e7e4742e7a31`, GREEN tests `71dcffa586ce785472f2c88e753e755cfe742bfc`. Test result: **22/22 PASS**.
+- Artifact `t2-ai-signal-contract-green-evidence`: ID `14711952424`; SHA-256 `7a94c8cdf9fbc1d73b256e7dd23ecd8d015d59ba001ccfbd001cacaf0f6713bd`; 1,460 bytes; expires 2026-12-05T14:55:01Z. ZIP downloaded and hash verified; `metadata.txt` and `test.log` inspected. Metadata confirms run ID and exact SHA; log shows 22 tests and OK.
+- Review record: `docs/reviews/T2_M2_5_AI_SIGNAL_VALIDATOR_REVIEW_2026-11-21.md`, commit `445f1b39ef5359f4520fc8a3604c4bda20be89fc`. Adversarial same-session review found R1 at `pipeline/ai_signal_contract.py:186`: unbounded `format(confidence, "f")` may allocate an enormous string for an extreme finite negative Decimal exponent, causing memory exhaustion. Verdict: **REQUEST CHANGES**.
+- M2.5 status: **BLOCKED / REQUEST CHANGES**. Focused CI is PASS, but validator review is not approved until R1 is fixed with TDD and a new exact-SHA workflow run passes. Genuine independent second-person review remains **NOT VERIFIED**. Full repository regression remains **NOT RUN**.
+- Next: bounded TDD correction for Decimal output representation (or explicit exponent/precision bounds), add regression coverage, update workflow blob pins, rerun all 22+ tests at a new exact SHA; then obtain a genuine independent second-person review. No PASS declaration before both gates are complete.
+- No Core, Shared Risk Engine, Kill Switch, Calibration Registry cryptographic implementation, ledgers, runner, runtime, DB, T0/T1, VPS, deployment, exchange or execution behavior was changed or invoked.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — T2 M2.5 AI Strategy Signal Validator GREEN implementation
 
 - Owner approved M2.5 bounded to the pure validator GREEN implementation against M2.4 AI Strategy Signal Contract V1 and its existing RED tests.
