@@ -371,18 +371,25 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
         canonical_mark = json.loads(canonical_payload)
         expected_payload_hash = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
         consumed_candle = canonical_mark["consumedCandle"]
-        if (not source_id or source_snapshot_id != mark_dataset
-                or payload_hash != expected_payload_hash
-                or mark_dataset != risk["dataset_version"]
-                or stored_price != text(mark) or stored_candle != candle
-                or stored_observed != observed
-                or canonical_mark.get("sourceId") != source_id
+        if not source_id:
+            raise ValueError("SOURCE_ID")
+        if source_snapshot_id != mark_dataset:
+            raise ValueError("SOURCE_SNAPSHOT_ID")
+        if payload_hash != expected_payload_hash:
+            raise ValueError("PAYLOAD_SHA256")
+        if mark_dataset != risk["dataset_version"]:
+            raise ValueError("DATASET_VERSION")
+        if stored_price != text(mark) or stored_candle != candle or stored_observed != observed:
+            raise ValueError("CONSUMED_MARK_FIELDS")
+        if (canonical_mark.get("sourceId") != source_id
                 or canonical_mark.get("datasetVersion") != mark_dataset
                 or consumed_candle.get("close") != stored_price
                 or consumed_candle.get("closeTimeMs") != stored_candle):
-            raise ValueError
-    except (TypeError, ValueError, KeyError, json.JSONDecodeError):
-        raise sqlite3.DatabaseError("ACCOUNT_RISK_MARK_PROVENANCE_INVALID") from None
+            raise ValueError("CANONICAL_PAYLOAD_FIELDS")
+    except (TypeError, ValueError, KeyError, json.JSONDecodeError) as exc:
+        raise sqlite3.DatabaseError(
+            "ACCOUNT_RISK_MARK_PROVENANCE_INVALID:" + str(exc)
+        ) from None
 
     if cutover:
         funding_gap = not _funding_provenance_ready(
