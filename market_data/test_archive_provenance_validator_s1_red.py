@@ -136,7 +136,8 @@ def build_valid_s1_fixture() -> dict[str, Any]:
             "T0-ARCHIVE-PAIR-V1", zip_id, sidecar_id
         )
         member_path = f"data/BTCUSDT-15m-{index:03d}.csv"
-        member_sha = _sha(f"member-{index}".encode())
+        member_bytes = f"member-{index}".encode("utf-8")
+        member_sha = _sha(member_bytes)
         member_id = "mem1:" + _enc_digest(
             "T0-CSV-MEMBER-V1", pair_id, member_path, bytes.fromhex(member_sha)
         )
@@ -194,7 +195,7 @@ def build_valid_s1_fixture() -> dict[str, Any]:
         })
         members.append({
             "member_id": member_id, "pair_id": pair_id,
-            "member_path": member_path, "member_size_bytes": 128,
+            "member_path": member_path, "member_size_bytes": len(member_bytes),
             "member_sha256": member_sha, "encoding": "UTF-8",
             "bom_present": 0, "newline": "LF", "delimiter": ",",
             "header_present": 1, "header_contract_id": "T0_ARCHIVE_CSV_HEADER_V1",
@@ -288,6 +289,17 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
     test.assertEqual(payload["contract_version"], "T0_PROVENANCE_VALIDATOR_S1_V1")
     test.assertEqual(hashlib.sha256(payload["inventory_raw_bytes"]).hexdigest(),
                      payload["inventory_expected_sha256"])
+    parsed_inventory = json.loads(payload["inventory_raw_bytes"].decode("utf-8"))
+    test.assertEqual(parsed_inventory["inventory_id"], payload["inventory_expected_id"])
+    test.assertEqual(parsed_inventory["objects"], payload["inventory"]["objects"])
+    test.assertEqual(payload["coverage_manifest"]["expected_object_count"], 404)
+    test.assertEqual(payload["coverage_manifest"]["expected_pair_count"], 202)
+    test.assertEqual(payload["coverage_manifest"]["expected_member_count"], 202)
+    test.assertEqual(payload["coverage_manifest"]["expected_row_count"], 202)
+    test.assertEqual(payload["coverage_manifest"]["expected_candle_count"], 202)
+    test.assertEqual(payload["coverage_manifest"]["expected_link_count"], 202)
+    test.assertEqual(payload["run"]["status"], "CANDIDATE")
+    test.assertEqual(payload["run"]["schema_contract_id"], "T0_STAGING_SCHEMA_V2")
     test.assertEqual(len(payload["inventory"]["objects"]), 404)
     test.assertEqual(len(payload["objects"]), 404)
     test.assertEqual(len(payload["attempts"]), 404)
@@ -306,26 +318,78 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
     member_by_id = {item["member_id"]: item for item in payload["members"]}
     candle_by_value = {item["candle_value_id"]: item for item in payload["candles"]}
     for obj in payload["objects"]:
+        test.assertEqual(
+            obj["object_id"],
+            _object_id(payload["inventory_expected_sha256"], obj["object_key"], obj["object_kind"]),
+        )
+        test.assertEqual(obj["expected_size_bytes"], obj["measured_size_bytes"])
+        test.assertEqual(obj["expected_sha256"], obj["measured_sha256"])
+        test.assertEqual(obj["response_status"], 200)
+        test.assertEqual(obj["exclusive_create"], 1)
+        test.assertTrue(obj["local_relative_path"])
         attempt = attempt_by_id[obj["successful_attempt_id"]]
+        test.assertEqual(attempt["attempt_id"], _attempt_id(obj["object_id"], obj["requested_key"]))
         test.assertEqual(attempt["object_id"], obj["object_id"])
         test.assertEqual(attempt["outcome"], "TRANSFERRED")
         test.assertEqual(attempt["complete_object_sha256"], obj["measured_sha256"])
         test.assertEqual(attempt["response_bytes_received"], obj["measured_size_bytes"])
     for pair in payload["pairs"]:
+        test.assertEqual(
+            pair["pair_id"],
+            "pair1:" + _enc_digest("T0-ARCHIVE-PAIR-V1", pair["zip_object_id"], pair["sidecar_object_id"]),
+        )
+        test.assertEqual(pair["member_count"], 1)
+        test.assertEqual(pair["zip_crc_ok"], 1)
+        test.assertEqual(pair["structural_ok"], 1)
         test.assertEqual(object_by_id[pair["zip_object_id"]]["verification_status"], "VERIFIED")
         test.assertEqual(object_by_id[pair["sidecar_object_id"]]["verification_status"], "VERIFIED")
         test.assertEqual(pair["sidecar_asserted_zip_sha256"], pair["measured_zip_sha256"])
     for member in payload["members"]:
+        test.assertEqual(
+            member["member_id"],
+            "mem1:" + _enc_digest(
+                "T0-CSV-MEMBER-V1", member["pair_id"], member["member_path"],
+                bytes.fromhex(member["member_sha256"]),
+            ),
+        )
+        test.assertEqual(member["member_size_bytes"], len(f"member-{payload['members'].index(member)}".encode("utf-8")))
+        test.assertEqual(member["encoding"], "UTF-8")
+        test.assertEqual(member["bom_present"], 0)
+        test.assertEqual(member["newline"], "LF")
+        test.assertEqual(member["delimiter"], ",")
+        test.assertEqual(member["header_present"], 1)
+        test.assertRegex(member["parser_source_sha"], r"^[0-9a-f]{40}$")
         test.assertEqual(member["disposition"], "VERIFIED")
         test.assertEqual(member["data_row_count"], 1)
     for row, link in zip(payload["source_rows"], payload["links"]):
         test.assertIn(row["member_id"], member_by_id)
         test.assertEqual(link["source_row_id"], row["source_row_id"])
+        test.assertEqual(
+            link["link_id"],
+            "lnk1:" + _enc_digest(
+                "T0-CANDLE-PROVENANCE-LINK-V1",
+                link["exchange"], link["market_type"], link["symbol"],
+                link["timeframe"], link["open_time_ms"], link["source_row_id"],
+                link["duplicate_disposition"],
+            ),
+        )
+        test.assertEqual(link["duplicate_disposition"], "UNIQUE")
         test.assertEqual(link["candle_value_id"], row["candle_value_id"])
         test.assertIn(row["candle_value_id"], candle_by_value)
         test.assertEqual(row["disposition"], "ACCEPTED")
         test.assertEqual(len(row["raw_fields"]), 12)
         test.assertEqual(row["physical_record_ordinal"], row["data_row_ordinal"] + 1)
+        test.assertEqual(row["raw_row_digest"], _enc_digest("T0-RAW-CSV-ROW-V1", *row["raw_fields"]))
+        test.assertEqual(
+            row["source_row_id"],
+            "row1:" + _enc_digest(
+                "T0-SOURCE-ROW-V1", row["member_id"], row["physical_record_ordinal"],
+                bytes.fromhex(row["raw_row_digest"]),
+            ),
+        )
+        test.assertRegex(row["parser_source_sha"], r"^[0-9a-f]{40}$")
+        test.assertRegex(row["importer_source_sha"], r"^[0-9a-f]{40}$")
+        test.assertTrue(row["importer_contract_id"])
     for candle in payload["candles"]:
         test.assertEqual(candle["available_at_ms"], candle["open_time_ms"] + 900000)
         test.assertEqual(candle["availability_kind"], "BAR_CLOSE_BOUNDARY")
