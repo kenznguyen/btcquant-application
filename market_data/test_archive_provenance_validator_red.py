@@ -17,7 +17,7 @@ class ProvenanceValidatorRedTest(unittest.TestCase):
     def test_t0enc1_frames_domain_and_fields(self):
         encode = self.validator.encode_t0enc1
         self.assertNotEqual(encode("D", "ab", "c"), encode("D", "a", "bc"))
-        self.assertTrue(encode("D", "x").startswith(b"T0ENC1\\x00"))
+        self.assertTrue(encode("D", "x").startswith(b"T0ENC1\x00"))
 
     def test_t0enc1_distinguishes_null_and_empty(self):
         encode = self.validator.encode_t0enc1
