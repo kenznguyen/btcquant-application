@@ -73,10 +73,26 @@ class PaperAccountScopeFencingBindingTests(unittest.TestCase):
 
     def test_binding_rejects_wrong_scope_and_non_paper_account(self):
         self.bind_paper_scope()
-        token = start_running(self.state, "session-1")
-        with sqlite3.connect(self.paper_path) as db:
-            db.execute("UPDATE paper_accounts SET mode='LIVE' WHERE account_id=1")
+        token = start_running(self.state, "session-1", account="another-scope")
+        with self.assertRaisesRegex(ValueError, "PAPER_SESSION_FENCE_NOT_CURRENT"):
+            resolve_paper_account_binding(
+                self.paper_path, self.state, account_id=1,
+                session_id=token.session_id,
+                fencing_generation=token.fencing_generation,
+            )
         with self.assertRaisesRegex(ValueError, "PAPER_ACCOUNT_IDENTITY_INVALID"):
+            resolve_paper_account_binding(
+                self.paper_path, self.state, account_id=2,
+                session_id=token.session_id,
+                fencing_generation=token.fencing_generation,
+            )
+
+    def test_binding_rejects_session_that_has_not_reached_running(self):
+        self.bind_paper_scope()
+        token = self.state.claim_writer(
+            __import__("persistent_state.test_session_fencing", fromlist=["make_session"]).make_session("session-starting")
+        )
+        with self.assertRaisesRegex(ValueError, "PAPER_SESSION_FENCE_NOT_CURRENT"):
             resolve_paper_account_binding(
                 self.paper_path, self.state, account_id=1,
                 session_id=token.session_id,
