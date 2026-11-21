@@ -173,7 +173,10 @@ class FiveLayerApiTest(unittest.TestCase):
 
         self.assertEqual(code, 200, result)
         self.assertEqual(result["decision"]["source"], "STRATEGY_CORE")
-        self.assertEqual(result["order"]["status"], "FILLED")
+        # The fixture has no verified account/funding cutover, so the shared
+        # risk gate must reject the order while the consumed mark is persisted.
+        self.assertEqual(result["order"]["status"], "REJECTED")
+        self.assertEqual(result["order"]["reason"], "RISK_INPUTS_UNAVAILABLE")
         with sqlite3.connect(self.paper_db) as connection:
             rows = connection.execute(
                 "SELECT source_id, dataset_version FROM paper_account_consumed_market_marks"
