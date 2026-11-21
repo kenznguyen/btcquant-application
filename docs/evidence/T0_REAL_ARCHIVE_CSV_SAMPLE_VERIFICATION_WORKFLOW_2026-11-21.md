@@ -106,3 +106,18 @@ Owner may separately authorize one manual dispatch of this workflow. Review the 
 - Third dispatch: **APPROVED / NOT DISPATCHED**. The available GitHub actions connector supports reading workflow runs and rerunning prior runs, but does not expose creating a new `workflow_dispatch` run. Rerunning run 2 would use its old source SHA and is not a valid substitute. Do not rerun it.
 - Real archive requests: none from run 2. Third dispatch has not occurred. 12-object verification remains **NOT VERIFIED**; parser contract freeze remains **BLOCKED**.
 - No changes to archive allowlist, object scope, REST policy, parser, inventory, SQLite/importer, Contract 1.2.0, Canonical T0, T1/T2, VPS/runtime, deployment, or trading.
+
+
+## Third approved dispatch — real archive format finding (2026-11-21)
+
+- Workflow run: [44923634320](https://github.com/kenznguyen/btcquant-application/actions/runs/44923634320); run number 3; event `workflow_dispatch`; attempt 1; conclusion **FAILURE**.
+- Exact source SHA checked out: `ab2ae82c12f858492128528d52b01c4455f43083`; job `136904830969`; runner `ubuntu-24.04`; Python 3.13.18 setup **PASS**.
+- The ancestry assertion now passes: checkout fetched full history, resolved source SHA and checked out the exact requested commit. The pinned inventory/parser/test blob checks also passed before archive processing.
+- Failure step: `Verify exact source pins and run real archive checks`. Exact error: `unexpected CSV header row in data/futures/um/monthly/klines/BTCUSDT/15m/BTCUSDT-15m-2022-08.zip`.
+- This proves the current workflow's universal headerless assumption is false for at least the sampled M15 monthly 2022-08 CSV. Workflow order indicates the preceding M15 daily 2019-12-31 sample passed all checks needed to proceed to the next sample; this is limited evidence for that one ZIP/sidecar pair only.
+- The workflow stopped at the second ZIP. Remaining four ZIPs and their sidecars were not processed. Do not infer full 12-object verification or parser compatibility.
+- Parser unit tests: **SKIPPED**. Artifact upload: **SKIPPED**. Artifacts: **none**. No diagnostic JSON report exists.
+- Status: ancestry/source pin checks **PASS**; M15 2022-08 headerless contract check **FAIL**; remaining samples **NOT VERIFIED**; 12-object verification **NOT VERIFIED**; parser unit tests **SKIPPED**; parser contract freeze **BLOCKED**.
+- The result identifies a real-source format discrepancy, not proof that the archive is corrupt. Do not silently strip/ignore headers or change the parser contract based on this single run.
+- This run consumed the third approved dispatch. No fourth dispatch, workflow correction, parser change, parser test change, importer, SQLite/staging, Contract 1.2.0 implementation, Canonical T0, REST-tail request, T1/T2, VPS/runtime, deployment, credentials or trading action is authorized by this result.
+- Next gate: record and review this evidence. Any change to accept optional headers, distinguish archive variants, or run another sample requires a separate owner decision and narrowly scoped approval.
