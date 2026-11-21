@@ -142,3 +142,14 @@ Owner approved the pure validator GREEN implementation against the M2.4 AI Strat
 - Validator is pure and signal-only; WAIT is diagnostic. It performs no cryptographic verification, risk admission, sizing, reservation, ledger write or execution.
 - No Core, Shared Risk Engine, Kill Switch, calibration registry implementation, ledger, runner, runtime, DB, T0/T1, VPS, deployment, exchange or trading behavior was changed or invoked.
 - Next: inspect exact workflow run/artifact and review exact tested blobs. Any follow-up validator correction must use TDD and exact-SHA CI. Calibration Registry, risk admission, ledgers, runtime, DB, T0/T1 integration and execution require separate owner approvals.
+
+
+---
+
+## M2.5 verification and review update (2026-11-21)
+
+- Focused GREEN workflow [44916378593](https://github.com/kenznguyen/btcquant-application/actions/runs/44916378593), job `136882764609`: **SUCCESS**, exact tested SHA `04820704b88f143575f0ebbb582ac515b2e47aed`, 22/22 tests PASS.
+- Artifact `t2-ai-signal-contract-green-evidence`: ID `14711952424`, SHA-256 `7a94c8cdf9fbc1d73b256e7dd23ecd8d015d59ba001ccfbd001cacaf0f6713bd`; downloaded archive hash verified and contents inspected.
+- Review: `docs/reviews/T2_M2_5_AI_SIGNAL_VALIDATOR_REVIEW_2026-11-21.md`; commit `445f1b39ef5359f4520fc8a3604c4bda20be89fc`. R1 blocks approval: fixed-point Decimal formatting is unbounded for tiny finite exponents and can cause resource exhaustion.
+- Disposition: **M2.5 BLOCKED / REQUEST CHANGES**. CI is verified PASS, but code review is not approved. Genuine independent second-person review remains NOT VERIFIED; full repository regression NOT RUN.
+- Next: TDD fix and regression test for bounded Decimal representation, update exact workflow pins, rerun focused CI at new SHA, then obtain genuine independent review. No M2.5 PASS until both review gates pass.
