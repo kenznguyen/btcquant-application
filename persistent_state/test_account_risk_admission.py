@@ -139,6 +139,38 @@ class AccountRiskAdmissionIntegrationTests(unittest.TestCase):
             )
             self.assertTrue(result.allowed, result.reason_code)
 
+    def test_policy_accepts_exact_decimal_limits_and_rejects_noncanonical_values(self):
+        policy = VersionedRiskPolicy(
+            version="decimal-policy-v1", quote_asset="USDT",
+            max_snapshot_age_ms=500, max_drawdown_quote="100.25",
+            max_daily_loss_quote="30.5", max_gross_exposure_quote="500.125",
+        )
+        self.assertEqual(policy.max_drawdown_quote, "100.25")
+        for invalid in ("-1", "01", "1e2", "NaN", 1.5):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValueError):
+                    VersionedRiskPolicy(
+                        version="bad-policy", quote_asset="USDT",
+                        max_snapshot_age_ms=500, max_drawdown_quote=invalid,
+                        max_daily_loss_quote="30", max_gross_exposure_quote="500",
+                    )
+
+    def test_exact_risk_limit_boundaries_are_admitted(self):
+        snapshot = replace(
+            self.snapshot, drawdown_quote="100", daily_loss_quote="30",
+            gross_exposure_quote="490",
+        )
+        context = replace(self.context, account_risk_snapshot=snapshot)
+        result = self.engine.evaluate(self.proposal(exposure="10"), context)
+        self.assertTrue(result.allowed, result.reason_code)
+
+    def test_snapshot_at_exact_freshness_boundary_is_admitted(self):
+        snapshot = replace(self.snapshot, as_of_ms=9_600)
+        result = self.engine.evaluate(
+            self.proposal(), replace(self.context, account_risk_snapshot=snapshot),
+        )
+        self.assertTrue(result.allowed, result.reason_code)
+
     def test_policy_requires_explicit_versioned_thresholds_and_is_immutable(self):
         with self.assertRaises((TypeError, ValueError)):
             VersionedRiskPolicy(
