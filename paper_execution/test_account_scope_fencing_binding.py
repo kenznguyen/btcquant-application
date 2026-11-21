@@ -18,10 +18,9 @@ class PaperAccountScopeFencingBindingTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.paper_path = Path(self.temp.name) / "paper.sqlite3"
         self.state_path = Path(self.temp.name) / "state.sqlite3"
-        bootstrap = PaperLedger(self.paper_path)
-        bootstrap.record_equity(
-            "100", 1_799_999_940_000, 1_800_000_000_000,
-            "sha256:" + "d" * 64, "100",
+        PaperLedger(
+            self.paper_path, strategy_id="STRATEGY_CORE",
+            source_sha="a" * 40, max_position_base="1",
         )
         self.state = SQLiteStateRepository(self.state_path)
         self.state.initialize()
