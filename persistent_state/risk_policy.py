@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import re
 
 
-_NON_NEGATIVE_DECIMAL = re.compile(r"^(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$")
+_NON_NEGATIVE_DECIMAL = re.compile(r"^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$")
 _ASSET = re.compile(r"^[A-Z][A-Z0-9]{1,11}$")
 
 
