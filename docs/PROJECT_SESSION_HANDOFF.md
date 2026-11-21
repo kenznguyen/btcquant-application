@@ -6399,3 +6399,17 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Increment status: **PARTIAL / NOT VERIFIED**. Required path declarations are corrected; behavioral trigger proof remains outstanding.
 - No production code, tests, Shared Risk Engine, risk policy, T2/T0/T1, runtime, database, VPS, deployment, exchange connection, paper execution or real order behavior was changed.
 - Next: retrieve the Actions run for `c93f48b617e64ec69aeddc7c3c2c6bda0a7bf22a`; then establish dependency-only trigger behavior without modifying production code. Preserve all current scope restrictions.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — F4 updated workflow run verification
+
+- Updated workflow commit SHA `c93f48b617e64ec69aeddc7c3c2c6bda0a7bf22a`; workflow blob `b425745fde77616e568eccffeb4918bcac603987`.
+- Exact push run [44904942269](https://github.com/kenznguyen/btcquant-application/actions/runs/44904942269): conclusion **success**; job `136848395225` success. Job log confirms checkout SHA and `git rev-parse HEAD` both match the workflow commit.
+- F4 API/decision suite on updated SHA: **47/47 PASS**; focused provenance/account-risk regressions executed; isolated Docker test container has network disabled, no credentials and no canonical DB mount.
+- Artifact `14707626950`, name `f4-pipeline-api-decision-evidence`, GitHub SHA-256 digest `870ad322253fde9c2c5269ac01989880ad2fcc8459ae9e34de9c57ba93d7b762`.
+- Both required dependencies remain statically present under `on.push.paths`: `paper_execution/account_history.py`, `paper_execution/risk_contract.py`.
+- Important: run 44904942269 was triggered by the workflow-only commit, so it does **not** independently prove either dependency-only push triggers F4. Dependency-only probes **NOT RUN** because creating commits touching those production dependency files would exceed the approved workflow-only scope. Independent per-dependency trigger behavior remains **NOT VERIFIED**.
+- Evidence: `docs/evidence/F4_WORKFLOW_UPDATED_SHA_RUN_2026-11-21.md`; evidence commit `abed8dea79c0ba4100b9a4082ff3a55b0d726d85`.
+- Status: updated-SHA workflow execution **PASS**; F4 suite **47/47 PASS**; path declarations **PASS**; independent trigger probes **NOT VERIFIED**; overall increment **PARTIAL**.
+- Next: only if separately authorized, create disposable dependency-only probes (one path per push) and remove probe branches after recording evidence. Until then do not claim independent trigger verification.
+- No production code, Shared Risk Engine, risk policy, T2/T0/T1, runtime, DB, VPS, deployment, exchange connection, paper execution or real orders were changed or authorized.
