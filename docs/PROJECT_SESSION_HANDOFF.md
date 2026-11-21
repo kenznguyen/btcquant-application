@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — Owner removes mandatory Independent Review gate for T0
+
+- Owner decision: **Independent Review is no longer a mandatory gate or blocker for T0 remediation and progress**.
+- T0 work may proceed using bounded scope, TDD RED/GREEN, exact-source SHA verification, GitHub Actions evidence, artifact/checksum inspection where available, and documented same-session self-review.
+- Self-review must be labeled **SELF-REVIEW**; it must never be represented as an independent second-person review.
+- Existing independent-review PRs #3 and #4 are no longer prerequisites. They may remain as optional review records; their pending status must not block T0 remediation.
+- This decision removes only the mandatory independent-review gate. It does **not** declare T0 PASS or waive technical correctness, tests, exact-SHA evidence, data-integrity checks, fail-closed behavior, or explicit owner approvals for scope expansion.
+- Preserve all existing safety boundaries: T0 remains independent; no canonical database mutation/replacement, Feeder/VPS/runtime start, T1/T2 runtime connection, PostgreSQL activation, deployment, exchange credential use, or trading without separate authorization.
+- Current T0 source/review status must be reassessed through a read-only source audit and evidence-based remediation; prior CI results remain tied to their exact historical SHAs.
+- Next: continue T0 read-only source audit and classify concrete blockers; fix only bounded approved findings with TDD and exact-SHA CI. Record PASS/BLOCKED/NOT VERIFIED, source SHA, workflow run/job/artifact and remaining limits.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — M2.5 GREEN CI PASS; validator review REQUEST CHANGES
 
 - Verified GitHub Actions workflow [44916378593](https://github.com/kenznguyen/btcquant-application/actions/runs/44916378593), job `136882764609`: SUCCESS at exact workflow/tested HEAD SHA `04820704b88f143575f0ebbb582ac515b2e47aed`.
