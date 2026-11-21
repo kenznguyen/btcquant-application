@@ -453,11 +453,14 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         expected = legacy_codes + (code,)
         if code != "RUN_ACCEPTANCE_INVARIANT_INVALID":
             expected += ("RUN_ACCEPTANCE_INVARIANT_INVALID",)
-        self.assertIn(code, result.error_codes)
         self.assertEqual(
-            result.error_codes,
-            tuple(item for item in expected if item in result.error_codes),
+            tuple(item for item in result.error_codes if item in expected),
+            expected,
         )
+        allowed = set(expected)
+        if code != "RUN_ACCEPTANCE_INVARIANT_INVALID":
+            allowed.add("RUN_ACCEPTANCE_INVARIANT_INVALID")
+        self.assertTrue(set(result.error_codes).issubset(allowed))
 
     def test_complete_s1_fixture_is_deterministic_and_structurally_valid(self) -> None:
         second = build_valid_s1_fixture()
