@@ -2574,6 +2574,73 @@ os._exit(0)
 
 
 
+    def test_record_account_mark_atomically_persists_the_exact_consumed_source_mark(self):
+        from paper_execution.account_equity import record_account_mark
+        from paper_execution.mark_provenance import build_market_mark_provenance
+
+        candle_close = self.now - 60_000
+        observed = self.now + 1_000
+        window = {
+            "exchange": "binance", "marketType": "USDT_PERPETUAL",
+            "symbol": "BTCUSDT", "timeframe": "15m",
+            "datasetVersion": "sha256:" + "d" * 64,
+            "coverage": {"complete": True},
+            "candles": [{
+                "openTimeMs": self.now-960_000, "closeTimeMs": candle_close,
+                "open": "100", "high": "101", "low": "99",
+                "close": "100.25", "volume": "1",
+            }],
+        }
+        provenance = build_market_mark_provenance(
+            window, source_id="T0_CANONICAL_MARKET_DATA"
+        )
+        account = PaperLedger(self.path, strategy_id="MANUAL")
+        snapshot = record_account_mark(
+            account, "100.25", candle_close, observed,
+            "sha256:" + "d" * 64, "100", mark_provenance=provenance,
+        )
+        self.assertEqual(snapshot["markPrice"], "100.25")
+        self.assertEqual(snapshot["markProvenance"]["sourceSnapshotId"], "sha256:" + "d" * 64)
+        self.assertEqual(
+            snapshot["markProvenance"]["sourcePayloadSha256"],
+            "sha256:" + provenance.source_payload_sha256,
+        )
+        with sqlite3.connect(self.path) as connection:
+            mark_id = connection.execute(
+                "SELECT last_mark_id FROM paper_account_risk_state WHERE account_id=1"
+            ).fetchone()[0]
+            stored = connection.execute(
+                "SELECT mark_price,payload_sha256,source_snapshot_id FROM paper_account_consumed_market_marks WHERE mark_id=?",
+                (mark_id,),
+            ).fetchone()
+        self.assertEqual(stored, ("100.25", provenance.source_payload_sha256, "sha256:" + "d" * 64))
+
+    def test_record_account_mark_rejects_a_price_not_matching_source_candle(self):
+        from paper_execution.account_equity import record_account_mark
+        from paper_execution.mark_provenance import build_market_mark_provenance
+
+        candle_close = self.now - 60_000
+        provenance = build_market_mark_provenance(
+            {
+                "exchange": "binance", "marketType": "USDT_PERPETUAL",
+                "symbol": "BTCUSDT", "timeframe": "15m",
+                "datasetVersion": "sha256:" + "d" * 64,
+                "coverage": {"complete": True},
+                "candles": [{
+                    "openTimeMs": self.now-960_000, "closeTimeMs": candle_close,
+                    "open": "100", "high": "101", "low": "99",
+                    "close": "100", "volume": "1",
+                }],
+            },
+            source_id="T0_CANONICAL_MARKET_DATA",
+        )
+        account = PaperLedger(self.path, strategy_id="MANUAL")
+        with self.assertRaisesRegex(ValueError, "CONSUMED_MARK_PROVENANCE_MISMATCH"):
+            record_account_mark(
+                account, "101", candle_close, self.now + 1_000,
+                "sha256:" + "d" * 64, "100", mark_provenance=provenance,
+            )
+
     def test_account_risk_snapshot_exposes_exact_immutable_consumed_mark_provenance(self):
         from paper_execution.ledger import read_account_risk_snapshot
 
