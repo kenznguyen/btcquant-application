@@ -51,8 +51,10 @@ class MarketMarkProvenance:
         _nonempty("source_id", self.source_id)
         _nonempty("source_snapshot_id", self.source_snapshot_id)
         _nonempty("dataset_version", self.dataset_version)
-        if self.source_snapshot_id != "sha256:" + self.source_payload_sha256:
-            raise ValueError("MARK_PROVENANCE_SNAPSHOT_HASH_MISMATCH")
+        if (self.source_snapshot_id != self.dataset_version
+                or len(self.source_snapshot_id) != 71
+                or not self.source_snapshot_id.startswith("sha256:")):
+            raise ValueError("MARK_PROVENANCE_SNAPSHOT_ID_MISMATCH")
         if (not isinstance(self.source_payload_sha256, str)
                 or len(self.source_payload_sha256) != 64
                 or any(c not in "0123456789abcdef" for c in self.source_payload_sha256)):
@@ -75,6 +77,9 @@ def build_market_mark_provenance(window: object, *, source_id: str) -> MarketMar
         raise ValueError("MARK_SOURCE_WINDOW_INVALID")
     symbol, timeframe = window.get("symbol"), window.get("timeframe")
     dataset = _nonempty("dataset_version", window.get("datasetVersion"))
+    if (len(dataset) != 71 or not dataset.startswith("sha256:")
+            or any(c not in "0123456789abcdef" for c in dataset[7:])):
+        raise ValueError("MARK_SOURCE_DATASET_VERSION_INVALID")
     if symbol != "BTCUSDT" or timeframe != "15m":
         raise ValueError("MARK_SOURCE_WINDOW_UNSUPPORTED")
     candles = window.get("candles")
@@ -98,7 +103,7 @@ def build_market_mark_provenance(window: object, *, source_id: str) -> MarketMar
     digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return MarketMarkProvenance(
         source_id=source,
-        source_snapshot_id="sha256:" + digest,
+        source_snapshot_id=dataset,
         dataset_version=dataset,
         mark_price=price,
         candle_close_ms=close_ms,
