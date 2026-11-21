@@ -42,7 +42,7 @@ def start_running(repository, session_id="session-1", *, account="paper-account"
             )
         if target is SessionStatus.RUNNING:
             kwargs["resume_confirmation"] = resume_confirmation_for(
-                repository.get_session(session_id), token, confirmed_at_ms=started_at + 1,
+                repository.get_session(session_id), token, confirmed_at_ms=start + 1,
             )
         repository.advance_session(
             token, expected_status=expected, new_status=target,
