@@ -309,3 +309,67 @@ No workflow was created or changed. No workflow run/job/artifact was produced. N
 - REST-tail source evidence: `docs/manifests/T0_BINANCE_UM_BTCUSDT_REST_TAIL_SOURCE_EVIDENCE_2026-11-20.json`.
 - REST-tail validation report: `docs/evidence/T0_BINANCE_UM_BTCUSDT_REST_TAIL_PERSONAL_HOST_VALIDATION_2026-11-20.md`.
 - Existing offline REST-tail validator workflow: `.github/workflows/t0-rest-tail-validator.yml` (pattern reference only; not a data recovery workflow).
+
+
+---
+
+## 12. Owner resolution addendum — 2026-11-21
+
+**Disposition: DESIGN APPROVED WITH IMPLEMENTATION GATES. Workflow creation remains NOT AUTHORIZED.**
+
+This addendum resolves the two open design choices in Sections 3, 5 and 9. It supersedes conflicting statements that require Candle Contract 1.1.0 semantics or leave the initial REST-tail scope undecided.
+
+### 12.1 available_at_ms — archive rows use BAR_CLOSE_BOUNDARY
+
+The archive does not contain trustworthy historical first-observation timestamps. Therefore:
+
+- Archive-derived candles MUST use availability_kind=BAR_CLOSE_BOUNDARY.
+- available_at_ms MUST equal the exclusive bar-close boundary: open_time_ms + timeframe_interval_ms.
+- Validate the Binance CSV inclusive close timestamp first: source_close_time_ms == open_time_ms + interval_ms - 1; derive the exclusive boundary by adding exactly 1 ms. The archive fixture must confirm this source convention before parser freeze.
+- This value means the bar became complete at its close boundary. It MUST NOT be described as the time the system first observed or retrieved the historical candle.
+- Archive rows MUST carry immutable reconstruction provenance linking the row to the exact archive object, ZIP SHA-256, sidecar evidence, CSV member and row ordinal. Unknown/missing kind or provenance fails closed.
+- Live Feeder rows retain FIRST_OBSERVED and the actual recorded observation timestamp. Do not rewrite or infer historical first-observation values.
+
+This decision adopts the already recorded Contract 1.2.0 option B semantic split: FIRST_OBSERVED for live Feeder data and BAR_CLOSE_BOUNDARY for archive reconstruction. Contract 1.1.0 cannot truthfully represent archive rows and MUST NOT be used as the staging schema/API contract for this reconstructed dataset.
+
+**Staging target contract:** Candle Contract 1.2.0 design, SQLite user_version=2, with required availability_kind enum and the validation/source rules in docs/design/T0_CANDLE_CONTRACT_1_2_0_DESIGN_2026-11-21.md. This is a target design only; no schema or application implementation is authorized by this addendum. Contract 1.2.0's separate fixture, implementation, compatibility and test gates remain mandatory. In particular, the exact Binance CSV header/order/encoding/close-time convention remains NOT VERIFIED until a representative fixture is separately approved and supplied.
+
+The API freshness rule remains: BAR_CLOSE_BOUNDARY is not a live observation; it MUST NOT produce an observation age or be treated as fresh/evaluable for real-time strategy decisions. Legacy 1.1.0 consumers must not be given archive rows under relabeled FIRST_OBSERVED semantics.
+
+### 12.2 REST tail — excluded from initial staging
+
+The initial workflow scope is **ARCHIVE-ONLY**:
+
+- Include exactly the 404 allowlisted archive objects: 202 ZIP + 202 paired .CHECKSUM sidecars.
+- Do not retrieve REST data, call Binance REST, access the personal host, transfer its files, or include REST-tail payloads in the GitHub runner.
+- Set/remove the include_rest_tail dispatch input; it is not a selectable mode in this approved initial workflow. Any future REST-tail inclusion requires a new decision and a separately approved, independently verifiable payload-transfer process. No retrieval retry, alternate endpoint, proxy, route or environment is authorized.
+- The recorded personal-host tail evidence remains a separate evidence source only: M15 128 closed rows (129 raw, 1 forming excluded), H1 32 closed rows (33 raw, 1 forming excluded), fixed cutoff 2026-11-20T08:02:15.852Z. Its reported hashes were not independently recomputed by repository tooling, and payload bytes are not in this repository. It is NOT part of this staging dataset.
+- Expected archive-only row counts remain M15 241,440 and H1 60,360, subject to fresh source materialization and full row-level reconciliation. Do not use the candidate combined totals 241,568 / 60,392.
+- Coverage label remains RECONSTRUCTED — PARTIAL COVERAGE; the archive bounds remain the only accepted bounds. Leading history before 2019-12-31 and trailing history after the archive's 2026-11-18 final candles remain NOT VERIFIED.
+
+### 12.3 Updated gate interpretation
+
+| Item | Decision/status |
+|---|---|
+| GitHub Actions architecture | APPROVED — ARCHITECTURE |
+| Workflow design topology and fail-closed gates | APPROVED — DESIGN |
+| available_at_ms archive semantics | RESOLVED — BAR_CLOSE_BOUNDARY under Contract 1.2.0 / schema v2 |
+| Initial REST-tail scope | RESOLVED — EXCLUDED; archive-only |
+| Contract 1.2.0 implementation/schema | NOT AUTHORIZED; separate approval and tests required |
+| Representative archive CSV fixture / parser freeze | BLOCKED — fixture not supplied/verified |
+| Workflow YAML creation | NOT AUTHORIZED |
+| Runner preflight | NOT RUN / NOT AUTHORIZED |
+| Archive materialization | NOT AUTHORIZED / NOT RUN |
+| Importer/normalization | NOT AUTHORIZED / NOT RUN |
+| SQLite creation/write/validation | NOT AUTHORIZED / NOT RUN |
+| Artifact upload / Canonical promotion | NOT AUTHORIZED / NOT RUN |
+
+### 12.4 Remaining prerequisites before a workflow-creation request
+
+1. Separately approve and supply a representative archive CSV fixture for offline inspection; verify exact 12-column order, encoding, member/header behavior, numeric grammar, timestamp units and inclusive close-time convention. Do not download an archive to obtain this fixture.
+2. Freeze the Contract 1.2.0 schema/API decision and the minimal offline staging schema implementation scope; any implementation requires separate approval, TDD and exact-SHA evidence.
+3. Confirm exact SQLite table/index/constraint definitions and archive-only expected-count manifest against the pinned source and fixture.
+4. Pin importer/validator source SHA and dependency lock hashes; select and approve ZIP per-object/aggregate uncompressed-byte and compression-ratio limits, retry/backoff/timeouts, and storage estimate.
+5. For the eventual workflow-creation request, approve exact workflow path/inputs, ubuntu-24.04 runner, action full SHAs, timeout/concurrency, permissions, artifact contents and retention, and the explicit phase approval model.
+
+Passing or approving this design does not authorize any of those implementation or execution steps. No workflow, test, runner, archive, REST endpoint, personal-host file, SQLite database, Canonical T0 asset, VPS/runtime, T1/T2, deployment or trading operation was accessed or changed in recording this design resolution.
