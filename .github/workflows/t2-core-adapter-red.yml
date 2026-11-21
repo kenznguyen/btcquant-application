@@ -1,0 +1,95 @@
+name: T2 Core Adapter RED contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/t2-core-adapter-red.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t2-core-adapter-red
+  cancel-in-progress: false
+
+jobs:
+  core-adapter-red:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify source and test blob
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git hash-object core_runtime/test_adapter_contract.py)" = "fbe6cc428fd7058a6dbefd9eaec1979a95638474"
+          mkdir -p "$RUNNER_TEMP/t2-red-evidence"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_run_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "workflow_head_sha=$GITHUB_SHA"
+            echo "test_blob_sha=$(git hash-object core_runtime/test_adapter_contract.py)"
+            echo "python_image=python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df"
+            echo "network=none"
+            echo "credentials=none"
+            echo "database_mount=none"
+          } > "$RUNNER_TEMP/t2-red-evidence/metadata.txt"
+
+      - name: Pull immutable Python image
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: docker pull --platform linux/amd64 "$PYTHON_IMAGE"
+
+      - name: Execute RED contract and verify expected missing adapter
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/t2-red-evidence/red-test.log"
+          set +e
+          docker run --rm --platform linux/amd64 --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges --pids-limit 64 \
+            --memory 1g --cpus 1 --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=64m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --env PYTHONPATH=/workspace --env PYTHONDONTWRITEBYTECODE=1 \
+            --workdir /workspace "$PYTHON_IMAGE" \
+            python -m unittest -v core_runtime.test_adapter_contract > "$log" 2>&1
+          test_status=$?
+          set -e
+          cat "$log"
+          if [[ "$test_status" -eq 0 ]]; then
+            echo "Expected RED, but contract unexpectedly passed." >&2
+            exit 1
+          fi
+          if ! grep -Eq "ModuleNotFoundError: No module named 'core_runtime(\.adapter)?'" "$log"; then
+            echo "RED failed for an unexpected reason; refusing to count it." >&2
+            exit 1
+          fi
+          echo "red_status=EXPECTED_MISSING_IMPLEMENTATION" >> "$RUNNER_TEMP/t2-red-evidence/metadata.txt"
+          echo "red_exit_code=$test_status" >> "$RUNNER_TEMP/t2-red-evidence/metadata.txt"
+          {
+            echo "## T2 Core Adapter RED"
+            echo "- Source SHA: $GITHUB_SHA"
+            echo "- Expected RED: adapter module is not implemented"
+            echo "- Network/database/exchange access: none"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload RED evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t2-core-adapter-red-evidence
+          path: ${{ runner.temp }}/t2-red-evidence/
+          if-no-files-found: error
+          retention-days: 14
