@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T2 Core Adapter same-session self-review
+
+- Owner asked for a self-review of the M2.3 Core Adapter → Validator parity increment.
+- Review document: `docs/reviews/T2_CORE_ADAPTER_SELF_REVIEW_2026-11-21.md`; commit `9a21e88df758f1405f9876f0cfcb76b3cfa315d0`.
+- Verdict: **REQUEST CHANGES**. Required finding: workflow `.github/workflows/t2-core-adapter-green.yml` path filter omits `pipeline/core_signal.py` and `pipeline/values.py`, even though parity tests depend on both. Changes to either dependency may not trigger the focused parity CI. Add both paths in a separately approved bounded TDD increment.
+- Optional finding: adapter `_ACTION_MAP.get(action)` raises TypeError for unhashable action values; consider a type guard and stable `CORE_PRODUCER_ACTION_INVALID` ValueError in a separate TDD increment.
+- Reviewed exact blobs: adapter `9795c346d2eec4c78c22035c32f463af6b40b8f4`; original tests `fbe6cc428fd7058a6dbefd9eaec1979a95638474`; parity tests `8f3c4dfa29f371334ded3486ca83f9a5ea7f974e`; validator `df5fbb59611bdd4fbb8224665f79655dd4433455`; shared values `5576376454af129b944919fb588e26c0657a781e`; workflow `5a5b70d244debcf8f5eb55733eef14d6e9661e38`.
+- Existing focused run 44896160495 is PASS 10/10 at source SHA `ca9f01902cd1e3b5f22ccecce7cd347077924f90`, but does not resolve the path-filter finding. Full repository regression remains NOT RUN.
+- This is a same-session self-review only. Genuine independent second-person review remains **NOT VERIFIED**.
+- No production code, workflow, tests, risk policy, runtime, DB, T0/T1, deployment or trading was changed by this review. The only changes are review documentation.
+- Next: request owner approval for a bounded TDD workflow-trigger correction. Keep optional action hardening separate unless explicitly included.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — T2 M2.3 Core Adapter → Validator parity tests PASS
 
 - Owner approved a bounded TDD increment for adapter-to-validator parity tests only.
