@@ -95,7 +95,7 @@ class ReadyRepositoryBoundaryTests(unittest.TestCase):
         )
 
     def test_wrong_fencing_generation_does_not_persist_evidence_or_reach_ready(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(SessionTransitionError):
             self.repository.advance_session(
                 self.token, expected_status=SessionStatus.RESTORING,
                 new_status=SessionStatus.READY, at_ms=1_800_000_000_011,
