@@ -5,6 +5,7 @@ All fixtures in this module are deterministic and synthetic; they are not exchan
 import hashlib
 import json
 import unittest
+from unittest.mock import patch
 
 from market_data.t1_orderbook.validation import validate_payload
 from market_data.t1_orderbook.errors import ContractError, ErrorCode
@@ -251,6 +252,21 @@ class T1OrderbookContractTest(unittest.TestCase):
     def test_adapter_returns_validated_snapshot_for_valid_payload(self):
         result = consume_payload(encode(valid_payload()), now_ms=NOW_MS)
         self.assertEqual(result.symbol, "BTCUSDT")
+
+    def test_digest_is_integrity_only_and_does_not_authenticate_a_payload(self):
+        p = valid_payload()
+        p["bids"][0][1] = "9.5"
+        p["snapshotId"] = ""
+        unsigned = dict(p); unsigned.pop("snapshotId")
+        p["snapshotId"] = "sha256:" + hashlib.sha256(_canonical_bytes(unsigned)).hexdigest()
+        self.assertEqual(self.accept(p).bids[0][1], "9.5")
+
+    def test_adapter_is_data_only_and_performs_no_network_io(self):
+        from market_data.t1_orderbook.contract import OrderbookSnapshot
+        with patch("socket.socket", side_effect=AssertionError("network access is forbidden")):
+            result = consume_payload(encode(valid_payload()), now_ms=NOW_MS)
+        self.assertIsInstance(result, OrderbookSnapshot)
+        self.assertFalse(hasattr(result, "signal"))
 
 
 if __name__ == "__main__":
