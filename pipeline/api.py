@@ -505,17 +505,30 @@ def application(environ, start_response):
                     end = timestamp // 900_000 * 900_000
                     mark_window = market_window("BTCUSDT","15m",
                                               end-900_000,end,as_of_ms=timestamp)
+                    mark_provenance = None
                     if mark_window["candles"] and mark_window["coverage"]["complete"]:
                         mark = mark_window["candles"][-1]
-                        ledger().record_account_mark(mark["close"],mark["closeTimeMs"],timestamp,
-                            mark_window["datasetVersion"],os.environ.get("PAPER_INITIAL_CAPITAL","100"))
+                        from paper_execution.mark_provenance import build_market_mark_provenance
+                        mark_provenance = build_market_mark_provenance(
+                            mark_window, source_id="T0_CANONICAL_MARKET_DATA"
+                        )
+                        ledger().record_account_mark(
+                            mark["close"], mark["closeTimeMs"], timestamp,
+                            mark_window["datasetVersion"],
+                            os.environ.get("PAPER_INITIAL_CAPITAL", "100"),
+                            mark_provenance=mark_provenance,
+                        )
                     reason = decision.get("reason")
                     event = "ENTRY" if reason in ("RSI_ADX_ENTRY","ALIGNED_PAPER_SIGNAL") else "DCA" if reason == "DCA" else "EXIT" if reason in ("EMERGENCY_SL","SOFT_SL","TAKE_PROFIT","CLOSE") else None
                     order = strategy_ledger.submit(decision["intent"], data["book"], timestamp,
                         strategy_id=source_id, strategy_event=event)
                     if mark_window["candles"] and mark_window["coverage"]["complete"]:
-                        ledger().record_account_mark(mark["close"],mark["closeTimeMs"],timestamp,
-                            mark_window["datasetVersion"],os.environ.get("PAPER_INITIAL_CAPITAL","100"))
+                        ledger().record_account_mark(
+                            mark["close"], mark["closeTimeMs"], timestamp,
+                            mark_window["datasetVersion"],
+                            os.environ.get("PAPER_INITIAL_CAPITAL", "100"),
+                            mark_provenance=mark_provenance,
+                        )
                 result = {"decision": decision, "order": order}
             else:
                 raise ValueError("Invalid control payload")
