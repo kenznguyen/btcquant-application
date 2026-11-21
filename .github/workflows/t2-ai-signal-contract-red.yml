@@ -66,10 +66,15 @@ jobs:
           cat "$log"
           test "$rc" -ne 0
           grep -F "No module named 'pipeline.ai_signal_contract'" "$log" >/dev/null
-          test "$(grep -c '^ERROR: test_' "$log")" = "10"
+          grep -F "Ran 10 tests" "$log" >/dev/null
+          missing_count="$(grep -cF "ModuleNotFoundError: No module named 'pipeline.ai_signal_contract'" "$log")"
+          module_error_count="$(grep -c "ModuleNotFoundError:" "$log")"
+          test "$missing_count" -ge 10
+          test "$module_error_count" = "$missing_count"
           {
             echo "red_status=EXPECTED_RED"
             echo "red_test_count=10"
+            echo "red_error_cases=$missing_count"
             echo "failure_cause=missing pipeline.ai_signal_contract implementation"
             echo "network=none"
             echo "database_mount=none"
