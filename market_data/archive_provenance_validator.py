@@ -48,6 +48,12 @@ class ProvenanceValidationResult:
             raise TypeError("invalid provenance validation result")
         if any(not isinstance(code, str) for code in self.error_codes):
             raise TypeError("error_codes must contain strings")
+        if len(set(self.error_codes)) != len(self.error_codes):
+            raise ValueError("error_codes must be unique")
+        if any(code not in _ERROR_CODE_ORDER for code in self.error_codes):
+            raise ValueError("error_codes must use stable V1 codes")
+        if tuple(code for code in _ERROR_CODE_ORDER if code in self.error_codes) != self.error_codes:
+            raise ValueError("error_codes must follow the V1 catalogue order")
         if self.valid is not (self.error_codes == ()):
             raise ValueError("valid must be true exactly when error_codes is empty")
 
