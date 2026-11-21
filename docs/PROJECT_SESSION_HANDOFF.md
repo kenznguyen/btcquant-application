@@ -6602,3 +6602,18 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - Implementation status: COMMITTED. Focused RED/GREEN execution and regression at exact new SHA: NOT VERIFIED because the Actions run/job log has not yet been retrieved. Full repository regression: NOT RUN. Self-review: pending. Do not claim parser PASS until exact-SHA Actions tests pass.
 - No archive workflow, source archive, Canonical T0, SQLite, importer, Contract 1.2.0, T1/T2, VPS/runtime, deployment, exchange credential or trading behavior was changed or invoked.
 - Next: inspect Actions run for the focused workflow at the latest source SHA; verify 34 tests (19 existing + 15 new) and record exact run/job/artifact. Fix any failure only with bounded TDD.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0_ARCHIVE_CSV_HEADER_V1 focused verification PASS
+
+- GitHub Actions run [44925135819](https://github.com/kenznguyen/btcquant-application/actions/runs/44925135819) verified: push event, completed success, run attempt 1.
+- Exact tested source SHA: 54317ad0aaaa8d547889b41336c0aaed4b1d09bc. Job parser-tests ID 136909445610, success. Ubuntu 24.04.5, CPython 3.13.18.
+- Exact command: python -B -m unittest -v market_data.test_archive_csv_parser market_data.test_archive_csv_header_contract.
+- Result: 34 tests passed (19 existing + 15 new), "Ran 34 tests ... OK". Workflow has no artifacts.
+- T0_ARCHIVE_CSV_HEADER_V1 strict exact-match parser implementation and focused test suite: PASS at the exact source SHA. Same-session self-review: PASS. Full repository regression: NOT RUN.
+- Real-source header evidence remains limited to M15 monthly 2022-08 sample; do not infer H1/daily header layout without source verification.
+- Evidence updated: docs/evidence/T0_ARCHIVE_CSV_HEADER_V1_TDD_2026-11-21.md, commit 409bc7a0ea199d818717c94d674ef712e8c965ec.
+- No archive download, Canonical T0 modification, SQLite/import, importer, Contract 1.2.0 implementation, T1/T2 connection, VPS/runtime/deployment, exchange credential or trading action occurred.
+- Next allowed planning step: separately scope staging/import work and its evidence requirements. Full repository regression remains a separate optional verification and has not been run.
