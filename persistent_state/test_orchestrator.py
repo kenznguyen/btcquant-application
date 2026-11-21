@@ -134,6 +134,25 @@ class SessionOrchestratorTests(unittest.TestCase):
         self.assertEqual(len(actions), 1)
         self.assertEqual(actions[0].operator_id, "operator-1")
 
+
+    def test_resume_rejects_unverified_operator_identity(self):
+        result = self.orchestrator.start(self.session("operator-auth"))
+        fresh_risk = self.orchestrator.prepare_resume(result.fencing_token)
+        with self.assertRaises(PermissionError):
+            self.orchestrator.resume(
+                result.fencing_token,
+                OperatorApproval(
+                    operator_id="unverified-user",
+                    confirmation_id="unverified-resume",
+                    confirmed_at_ms=self.now[0],
+                    risk_attestation=fresh_risk,
+                ),
+            )
+        self.assertEqual(
+            self.repository.get_session("operator-auth").status,
+            SessionStatus.READY,
+        )
+
     def test_failed_preflight_blocks_before_restore(self):
         self.orchestrator.preflight_provider = lambda session, token: PreflightAttestation(
             binding=self.binding(session, token),
