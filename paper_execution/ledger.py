@@ -1661,6 +1661,7 @@ class PaperLedger:
                     migrate_cutover_ledger_snapshots(connection, self.source_sha)
                     migrate_fee_currency_provenance(connection, self.source_sha)
                     migrate_daily_baseline_audit(connection, self.source_sha)
+                    migrate_consumed_market_mark_provenance(connection, self.source_sha)
                 elif not _dual_ledger_migrations_ready(connection):
                     raise sqlite3.DatabaseError("DUAL_LEDGER_MIGRATION_NOT_READY")
     def connect(self):
