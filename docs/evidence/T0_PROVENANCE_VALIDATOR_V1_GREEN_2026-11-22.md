@@ -17,13 +17,13 @@ Owner approved the proposed GREEN increment:
 ## 2. Exact source identity
 
 Final main HEAD after this increment:
-- `d4a9b4752928ac07a7c8e869c97097308e6f8557`
+- `70f76ef48db9373c42c8436cbb4d490ef51a90ea`
 
 Final GitHub readback blob identities:
 - Implementation: `market_data/archive_provenance_validator.py`
-  - blob `8f35c0641d70ff13d3bb79273375b6a989f79e92`
+  - blob `c2c05dd8e62ebb8d1dce835909e1185a1a67b597`
 - New synthetic tests: `market_data/test_archive_provenance_validator_green.py`
-  - blob `c1da9b8d2046e1a1234b773be37b517b4396ac68`
+  - blob `da854052564a34c49c1e2f40da1c80315da04182`
 - Original RED tests, unchanged:
   - `market_data/test_archive_provenance_validator_red.py`
   - blob `abbaeab16f026757923c679330f124a3d99e0774`
@@ -38,6 +38,8 @@ Implementation commit history for this increment:
 - DTO regression tests: `861cd9a11da2c21e723368b2cc40469b6cdada02`.
 - Missing provenance identity hardening: `30c413c2cb95f69774ebbbd88b258cf1c7785367`.
 - Final missing-ID regression test: `d4a9b4752928ac07a7c8e869c97097308e6f8557`.
+- Candle identity representation cross-check: `4b71c2b295d3e5f56e5712ace4b0d60e4e47242d`.
+- Final candle identity regression test: `70f76ef48db9373c42c8436cbb4d490ef51a90ea`.
 
 An intermediate T0ENC1 source write contained over-escaped byte/regex literals. This was detected by comparing the fetched GitHub blob with the local tested source and corrected before the final focused verification. The final blobs above match the local test copies.
 
@@ -63,7 +65,7 @@ Focused command:
 ```bash
 python -B -m unittest -v market_data.test_archive_provenance_validator_green market_data.test_archive_provenance_validator_red
 ```
-Result: **23 tests — PASS** (11 new GREEN methods + 12 original RED methods).
+Result: **24 tests — PASS** (12 new GREEN methods + 12 original RED methods).
 
 The added tests cover:
 - malformed top-level/container input;
@@ -72,13 +74,14 @@ The added tests cover:
 - deduplicated aggregation, catalogue ordering and list/mapping permutation invariance;
 - normalized candle tuple conflicts even when a supplied value ID is unchanged;
 - missing/unhashable pair and source-row identities;
+- consistency between `natural_key` and explicit candle identity fields;
 - immutable result DTO and non-mutation of input payload.
 
 Market-data package regression:
 ```bash
 python -B -m unittest discover -s market_data -p 'test*.py'
 ```
-Result: **356 tests — PASS**. Existing ResourceWarnings about unclosed SQLite connections were emitted by the wider test suite; no test failed.
+Result: **357 tests — PASS**. Existing ResourceWarnings about unclosed SQLite connections were emitted by the wider test suite; no test failed.
 
 Full repository regression:
 ```bash
@@ -96,8 +99,8 @@ Result: **579 tests; 1 failure; 6 errors**. All observed failing/erroring tests 
 ### Source snapshot limitation
 
 The local workspace came from the user-provided ZIP `btcquant-application-69a97d0c4dce7e85a00a1f49b5e0f25eb28bcc20.zip`, which has no Git metadata. Four earlier source blobs were independently matched to its target commit, and the final implementation, new test and unchanged RED test blobs were subsequently matched against GitHub readback. The complete ZIP tree was not proven identical to final main HEAD. Therefore:
-- focused 23-test execution is tied to the exact three relevant file blobs;
-- the 356-test market_data run and 579-test repository run are results on the supplied ZIP snapshot, not a fully proven checkout of final main HEAD;
+- focused 24-test execution is tied to the exact three relevant file blobs;
+- the 357-test market_data run and 579-test repository run are results on the supplied ZIP snapshot, not a fully proven checkout of final main HEAD;
 - full repository regression on exact final main HEAD remains **NOT VERIFIED**, in addition to the observed failures above.
 
 ## 5. V1 limitations — not a full S1 acceptance validator
@@ -131,9 +134,17 @@ The synthetic 404-entry fixture proves only that the current V1 catalogue checks
 - Frozen V1 module/API implementation: **PASS**.
 - Original 12 RED test bodies: **PASS**.
 - New synthetic V1 tests: **PASS**.
-- Market-data suite on supplied ZIP snapshot: **PASS — 356/356**.
+- Market-data suite on supplied ZIP snapshot: **PASS — 357/357**.
 - Full repository suite on supplied ZIP snapshot: **BLOCKED/PARTIAL — 1 failure, 6 errors**.
 - Full repository regression on exact final main HEAD: **NOT VERIFIED**.
 - Full S1 acceptance matrix and real inventory authentication: **NOT VERIFIED**.
 - Workflow run/job/artifact: **NONE**.
 - No scope expansion is authorized by this result.
+
+## 8. Same-session self-review
+
+- Correctness: reviewed input-shape guards, T0ENC1 framing, attempt-ID preimage and bounds, stable error aggregation, unhashable/missing identity handling, pair/member and row/link matching, and candle identity/value/boundary checks. The review found that a record could supply both `natural_key` and explicit identity fields that disagreed; this was fixed and covered by `test_candle_natural_key_must_match_explicit_identity_fields`.
+- Readability/architecture: one self-contained standard-library module; no changes to existing T0 storage/API/runtime modules; public API limited to the frozen three functions plus DTO.
+- Security: payload treated as untrusted mappings; no I/O, dynamic execution, SQL, network, secret handling or dependency additions.
+- Performance: linear scans and bounded 404-entry inventory validation; no external calls or unbounded retrieval.
+- Verdict: **SELF-REVIEW PASS WITH KNOWN S1 COVERAGE LIMITATIONS**. This is not an independent second-person review.
