@@ -259,6 +259,27 @@ def validate_ready_evidence(
 
 
 
+
+def validate_preflight_attestation(
+    session: SessionRecord,
+    *,
+    fencing_generation: int,
+    preflight: PreflightAttestation | None,
+) -> None:
+    """Require matching, passing market-data preflight before entering RESTORING."""
+    if not isinstance(session, SessionRecord) or session.status is not SessionStatus.PREFLIGHT:
+        raise ValueError("preflight evidence can only be checked for a PREFLIGHT session")
+    if not isinstance(preflight, PreflightAttestation):
+        raise ValueError("typed preflight attestation is required")
+    _validate_binding("preflight", preflight.binding, session, fencing_generation)
+    if not preflight.passed:
+        raise ValueError("market-data preflight did not pass")
+    if preflight.market_data_snapshot_id != session.source_snapshot_id:
+        raise ValueError("preflight market-data snapshot does not match the session")
+    if preflight.data_as_of_ms > preflight.binding.checked_at_ms:
+        raise ValueError("preflight data timestamp is later than its check time")
+
+
 def validate_resume_confirmation(
     session: SessionRecord,
     *,
@@ -285,5 +306,5 @@ def validate_resume_confirmation(
 
 __all__ = [
     "EvidenceBinding", "PreflightAttestation", "RestoreAttestation",
-    "RiskReadinessAttestation", "ReadyEvidenceBundle", "OperatorResumeConfirmation", "validate_ready_evidence", "validate_resume_confirmation",
+    "RiskReadinessAttestation", "ReadyEvidenceBundle", "OperatorResumeConfirmation", "validate_ready_evidence", "validate_resume_confirmation", "validate_preflight_attestation",
 ]
