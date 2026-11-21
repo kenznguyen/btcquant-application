@@ -137,3 +137,62 @@ The owner explicitly approved both governance decisions:
 ### Scope boundary
 
 This approval authorizes recording the decisions and proceeding with isolated, application-code-only design/implementation and deterministic tests for the listed gates. It does not authorize opening/mutating any operational database, accessing VPS/T0/T1/T2 runtime, starting services, enabling automatic execution, connecting a live exchange account, or placing paper/live orders. PAPER remains paper-first and on-demand; LIVE remains out of scope.
+
+## Implementation and verification update — 2026-11-21
+
+### Verified source and mark provenance — PASS
+
+- The T0 datasetVersion is recomputed from the canonical source-window payload (venue, market type, symbol, timeframe, window bounds, asOfMs, and all candles); a caller-supplied digest is not trusted.
+- M15 coverage and candle continuity are checked. The consumed mark must be the final candle, and its exact close price and close time must match the account mark.
+- The typed provenance object validates its complete canonical source window itself, so callers cannot bypass validation by directly constructing the dataclass.
+- The immutable consumed-mark row is linked to paper_account_risk_state.last_mark_id in the same SQLite transaction as the equity/exposure update.
+- Snapshot reads revalidate the exact mark ID, payload hash, upstream dataset digest, source identity, mark timestamp, and price. Missing or corrupt provenance fails closed.
+- The source snapshot ID (datasetVersion) and consumed-mark payload SHA-256 remain distinct values.
+
+### Account, session, and fencing binding — PASS (isolated software contract)
+
+- paper_execution/account_scope_binding.py adds an explicit, immutable mapping from PAPER account_id=1 to one account_scope_id. There is no inferred/default account scope and no automatic migration.
+- SQLiteStateRepository.read_active_writer_binding() reads the RUNNING owner session and fencing generation in one read transaction.
+- The resolver requires exact account scope, session ID, and fencing generation. Missing mapping, non-RUNNING session, stale owner, or generation mismatch is denied.
+- The Provider checks the binding before and after its account snapshot read. A fence change during the read is denied.
+- Actual application PAPER database migration was not run; only temporary test databases were used.
+
+### Versioned policy and SQLite CAS — PASS (isolated software contract)
+
+- Git-authored policy schema and manifest schema are defined under config/risk_policies/.
+- SQLite publication stores canonical payload, immutable version history, source commit/path/file hash, operator/reason metadata, and an audited active pointer.
+- Publication uses a transaction and compare-and-swap against the expected active payload hash. A concurrent two-publisher test proves exactly one publisher wins.
+- Environment variables no longer automatically provision risk policy in the pipeline.api.ledger() path.
+- PERCENT_HWM publication is rejected until the Shared Risk Engine supports that semantic; only explicit ABSOLUTE_QUOTE drawdown is currently admissible.
+- No production threshold values or active policy were selected or published.
+- The store records the Git commit and exact source file hash; a separate operator publication action must still verify that the named path and bytes belong to the reviewed GitHub commit before publication. No live GitHub publisher was run.
+
+### Read-only AccountRiskSnapshot Provider — implemented and tested
+
+- Added paper_execution/account_risk_provider.py.
+- Provider reads the reconciled PAPER snapshot and active policy from the same read-only SQLite transaction.
+- It emits a typed AccountRiskSnapshot, a typed VersionedRiskPolicy, and the verified account/session/fencing binding.
+- Missing policy, non-ready ledger, future mark, mismatched provenance, or changed fencing is fail-closed.
+- PaperAccountRiskBundle.admission_context() creates one immutable context that can be reused for both CORE and AI proposals. Tests confirm both strategies are evaluated against the same snapshot and policy version.
+- Integration test uses a temporary dual-ledger PAPER database and a separate temporary SQLiteStateRepository; it does not access a real account database or VPS.
+
+### CI evidence
+
+- Tested source SHA: a4619ba8ec585e613a235cda446cb32a6546ed1a
+- Workflow: https://github.com/kenznguyen/btcquant-application/actions/runs/44865380093
+- Job: 136727747289 — SUCCESS
+- Test suites: 179 + 179 = 358 PASS
+- Artifact: persistent-state-contract-test-evidence, ID 14691124782
+- Artifact SHA-256: 388e4152a901750f7504c2429e612211f2a98262310c4d2f7613a98a9bcb100e
+- Artifact expiry: 2026-12-05
+
+### Remaining caller integration blocker
+
+The Provider and common Core/AI admission-context boundary are implemented, but the production Core/AI order callers are not yet wired. Repository inspection found:
+
+1. pipeline.api does not instantiate or resolve a production SQLiteStateRepository, nor does it receive the active On-Demand session_id and fencing_generation.
+2. RiskState currently exists as a typed contract and test fixture, but no production aggregate reader/writer or authoritative runtime source is wired. This is part of the previously blocked B3 Kill Switch/RiskState persistence work.
+3. Existing POST /v1/paper/evaluate still follows the Core-first PaperLedger submission path; AI execution remains disabled. It does not yet invoke the new Provider + Shared Risk Engine as the final admission gate.
+4. No actual PAPER DB account-scope migration or active policy publication has been performed.
+
+Do not invent a runtime database path, session identity, fencing generation, or RiskState source. Caller integration remains BLOCKED until the authoritative Persistent State runtime configuration and durable RiskState source are approved and implemented. The Provider itself is software-tested and does not enable execution.
