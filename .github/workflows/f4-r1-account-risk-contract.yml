@@ -6,10 +6,9 @@ on:
       - main
     paths:
       - ".github/workflows/f4-r1-account-risk-contract.yml"
-      - "paper_execution/**"
-      - "pipeline/api.py"
-      - "pipeline/test_api.py"
-      - "pipeline/test_decision.py"
+      - "paper_execution/risk_contract.py"
+      - "paper_execution/test_f4_r1_account_contract.py"
+      - "paper_execution/test_risk_limits.py"
 
 permissions:
   contents: read
