@@ -6249,3 +6249,18 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Status: architecture **OWNER APPROVED**; specification **DRAFTED FOR OWNER REVIEW**; implementation **NOT STARTED**; archive materialization/database creation/import **NOT AUTHORIZED**; PostgreSQL **PARKED**.
 - No tests/workflows were run; no workflow run/job/artifact. Documentation-only commits on existing `main`.
 - Next: owner review of the specification, particularly `available_at_ms` semantics and exact CSV mapping. Any implementation or data operation requires separate explicit approval.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — Owner decisions: availability semantics and CSV mapping
+
+- Owner decision: `available_at_ms` option **B SELECTED**. Design the proposed Candle Contract 1.2.0 with explicit availability kinds:
+  - `FIRST_OBSERVED`: actual first-observed timestamp for live Feeder data.
+  - `BAR_CLOSE_BOUNDARY`: archive-derived exclusive bar-close boundary `open_time_ms + interval_ms`; this is bar eligibility/completion, not a claim of historical first observation.
+- Binance CSV close timestamp convention must be distinguished: expected source `close_time` is inclusive (`open_time_ms + interval_ms - 1)); the internal contract close boundary is exclusive (+1 ms). Validate the source value before deriving the boundary.
+- Consumers requiring first-observation/latency semantics must require `FIRST_OBSERVED`; they must not treat `BAR_CLOSE_BOUNDARY` as first-observed evidence. Existing implementation currently emits `FIRST_OBSERVED` unconditionally; additive schema/API changes, migration/backward-compatibility design and consumer review remain required before implementation.
+- Owner decision: approve the proposed semantic mapping for the 12 expected Binance USD-M Kline CSV fields as the working design: open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_buy_base_asset_volume, taker_buy_quote_asset_volume, ignore. OHLCV fields map to the existing Candle fields; close_time is validation/derived-boundary input; the other four non-Candle fields are retained in audit/provenance, not silently discarded.
+- Exact CSV header/order/parser contract remains **NOT FROZEN** until an owner-approved representative fixture is available and verified. No archive access or fixture materialization is authorized by this decision.
+- Updated specification: `docs/specs/T0_CANONICAL_RECONSTRUCTION_SPEC_2026-11-21.md`; commit `0a83540b15230dc3a65caca6a22dbc318e1f18fa`; blob `0d592dbfd013c7d19b1a7d0b38dc2989300a4d46`.
+- Status: availability semantics **DESIGN DECISION RECORDED**; CSV mapping **PROVISIONALLY APPROVED / FIXTURE VERIFICATION PENDING**; Contract 1.2.0 implementation **NOT AUTHORIZED**; Importer **NOT STARTED**; new SQLite **NOT CREATED**.
+- This increment is documentation-only on existing `main`. No source code, schema, API, tests, workflows, dependencies, archive, object store, host, filesystem, database, VPS, runtime, Feeder, T1/T2, deployment or exchange was accessed or changed. No tests/workflows were run; no workflow run/job/artifact.
+- Next: obtain a representative CSV fixture only through a separately approved source-access/materialization gate; verify and freeze the mapping. Separately design the additive Contract 1.2.0 schema/API migration and compatibility plan. Any implementation, archive operation, SQLite creation/import or runtime action requires its own explicit approval.
