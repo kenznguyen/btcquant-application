@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BTCUSDT PAPER Active Risk Policy Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policySchemaVersion",
+    "policyVersion",
+    "policyPath",
+    "policyFileSha256",
+    "sourceGitCommitSha"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "policySchemaVersion": { "const": 1 },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "policyPath": {
+      "type": "string",
+      "pattern": "^config/risk_policies/[A-Za-z0-9._-]+\\.json$"
+    },
+    "policyFileSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "sourceGitCommitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    }
+  }
+}
