@@ -338,6 +338,9 @@ class SessionFencingTests(unittest.TestCase):
         self.repository.advance_session(
             restore_token, expected_status=SessionStatus.PREFLIGHT,
             new_status=SessionStatus.RESTORING, at_ms=1_800_000_010_002,
+            preflight_attestation=ready_evidence_for(
+                self.repository.get_session("blocked-restore"), restore_token,
+            ).preflight,
         )
         self.repository.advance_session(
             restore_token, expected_status=SessionStatus.RESTORING,
