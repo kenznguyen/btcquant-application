@@ -17,8 +17,8 @@ INTERVALS_MS = {
 }
 MAX_INTEGER = (1 << 63) - 1
 MAX_NUMERIC_TOKEN_LENGTH = 128
-_INTEGER_RE = re.compile(r"(?:0|[1-9][0-9]*)\\Z")
-_DECIMAL_RE = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?\\Z")
+_INTEGER_RE = re.compile(r"(?:0|[1-9][0-9]*)\Z")
+_DECIMAL_RE = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?\Z")
 
 ARCHIVE_CSV_HEADER_V1 = (
     "open_time",
