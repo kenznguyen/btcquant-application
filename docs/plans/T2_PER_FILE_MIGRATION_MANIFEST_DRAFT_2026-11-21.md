@@ -117,3 +117,28 @@ Owner approved the bounded M2.4 contract + test-only RED scope. This addendum su
 - M2.4: **PASS — contract + RED specification**. GREEN implementation **NOT IMPLEMENTED / NOT AUTHORIZED**. Full repository regression and independent second-person review remain **NOT VERIFIED**.
 - The signal report is AI-owned and independent of Core; validated output is signal-only. It is not an order, intent, reservation or ledger mutation. Every future exposure-increasing trade remains subject to the common Shared Risk Engine and Kill Switch.
 - Next permitted increment: separate owner approval for M2.5 pure validator GREEN implementation. Do not add calibration registry cryptographic implementation, AI paper admission, dual-ledger writes, runner, runtime, DB, T0/T1 connection, deployment or trading under M2.4.
+
+
+---
+
+## Addendum — M2.5 AI Strategy Signal Validator GREEN implementation (2026-11-21)
+
+Owner approved the pure validator GREEN implementation against the M2.4 AI Strategy Signal Contract V1 and its existing RED tests. This is a bounded implementation increment only.
+
+| Deliverable | Target path | Blob SHA |
+|---|---|---|
+| Pure AI signal validator | `pipeline/ai_signal_contract.py` | `efb43ba777097e261c32671b9b37c24efad1a2e3` |
+| Existing M2.4 contract RED tests | `pipeline/test_ai_signal_contract_red.py` | `bd4c6325739a7d1eadf5ced64c71e7e4742e7a31` — unchanged |
+| Additional GREEN tests | `pipeline/test_ai_signal_contract_green.py` | `71dcffa586ce785472f2c88e753e755cfe742bfc` |
+| Isolated GREEN workflow | `.github/workflows/t2-ai-signal-contract-green.yml` | `4fd7e23d9e12f97bc01940873267824aeafc651c` |
+| Evidence | `docs/evidence/T2_M2_5_AI_SIGNAL_VALIDATOR_GREEN_2026-11-21.md` | latest evidence commit `b347788d3a34672df3920b71e77f32328eb64963` |
+
+- Implementation commit: `ae11175bdb61880bb5351fd129428c40d8ec0071`.
+- Test commit: `aba767e27cc728e6c83e9b3abf734cab1bf6e113`.
+- Workflow/source commit: `04820704b88f143575f0ebbb582ac515b2e47aed`.
+- Additional local scratch test methods: 12/12 PASS. The isolated GitHub workflow is configured to execute 22 tests total (10 existing M2.4 contract tests + 12 additional tests) in a pinned, network-disabled container.
+- GitHub Actions run ID, job conclusion and artifact: **NOT VERIFIED**. Do not mark M2.5 PASS until exact run and artifact are inspected.
+- M2.5 disposition: **PARTIAL — pure validator and additional tests committed; CI NOT VERIFIED**. Full repository regression and independent review remain NOT VERIFIED.
+- Validator is pure and signal-only; WAIT is diagnostic. It performs no cryptographic verification, risk admission, sizing, reservation, ledger write or execution.
+- No Core, Shared Risk Engine, Kill Switch, calibration registry implementation, ledger, runner, runtime, DB, T0/T1, VPS, deployment, exchange or trading behavior was changed or invoked.
+- Next: inspect exact workflow run/artifact and review exact tested blobs. Any follow-up validator correction must use TDD and exact-SHA CI. Calibration Registry, risk admission, ledgers, runtime, DB, T0/T1 integration and execution require separate owner approvals.
