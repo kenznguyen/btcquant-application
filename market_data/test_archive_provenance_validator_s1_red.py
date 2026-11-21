@@ -325,8 +325,10 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
     test.assertEqual(len({item["member_id"] for item in payload["members"]}), 202)
     test.assertEqual(len({item["source_row_id"] for item in payload["source_rows"]}), 202)
     test.assertEqual(len({item["link_id"] for item in payload["links"]}), 202)
+    test.assertEqual(len({item["attempt_id"] for item in payload["attempts"]}), 404)
     object_by_id = {item["object_id"]: item for item in payload["objects"]}
     attempt_by_id = {item["attempt_id"]: item for item in payload["attempts"]}
+    pair_by_id = {item["pair_id"]: item for item in payload["pairs"]}
     member_by_id = {item["member_id"]: item for item in payload["members"]}
     candle_by_value = {item["candle_value_id"]: item for item in payload["candles"]}
     for obj in payload["objects"]:
@@ -337,6 +339,8 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
         test.assertEqual(obj["expected_size_bytes"], obj["measured_size_bytes"])
         test.assertEqual(obj["expected_sha256"], obj["measured_sha256"])
         test.assertEqual(obj["response_status"], 200)
+        test.assertEqual(obj["response_bytes_total"], obj["measured_size_bytes"])
+        test.assertEqual(obj["attempt_count"], 1)
         test.assertEqual(obj["exclusive_create"], 1)
         test.assertTrue(obj["local_relative_path"])
         attempt = attempt_by_id[obj["successful_attempt_id"]]
@@ -355,8 +359,17 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
         test.assertEqual(pair["structural_ok"], 1)
         test.assertEqual(object_by_id[pair["zip_object_id"]]["verification_status"], "VERIFIED")
         test.assertEqual(object_by_id[pair["sidecar_object_id"]]["verification_status"], "VERIFIED")
+        test.assertEqual(
+            object_by_id[pair["zip_object_id"]]["paired_object_key"],
+            object_by_id[pair["sidecar_object_id"]]["object_key"],
+        )
+        test.assertEqual(
+            object_by_id[pair["sidecar_object_id"]]["paired_object_key"],
+            object_by_id[pair["zip_object_id"]]["object_key"],
+        )
         test.assertEqual(pair["sidecar_asserted_zip_sha256"], pair["measured_zip_sha256"])
     for member in payload["members"]:
+        test.assertIn(member["pair_id"], pair_by_id)
         source_row = next(row for row in payload["source_rows"] if row["member_id"] == member["member_id"])
         member_bytes = _CSV_HEADER.encode("utf-8") + (",".join(source_row["raw_fields"]) + "\n").encode("utf-8")
         test.assertEqual(member["member_size_bytes"], len(member_bytes))
@@ -389,8 +402,15 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
             ),
         )
         test.assertEqual(link["duplicate_disposition"], "UNIQUE")
+        test.assertEqual(link["natural_key"], row["natural_key"])
         test.assertEqual(link["candle_value_id"], row["candle_value_id"])
         test.assertIn(row["candle_value_id"], candle_by_value)
+        candle = candle_by_value[row["candle_value_id"]]
+        test.assertEqual(row["natural_key"], (
+            candle["exchange"], candle["market_type"], candle["symbol"],
+            candle["timeframe"], candle["open_time_ms"],
+        ))
+        test.assertEqual(row["raw_fields"][6], str(candle["available_at_ms"] - 1))
         test.assertEqual(row["disposition"], "ACCEPTED")
         test.assertEqual(len(row["raw_fields"]), 12)
         test.assertEqual(row["physical_record_ordinal"], row["data_row_ordinal"] + 1)
