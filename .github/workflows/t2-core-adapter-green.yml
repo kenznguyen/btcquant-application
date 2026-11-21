@@ -8,6 +8,8 @@ on:
       - "core_runtime/adapter.py"
       - "core_runtime/test_adapter_contract.py"
       - "core_runtime/test_adapter_validator_parity.py"
+      - "pipeline/core_signal.py"
+      - "pipeline/values.py"
   workflow_dispatch:
 
 permissions:
