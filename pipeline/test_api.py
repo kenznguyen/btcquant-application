@@ -125,9 +125,9 @@ class FiveLayerApiTest(unittest.TestCase):
             connection.execute("DELETE FROM paper_account_risk_contract_audit")
             connection.execute("DELETE FROM paper_account_risk_contract")
         from paper_execution import ledger as ledger_module
-        with patch.object(ledger_module, "PaperLedger") as constructor, \\
-             patch("paper_execution.risk_contract.provision_account_risk_contract") as provision:
-            api.ledger()
+        with patch.object(ledger_module, "PaperLedger") as constructor:
+            with patch("paper_execution.risk_contract.provision_account_risk_contract") as provision:
+                api.ledger()
         provision.assert_not_called()
         constructor.assert_called_once()
         with sqlite3.connect(self.paper_db) as connection:
