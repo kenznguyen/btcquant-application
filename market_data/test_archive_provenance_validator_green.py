@@ -159,6 +159,12 @@ class ProvenanceValidatorGreenTest(unittest.TestCase):
         payload["candles"].append(second)
         self.assertIn("CANDLE_IDENTITY_VALUE_CONFLICT", validate_provenance(payload).error_codes)
 
+    def test_candle_natural_key_must_match_explicit_identity_fields(self) -> None:
+        payload = _valid_payload()
+        payload["candles"][0]["natural_key"] = ("binance", "usdm", "BTCUSDT", "15m", 1_767_225_600_000)  # type: ignore[index]
+        payload["candles"][0]["symbol"] = "ETHUSDT"  # type: ignore[index]
+        self.assertIn("CANDLE_IDENTITY_VALUE_CONFLICT", validate_provenance(payload).error_codes)
+
     def test_missing_pair_and_source_row_ids_cannot_form_matching_links(self) -> None:
         payload = _valid_payload()
         payload["pairs"][0]["pair_id"] = ""  # type: ignore[index]
