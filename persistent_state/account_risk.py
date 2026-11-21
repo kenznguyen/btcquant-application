@@ -10,7 +10,7 @@ from typing import Protocol
 
 
 _SCHEMA_VERSION = 1
-_NON_NEGATIVE_DECIMAL = re.compile(r"^(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$")
+_NON_NEGATIVE_DECIMAL = re.compile(r"^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$")
 _SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
 _QUOTE_ASSET = re.compile(r"^[A-Z][A-Z0-9]{1,11}$")
 
