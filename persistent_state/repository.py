@@ -785,6 +785,62 @@ class SQLiteStateRepository:
         finally:
             connection.close()
 
+    def read_active_writer_binding(
+        self,
+        account_scope_id: str,
+        session_id: str,
+        fencing_generation: int,
+    ) -> tuple[SessionRecord, FencingToken]:
+        """Read the RUNNING owner session and fence in one consistent read transaction."""
+        if not isinstance(account_scope_id, str) or not account_scope_id.strip():
+            raise ValueError("account_scope_id must be a non-empty string")
+        if not isinstance(session_id, str) or not session_id.strip():
+            raise ValueError("session_id must be a non-empty string")
+        if type(fencing_generation) is not int or fencing_generation < 1:
+            raise ValueError("fencing_generation must be an integer >= 1")
+        connection = self._connect_existing()
+        try:
+            connection.execute("PRAGMA query_only=ON")
+            connection.execute("BEGIN")
+            row = connection.execute(
+                """SELECT s.*, f.owner_session_id, f.fencing_generation
+                   FROM ps_writer_fences f
+                   JOIN ps_sessions s
+                     ON s.session_id=f.owner_session_id
+                    AND s.account_scope_id=f.account_scope_id
+                   WHERE f.account_scope_id=?""",
+                (account_scope_id,),
+            ).fetchone()
+            if row is None:
+                raise WriterOwnershipError("PAPER_SESSION_FENCE_NOT_CURRENT")
+            if (
+                row["owner_session_id"] != session_id
+                or row["session_id"] != session_id
+                or row["fencing_generation"] != fencing_generation
+                or SessionStatus(row["status"]) is not SessionStatus.RUNNING
+            ):
+                raise WriterOwnershipError("PAPER_SESSION_FENCE_NOT_CURRENT")
+            session = SessionRecord(
+                session_id=row["session_id"],
+                account_scope_id=row["account_scope_id"],
+                status=SessionStatus(row["status"]),
+                started_at_ms=row["started_at_ms"],
+                initiator=row["initiator"],
+                source_snapshot_id=row["source_snapshot_id"],
+                config_hash=row["config_hash"],
+                code_version=row["code_version"],
+                last_committed_event_sequence=row["last_committed_event_sequence"],
+                ended_at_ms=row["ended_at_ms"],
+                stop_requested_at_ms=row["stop_requested_at_ms"],
+                schema_version=row["schema_version"],
+            )
+            token = FencingToken(
+                account_scope_id, row["owner_session_id"], row["fencing_generation"]
+            )
+            return session, token
+        finally:
+            connection.close()
+
     @staticmethod
     def _require_operator_action_schema(connection: sqlite3.Connection) -> None:
         found = {
