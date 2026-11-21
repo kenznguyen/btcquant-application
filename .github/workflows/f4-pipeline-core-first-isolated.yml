@@ -141,7 +141,8 @@ jobs:
             --env PYTHONPATH=/workspace \
             --workdir /workspace \
             "$PYTHON_IMAGE" \
-            sh -ec 'python -c "import pipeline.api, pipeline.test_api, pipeline.test_decision; print(\"import_verification=PASS\")" && python -m unittest -v pipeline.test_api.FiveLayerApiTest.test_paper_evaluate_records_typed_canonical_mark_provenance pipeline.test_api.FiveLayerApiTest.test_dual_ledger_fixture_establishes_verified_account_risk_cutover > /artifacts/provenance-regression.log 2>&1 && cat /artifacts/provenance-regression.log && python -m unittest -v pipeline.test_api pipeline.test_decision' \
+            sh -ec 'python -c "import pipeline.api, pipeline.test_api, pipeline.test_decision; print(\"import_verification=PASS\")" && python -m unittest -v pipeline.test_api.FiveLayerApiTest.test_paper_evaluate_records_typed_canonical_mark_provenance pipeline.test_api.FiveLayerApiTest.test_dual_ledger_fixture_establishes_verified_account_risk_cutover > /artifacts/provenance-regression.log 2>&1 || { status=$?; cat /artifacts/provenance-regression.log; exit "$status"; }
+            cat /artifacts/provenance-regression.log && python -m unittest -v pipeline.test_api pipeline.test_decision' \
             > "$log" 2>&1; then
             test_status=0
           else
