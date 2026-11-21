@@ -98,7 +98,7 @@ class MarketMarkProvenanceTests(unittest.TestCase):
         payload["sourceWindow"]["candles"][0]["close"] = "101.26"
         canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
         with self.assertRaisesRegex(ValueError, "MARK_PROVENANCE_DATASET_HASH_MISMATCH"):
-        forged = MarketMarkProvenance(
+            MarketMarkProvenance(
                 source_id=original.source_id,
                 source_snapshot_id=original.source_snapshot_id,
                 dataset_version=original.dataset_version,
