@@ -6557,3 +6557,15 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - Existing parser blob `7d59706778a98a18185e0b2fe744c3c43c2eb870`, tests blob `50199cd168fd52314a846760cc4baf51a8cd5e9a`, workflow blob `9edb0e4cf74c22f82c38f107c730e73abf04de44` remain unchanged.
 - Status: design **PASS WITH REQUIRED INPUT GATE**; header tuple **NOT VERIFIED / NOT FROZEN**; implementation **NOT AUTHORIZED**; parser tests **NOT CHANGED / NOT RUN**; workflow **UNCHANGED**; six-object verification **NOT VERIFIED**; parser contract freeze **BLOCKED**.
 - No fourth dispatch, archive retrieval, workflow correction, parser/test implementation, importer, SQLite/staging, Contract 1.2.0 implementation, Canonical T0, REST tail, T1/T2, VPS/runtime, deployment, credentials or trading action is authorized by this design decision.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 approved archive header schema evidence audit
+
+- Owner requested verification of the exact header schema from the already-approved source sample before proposing contract freeze and TDD implementation.
+- Read-only audit inspected the retained run 3 job log, artifact list and current pinned parser/tests/workflow plus handoff. Run [44923634320](https://github.com/kenznguyen/btcquant-application/actions/runs/44923634320), source SHA `ab2ae82c12f858492128528d52b01c4455f43083`, job `136904830969`.
+- The log proves the M15 monthly 2022-08 CSV first record triggered the workflow's one-cell `open_time` / `open time` heuristic after 12-column row-shape checking. It does **not** print the 12 header labels or their order. The workflow report is written only after the failed check; artifact list is empty. No retained CSV member or diagnostic report exists.
+- Current pinned parser has no header schema; its header rejection test is synthetic. Inventory is object metadata, not CSV header content. Therefore exact source header tuple **NOT VERIFIED**; header contract freeze **BLOCKED**.
+- Audit evidence: `docs/evidence/T0_ARCHIVE_HEADER_SCHEMA_SOURCE_EVIDENCE_AUDIT_2026-11-21.md`, commit `1594cbd8d043ebc7f7b66dd6e1a04ab9f6329fb3`.
+- Next gate: owner must separately approve one narrowly scoped inspection of the exact allowlisted M15 monthly 2022-08 ZIP that validates ZIP/sidecar provenance and emits only the first CSV record as 12 ordered fields plus member/hash/encoding metadata. Prior three-dispatch approval is consumed; this audit does not authorize another archive request or workflow dispatch.
+- After obtaining source evidence, propose exact header tuple(s) and normalization policy for separate contract approval. Only then request separate TDD implementation approval.
+- No archive/REST request, workflow dispatch/rerun/edit, parser/test edit, SQLite/importer/staging, Contract 1.2.0 implementation, Canonical T0, T1/T2, VPS/runtime, deployment, credentials or trading operation was performed.
