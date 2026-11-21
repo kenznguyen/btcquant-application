@@ -487,12 +487,9 @@ class DualLedgerRedTest(unittest.TestCase):
                        daily_baseline_utc_day_ms=?,
                        daily_baseline_equity_quote='108',
                        last_equity_quote='106.75',
-                       last_mark_price='100',mark_observed_at_ms=?,
-                       mark_candle_close_ms=?,dataset_version='sha256:snapshot-fixture',
                        risk_ready=1,unavailable_reason=NULL,updated_at_ms=?
                    WHERE account_id=1""",
-                (self.now // 86_400_000 * 86_400_000, self.now,
-                 self.now - 60_000, self.now),
+                (self.now // 86_400_000 * 86_400_000, self.now,),
             )
 
         self.core.set_killed(True, self.now + 1, "SNAPSHOT_TEST")
