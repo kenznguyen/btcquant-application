@@ -445,3 +445,82 @@ Next: owner reviews this S1 freeze proposal. After review, request separate appr
 - No Canonical T0/MAY-10 access.
 - No code, tests, dependencies, runtime, VPS, T1/T2, deployment or trading changes.
 - Workflow run/job/artifact: none.
+
+
+---
+
+## 12. S1 design amendment — failure evidence and acquisition-attempt history
+
+Date: 2026-11-22
+Status: **DESIGN AMENDMENT — DOCUMENTATION ONLY**
+This section supersedes conflicting requirements in Sections 4.1, 4.2, 4.3, 5 (DDL constraints for the affected tables), 6.1 items 2–4, and 8 concerning failed/incomplete acquisition evidence. All other S1 contracts remain unchanged.
+
+### 12.1 Preserve failed and incomplete evidence
+
+Evidence records must describe what was observed, including unsuccessful attempts. A failed operation must not be forced into a successful shape merely to satisfy NOT NULL or success-only CHECK constraints.
+
+For `ArchiveObjectEvidence`:
+- `measured_size_bytes` and `measured_sha256` are nullable only when no complete response object was received and finalized.
+- `response_status` is nullable when no HTTP response was received.
+- `local_relative_path` and `exclusive_create` are nullable when no complete local object was created.
+- `response_bytes_total` is always present and records bytes actually received for that object across the attempt summary; zero is valid.
+- Add `failure_code` (nullable for VERIFIED; required for QUARANTINED) and `failure_detail_code` (stable machine-readable subreason, not free-form secrets or response bodies).
+- `VERIFIED` requires complete measured size/hash, successful response, exact requested key, exclusive creation, and all applicable inventory expectations satisfied.
+- `QUARANTINED` may retain partial byte counts and any measurements that were safely completed. It must never be promoted to VERIFIED by inference.
+
+The measured SHA-256 is computed only over a complete finalized object byte sequence. Do not label a partial-body digest as the object's measured SHA-256. If partial bytes need integrity evidence, store a separately named `partial_body_sha256` in the attempt record with an explicit byte count and `is_complete_object=false`.
+
+### 12.2 Append-only acquisition attempt contract
+
+Add a separate append-only `AcquisitionAttemptEvidence` record for every attempt, including attempts that fail before an HTTP response. Attempts are evidence, not object identity; retrying never changes `object_id`.
+
+Required fields:
+- `attempt_id`: `att1:` + SHA-256 of `ENC("T0-ACQUISITION-ATTEMPT-V1", object_id, attempt_number_i64, workflow_run_id, workflow_job_id, trigger_sha, requested_key)`.
+- `object_id`, `attempt_number` (1-based, strictly increasing per object), exact `requested_key`.
+- `workflow_run_id`, `workflow_job_id`, `workflow_event`, `trigger_sha`, `checkout_sha`, `started_at_utc`, nullable `finished_at_utc`.
+- `outcome`: exactly `STARTED`, `HTTP_FAILED`, `TRANSFER_FAILED`, `TRANSFERRED`, `VALIDATION_FAILED`, or `UNKNOWN`.
+- nullable `response_status`; `response_bytes_received` (nonnegative); `is_complete_object` (0/1); nullable `partial_body_sha256`; nullable `complete_object_sha256`; nullable `failure_code`.
+- A `TRANSFERRED` outcome requires `is_complete_object=1`, complete object SHA-256 and finalized byte count. All other outcomes require `is_complete_object=0`; they may retain partial-body hash only when the byte count and hash cover exactly the same received bytes.
+- `STARTED` may have no finish time; every terminal outcome must have a finish time. A process interruption with unknown outcome is recorded as `UNKNOWN`, never silently retried as though no attempt occurred.
+- Attempts are append-only: no UPDATE/DELETE, no reuse of attempt number, and no replacement of an earlier attempt. The successful final object summary references the successful attempt ID. If no attempt succeeds, object evidence remains QUARANTINED and retains all attempt records.
+- Each attempt is bounded by the existing 100 MiB cumulative response-body cap across the approved operation. No retry policy or acquisition authorization is granted by this schema amendment.
+
+### 12.3 Revised staging DDL constraints
+
+The earlier DDL remains the structural baseline, but these exact changes are required before any future DDL implementation:
+
+1. Add `acquisition_attempts` with the fields and constraints in §12.2, primary key `attempt_id`, foreign key `object_id` to `archive_objects`, and UNIQUE(`object_id`, `attempt_number`). Add an index on (`object_id`, `attempt_number`).
+2. In `archive_objects`, make `measured_size_bytes`, `measured_sha256`, `response_status`, `local_relative_path`, and `exclusive_create` nullable. Add nullable `failure_code`, nullable `failure_detail_code`, and nullable `successful_attempt_id` referencing `acquisition_attempts(attempt_id)`. The circular reference is resolved by creating `archive_objects` first and adding the FK through a later schema migration/rebuild, or by storing the successful attempt reference in a separate object-attempt relation; implementation must choose and test one exact SQLite-safe approach before DDL freeze. Do not silently omit this relationship.
+3. Replace unconditional success-only checks on `archive_objects` with conditional checks:
+   - VERIFIED: measured size/hash, response status, local path, exclusive_create=1, successful_attempt_id, and failure_code IS NULL are all required.
+   - QUARANTINED: failure_code is required; measurements and local path may be NULL; if exclusive_create is non-NULL it must be 0 or 1 and must not imply verification.
+   - `requested_key=object_key` remains mandatory for every record.
+4. In `archive_pairs`, make measurements and validation booleans nullable when a pair cannot be evaluated because one or both object records are missing/incomplete. Add nullable `failure_code`. VERIFIED requires both referenced objects VERIFIED, all measurements present, assertion/CRC/structure pass, and member_count=1. QUARANTINED requires a failure_code and may retain any available measurements; do not force failed checks to equal 1. Remove unconditional CHECKs that reject evidence of failed assertion, CRC, structure or member count.
+5. In `csv_members`, retain only observed candidate-member evidence. Permit zero records for a ZIP with no candidate member and multiple records when multiple candidates were observed; the pair is QUARANTINED in either case. Remove UNIQUE(pair_id). Each observed candidate has its own stable member identity. A successful pair has exactly one VERIFIED member. An unsupported or invalid candidate is recorded as QUARANTINED with a stable failure code; it is not omitted.
+6. Cross-table validator—not SQLite CHECK alone—must enforce that a run can become VALIDATED only with exactly 404 VERIFIED objects, 202 VERIFIED pairs, exactly one VERIFIED CSV member per pair, no rejected rows, complete attempt history, and all S1 invariants. Quarantined evidence is retained but never contributes candles to a VALIDATED candidate.
+
+The schema is still design-only. This amendment does not provide executable DDL, migrations, tests, importer code, or a workflow.
+
+### 12.4 Acceptance semantics
+
+- A failed or incomplete attempt is a valid evidence record, not a missing record.
+- A QUARANTINED object/pair/member must retain every available measurement and a stable failure code.
+- Partial-body hashes are never confused with complete-object hashes.
+- A complete object can be VERIFIED only after its final bytes are measured and all inventory, sidecar, ZIP, and member checks applicable to that stage pass.
+- A later successful retry does not erase earlier failed attempts; it appends a new attempt and may allow the final object summary to become VERIFIED only if all contract checks pass.
+- If process termination leaves completion uncertain, record UNKNOWN and quarantine pending explicit reconciliation; do not infer success or failure from the absence of a response.
+- Evidence retention/deletion remains a separate owner decision. No cleanup or deletion is authorized.
+
+### 12.5 S1 amendment disposition
+
+| Item | Status |
+|---|---|
+| Failed/incomplete object evidence semantics | FROZEN — DESIGN AMENDMENT |
+| Append-only acquisition attempt contract | FROZEN — DESIGN AMENDMENT |
+| Pair/member quarantine evidence semantics | FROZEN — DESIGN AMENDMENT |
+| Revised DDL constraints | FROZEN — DESIGN REQUIREMENTS; executable DDL NOT IMPLEMENTED |
+| S2 synthetic-only validator RED tests | NOT AUTHORIZED |
+| Archive acquisition / workflow / SQLite / importer | NOT AUTHORIZED |
+| Canonical T0 / MAY-10 / REST tail | EXCLUDED |
+
+Remaining open items from the original S1 document remain open, including exact SQLite runtime/STRICT support, full cross-table validator test design, compression/uncompressed-size/disk-reserve limits, artifact/source retention, and real header-mode verification across all 202 archives.
