@@ -27,7 +27,7 @@ from persistent_state.contracts import (
 from persistent_state.evidence import (
     EvidenceBinding, OperatorResumeConfirmation, PreflightAttestation, ReadyEvidenceBundle,
     RestoreAttestation, RiskReadinessAttestation, validate_ready_evidence,
-    validate_resume_confirmation,
+    validate_resume_confirmation, validate_preflight_attestation,
 )
 from persistent_state.lifecycle import is_terminal_session_status, validate_session_transition
 
@@ -193,6 +193,7 @@ class StateRepository(Protocol):
         self, fencing_token: FencingToken, *, expected_status: SessionStatus,
         new_status: SessionStatus, at_ms: int,
         readiness_evidence: ReadyEvidenceBundle | None = None,
+        preflight_attestation: PreflightAttestation | None = None,
         resume_confirmation: OperatorResumeConfirmation | None = None,
     ) -> SessionRecord: ...
 
@@ -862,6 +863,26 @@ class SQLiteStateRepository:
         finally:
             connection.close()
     @staticmethod
+    def _persist_one_attestation(connection, token, kind, attestation) -> None:
+        payload = asdict(attestation)
+        payload["reason_codes"] = list(payload["reason_codes"])
+        payload_json = canonical_json(payload)
+        checksum = "sha256:" + hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+        connection.execute(
+            """
+            INSERT INTO ps_session_attestations (
+                session_id, account_scope_id, attestation_type,
+                fencing_generation, payload_json, payload_checksum, recorded_at_ms
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                token.session_id, token.account_scope_id, kind,
+                token.fencing_generation, payload_json, checksum,
+                attestation.binding.checked_at_ms,
+            ),
+        )
+
+    @staticmethod
     def _persist_ready_evidence(
         connection: sqlite3.Connection,
         token: FencingToken,
@@ -876,6 +897,17 @@ class SQLiteStateRepository:
             payload["reason_codes"] = list(payload["reason_codes"])
             payload_json = canonical_json(payload)
             checksum = "sha256:" + hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+            if kind == "preflight":
+                existing = connection.execute(
+                    "SELECT payload_json, payload_checksum FROM ps_session_attestations "
+                    "WHERE session_id=? AND attestation_type='preflight'",
+                    (token.session_id,),
+                ).fetchone()
+                if existing is None or existing["payload_json"] != payload_json or existing["payload_checksum"] != checksum:
+                    raise EvidenceIntegrityError(
+                        "READY preflight evidence differs from durable PREFLIGHT evidence"
+                    )
+                continue
             connection.execute(
                 """
                 INSERT INTO ps_session_attestations (
@@ -947,6 +979,7 @@ class SQLiteStateRepository:
         new_status: SessionStatus,
         at_ms: int,
         readiness_evidence: ReadyEvidenceBundle | None = None,
+        preflight_attestation: PreflightAttestation | None = None,
         resume_confirmation: OperatorResumeConfirmation | None = None,
     ) -> SessionRecord:
         try:
@@ -963,6 +996,41 @@ class SQLiteStateRepository:
             )
             if at_ms < session["started_at_ms"]:
                 raise ValueError("session transition timestamp cannot precede session start")
+            if new_status is SessionStatus.RESTORING:
+                if not isinstance(preflight_attestation, PreflightAttestation):
+                    raise SessionTransitionError(
+                        "PREFLIGHT -> RESTORING requires a typed market-data attestation"
+                    )
+                self._require_evidence_append_only(connection)
+                preflight_session = SessionRecord(
+                    session_id=session["session_id"],
+                    account_scope_id=session["account_scope_id"],
+                    status=SessionStatus(session["status"]),
+                    started_at_ms=session["started_at_ms"],
+                    initiator=session["initiator"],
+                    source_snapshot_id=session["source_snapshot_id"],
+                    config_hash=session["config_hash"],
+                    code_version=session["code_version"],
+                    last_committed_event_sequence=session["last_committed_event_sequence"],
+                    ended_at_ms=session["ended_at_ms"],
+                    stop_requested_at_ms=session["stop_requested_at_ms"],
+                    schema_version=session["schema_version"],
+                )
+                try:
+                    validate_preflight_attestation(
+                        preflight_session,
+                        fencing_generation=fencing_token.fencing_generation,
+                        preflight=preflight_attestation,
+                    )
+                except ValueError as exc:
+                    raise SessionTransitionError(str(exc)) from exc
+                self._persist_one_attestation(
+                    connection, fencing_token, "preflight", preflight_attestation,
+                )
+            elif preflight_attestation is not None:
+                raise SessionTransitionError(
+                    "preflight attestation is accepted only for PREFLIGHT -> RESTORING"
+                )
             if new_status is SessionStatus.READY:
                 if not isinstance(readiness_evidence, ReadyEvidenceBundle):
                     raise SessionTransitionError(
