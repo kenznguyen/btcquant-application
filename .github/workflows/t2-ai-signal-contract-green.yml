@@ -1,0 +1,91 @@
+name: T2 M2.5 AI Signal Contract GREEN
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/architecture/AI_STRATEGY_SIGNAL_CONTRACT_V1.md"
+      - "pipeline/ai_signal_contract.py"
+      - "pipeline/test_ai_signal_contract_red.py"
+      - "pipeline/test_ai_signal_contract_green.py"
+      - ".github/workflows/t2-ai-signal-contract-green.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t2-ai-signal-contract-green
+  cancel-in-progress: false
+
+jobs:
+  pure-validator:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact contract, implementation and test blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git hash-object docs/architecture/AI_STRATEGY_SIGNAL_CONTRACT_V1.md)" = "e5df7ec59c04a4f08b6ec0fc98e7e5702b3543dc"
+          test "$(git hash-object pipeline/ai_signal_contract.py)" = "efb43ba777097e261c32671b9b37c24efad1a2e3"
+          test "$(git hash-object pipeline/test_ai_signal_contract_red.py)" = "bd4c6325739a7d1eadf5ced64c71e7e4742e7a31"
+          test "$(git hash-object pipeline/test_ai_signal_contract_green.py)" = "71dcffa586ce785472f2c88e753e755cfe742bfc"
+          mkdir -p "$RUNNER_TEMP/t2-ai-signal-green"
+          {
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "workflow_head_sha=$GITHUB_SHA"
+            echo "python_image=python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df"
+            echo "network=none"
+            echo "credentials=none"
+            echo "database_mount=none"
+          } > "$RUNNER_TEMP/t2-ai-signal-green/metadata.txt"
+
+      - name: Run contract and validator tests in isolated container
+        shell: bash
+        env:
+          PYTHON_IMAGE: python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/t2-ai-signal-green/test.log"
+          docker run --rm --platform linux/amd64 --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges --pids-limit 64 \
+            --memory 1g --cpus 1 --user 65534:65534 \
+            --tmpfs /tmp:rw,nosuid,nodev,size=64m,mode=1777 \
+            --mount "type=bind,src=$GITHUB_WORKSPACE,dst=/workspace,readonly" \
+            --env PYTHONPATH=/workspace --env PYTHONDONTWRITEBYTECODE=1 \
+            --workdir /workspace "$PYTHON_IMAGE" \
+            python -m unittest -v pipeline.test_ai_signal_contract_red pipeline.test_ai_signal_contract_green > "$log" 2>&1
+          cat "$log"
+          grep -F "Ran 22 tests" "$log" >/dev/null
+          grep -F "OK" "$log" >/dev/null
+          {
+            echo "green_status=PASS"
+            echo "test_count=22"
+            echo "scope=pure validator only"
+            echo "network=none"
+            echo "database_mount=none"
+          } >> "$RUNNER_TEMP/t2-ai-signal-green/metadata.txt"
+          {
+            echo "## T2 M2.5 AI Signal Contract GREEN"
+            echo "- Source SHA: $GITHUB_SHA"
+            echo "- Tests: 22/22 PASS"
+            echo "- Scope: pure deterministic validator; no Core, risk admission, ledger, DB, network or execution"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload GREEN evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: t2-ai-signal-contract-green-evidence
+          path: ${{ runner.temp }}/t2-ai-signal-green/
+          if-no-files-found: error
+          retention-days: 14
