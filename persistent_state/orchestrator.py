@@ -113,6 +113,17 @@ class SessionOrchestrator:
                 self.repository, session.account_scope_id, self.reducer,
             )
             restore = self.restore_attestation_provider(current, token, recovery)
+            if (
+                restore.last_event_sequence != recovery.last_event_sequence
+                or restore.aggregate_versions_json != recovery.aggregate_versions_json
+                or (
+                    recovery.checkpoint_id is not None
+                    and restore.checkpoint_id != recovery.checkpoint_id
+                )
+            ):
+                raise RecoveryValidationError(
+                    "restore attestation does not match deterministic recovery output"
+                )
             risk = self.risk_readiness_provider(current, token)
             bundle = ReadyEvidenceBundle(
                 preflight=preflight, restore=restore, risk=risk,
