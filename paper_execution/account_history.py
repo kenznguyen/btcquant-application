@@ -862,10 +862,16 @@ def migrate_consumed_market_mark_provenance(connection, source_sha):
             AND payload_sha256 NOT GLOB '*[^0-9a-f]*'),
         canonical_payload TEXT NOT NULL,
         recorded_at_ms INTEGER NOT NULL,
-        UNIQUE(account_id,observed_at_ms),
         CHECK(observed_at_ms>=candle_close_ms),
         CHECK(source_snapshot_id='sha256:' || payload_sha256)
     )""")
+    risk_columns = {row[1] for row in connection.execute(
+        "PRAGMA table_info(paper_account_risk_state)"
+    )}
+    if "last_mark_id" not in risk_columns:
+        connection.execute(
+            "ALTER TABLE paper_account_risk_state ADD COLUMN last_mark_id TEXT"
+        )
     connection.execute("""CREATE TRIGGER paper_account_consumed_market_marks_immutable_update
         BEFORE UPDATE ON paper_account_consumed_market_marks
         BEGIN SELECT RAISE(ABORT,'CONSUMED_MARK_PROVENANCE_IMMUTABLE'); END""")
@@ -916,8 +922,8 @@ def record_consumed_market_mark(connection, provenance, *, observed_at_ms):
         """SELECT mark_id,account_id,observed_at_ms,candle_close_ms,mark_price,source_id,
                   source_snapshot_id,dataset_version,payload_sha256,canonical_payload,recorded_at_ms
            FROM paper_account_consumed_market_marks
-           WHERE account_id=1 AND observed_at_ms=?""",
-        (observed,),
+           WHERE mark_id=? AND account_id=1""",
+        (mark_id,),
     ).fetchone()
     if existing is not None:
         if existing != row:
