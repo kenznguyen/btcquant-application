@@ -62,8 +62,10 @@ class DualLedgerRedTest(unittest.TestCase):
         from paper_execution.account_history import record_consumed_market_mark
         seed_mark = build_market_mark_provenance(
             {
+                "exchange": "binance", "marketType": "USDT_PERPETUAL",
                 "symbol": "BTCUSDT", "timeframe": "15m",
                 "datasetVersion": "sha256:" + "d" * 64,
+                "coverage": {"complete": True},
                 "candles": [{
                     "openTimeMs": self.now-960_000, "closeTimeMs": self.now-60_000,
                     "open": "100", "high": "101", "low": "99",
@@ -2483,6 +2485,7 @@ os._exit(0)
         )
         from paper_execution.mark_provenance import build_market_mark_provenance
         mark_window = {
+            "exchange": "binance", "marketType": "USDT_PERPETUAL",
             "symbol": "BTCUSDT", "timeframe": "15m",
             "datasetVersion": "sha256:" + "a" * 64,
             "coverage": {"complete": True},
