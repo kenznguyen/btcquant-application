@@ -102,8 +102,8 @@ class VersionedRiskPolicyStoreTests(unittest.TestCase):
                 self.publish(policy)
         with self.assertRaises(ValueError):
             publish_versioned_risk_policy(
-                self.db, self.policy, expected_active_hash=None,
-                source_git_commit_sha="not-a-commit",
+                self.db, json.dumps(self.policy, sort_keys=True, separators=(",", ":")), expected_active_hash=None,
+                source_git_commit_sha="not-a-commit", source_policy_sha256=hashlib.sha256(json.dumps(self.policy, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
                 source_policy_path="../outside.json", operator_id="operator:test",
                 reason="invalid source", published_at_ms=1_800_000_000_100,
             )
