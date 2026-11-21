@@ -36,6 +36,10 @@ def start_running(repository, session_id="session-1", *, account="paper-account"
         (SessionStatus.READY, SessionStatus.RUNNING),
     ):
         kwargs = {}
+        if target is SessionStatus.RESTORING:
+            kwargs["preflight_attestation"] = ready_evidence_for(
+                repository.get_session(session_id), token,
+            ).preflight
         if target is SessionStatus.READY:
             kwargs["readiness_evidence"] = ready_evidence_for(
                 repository.get_session(session_id), token,
@@ -162,6 +166,10 @@ class SessionFencingTests(unittest.TestCase):
             (SessionStatus.READY, SessionStatus.RUNNING),
         ):
             kwargs = {}
+            if target is SessionStatus.RESTORING:
+                kwargs["preflight_attestation"] = ready_evidence_for(
+                    self.repository.get_session("recovery-session"), new_token,
+                ).preflight
             if target is SessionStatus.READY:
                 kwargs["readiness_evidence"] = ready_evidence_for(
                     self.repository.get_session("recovery-session"), new_token,
