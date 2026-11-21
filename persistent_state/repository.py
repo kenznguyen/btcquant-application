@@ -556,9 +556,9 @@ class SQLiteStateRepository:
                     "cannot migrate incomplete v1 schema: " + ", ".join(sorted(missing_base))
                 )
             evidence_objects = {
-                "ps_session_attestations",
-                "ps_session_attestations_no_update",
-                "ps_session_attestations_no_delete",
+                "ps_session_attestations", "ps_session_attestations_no_update",
+                "ps_session_attestations_no_delete", "ps_session_operator_actions",
+                "ps_session_operator_actions_no_update", "ps_session_operator_actions_no_delete",
             }
             if evidence_objects <= found:
                 return
@@ -779,6 +779,83 @@ class SQLiteStateRepository:
         finally:
             connection.close()
 
+    @staticmethod
+    def _require_operator_action_schema(connection: sqlite3.Connection) -> None:
+        found = {
+            row[0] for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"
+            )
+        }
+        required = {
+            "ps_session_operator_actions",
+            "ps_session_operator_actions_no_update",
+            "ps_session_operator_actions_no_delete",
+        }
+        missing = required - found
+        if missing:
+            raise EvidenceSchemaMigrationRequiredError(
+                "explicit session evidence migration required for operator audit: "
+                + ", ".join(sorted(missing))
+            )
+
+    @staticmethod
+    def _persist_resume_confirmation(connection, token, confirmation) -> None:
+        payload = asdict(confirmation)
+        payload["risk_attestation"]["reason_codes"] = list(payload["risk_attestation"]["reason_codes"])
+        payload_json = canonical_json(payload)
+        checksum = "sha256:" + hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+        connection.execute(
+            """
+            INSERT INTO ps_session_operator_actions (
+                session_id, account_scope_id, action_id, action_type,
+                fencing_generation, payload_json, payload_checksum, recorded_at_ms
+            ) VALUES (?, ?, ?, 'RESUME', ?, ?, ?, ?)
+            """,
+            (token.session_id, token.account_scope_id, confirmation.confirmation_id,
+             token.fencing_generation, payload_json, checksum, confirmation.confirmed_at_ms),
+        )
+
+    def read_resume_confirmations(self, session_id: str) -> tuple[OperatorResumeConfirmation, ...]:
+        if not isinstance(session_id, str) or not session_id.strip():
+            raise ValueError("session_id must be a non-empty string")
+        connection = self._connect_existing()
+        try:
+            self._require_operator_action_schema(connection)
+            rows = connection.execute(
+                "SELECT * FROM ps_session_operator_actions WHERE session_id=? AND action_type='RESUME' ORDER BY recorded_at_ms, action_id",
+                (session_id,),
+            ).fetchall()
+            result = []
+            for row in rows:
+                raw = row["payload_json"]
+                checksum = "sha256:" + hashlib.sha256(raw.encode("utf-8")).hexdigest()
+                if checksum != row["payload_checksum"]:
+                    raise EvidenceIntegrityError("operator action checksum mismatch")
+                try:
+                    payload = json.loads(raw)
+                    if not isinstance(payload, dict) or canonical_json(payload) != raw:
+                        raise ValueError("non-canonical operator action")
+                    binding = EvidenceBinding(**payload["binding"])
+                    risk_payload = payload["risk_attestation"]
+                    risk_binding = EvidenceBinding(**risk_payload.pop("binding"))
+                    risk_payload["reason_codes"] = tuple(risk_payload.get("reason_codes", ()))
+                    risk = RiskReadinessAttestation(binding=risk_binding, **risk_payload)
+                    confirmation = OperatorResumeConfirmation(
+                        binding=binding, operator_id=payload["operator_id"],
+                        confirmation_id=payload["confirmation_id"],
+                        confirmed_at_ms=payload["confirmed_at_ms"], risk_attestation=risk,
+                    )
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise EvidenceIntegrityError("persisted operator action is malformed") from exc
+                if (row["account_scope_id"] != binding.account_scope_id
+                    or row["fencing_generation"] != binding.fencing_generation
+                    or row["action_id"] != confirmation.confirmation_id
+                    or row["recorded_at_ms"] != confirmation.confirmed_at_ms):
+                    raise EvidenceIntegrityError("operator action metadata does not match payload")
+                result.append(confirmation)
+            return tuple(result)
+        finally:
+            connection.close()
     @staticmethod
     def _persist_ready_evidence(
         connection: sqlite3.Connection,
