@@ -143,3 +143,14 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - New-SHA Python execution and V1 regression: **NOT RUN / NOT VERIFIED**. Previous workflow run 44940259084 is tied to old SHA `6a35462fe4db37c8a09fde3c20260fe6ba84f31a`.
 - Status: test-source correction **COMMITTED**; test verification **PENDING**; S1 GREEN **NOT AUTHORIZED**.
 - Next: dispatch `.github/workflows/t0-s4-provenance-red-isolated.yml` with `source_sha=4534904fccc74a57a3a09793dd63e24414ab2cb1`. Record new run/job/artifact and inspect complete logs before making any PASS/BLOCKED decision.
+
+
+## S4 corrected-source workflow result — 2026-11-22
+
+- Workflow run [44941050940](https://github.com/kenznguyen/btcquant-application/actions/runs/44941050940), job `136958108791`, attempt `1`, workflow `.github/workflows/t0-s4-provenance-red-isolated.yml`.
+- Workflow metadata HEAD was `4cdb2a6bd1526e774e94703a63a54388dd5b829e`, but the explicitly requested SHA, checkout ref, actual checkout HEAD and artifact summary all match `4534904fccc74a57a3a09793dd63e24414ab2cb1`. S4 test blob `08d02470e87e317afe8023ed6d6f14db847f5597`; V1 test/validator blobs unchanged.
+- CPython 3.13.18 / Ubuntu 26.04.1. S4: 13 tests, 1 fixture-structure PASS, 12 RED assertion failures, exit 1. Ten isolated mutations return valid under the V1-only validator; inventory-set case returns only legacy V1 codes; aggregate test emits no S3 codes. The tests therefore demonstrate missing S3 enforcement, not successful S3 diagnostic behavior. V1 regression: 24/24 PASS, exit 0.
+- Workflow conclusion success is harness/upload success only. Artifact `t0-s4-v1-verification-44941050940`, ID `14721587275`, 3,594 bytes, SHA-256 `4ae10f8f63a6ed03e5e1cb738bdacfcf92e4203f1d5f73f831e71c4a3ee14d05`; downloaded and inspected.
+- Evidence record updated in commit `c71cccaf476d66d9ab11ca75cfd85c4ee742cce2`, blob `400b8f6b0e6f194cd2b47d6f35c0f1bf9aa8ef09`.
+- Status: exact-SHA workflow execution PASS; fixture structure PASS; S4 RED assertions expose unimplemented S3 invariants; V1 regression PASS 24/24; S3 GREEN NOT AUTHORIZED; archive/Canonical T0/DDL/SQLite/importer/T1/T2 runtime/VPS/deployment/trading remain untouched.
+- Next: inspect the RED assertions as executable specifications and request separate explicit approval before any S3 GREEN implementation.
