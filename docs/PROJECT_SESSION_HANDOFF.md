@@ -6499,3 +6499,17 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Approval is limited to source-byte/ZIP/CSV inspection and diagnostic parser comparison. No full 404-object materialization, REST, personal host/VPS, database/SQLite, importer, Contract 1.2.0 implementation, Canonical T0, T1/T2, runtime, deployment, trading or raw artifact upload.
 - EXECUTION BLOCKED: creating/modifying GitHub Actions workflow YAML was explicitly excluded from this approval. No existing workflow has been verified as authorized for this exact retrieval. Obtain separate approval for one narrowly scoped manually dispatched workflow before fetching any object.
 - Parser contract freeze and importer remain NOT AUTHORIZED pending review of real-source evidence and a further owner decision.
+
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 real archive CSV sample workflow created
+
+- Owner separately approved creating exactly one manually dispatched workflow, with no automatic dispatch: decision `docs/decisions/T0_REAL_ARCHIVE_CSV_SAMPLE_VERIFICATION_WORKFLOW_APPROVAL_2026-11-21.md`, commit `02b407fe7d90efe184ae11d8b271a7aeb6e23f96`.
+- Workflow: `.github/workflows/t0-real-archive-csv-sample-verification.yml`; final workflow commit `b5bd4f7f1f6fb48c5310281a7796c9a5a80ec0b2`; blob `44f83168908c7b4c8f7b67383e4cbfaea34b0c09`.
+- Trigger is exactly `workflow_dispatch`; GitHub-hosted `ubuntu-24.04`; repository permission `contents: read`; no secrets; checkout credentials not persisted.
+- Scope is pinned to exactly six allowlisted ZIP archives and their six paired `.CHECKSUM` sidecars. Source inventory blob `eb251ac0924b46add906123f99b82e054d887a59`; parser blob `7d59706778a98a18185e0b2fe744c3c43c2eb870`; parser test blob `50199cd168fd52314a846760cc4baf51a8cd5e9a`.
+- Workflow checks ZIP size/SHA, sidecar body and sidecar own digest/size, ZIP CRC, CSV member/path, UTF-8/BOM, newline, header, delimiter, 12 columns, row count and complete parser compatibility. It uploads only a diagnostic JSON report; raw archives are not artifacts.
+- Evidence record: `docs/evidence/T0_REAL_ARCHIVE_CSV_SAMPLE_VERIFICATION_WORKFLOW_2026-11-21.md`, latest update commit `c61a337b6c3a3156d2817288022f55316caa9622`.
+- Implementation/static scope review: **PASS**. YAML/actionlint validation: **NOT RUN**. Workflow dispatch: **NOT RUN**. Workflow run/job/artifact: **NOT AVAILABLE**. Real archive format compatibility: **NOT VERIFIED**.
+- No source archive or REST request has been made. No SQLite/database, importer, Contract 1.2.0 implementation, Canonical T0, T1/T2, VPS/runtime, deployment, exchange credentials or trading behavior was changed or invoked.
+- Next gate: obtain separate explicit approval to dispatch this workflow once. After a successful run, review the diagnostic report before any parser contract freeze decision. Importer and staging remain unauthorized.
