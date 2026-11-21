@@ -143,6 +143,42 @@ class DualLedgerRedTest(unittest.TestCase):
             "asks": [{"price": ask, "quantity": "1"}],
         }
 
+    def update_consumed_mark(self, db_path, *, mark_price, observed_at_ms, dataset_suffix):
+        from paper_execution.mark_provenance import build_market_mark_provenance
+        from paper_execution.account_history import record_consumed_market_mark
+
+        dataset_version = "sha256:" + dataset_suffix
+        candle_close_ms = observed_at_ms - 60_000
+        provenance = build_market_mark_provenance(
+            {
+                "exchange": "binance", "marketType": "USDT_PERPETUAL",
+                "symbol": "BTCUSDT", "timeframe": "15m",
+                "datasetVersion": dataset_version, "coverage": {"complete": True},
+                "candles": [{
+                    "openTimeMs": observed_at_ms - 960_000,
+                    "closeTimeMs": candle_close_ms,
+                    "open": mark_price, "high": mark_price, "low": mark_price,
+                    "close": mark_price, "volume": "1",
+                }],
+            },
+            source_id="T0_CANONICAL_MARKET_DATA",
+        )
+        with sqlite3.connect(db_path) as connection:
+            consumed = record_consumed_market_mark(
+                connection, provenance, observed_at_ms=observed_at_ms
+            )
+            connection.execute(
+                """UPDATE paper_account_risk_state
+                   SET last_mark_price=?,mark_observed_at_ms=?,mark_candle_close_ms=?,
+                       dataset_version=?,updated_at_ms=?,last_mark_id=?
+                   WHERE account_id=1""",
+                (
+                    mark_price, observed_at_ms, candle_close_ms, dataset_version,
+                    observed_at_ms, consumed["markId"],
+                ),
+            )
+        return provenance
+
     def test_core_and_ai_hold_independent_positions_in_one_account_database(self):
         core_order = self.core.submit(
             self.intent("core-long", "0.1", "100.1", "core-book"),
@@ -1941,14 +1977,10 @@ os._exit(0)
             config_version="funding-policy-v1",
             recorded_at_ms=self.now + 10 * 60_000,
         )
-        with sqlite3.connect(self.path) as connection:
-            connection.execute(
-                """UPDATE paper_account_risk_state
-                   SET last_mark_price='101',mark_observed_at_ms=?,
-                       mark_candle_close_ms=?,updated_at_ms=?
-                   WHERE account_id=1""",
-                (advanced_now, advanced_now - 60_000, advanced_now),
-            )
+        self.update_consumed_mark(
+            self.path, mark_price="101", observed_at_ms=advanced_now,
+            dataset_suffix="1" * 64,
+        )
 
         snapshot = ledger.read_account_risk_snapshot(self.path, now_ms=advanced_now)
         self.assertTrue(snapshot["riskReady"], snapshot)
@@ -1962,13 +1994,10 @@ os._exit(0)
 
     def test_mark_advancement_beyond_funding_coverage_blocks_new_exposure(self):
         advanced_now = self.now + 5 * 60_000
-        with sqlite3.connect(self.path) as connection:
-            connection.execute(
-                """UPDATE paper_account_risk_state
-                   SET mark_observed_at_ms=?,mark_candle_close_ms=?,updated_at_ms=?
-                   WHERE account_id=1""",
-                (advanced_now, advanced_now - 60_000, advanced_now),
-            )
+        self.update_consumed_mark(
+            self.path, mark_price="100", observed_at_ms=advanced_now,
+            dataset_suffix="2" * 64,
+        )
 
         snapshot = ledger.read_account_risk_snapshot(self.path, now_ms=advanced_now)
         self.assertTrue(snapshot["available"], snapshot)
@@ -1997,13 +2026,11 @@ os._exit(0)
             config_version="funding-policy-v1",
             recorded_at_ms=advanced_now,
         )
+        self.update_consumed_mark(
+            self.path, mark_price="100", observed_at_ms=advanced_now,
+            dataset_suffix="3" * 64,
+        )
         with sqlite3.connect(self.path) as connection:
-            connection.execute(
-                """UPDATE paper_account_risk_state
-                   SET mark_observed_at_ms=?,mark_candle_close_ms=?,updated_at_ms=?
-                   WHERE account_id=1""",
-                (advanced_now, advanced_now - 60_000, advanced_now),
-            )
             previous_baseline = connection.execute(
                 """SELECT daily_baseline_utc_day_ms,daily_baseline_equity_quote
                    FROM paper_account_risk_state WHERE account_id=1"""
