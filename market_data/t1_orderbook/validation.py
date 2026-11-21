@@ -99,7 +99,7 @@ def validate_payload(payload: bytes, *, now_ms: int) -> OrderbookSnapshot:
             object_pairs_hook=_unique_object,
             parse_constant=_reject_constant,
         )
-    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError, RecursionError) as exc:
         _fail(ErrorCode.MALFORMED_JSON, f"invalid JSON payload: {exc}")
     if not isinstance(decoded, dict):
         _fail(ErrorCode.SCHEMA_MISMATCH, "payload root must be an object")
@@ -157,6 +157,7 @@ def validate_payload(payload: bytes, *, now_ms: int) -> OrderbookSnapshot:
         _fail(ErrorCode.DIGEST_MISMATCH, "snapshotId must use sha256:<64 lowercase hex>")
     unsigned = dict(decoded)
     unsigned.pop("snapshotId")
+    # This digest detects payload mutation; it is not transport authentication or provenance.
     expected_digest = "sha256:" + hashlib.sha256(canonical_snapshot_bytes(unsigned)).hexdigest()
     if not hmac.compare_digest(snapshot_id, expected_digest):
         _fail(ErrorCode.DIGEST_MISMATCH, "snapshot digest does not match canonical payload")
