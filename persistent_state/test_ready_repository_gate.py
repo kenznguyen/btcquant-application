@@ -43,6 +43,7 @@ class ReadyRepositoryBoundaryTests(unittest.TestCase):
         self.repository.advance_session(
             self.token, expected_status=SessionStatus.PREFLIGHT,
             new_status=SessionStatus.RESTORING, at_ms=1_800_000_000_002,
+            preflight_attestation=self.ready_evidence().preflight,
         )
 
     def ready_evidence(self, *, generation=1):
