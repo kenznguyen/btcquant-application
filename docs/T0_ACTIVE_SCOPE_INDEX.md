@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 transfer continuation / reconstruction gates
+
+- Target ownership: `kenznguyen/btcquant-application`. Former Canonical SQLite is **LOST** and not needed; no recovery/migration/deletion is in scope. New reconstructed dataset is **NOT CREATED**.
+- PR #3/#4 automated reviews from Codex and Graphify are **ACCEPTED BY OWNER**. Review PRs remain OPEN / UNMERGED; this does not imply implementation merge or runtime approval.
+- Controlling reconstruction records: `docs/decisions/T0_CANONICAL_DATA_PRESERVE_AND_RECONSTRUCT_DECISION_2026-11-20.md` and `docs/plans/T0_CANONICAL_SQLITE_RECONSTRUCTION_EXECUTION_PLAN_2026-11-20.md`. Older materialization approval/staging plan is superseded/hold for execution. Old proposed `/srv/btcquant/staging/t0-reconstructed-btcusdt-20261120-run-001` is not an active approved destination; former VPS was deleted.
+- Archive evidence accepted only as **RECONSTRUCTED — PARTIAL COVERAGE**: 202 ZIP + 202 sidecars; M15 241,440 rows through 2026-11-18 23:45 UTC; H1 60,360 rows through 2026-11-18 23:00 UTC. REST tail is **NOT VERIFIED — CLOSED BY OWNER DECISION / NO FURTHER RETRIEVAL**. Draft manifest contains stale REST-success claims and is not usable for DB build.
+- Current blockers: new exact owner-controlled host/path, source access, fresh per-object archive evidence/sidecar hashes, source-column mapping, `available_at_ms` policy, importer SHA/dependency lock, gap/conflict policy, validation plan and separate execution approval.
+- Status: design **APPROVED**; archive materialization **NOT AUTHORIZED**; destination preflight **NOT RUN**; SQLite **NOT AUTHORIZED / NOT CREATED**; promotion, cutover, runtime and T1/T2 **NOT AUTHORIZED**.
+- No data, host, database, runtime, source code or tests changed. Governance documentation only.
+- Next: resolve owner gates and submit a newly reconciled execution request; no preflight/network/data/DB operation until explicit approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — Two T0 independent-review PRs opened
 
 - Review target snapshot for both PRs: `b79c7e5d0bc7cf5e6beee0d4e05505a1b1aa6556` (main at PR creation).
