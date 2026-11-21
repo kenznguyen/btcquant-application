@@ -33,8 +33,8 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          test "$(git hash-object docs/architecture/AI_STRATEGY_SIGNAL_CONTRACT_V1.md)" = "TO_BE_FILLED_DOC"
-          test "$(git hash-object pipeline/test_ai_signal_contract_red.py)" = "TO_BE_FILLED_TEST"
+          test "$(git hash-object docs/architecture/AI_STRATEGY_SIGNAL_CONTRACT_V1.md)" = "ee8dede7e2fc6048f2da1501ae6c20cf5dae1ee1"
+          test "$(git hash-object pipeline/test_ai_signal_contract_red.py)" = "bd4c6325739a7d1eadf5ced64c71e7e4742e7a31"
           mkdir -p "$RUNNER_TEMP/t2-ai-signal-red"
           {
             echo "workflow_run_id=$GITHUB_RUN_ID"
