@@ -8,7 +8,7 @@ from persistent_state.contracts import (
     Checkpoint, EventRecord, IdempotencyClaim, SessionRecord, SessionStatus,
     StrategyId, canonical_json, derive_idempotency_key,
 )
-from persistent_state.test_support import ready_evidence_for
+from persistent_state.test_support import ready_evidence_for, resume_confirmation_for
 from persistent_state.repository import (
     AggregateMutation, CheckpointIntegrityError, CheckpointRequiredForCloseError,
     GracefulStopTimeoutError,
@@ -39,6 +39,10 @@ def start_running(repository, session_id="session-1", *, account="paper-account"
         if target is SessionStatus.READY:
             kwargs["readiness_evidence"] = ready_evidence_for(
                 repository.get_session(session_id), token,
+            )
+        if target is SessionStatus.RUNNING:
+            kwargs["resume_confirmation"] = resume_confirmation_for(
+                repository.get_session(session_id), token, confirmed_at_ms=started_at + 1,
             )
         repository.advance_session(
             token, expected_status=expected, new_status=target,
@@ -161,6 +165,11 @@ class SessionFencingTests(unittest.TestCase):
             if target is SessionStatus.READY:
                 kwargs["readiness_evidence"] = ready_evidence_for(
                     self.repository.get_session("recovery-session"), new_token,
+                )
+            if target is SessionStatus.RUNNING:
+                kwargs["resume_confirmation"] = resume_confirmation_for(
+                    self.repository.get_session("recovery-session"), new_token,
+                    confirmed_at_ms=1_800_000_020_001,
                 )
             self.repository.advance_session(
                 new_token, expected_status=expected, new_status=target,
