@@ -10,8 +10,11 @@ from paper_execution.mark_provenance import (
 class MarketMarkProvenanceTests(unittest.TestCase):
     def window(self):
         return {
+            "exchange": "binance",
+            "marketType": "USDT_PERPETUAL",
             "symbol": "BTCUSDT",
             "timeframe": "15m",
+            "coverage": {"complete": True},
             "datasetVersion": "sha256:" + "a" * 64,
             "candles": [
                 {
@@ -43,6 +46,8 @@ class MarketMarkProvenanceTests(unittest.TestCase):
         reordered = {
             "candles": [dict(reversed(list(original["candles"][0].items())))],
             "datasetVersion": original["datasetVersion"],
+            "exchange": original["exchange"], "marketType": original["marketType"],
+            "coverage": original["coverage"],
             "timeframe": original["timeframe"],
             "symbol": original["symbol"],
         }
@@ -50,7 +55,7 @@ class MarketMarkProvenanceTests(unittest.TestCase):
         second = build_market_mark_provenance(reordered, source_id="T0_CANONICAL_MARKET_DATA")
         self.assertEqual(first, second)
 
-    def test_any_change_to_consumed_mark_or_dataset_changes_snapshot_identity(self):
+    def test_consumed_mark_hash_and_upstream_dataset_identity_are_distinct(self):
         original = self.window()
         first = build_market_mark_provenance(original, source_id="T0_CANONICAL_MARKET_DATA")
         changed = self.window()
@@ -71,6 +76,8 @@ class MarketMarkProvenanceTests(unittest.TestCase):
             {**self.window(), "candles": [None]},
             {**self.window(), "symbol": "ETHUSDT"},
             {**self.window(), "timeframe": "1m"},
+            {**self.window(), "coverage": {"complete": False}},
+            {**self.window(), "exchange": "okx"},
         ]
         for window in invalid:
             with self.subTest(window=window), self.assertRaises(ValueError):
