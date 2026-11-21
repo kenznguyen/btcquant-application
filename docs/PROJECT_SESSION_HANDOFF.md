@@ -1,19 +1,20 @@
 # CURRENT STATUS OVERRIDE — 2026-11-21 — D5 repository evidence gates and SessionOrchestrator CI PASS
 
 - D4 remains **APPROVED**. D5 is **APPROVED FOR IMPLEMENTATION**.
-- Implemented on existing branch `main`; exact tested source SHA: `e67e98b6fb92eb36b61139d4ac831fdfb8ccce06`.
+- Implemented on existing branch `main`; exact tested source SHA: `64001345c5e41089b4e75f2bb075067386543f35`.
 - Added `persistent_state/orchestrator.py`: manual session start, preflight, deterministic recovery via existing `recover_repository_state`, restore/risk attestation providers, and operator-only Resume. Start stops at READY; no automatic Resume and no strategy worker start.
 - `persistent_state/evidence.py`: typed preflight, restore, risk, bundle and operator Resume confirmation contracts with session/account/config/snapshot/fencing binding.
 - `persistent_state/repository.py`: repository-level enforcement for PREFLIGHT -> RESTORING and RESTORING -> READY; evidence writes and lifecycle transition share one transaction. READY -> RUNNING requires explicit Resume confirmation and fresh risk attestation.
+- Orchestrator cross-checks restore event head, aggregate-version map and checkpoint identity against deterministic replay output.
 - Durable append-only tables `ps_session_attestations` and `ps_session_operator_actions`; SHA-256 checksums and append-only triggers. Additive v1 extension preserves `user_version=1`; old v1 DB requires explicit `migrate_v1_session_evidence()`. No automatic migration.
 - New-session event head is initialized from persisted account event history for recovery reconciliation.
-- CI workflow [44855817663](https://github.com/kenznguyen/btcquant-application/actions/runs/44855817663) — **SUCCESS**; job `136697656292`.
-- Persistent State tests **143 PASS**; adjacent Paper Ledger / Strategy API regression **160 PASS**.
-- Artifact `persistent-state-contract-test-evidence`: ID `14687098658`, SHA-256 `472f1d87932dbc9fee78cfb07974df501231fd0d8528474ccc7e4b29219eaf12`, expires 2026-12-05.
+- CI workflow [44856004749](https://github.com/kenznguyen/btcquant-application/actions/runs/44856004749) — **SUCCESS**; job `136698296005`.
+- Persistent State tests **144 PASS**; adjacent Paper Ledger / Strategy API regression **160 PASS**.
+- Artifact `persistent-state-contract-test-evidence`: ID `14687805995`, SHA-256 `e7ccede1d2ee572ef64d2c135ada41d1fc85fe1813242ca8662c3e9bb03ecc93`, expires 2026-12-05.
 - Evidence report updated: `docs/evidence/PERSISTENT_STATE_RECOVERY_PREFLIGHT_RISK_SESSION_LIFECYCLE_2026-11-20.md`.
 - B1 repository evidence gates: **PASS** for preflight, READY and Resume lifecycle boundaries. Independent code review: **NOT VERIFIED**.
 - B2 full risk-policy integration: **BLOCKED**. B3 Kill Switch end-to-end persistence/reset/audit: **BLOCKED**. B4 real independent Core/AI ledger restoration: **BLOCKED**. B5 feature-configured lookback calculation and production T0 adapter: **PARTIAL**.
-- Operator approval verifier is an injected port; production authentication/API/UI wiring is **NOT VERIFIED**. Current tests use an isolated verifier callback.
+- Operator approval verifier is an injected port; production authentication/API/UI wiring is **NOT VERIFIED**. Current CI tests use an isolated verifier callback.
 - No Canonical T0 DB created or accessed; former Canonical remains **LOST**, reconstructed DB **NOT CREATED**, Feeder **NOT STARTED**. No VPS, T1/T2 runtime, exchange credentials, live/paper runtime or orders accessed.
 - Next: complete B2/B3/B4/B5 in isolated contract-first increments, obtain independent code review, then consider Core/AI runtime integration only after all blockers close. Keep runtime, T0 reconstruction, Feeder, T1/T2 runtime and trading blocked until separately authorized.
 
