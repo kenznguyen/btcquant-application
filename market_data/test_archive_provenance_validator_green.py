@@ -180,6 +180,12 @@ class ProvenanceValidatorGreenTest(unittest.TestCase):
         with self.assertRaises(FrozenInstanceError):
             result.valid = True  # type: ignore[misc]
         self.assertIsInstance(result.error_codes, tuple)
+        with self.assertRaises(ValueError):
+            ProvenanceValidationResult(False, ("ATTEMPT_OUTCOME_UNKNOWN", "ATTEMPT_OUTCOME_UNKNOWN"))
+        with self.assertRaises(ValueError):
+            ProvenanceValidationResult(False, ("NOT_A_V1_CODE",))
+        with self.assertRaises(ValueError):
+            ProvenanceValidationResult(False, ("CANDLE_AVAILABILITY_BOUNDARY_INVALID", "INVENTORY_OBJECT_SET_INCOMPLETE"))
 
 
 if __name__ == "__main__":
