@@ -7,6 +7,7 @@ from persistent_state.repository import SQLiteStateRepository, SessionTransition
 
 
 class ReadyRepositoryBoundaryTests(unittest.TestCase):
+    """Regression proof for the previously bypassable READY boundary."""
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
