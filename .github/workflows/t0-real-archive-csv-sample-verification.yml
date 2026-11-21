@@ -31,13 +31,14 @@ jobs:
       - name: Verify exact source pins and run real archive checks
         shell: bash
         env:
-          APPROVAL_SOURCE_SHA: c4d851b7fa98aad2240c4a58f833c91ee818078c
+          APPROVAL_SOURCE_SHA: f46f1b2e76c0fcdc38ecde6c45c8fee52e76f904
           INVENTORY_BLOB_SHA: eb251ac0924b46add906123f99b82e054d887a59
           PARSER_BLOB_SHA: 7d59706778a98a18185e0b2fe744c3c43c2eb870
           PARSER_TEST_BLOB_SHA: 50199cd168fd52314a846760cc4baf51a8cd5e9a
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor "$APPROVAL_SOURCE_SHA" HEAD
           python - <<'PY'
           import csv
           import hashlib
@@ -129,7 +130,7 @@ jobs:
                       url = BASE + object_key
                       subprocess.run(
                           ["curl", "--fail", "--location", "--silent", "--show-error",
-                           "--proto", "=https", "--tlsv1.2", "--max-time", "90",
+                           "--proto", "=https", "--tlsv1.2", "--max-time", "90", "--max-filesize", "200000",
                            "--output", str(target), url],
                           check=True,
                       )
@@ -168,7 +169,7 @@ jobs:
                       raise SystemExit(f"empty CSV member for {key}")
                   has_crlf = b"\r\n" in csv_bytes
                   without_crlf = csv_bytes.replace(b"\r\n", b"")
-                  if b"\r" in without_crlf or b"\n" in without_crlf:
+                  if b"\r" in without_crlf or (has_crlf and b"\n" in without_crlf):
                       raise SystemExit(f"mixed or unsupported newline convention in {key}")
                   newline_style = "CRLF" if has_crlf else ("LF" if b"\n" in csv_bytes else "NONE")
 
