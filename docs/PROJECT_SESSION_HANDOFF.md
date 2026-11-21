@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — D5 approved; typed session evidence contract increment PASS
+
+- Owner approved D5 implementation. Work is proceeding in small isolated increments on existing branch `main`; do not create a parallel branch or PR without a separate need.
+- D4 remains **APPROVED**. D5 is **APPROVED FOR IMPLEMENTATION**; this does not authorize production DB creation, T0 reconstruction, Feeder, VPS, runtime, T1/T2 runtime, automatic execution or real orders.
+- Repository source HEAD after evidence documentation: `b65210efe37386d7e052f66bc10b3b8f7082c633`.
+- Typed evidence source SHA tested by CI: `bd3ade272a226799e34699e49f3d22de1067bc94`.
+- Added `persistent_state/evidence.py` with immutable `EvidenceBinding`, `PreflightAttestation`, `RestoreAttestation`, `RiskReadinessAttestation`, and pure `validate_ready_evidence`.
+- Added `persistent_state/test_evidence.py` with 7 tests. Persistent State suite **130 PASS**; adjacent Paper Ledger / Strategy API regression **160 PASS**.
+- Workflow [44853569768](https://github.com/kenznguyen/btcquant-application/actions/runs/44853569768) — **SUCCESS**, job `136690345154`.
+- Artifact `persistent-state-contract-test-evidence`: ID `14686312334`, SHA-256 `d213583eb6280a8e139a870138fc2499968026ba2666c231155e0ae45181968d`, expires 2026-12-05.
+- Evidence report updated: `docs/evidence/PERSISTENT_STATE_RECOVERY_PREFLIGHT_RISK_SESSION_LIFECYCLE_2026-11-20.md`.
+- **B1 Evidence gates = PARTIAL / NOT CLOSED**: typed attestations and pure binding validation exist, but `SQLiteStateRepository.advance_session` still exposes generic direct transitions to RESTORING/READY. Repository-boundary enforcement and SessionOrchestrator are still required; do not claim callers cannot bypass the validator.
+- Current implementation is contract-only. No database, canonical data, network, T0 provider, Feeder, VPS, T1/T2 runtime, credentials, account or execution was accessed. CI tests are isolated; no live/paper runtime was started.
+- Next: add failing tests for repository-level READY transition bypass, then enforce evidence at the transition boundary while preserving explicit initializer-only schema creation and existing lifecycle semantics. Follow with SessionOrchestrator. Keep Core/AI runtime integration blocked until all five D5 blockers are closed and independently reviewed.
+- T0 status remains controlling: former Canonical SQLite **LOST**; reconstructed SQLite **NOT CREATED**; Feeder **NOT STARTED**; historical archive/REST evidence limitations unchanged.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Application-first / T0 offline REST-tail validator CI PASS
 
 - Owner-approved delivery order: **Application-first**. Controlling decision: `docs/decisions/DELIVERY_ORDER_APPLICATION_FIRST_2026-11-20.md`. Complete application/software foundations before Feeder restart or new T0 Canonical reconstruction; this sequence does not authorize data, runtime, integration or trading operations.
