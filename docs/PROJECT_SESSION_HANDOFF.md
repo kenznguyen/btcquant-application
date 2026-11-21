@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — Owner approved PAPER source and GitHub/SQLite policy governance
+
+- Owner explicitly approved the application-owned Paper Account Ledger as the official PAPER equity/exposure source, conditional on exact market-mark provenance and account/session/fencing binding being implemented and verified. This is PAPER only; LIVE source remains NOT FOUND / NOT VERIFIED.
+- Owner explicitly approved GitHub-reviewed, versioned policy documents as the sole authoring/approval source, with explicit manual publication into an application SQLite active-policy store. SQLite must retain full immutable published versions and audit history, with transactional CAS activation. Runtime reads the persisted active policy; no environment-variable auto-provision/override and no mutable GitHub fetch at runtime.
+- Decision record: `docs/decisions/ACCOUNT_RISK_SOURCE_AND_POLICY_GOVERNANCE_2026-11-21.md`, section 8 records owner approval.
+- Approval does not set numeric thresholds or resolve drawdown semantics: current contract v1 uses percentage drawdown; VersionedRiskPolicy V1 uses absolute quote drawdown. No conversion is permitted until separately defined and tested. Snapshot freshness remains explicit.
+- Next: isolated code-only work, TDD first, to close consumed-mark provenance linkage and account/session/fencing binding; separately design/test the versioned policy schema, immutable SQLite history, CAS publication and removal of environment auto-provision from the governed path. Then implement the read-only Provider and actual Core/AI caller wiring only after those gates pass.
+- B2 status: **BLOCKED**. Provider and production caller wiring: **NOT IMPLEMENTED**. Actual PAPER DB identity/cutover/readiness: **NOT VERIFIED**. LIVE source: **NOT FOUND / NOT VERIFIED**.
+- This increment is documentation-only. No tests/workflows were run; no code, DB, runtime, VPS, T0/T1/T2, exchange credentials, execution or orders were accessed or changed. Operational DB access/mutation, runtime start, automatic execution and LIVE remain unauthorized.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — Account source and policy governance audit
 
 - Read-only audit record: docs/decisions/ACCOUNT_RISK_SOURCE_AND_POLICY_GOVERNANCE_2026-11-21.md; decision/evidence commit a73078067456b6b3fa3424775b3e74418fd16107.
