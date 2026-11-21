@@ -54,7 +54,7 @@ The policy must be supplied on every call. No production defaults are permitted.
 
 Required fields:
 - `policyVersion`
-- `confidenceMin` in the open interval (0, 1)
+- `confidenceMin` in [0, 1); a value of 1 is invalid because the leverage mapping denominator would be zero
 - `minCalibrationSamples` as a positive integer
 - `minCalibrationPeriodMs` as a positive integer
 - `maxCalibrationAgeMs` as a positive integer
