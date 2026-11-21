@@ -6206,3 +6206,17 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - No old DB, archive payload, host, filesystem, SQLite, Dropbox, VPS/runtime, Feeder/Writer, T1/T2, exchange credentials or trading operation was accessed or changed in this increment. No tests/workflows were run; this is a governance/handoff update.
 - Next: resolve the execution-plan owner gates and prepare a newly reconciled bounded execution request for explicit approval. Do not preflight, retrieve archives, create SQLite, or select a fallback path until the current host/path and execution scope are explicitly approved.
 
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 AI-assisted source review increment
+
+- Owner approved proceeding without a separate human second-person reviewer. Review method recorded as AI-assisted source review; do not describe it as a human-independent review.
+- Review report: `docs/reviews/T0_AI_ASSISTED_SOURCE_REVIEW_2026-11-21.md`.
+- Reviewed T0 source snapshot: `4d41294a7b82566666e50a79b87f62b668672077`; current main before review report was `95fcd70f5057f3c3eac79c09723a1e0631ae49ff`. Inspected T0 file blob SHAs matched between the tested snapshot and current main for the files compared.
+- API test reconciliation: `market_data/test_api.py` is explicitly executed by the FastAPI workflow, alongside FastAPI/API-contract/controlled-ingestion/WSGI-retirement tests. Run `44861746989`, job `136716449564`, exact SHA `4d41294a7b82566666e50a79b87f62b668672077`: **69/69 PASS**.
+- FastAPI evidence artifact `14689618455`, SHA-256 `fe44ab13bf1dca83bcb072b88467f99d1e6f2249f6884f24f2a75b0d1f990068`; runtime-lock artifact `14690086537`, SHA-256 `0c1c9fdd2424a4cf4488e9e6bf27a7a7b66f47a3735c3a91beb7a71f6e210312`; Uvicorn/Nginx artifact `14690171368`, SHA-256 `736daffdceaa1b52a74d940c6e29d1b3f4593b0b3028d0e3b36b0b2b87e4088b`.
+- SQLite aggregate remains historical **174/174 PASS** at SHA `b4e16a153ef7b0306784efa117b3121fc83dacb5`, run `44740818608`; it is not a run on the FastAPI source SHA. SQLite-only aggregate selects four SQLite tests from `test_storage.py`; PostgreSQL-specific factory/connection tests are excluded because PostgreSQL remains parked.
+- AI-assisted review inspected API, contract, SQLite storage/read/write gateway, feeder scheduler/recovery/lease, runtime composition/sync, selected associated tests and T0 workflows. No Critical or Required findings were identified in this inspected scope.
+- Review coverage is **PARTIAL**, not exhaustive. PostgreSQL is **NOT VERIFIED / PARKED**; no fresh local test suite, live DB, Feeder, VPS/runtime, T1/T2, deployment or exchange operation was performed.
+- T0 overall status remains **NOT VERIFIED**; this review does not authorize SQLite reconstruction, archive staging/materialization, runtime, deployment, PostgreSQL activation, T1/T2 connection or trading.
+- No application source/test/workflow/dependency, database/data or runtime was changed in this review increment.
