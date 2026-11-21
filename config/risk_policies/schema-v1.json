@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kenznguyen/btcquant-application/config/risk_policies/schema-v1.json",
+  "title": "BTCUSDT PAPER Risk Policy V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policyVersion",
+    "quoteAsset",
+    "maxSnapshotAgeMs",
+    "drawdownLimit",
+    "maxDailyLossQuote",
+    "maxGrossExposureQuote"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "quoteAsset": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{1,11}$"
+    },
+    "maxSnapshotAgeMs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "drawdownLimit": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "value"],
+          "properties": {
+            "mode": { "const": "ABSOLUTE_QUOTE" },
+            "value": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+              "description": "Maximum loss from high-water mark, denominated in quoteAsset."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "value"],
+          "properties": {
+            "mode": { "const": "PERCENT_HWM" },
+            "value": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+              "description": "Maximum percentage drawdown from high-water mark, in the range 0..100."
+            }
+          }
+        }
+      ]
+    },
+    "maxDailyLossQuote": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+    },
+    "maxGrossExposureQuote": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+    }
+  }
+}
