@@ -69,6 +69,16 @@ class DualStrategyApiScopeRedTest(unittest.TestCase):
         ))
         return int(statuses[0][0].split()[0]), json.loads(payload)
 
+    def test_ledger_factory_does_not_auto_provision_policy_from_environment(self):
+        from paper_execution import ledger as ledger_module
+
+        with patch.object(api, "resolve_paper_db_path", return_value=self.db), \\
+             patch("paper_execution.risk_contract.provision_account_risk_contract") as provision, \\
+             patch.object(ledger_module, "PaperLedger") as constructor:
+            api.ledger()
+        provision.assert_not_called()
+        constructor.assert_called_once()
+
     def test_ledger_factory_constructs_the_requested_strategy_scope(self):
         from paper_execution import ledger as ledger_module
 
