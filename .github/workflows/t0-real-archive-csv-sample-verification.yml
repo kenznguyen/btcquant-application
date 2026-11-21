@@ -1,0 +1,229 @@
+name: T0 Real Archive CSV Sample Verification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t0-real-archive-csv-sample-verification
+  cancel-in-progress: false
+
+jobs:
+  verify-six-archives:
+    name: Verify 6 allowlisted Binance archives and 6 sidecars
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout approved source snapshot
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.13"
+          cache: "false"
+
+      - name: Verify exact source pins and run real archive checks
+        shell: bash
+        env:
+          APPROVAL_SOURCE_SHA: c4d851b7fa98aad2240c4a58f833c91ee818078c
+          INVENTORY_BLOB_SHA: eb251ac0924b46add906123f99b82e054d887a59
+          PARSER_BLOB_SHA: 7d59706778a98a18185e0b2fe744c3c43c2eb870
+          PARSER_TEST_BLOB_SHA: 50199cd168fd52314a846760cc4baf51a8cd5e9a
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import csv
+          import hashlib
+          import importlib.util
+          import json
+          import os
+          import re
+          import subprocess
+          import tempfile
+          import zipfile
+          from pathlib import Path, PurePosixPath
+
+          ROOT = Path.cwd()
+          REPORT = ROOT / "t0-real-archive-csv-sample-verification.json"
+          BASE = "https://data.binance.vision/"
+          INVENTORY = "docs/manifests/T0_BINANCE_UM_BTCUSDT_ARCHIVE_OBJECT_PROVENANCE_INVENTORY_2026-11-20.json"
+          EXPECTED_INVENTORY_BLOB = os.environ["INVENTORY_BLOB_SHA"]
+          EXPECTED_PARSER_BLOB = os.environ["PARSER_BLOB_SHA"]
+          EXPECTED_TEST_BLOB = os.environ["PARSER_TEST_BLOB_SHA"]
+
+          samples = [
+              ("15m", "data/futures/um/daily/klines/BTCUSDT/15m/BTCUSDT-15m-2019-12-31.zip", 4678, "7ea064f87f2cb0d8ef568fa1ad2e6ffae9b6d86210ea1ef21b077324e0abf0ab", 96),
+              ("15m", "data/futures/um/monthly/klines/BTCUSDT/15m/BTCUSDT-15m-2022-08.zip", 143927, "517e241a31c2062c50ca9861eb832fa9b3505b0ae67350135d5a74d812228eab", 2976),
+              ("15m", "data/futures/um/monthly/klines/BTCUSDT/15m/BTCUSDT-15m-2026-10.zip", 142135, "4c146566bbff66b73f4058120be7d2188d7cef4d2fd7c0deab8308233de80b85", 2976),
+              ("1h", "data/futures/um/daily/klines/BTCUSDT/1h/BTCUSDT-1h-2019-12-31.zip", 1387, "8ad8402a2b7eb92d48a3613fcea783592d7fec9c99dc07613271589501a1701a", 24),
+              ("1h", "data/futures/um/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2022-08.zip", 38388, "a1ad9eafd3dfecccfbc60c07de33ec2f7c33eab96f8ec04f88360b73b55dad76", 744),
+              ("1h", "data/futures/um/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-10.zip", 37961, "da0ec480b8857600067635308423022972e994d9dffe8b0251f0b7813018e2c8", 744),
+          ]
+
+          def sha256(data: bytes) -> str:
+              return hashlib.sha256(data).hexdigest()
+
+          def blob_sha(path: str) -> str:
+              return subprocess.check_output(
+                  ["git", "rev-parse", f"HEAD:{path}"], text=True
+              ).strip()
+
+          if blob_sha(INVENTORY) != EXPECTED_INVENTORY_BLOB:
+              raise SystemExit("inventory blob SHA does not match approved pin")
+          if blob_sha("market_data/archive_csv_parser.py") != EXPECTED_PARSER_BLOB:
+              raise SystemExit("parser blob SHA does not match approved pin")
+          if blob_sha("market_data/test_archive_csv_parser.py") != EXPECTED_TEST_BLOB:
+              raise SystemExit("parser test blob SHA does not match approved pin")
+
+          inventory = json.loads((ROOT / INVENTORY).read_text(encoding="utf-8"))
+          inventory_by_key = {item["object_key"]: item for item in inventory["objects"]}
+          if len(samples) != 6 or len({item[1] for item in samples}) != 6:
+              raise SystemExit("sample allowlist must contain exactly six unique ZIPs")
+
+          parser_spec = importlib.util.spec_from_file_location(
+              "archive_csv_parser", ROOT / "market_data/archive_csv_parser.py"
+          )
+          parser = importlib.util.module_from_spec(parser_spec)
+          import sys
+          sys.modules[parser_spec.name] = parser
+          parser_spec.loader.exec_module(parser)
+
+          report = {
+              "status": "RUNNING",
+              "source_commit_sha": os.environ["GITHUB_SHA"],
+              "approval_source_sha": os.environ["APPROVAL_SOURCE_SHA"],
+              "inventory_blob_sha": EXPECTED_INVENTORY_BLOB,
+              "parser_blob_sha": EXPECTED_PARSER_BLOB,
+              "parser_test_blob_sha": EXPECTED_TEST_BLOB,
+              "source_base": BASE,
+              "scope": "exactly 6 ZIP archives and their 6 paired .CHECKSUM sidecars",
+              "sqlite_created": False,
+              "importer_created": False,
+              "canonical_t0_modified": False,
+              "rest_tail_requested": False,
+              "objects": [],
+          }
+
+          with tempfile.TemporaryDirectory(prefix="t0-archive-sample-") as temp:
+              tempdir = Path(temp)
+              for timeframe, key, expected_size, expected_digest, expected_rows in samples:
+                  entry = inventory_by_key.get(key)
+                  if not entry or entry.get("object_kind") != "ZIP":
+                      raise SystemExit(f"allowlisted ZIP absent from inventory: {key}")
+                  if entry.get("byte_size") != expected_size or entry.get("sha256") != expected_digest:
+                      raise SystemExit(f"manifest metadata mismatch for {key}")
+                  sidecar_key = key + ".CHECKSUM"
+                  if entry.get("paired_sidecar_key") != sidecar_key:
+                      raise SystemExit(f"unexpected sidecar pairing for {key}")
+
+                  zip_path = tempdir / (Path(key).name)
+                  sidecar_path = tempdir / (Path(key).name + ".CHECKSUM")
+                  for object_key, target in ((key, zip_path), (sidecar_key, sidecar_path)):
+                      url = BASE + object_key
+                      subprocess.run(
+                          ["curl", "--fail", "--location", "--silent", "--show-error",
+                           "--proto", "=https", "--tlsv1.2", "--max-time", "90",
+                           "--output", str(target), url],
+                          check=True,
+                      )
+
+                  zip_bytes = zip_path.read_bytes()
+                  sidecar_bytes = sidecar_path.read_bytes()
+                  actual_digest = sha256(zip_bytes)
+                  if len(zip_bytes) != expected_size:
+                      raise SystemExit(f"ZIP byte-size mismatch for {key}")
+                  if actual_digest != expected_digest:
+                      raise SystemExit(f"ZIP SHA-256 mismatch for {key}")
+
+                  sidecar_text = sidecar_bytes.decode("ascii", errors="strict").strip()
+                  match = re.fullmatch(r"([0-9a-fA-F]{64})(?:[ \t]+\*?[^\r\n]+)?", sidecar_text)
+                  if not match or match.group(1).lower() != expected_digest:
+                      raise SystemExit(f"sidecar body does not assert expected ZIP SHA-256: {sidecar_key}")
+
+                  with zipfile.ZipFile(zip_path, "r") as archive:
+                      bad_member = archive.testzip()
+                      if bad_member is not None:
+                          raise SystemExit(f"ZIP CRC failure in {key}: {bad_member}")
+                      members = [info for info in archive.infolist() if not info.is_dir()]
+                      if len(members) != 1:
+                          raise SystemExit(f"expected exactly one file member in {key}")
+                      member = members[0]
+                      member_path = PurePosixPath(member.filename)
+                      if member_path.is_absolute() or ".." in member_path.parts or member_path.suffix.lower() != ".csv":
+                          raise SystemExit(f"unsafe or non-CSV ZIP member in {key}")
+                      csv_bytes = archive.read(member)
+
+                  if b"\x00" in csv_bytes:
+                      raise SystemExit(f"NUL byte in CSV member for {key}")
+                  has_bom = csv_bytes.startswith(b"\xef\xbb\xbf")
+                  csv_text = csv_bytes.decode("utf-8-sig", errors="strict")
+                  if not csv_text:
+                      raise SystemExit(f"empty CSV member for {key}")
+                  has_crlf = b"\r\n" in csv_bytes
+                  without_crlf = csv_bytes.replace(b"\r\n", b"")
+                  if b"\r" in without_crlf or b"\n" in without_crlf:
+                      raise SystemExit(f"mixed or unsupported newline convention in {key}")
+                  newline_style = "CRLF" if has_crlf else ("LF" if b"\n" in csv_bytes else "NONE")
+
+                  raw_rows = list(csv.reader(csv_text.splitlines(), strict=True))
+                  if not raw_rows or any(len(row) != 12 for row in raw_rows):
+                      raise SystemExit(f"CSV must be non-empty, headerless 12-column rows: {key}")
+                  if any(not any(field.strip() for field in row) for row in raw_rows):
+                      raise SystemExit(f"blank CSV row in {key}")
+                  if raw_rows[0][0].strip().lower() in {"open_time", "open time"}:
+                      raise SystemExit(f"unexpected CSV header row in {key}")
+
+                  parsed = parser.parse_archive_csv(csv_text, timeframe=timeframe)
+                  if len(parsed) != expected_rows or len(parsed) != len(raw_rows):
+                      raise SystemExit(f"row-count mismatch for {key}: parsed={len(parsed)} expected={expected_rows}")
+
+                  report["objects"].append({
+                      "zip_key": key,
+                      "zip_size_bytes": len(zip_bytes),
+                      "zip_sha256": actual_digest,
+                      "sidecar_key": sidecar_key,
+                      "sidecar_size_bytes": len(sidecar_bytes),
+                      "sidecar_sha256": sha256(sidecar_bytes),
+                      "sidecar_asserted_zip_sha256": match.group(1).lower(),
+                      "csv_member": member.filename,
+                      "csv_size_bytes": len(csv_bytes),
+                      "csv_encoding": "UTF-8",
+                      "utf8_bom_present": has_bom,
+                      "delimiter": "comma",
+                      "newline": newline_style,
+                      "header": "absent",
+                      "column_count": 12,
+                      "row_count": len(parsed),
+                      "timeframe": timeframe,
+                      "first_open_time_ms": parsed[0].open_time_ms,
+                      "last_open_time_ms": parsed[-1].open_time_ms,
+                      "close_time_semantics": "inclusive millisecond; exclusive boundary = close_time + 1",
+                      "zip_crc": "PASS",
+                      "parser": "PASS",
+                  })
+
+          if len(report["objects"]) != 6:
+              raise SystemExit("not all six allowlisted archives were verified")
+          report["status"] = "PASS"
+          REPORT.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print(json.dumps(report, indent=2, sort_keys=True))
+          PY
+
+      - name: Run existing offline parser unit tests
+        run: python -B -m unittest -v market_data.test_archive_csv_parser
+
+      - name: Upload verification report only
+        if: always() && hashFiles('t0-real-archive-csv-sample-verification.json') != ''
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        with:
+          name: t0-real-archive-csv-sample-verification
+          path: t0-real-archive-csv-sample-verification.json
+          if-no-files-found: error
+          retention-days: 14
