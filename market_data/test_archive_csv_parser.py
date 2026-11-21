@@ -90,9 +90,11 @@ class ArchiveCsvParserTest(unittest.TestCase):
 
     def test_rejects_non_finite_and_exponent_overflow_values(self):
         text = (FIXTURES / "binance_um_btcusdt_m15_synthetic.csv").read_text(encoding="utf-8")
-        malformed = text.replace("12.345", "Infinity", 1)
-        with self.assertRaises(ArchiveCsvError):
-            parse_archive_csv(malformed, timeframe="15m")
+        for invalid in ("Infinity", "1e999999", "9" * 129):
+            malformed = text.replace("12.345", invalid, 1)
+            with self.subTest(invalid=invalid[:16]):
+                with self.assertRaises(ArchiveCsvError):
+                    parse_archive_csv(malformed, timeframe="15m")
 
     def test_rejects_invalid_ohlc_envelope(self):
         text = (FIXTURES / "binance_um_btcusdt_m15_synthetic.csv").read_text(encoding="utf-8")
@@ -123,6 +125,13 @@ class ArchiveCsvParserTest(unittest.TestCase):
         lines = text.splitlines()
         with self.assertRaisesRegex(ArchiveCsvError, "strictly increasing"):
             parse_archive_csv("\n".join([lines[1], lines[0]]) + "\n", timeframe="15m")
+
+    def test_rejects_exclusive_close_boundary_overflow(self):
+        text = (FIXTURES / "binance_um_btcusdt_m15_synthetic.csv").read_text(encoding="utf-8")
+        # Keep the timestamp aligned but make the exclusive boundary exceed signed int64.
+        overflow_row = "9223372036854000000,1,2,1,2,1,9223372036854899999,2,1,1,1,0"
+        with self.assertRaises(ArchiveCsvError):
+            parse_archive_csv(overflow_row, timeframe="15m")
 
     def test_rejects_csv_syntax_errors(self):
         with self.assertRaises(ArchiveCsvError):
