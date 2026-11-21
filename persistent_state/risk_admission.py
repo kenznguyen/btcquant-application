@@ -92,7 +92,9 @@ def _positive_decimal(value: Any) -> Decimal:
     return number
 
 
-def _non_negative_decimal(value: str) -> Decimal:
+def _non_negative_decimal(value: Any) -> Decimal:
+    if not isinstance(value, str) or not value or len(value) > 128:
+        raise ValueError("risk amounts must be exact decimal strings")
     try:
         number = Decimal(value)
     except (InvalidOperation, TypeError, ValueError) as exc:
@@ -177,7 +179,7 @@ class SharedRiskEngine:
             drawdown = _non_negative_decimal(snapshot.drawdown_quote)
             daily_loss = _non_negative_decimal(snapshot.daily_loss_quote)
             gross_exposure = _non_negative_decimal(snapshot.gross_exposure_quote)
-            requested_margin = _positive_decimal(proposal.requested_margin_quote)
+            requested_margin = _non_negative_decimal(proposal.requested_margin_quote)
         except (InvalidOperation, TypeError, ValueError):
             return self._deny("RISK_INPUT_INVALID", risk_state)
 
@@ -186,6 +188,8 @@ class SharedRiskEngine:
 
         is_new_exposure = proposal.action_kind in _NEW_EXPOSURE_ACTIONS
         if is_new_exposure:
+            if requested_margin <= 0:
+                return self._deny("RISK_INPUT_INVALID", risk_state)
             if drawdown > Decimal(policy.max_drawdown_quote):
                 return self._deny("DRAWDOWN_LIMIT_EXCEEDED", risk_state)
             if daily_loss > Decimal(policy.max_daily_loss_quote):
