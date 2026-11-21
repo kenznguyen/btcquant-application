@@ -96,13 +96,74 @@ class FiveLayerApiTest(unittest.TestCase):
         return int(status.split()[0]), json.loads(data)
 
     def enable_dual_ledger(self):
-        from paper_execution import equity as paper_equity
+        from paper_execution import ledger as paper_ledger
+        from paper_execution.account_history import record_consumed_market_mark
+        from paper_execution.mark_provenance import build_market_mark_provenance
+
+        bootstrap = PaperLedger(self.paper_db)
+        bootstrap.record_equity(
+            "100", self.now - 60_000, self.now, self.window["datasetVersion"], "100"
+        )
+        core = PaperLedger(
+            self.paper_db, strategy_id="STRATEGY_CORE", source_sha="a" * 40
+        )
+        ai = PaperLedger(
+            self.paper_db, strategy_id="AI_FREQAI", source_sha="a" * 40, leverage="3"
+        )
+        mark_window = api.market_window(
+            "BTCUSDT", "15m", self.end - 900_000, self.end, as_of_ms=self.now
+        )
+        if not mark_window["candles"] or not mark_window["coverage"]["complete"]:
+            raise AssertionError("API_TEST_CANONICAL_MARK_FIXTURE_INCOMPLETE")
+        mark = mark_window["candles"][-1]
+        provenance = build_market_mark_provenance(
+            mark_window, source_id="T0_CANONICAL_MARKET_DATA"
+        )
         with sqlite3.connect(self.paper_db) as connection:
-            paper_equity.ensure(connection)
+            day = self.now // 86_400_000 * 86_400_000
             connection.execute(
-                "INSERT OR IGNORE INTO paper_account_config (id, initial_capital) VALUES (1, '100')"
+                """UPDATE paper_account_risk_state SET high_water_mark_quote='100',
+                   daily_baseline_utc_day_ms=?,daily_baseline_equity_quote='100',
+                   last_equity_quote='100',last_mark_price=?,mark_observed_at_ms=?,
+                   mark_candle_close_ms=?,dataset_version=?,
+                   risk_ready=1,unavailable_reason=NULL,updated_at_ms=?
+                   WHERE account_id=1""",
+                (
+                    day, mark["close"], self.now, mark["closeTimeMs"],
+                    mark_window["datasetVersion"], self.now,
+                ),
             )
-        PaperLedger(self.paper_db, strategy_id="STRATEGY_CORE", source_sha="a" * 40)
+            consumed = record_consumed_market_mark(
+                connection, provenance, observed_at_ms=self.now
+            )
+            connection.execute(
+                "UPDATE paper_account_risk_state SET last_mark_id=? WHERE account_id=1",
+                (consumed["markId"],),
+            )
+        coverage_start = self.now - 86_400_000
+        paper_ledger.record_funding_coverage(
+            self.paper_db, coverage_id="api-test-funding-coverage",
+            start_at_ms=coverage_start, end_at_ms=self.now,
+            status="VERIFIED", source="API_TEST_RECONCILED_HISTORY",
+            source_snapshot_id="api-test:funding-history",
+            payload_hash="sha256:" + "a" * 64,
+            config_version="api-test-funding-v1", recorded_at_ms=self.now,
+        )
+        paper_ledger.record_account_equity_cutover(
+            self.paper_db, cutover_id="api-test-account-cutover",
+            expected_initial_capital_quote="100",
+            expected_realized_pnl_quote="0", expected_fees_quote="0",
+            expected_funding_quote="0", expected_account_equity_quote="100",
+            mark_price=mark["close"], mark_candle_close_ms=mark["closeTimeMs"],
+            mark_observed_at_ms=self.now,
+            dataset_version=mark_window["datasetVersion"],
+            funding_coverage_start_at_ms=coverage_start,
+            source="API_TEST_RECONCILED_HISTORY",
+            source_snapshot_id="api-test:account-cutover",
+            payload_hash="sha256:" + "b" * 64,
+            config_version="api-test-cutover-v1", recorded_at_ms=self.now,
+        )
+        self.core, self.ai = core, ai
 
     def test_dual_ledger_fixture_establishes_verified_account_risk_cutover(self):
         self.enable_dual_ledger()
