@@ -35,7 +35,7 @@ class MarketMarkProvenanceTests(unittest.TestCase):
         self.assertEqual(provenance.candle_close_ms, 1_800_000_900_000)
         self.assertEqual(provenance.dataset_version, "sha256:" + "a" * 64)
         self.assertTrue(provenance.source_snapshot_id.startswith("sha256:"))
-        self.assertEqual(provenance.source_snapshot_id, provenance.source_payload_sha256)
+        self.assertEqual(provenance.source_snapshot_id, "sha256:" + provenance.source_payload_sha256)
 
     def test_provenance_digest_is_deterministic_and_key_order_independent(self):
         original = self.window()
