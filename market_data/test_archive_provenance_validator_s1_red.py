@@ -505,9 +505,9 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.payload["inventory_expected_sha256"] = "0" * 64
         self.payload["inventory"]["objects"].pop()
         self.payload["objects"][0]["response_status"] = 302
-        _renumber_attempt_and_reference(self.payload, 2, 2)
-        self.payload["pairs"][0]["zip_crc_ok"] = 0
-        self.payload["members"][0]["parser_source_sha"] = "invalid"
+        _renumber_attempt_and_reference(self.payload, 4, 2)
+        self.payload["pairs"][3]["zip_crc_ok"] = 0
+        self.payload["members"][5]["parser_source_sha"] = "invalid"
         self.payload["source_rows"][0]["physical_record_ordinal"] = 1
         _refresh_source_row_identity(self.payload, 0)
 
