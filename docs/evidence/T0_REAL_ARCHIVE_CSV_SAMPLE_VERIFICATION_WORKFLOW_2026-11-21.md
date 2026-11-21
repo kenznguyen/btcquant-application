@@ -93,3 +93,16 @@ Owner may separately authorize one manual dispatch of this workflow. Review the 
 - This run consumed the separately approved second dispatch. The approval covered only removal of invalid `cache: "false"` and one second dispatch; it did not authorize further workflow changes or a third dispatch.
 - A narrowly scoped next correction would need to make the approved ancestor commit available to the ancestry check (e.g. explicitly fetch that exact SHA before `merge-base`, or use sufficient checkout history). This is a proposal only, not implemented or authorized.
 - No SQLite, importer, Contract 1.2.0 implementation/freeze, Canonical T0, REST tail, T1/T2, VPS/runtime, deployment, exchange credentials or trading was changed or invoked.
+
+
+## Third dispatch authorization and ancestry correction — 2026-11-21
+
+- Owner explicitly approved both (1) the narrowly scoped ancestry-check correction and (2) one third workflow dispatch.
+- Run 2 failure root cause: `actions/checkout` default shallow history (`fetch-depth: 1`) did not contain approval commit `02b407fe7d90efe184ae11d8b271a7aeb6e23f96`; `git merge-base --is-ancestor` could not resolve it.
+- Correction: set `fetch-depth: 0` for the existing pinned checkout action. No other workflow logic or scope changed. This provides full Git history for the ancestry assertion; it does not retrieve additional Binance archive objects.
+- Correction commit: `82c1e8c1e20d7df335936a53005d84cc1756c075`.
+- Workflow blob after correction: `9edb0e4cf74c22f82c38f107c730e73abf04de44`.
+- Static verification: **PASS** — latest main workflow contains exactly one `fetch-depth: 0`; setup-python has no invalid `cache: "false"`; six ZIP allowlist and all other workflow content are unchanged relative to the prior version except the single checkout depth setting.
+- Third dispatch: **APPROVED / NOT DISPATCHED**. The available GitHub actions connector supports reading workflow runs and rerunning prior runs, but does not expose creating a new `workflow_dispatch` run. Rerunning run 2 would use its old source SHA and is not a valid substitute. Do not rerun it.
+- Real archive requests: none from run 2. Third dispatch has not occurred. 12-object verification remains **NOT VERIFIED**; parser contract freeze remains **BLOCKED**.
+- No changes to archive allowlist, object scope, REST policy, parser, inventory, SQLite/importer, Contract 1.2.0, Canonical T0, T1/T2, VPS/runtime, deployment, or trading.
