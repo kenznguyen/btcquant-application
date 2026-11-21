@@ -8,6 +8,7 @@ from persistent_state.evidence import (
     EvidenceBinding, PreflightAttestation, RestoreAttestation,
     RiskReadinessAttestation, ReadyEvidenceBundle,
 )
+from persistent_state.test_support import resume_confirmation_for
 from persistent_state.repository import (
     SQLiteStateRepository, SessionTransitionError, EvidenceIntegrityError,
 )
@@ -107,6 +108,44 @@ class ReadyRepositoryBoundaryTests(unittest.TestCase):
         )
         with self.assertRaises(KeyError):
             self.repository.read_ready_evidence("session-ready-gate")
+
+
+    def enter_ready(self):
+        self.repository.advance_session(
+            self.token, expected_status=SessionStatus.RESTORING,
+            new_status=SessionStatus.READY, at_ms=1_800_000_000_011,
+            readiness_evidence=self.ready_evidence(),
+        )
+
+    def test_repository_rejects_running_transition_without_operator_confirmation(self):
+        self.enter_ready()
+        with self.assertRaises(SessionTransitionError):
+            self.repository.advance_session(
+                self.token, expected_status=SessionStatus.READY,
+                new_status=SessionStatus.RUNNING, at_ms=1_800_000_000_020,
+            )
+        self.assertEqual(
+            self.repository.get_session("session-ready-gate").status,
+            SessionStatus.READY,
+        )
+
+    def test_operator_resume_confirmation_and_fresh_risk_are_durably_audited(self):
+        self.enter_ready()
+        ready_session = self.repository.get_session("session-ready-gate")
+        confirmation = resume_confirmation_for(
+            ready_session, self.token, confirmed_at_ms=1_800_000_000_020,
+        )
+        running = self.repository.advance_session(
+            self.token, expected_status=SessionStatus.READY,
+            new_status=SessionStatus.RUNNING, at_ms=1_800_000_000_021,
+            resume_confirmation=confirmation,
+        )
+        self.assertEqual(running.status, SessionStatus.RUNNING)
+        reopened = SQLiteStateRepository(self.repository.database_path)
+        self.assertEqual(
+            reopened.read_resume_confirmations("session-ready-gate"),
+            (confirmation,),
+        )
 
     def test_persisted_attestation_checksum_is_verified_on_read(self):
         self.repository.advance_session(
