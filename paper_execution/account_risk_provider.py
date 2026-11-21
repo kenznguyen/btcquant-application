@@ -39,6 +39,25 @@ class PaperAccountRiskBundle:
     policy_payload_sha256: str
     policy_source_commit_sha: str
 
+    def admission_context(self, risk_state, *, now_ms: int):
+        """Create one immutable admission context reusable by both Core and AI."""
+        from persistent_state.contracts import SessionStatus
+        from persistent_state.risk_admission import RiskAdmissionContext
+
+        if type(now_ms) is not int or now_ms < self.snapshot.generated_at_ms:
+            raise ValueError("RISK_ADMISSION_CONTEXT_TIME_INVALID")
+        return RiskAdmissionContext(
+            account_scope_id=self.binding.account_scope_id,
+            session_id=self.binding.session_id,
+            fencing_generation=self.binding.fencing_generation,
+            session_status=SessionStatus.RUNNING,
+            risk_state=risk_state,
+            account_risk_snapshot=self.snapshot,
+            risk_policy=self.policy,
+            now_ms=now_ms,
+            shared_risk_engine_available=True,
+        )
+
 
 class SQLitePaperAccountRiskSnapshotProvider(AccountRiskSnapshotProvider):
     """Build a typed snapshot from one read-only PAPER transaction and a current writer fence.
