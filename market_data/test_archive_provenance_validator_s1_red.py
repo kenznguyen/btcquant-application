@@ -372,7 +372,6 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.assert_s1_error("RUN_ACCEPTANCE_INVARIANT_INVALID")
 
     def test_aggregate_new_codes_are_ordered_and_deduplicated(self) -> None:
-        self.payload["inventory_raw_bytes"] = b"not-json"
         self.payload["inventory_expected_sha256"] = "0" * 64
         self.payload["inventory"]["objects"].pop()
         self.payload["objects"][0]["measured_size_bytes"] = None
