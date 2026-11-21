@@ -103,7 +103,10 @@ class SessionOrchestrator:
                 blocked_reason=f"PREFLIGHT_BLOCKED:{type(exc).__name__}",
             )
 
-        self._advance(\n            token, SessionStatus.PREFLIGHT, SessionStatus.RESTORING,\n            preflight_attestation=preflight,\n        )
+        self._advance(
+            token, SessionStatus.PREFLIGHT, SessionStatus.RESTORING,
+            preflight_attestation=preflight,
+        )
         current = self.repository.get_session(session.session_id)
         try:
             recovery = recover_repository_state(
