@@ -1,0 +1,116 @@
+name: T0 S4 isolated provenance RED and V1 regression
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: "Exact source commit SHA to test (40-character Git SHA)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: t0-s4-isolated-${{ inputs.source_sha }}
+  cancel-in-progress: false
+
+jobs:
+  isolated-verification:
+    name: S4 RED + V1 regression on one checkout
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Validate requested source SHA
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "source_sha must be a full 40-character lowercase Git SHA" >&2
+            exit 2
+          fi
+
+      - name: Checkout exact source SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up isolated Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          check-latest: false
+
+      - name: Capture checkout and test provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p verification-artifacts
+          {
+            echo "requested_source_sha=${{ inputs.source_sha }}"
+            echo "git_rev_parse_head=$(git rev-parse HEAD)"
+            echo "git_status_begin"
+            git status --short
+            echo "git_status_end"
+            echo "s4_test_blob=$(git rev-parse HEAD:market_data/test_archive_provenance_validator_s1_red.py)"
+            echo "v1_red_test_blob=$(git rev-parse HEAD:market_data/test_archive_provenance_validator_red.py)"
+            echo "v1_green_test_blob=$(git rev-parse HEAD:market_data/test_archive_provenance_validator_green.py)"
+            echo "validator_blob=$(git rev-parse HEAD:market_data/archive_provenance_validator.py)"
+            echo "python_version=$(python --version 2>&1)"
+            echo "python_executable=$(python -c 'import sys; print(sys.executable)')"
+            echo "captured_at_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } | tee verification-artifacts/provenance.txt
+
+      - name: Run S4 RED suite (preserve full failure trace)
+        id: s4
+        shell: bash
+        run: |
+          set +e
+          python -B -m unittest -v market_data.test_archive_provenance_validator_s1_red 2>&1 | tee verification-artifacts/s4-red.log
+          code=${PIPESTATUS[0]}
+          echo "$code" > verification-artifacts/s4-red.exit-code
+          echo "exit_code=$code"
+          exit 0
+
+      - name: Run V1 focused regression on the same checkout
+        id: v1
+        shell: bash
+        run: |
+          set +e
+          python -B -m unittest -v \
+            market_data.test_archive_provenance_validator_red \
+            market_data.test_archive_provenance_validator_green \
+            2>&1 | tee verification-artifacts/v1-regression.log
+          code=${PIPESTATUS[0]}
+          echo "$code" > verification-artifacts/v1-regression.exit-code
+          echo "exit_code=$code"
+          exit 0
+
+      - name: Write machine-readable result summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          s4_code="$(cat verification-artifacts/s4-red.exit-code 2>/dev/null || echo NOT_RUN)"
+          v1_code="$(cat verification-artifacts/v1-regression.exit-code 2>/dev/null || echo NOT_RUN)"
+          {
+            echo "source_sha=${{ inputs.source_sha }}"
+            echo "checked_out_sha=$(git rev-parse HEAD)"
+            echo "s4_red_exit_code=$s4_code"
+            echo "v1_regression_exit_code=$v1_code"
+            echo "interpretation=Execution harness only; inspect full logs and test assertions before assigning PASS/BLOCKED."
+            echo "scope=No archive acquisition, Canonical T0 access, database writes, importer, deployment, or trading."
+          } | tee verification-artifacts/result-summary.txt
+
+      - name: Upload complete verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: t0-s4-v1-verification-${{ github.run_id }}
+          path: verification-artifacts/
+          if-no-files-found: error
+          retention-days: 30
