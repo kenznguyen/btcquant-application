@@ -1,7 +1,10 @@
 import hashlib
 import json
 import sqlite3
+import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 from paper_execution.versioned_risk_policy_store import (
     initialize_risk_policy_schema,
@@ -140,6 +143,61 @@ class VersionedRiskPolicyStoreTests(unittest.TestCase):
                 source_policy_path="../outside.json", operator_id="operator:test",
                 reason="invalid source", published_at_ms=1_800_000_000_100,
             )
+
+    def test_concurrent_publishers_with_same_expected_hash_have_exactly_one_winner(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "policy.sqlite3"
+            setup = sqlite3.connect(path)
+            initialize_risk_policy_schema(
+                setup, source_sha="a" * 40, applied_at_ms=1_800_000_000_000
+            )
+            setup.close()
+
+            def attempt(version):
+                document = dict(self.policy, policyVersion=version)
+                raw = json.dumps(document, sort_keys=True, separators=(",", ":"))
+                db = sqlite3.connect(path, timeout=5, isolation_level=None)
+                try:
+                    return publish_versioned_risk_policy(
+                        db, raw, expected_active_hash=None,
+                        source_git_commit_sha="b" * 40,
+                        source_policy_path=f"config/risk_policies/{version}.json",
+                        source_policy_sha256=hashlib.sha256(raw.encode()).hexdigest(),
+                        operator_id=f"operator:{version}", reason="concurrent CAS test",
+                        published_at_ms=1_800_000_000_100,
+                    )
+                finally:
+                    db.close()
+
+            def capture(version):
+                try:
+                    return ("PASS", attempt(version))
+                except ValueError as exc:
+                    return ("DENIED", str(exc))
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                results = list(pool.map(capture, ("paper-risk-a", "paper-risk-b")))
+            self.assertEqual(sum(status == "PASS" for status, _ in results), 1)
+            self.assertEqual(sum(
+                status == "DENIED" and value == "RISK_POLICY_ACTIVE_VERSION_CONFLICT"
+                for status, value in results
+            ), 1)
+            db = sqlite3.connect(path)
+            try:
+                self.assertEqual(
+                    db.execute("SELECT COUNT(*) FROM paper_risk_policy_active").fetchone()[0],
+                    1,
+                )
+                self.assertEqual(
+                    db.execute("SELECT COUNT(*) FROM paper_risk_policy_publication_audit").fetchone()[0],
+                    1,
+                )
+                self.assertEqual(
+                    db.execute("SELECT COUNT(*) FROM paper_risk_policy_versions").fetchone()[0],
+                    1,
+                )
+            finally:
+                db.close()
 
     def test_existing_database_schema_is_required_and_not_auto_created_by_publish(self):
         empty = sqlite3.connect(":memory:")
