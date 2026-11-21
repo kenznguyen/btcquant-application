@@ -6307,3 +6307,14 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Contract 1.2.0 implementation, migration SQL, acceptance tests and Importer: **NOT STARTED / NOT AUTHORIZED**. No implementation approval requested or granted.
 - This increment is documentation-only on existing `main`. No code, schema, API, migration SQL, tests, workflows, dependencies, archive, object store, host, filesystem, database, SQLite, VPS, runtime, Feeder, T1/T2, PostgreSQL, deployment or exchange was accessed or changed. No tests/workflows run; no workflow run/job/artifact.
 - Next: owner-approved fixture source/access/materialization scope before fixture verification; owner review of the Contract 1.2.0 design and required gates. Only after those gates may a separate implementation approval be requested. Preserve the no-execution boundary.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T2 Core Adapter CI path-filter correction
+
+- Owner approved a bounded change to add `pipeline/core_signal.py` and `pipeline/values.py` to `.github/workflows/t2-core-adapter-green.yml` `on.push.paths`, so edits to the validator and shared value primitives trigger the Adapter + Validator parity tests.
+- Implemented on existing `main`; commit: `3455d126688b827be4ad4819d1a3695af4997899`; workflow blob: `88a2ff4c2795e0fffd5977ce21372219952f364a`.
+- Prior trigger paths, exact source blob assertions, pinned Python image, network-disabled/read-only test container and 10-test assertion remain unchanged. Only the two required path filters were added.
+- Optional adapter hardening for list/dict action values was explicitly out of scope and remains NOT IMPLEMENTED. No adapter, tests, validator, shared values, risk policy, runner, ledger, T0/T1, AI, DB, runtime or trading behavior changed.
+- CI execution for commit `3455d126688b827be4ad4819d1a3695af4997899`: **PENDING / NOT VERIFIED** at handoff update time. The prior 10/10 PASS remains tied to tested SHA `ca9f01902cd1e3b5f22ccecce7cd347077924f90`, not this workflow-only commit.
+- Status: path-filter correction **IMPLEMENTED**; workflow CI verification **PENDING**; self-review closure **PENDING**; independent second-person review **NOT VERIFIED**; full repository regression **NOT RUN**.
+- Next: verify the GitHub Actions run triggered by the workflow-only commit, capture run/job/artifact IDs and SHA256 if available, then update this handoff with exact evidence and final PASS/BLOCKED/NOT VERIFIED status. No runtime or trading action is authorized.
