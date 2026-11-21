@@ -6140,3 +6140,14 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Producer compatibility remains **BLOCKED**: T1 OrderbookManager `f64` loses exact decimal source text; snapshot metadata is incomplete; strict continuity/reconnect evidence is missing; receipt-time provenance is unproven; initial REST/WS bridge rule conflicts between T1 contract and publisher validator. Bridge-specific consumer test intentionally not implemented until producer semantics are reconciled.
 - Independent review: **NOT PERFORMED**. Provider remains **PAUSED**. T1 → T2 runtime **NOT APPROVED**. Production readiness **NOT VERIFIED**.
 - Next permitted work: preserve this bounded consumer implementation and request independent review if needed. Any T1 producer correction, HTTP transport, provider activation, T1 → T2 runtime connection, T0 data/runtime access, or strategy feature activation requires separate explicit approval.
+
+## 2026-11-21 — AccountRiskSnapshot gates and Provider progress
+
+- Provenance, explicit PAPER account-scope binding, atomic session/fencing read, policy schema/CAS, and Provider isolated integration tests: PASS.
+- Provider file: paper_execution/account_risk_provider.py; common Core/AI admission context is exposed through PaperAccountRiskBundle.admission_context().
+- Exact tested source SHA: a4619ba8ec585e613a235cda446cb32a6546ed1a.
+- CI workflow https://github.com/kenznguyen/btcquant-application/actions/runs/44865380093, job 136727747289, SUCCESS; 358 tests PASS (179 + 179).
+- Artifact persistent-state-contract-test-evidence, ID 14691124782, SHA-256 388e4152a901750f7504c2429e612211f2a98262310c4d2f7613a98a9bcb100e, expires 2026-12-05.
+- No real PAPER DB, T0 database, VPS, Feeder, exchange credentials, or order execution was accessed.
+- Production caller wiring remains BLOCKED: pipeline.api has no runtime Persistent State repository/session-fence source, and no production durable RiskState aggregate is wired (B3 remains blocked). Do not substitute environment variables, user payload, or legacy PaperLedger state for those authorities.
+- Next decision required: approve the authoritative runtime Persistent State database configuration and RiskState aggregate source (Kill Switch, policy version, reserved margin, aggregate version). After that, wire Core proposal admission through Provider + SharedRiskEngine. Keep AI execution disabled; wire AI proposals to the same admission context without enabling orders.
