@@ -287,3 +287,23 @@ Not approved:
 - Storage/data migration, live trading, or real orders.
 
 Current disposition: **DESIGN BASELINE RECORDED; IMPLEMENTATION NOT STARTED; ACCEPTANCE TESTS SPECIFIED BUT NOT EXECUTED; PRODUCER COMPATIBILITY BLOCKED BY OPEN ITEMS ABOVE.**
+
+
+---
+
+## 13. Implementation status override — 2026-11-21
+
+This update supersedes the earlier statements in Sections 9 and 12 that no consumer test code had been created or executed. The owner subsequently approved the bounded consumer implementation.
+
+- Consumer package implemented under `market_data/t1_orderbook/`: immutable DTO, typed errors, strict validator, deterministic synthetic fixture builder, and a transport-neutral adapter that performs no I/O.
+- Focused suite: **43 T1 consumer acceptance tests**. Adjacent offline T0 REST-tail validator regression: **10 tests**.
+- Final GitHub Actions run [44850261269](https://github.com/kenznguyen/btcquant-application/actions/runs/44850261269), exact tested source SHA `3d85f19e36807f3b7eed1eb8a9057b4a77173a6d`, job `136679697952`: **53/53 PASS** in an isolated network-disabled CPython 3.12.16 container.
+- Artifact `t1-orderbook-consumer-contract-evidence`: ID `14684123969`, SHA-256 `d160586bbaff3187ffdfdfa6d4bb0a27c64e1924e09202b537b647281e6d2e6b`.
+- RED-first evidence: run [44849764243](https://github.com/kenznguyen/btcquant-application/actions/runs/44849764243), test-first SHA `4b7f9326a6bf1c8d658a0a0c0c87ae683a9db877`, failed as expected before the consumer package existed.
+- The initial bridge-boundary test remains blocked and intentionally unimplemented because T1's design and publisher validator disagree on the accepted initial bridge event. Do not resolve this by weakening consumer checks or guessing a producer rule.
+- Consumer implementation does not include HTTP, sockets, retries, caches, background work, T0 fallback, strategy signal generation, or execution. The adapter accepts already-obtained bytes only. No provider or runtime activation follows from this PASS.
+- Producer compatibility remains **BLOCKED** by decimal provenance (`f64` in T1 OrderbookManager), incomplete snapshot metadata, strict continuity/reconnect evidence, receipt-time provenance, and the bridge-boundary mismatch. T1 Provider remains **PAUSED**.
+- Independent review: **NOT PERFORMED**. Production readiness and T1 → T2 runtime: **NOT VERIFIED / NOT APPROVED**.
+- Full implementation evidence and file blob SHAs: `docs/evidence/T1_ORDERBOOK_CONSUMER_V1_IMPLEMENTATION_2026-11-21.md`.
+
+Current disposition: **CONSUMER IMPLEMENTATION PASS FOR THE TESTED SUBSET; PRODUCER COMPATIBILITY BLOCKED; TRANSPORT AND RUNTIME NOT IMPLEMENTED OR AUTHORIZED.**
