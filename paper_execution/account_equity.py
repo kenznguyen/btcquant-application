@@ -110,6 +110,7 @@ def record_account_mark(
     provenance = validate_consumed_mark(
         mark_provenance, mark_price=format(mark, "f"),
         candle_close_ms=candle_at, dataset_version=dataset_version,
+        observed_at_ms=observed_at,
     )
 
     with closing(ledger.connect()) as connection, connection:
