@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — T0 Application Foundation exact-source audit and independent-review gate
+
+- Current repository HEAD at audit start: `d6e7516e0cdbcde58d4b78327c18c22aa3a4c2a0`; documentation record commits: review package `7cf9e3a4e51bd5b395d8ee968852777d6defc18c`, T0 scope index `b9cc5782551c2bfee7ba74343722bad163075ddc`.
+- Current T0 review package: `docs/reviews/T0_APPLICATION_FOUNDATION_CURRENT_REVIEW_PACKAGE_2026-11-21.md`. It pins current T0 source/test/workflow blob SHAs, CI runs/artifacts, scope limits and the independent reviewer checklist.
+- T0 Application Foundation implementation **PASS — CODE PRESENT**. FastAPI/Candle API **69/69 PASS** on exact source SHA `4d41294a7b82566666e50a79b87f62b668672077`; workflow [44861746989](https://github.com/kenznguyen/btcquant-application/actions/runs/44861746989), jobs `136716449564` (69/69), `136716449529` (runtime-lock + ASGI smoke), `136716449322` (Uvicorn/Nginx loopback integration). Artifacts: `14689618455` SHA-256 `fe44ab13bf1dca83bcb072b88467f99d1e6f2249f6884f24f2a75b0d1f990068`; `14690086537` SHA-256 `0c1c9fdd2424a4cf4488e9e6bf27a7a7b66f47a3735c3a91beb7a71f6e210312`; `14690171368` SHA-256 `736daffdceaa1b52a74d940c6e29d1b3f4593b0b3028d0e3b36b0b2b87e4088b`.
+- SQLite-only aggregate **174/174 PASS** remains historical exact-SHA evidence: run [44740818608](https://github.com/kenznguyen/btcquant-application/actions/runs/44740818608), SHA `b4e16a153ef7b0306784efa117b3121fc83dacb5`, artifact `14629919931`, SHA-256 `87df9fe44627016066b893f9cf98d27bad5b31f80e64cb6993c7e9d8b61fc731`. Do not call it a current-HEAD run.
+- The T0 source/test/workflow paths match the tested FastAPI snapshot; compare from `4d41294a7b82566666e50a79b87f62b668672077` to `d6e7516e0cdbcde58d4b78327c18c22aa3a4c2a0` is 107 ahead / 0 behind with no T0 path changes. CI evidence remains attached to its exact tested SHA.
+- Genuine independent second-person review of current exact T0 source: **NOT VERIFIED / PENDING**. Existing review package targets older SHA `fc2e48420c6bbd00b7c5cfbaa8b3d7b2fc996235`; Graphify index is stale at `1e7dcc5e70a0e6840a7c5617893d3d2b0fc952df`. The new package is review preparation only, not approval.
+- REST-tail validator synthetic regression **10/10 PASS** at SHA `265268c0b527c4a323493c4643a67a46ee15a223`; real REST payload remains **NOT VERIFIED — CLOSED BY OWNER DECISION** after HTTP 451. No retry/bypass.
+- VPS/runtime/production readiness **NOT VERIFIED / NOT AUTHORIZED**; PostgreSQL/TimescaleDB **PARKED / BLOCKED**. `/health` is owner-approved liveness-only.
+- This audit was read-only except documentation records. No source/test/workflow/dependency changes; no canonical DB/data, Feeder, VPS/runtime, T1/T2 runtime, deployment, exchange credential or trading access.
+- Next: obtain genuine independent second-person review of the current exact-source snapshot; fix only bounded Required findings with exact-SHA CI and follow-up review. Keep real-data, runtime, database, layer-integration and trading gates separate.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — Owner approved PAPER source and GitHub/SQLite policy governance
 
 - Owner explicitly approved the application-owned Paper Account Ledger as the official PAPER equity/exposure source, conditional on exact market-mark provenance and account/session/fencing binding being implemented and verified. This is PAPER only; LIVE source remains NOT FOUND / NOT VERIFIED.
