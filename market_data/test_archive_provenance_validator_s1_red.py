@@ -28,6 +28,7 @@ _CHECKOUT_SHA = "c" * 40
 _ROW_COUNT = 202
 _ZIP_BYTES = b"synthetic deterministic zip evidence"
 _SIDECAR_BYTES = b"synthetic deterministic checksum sidecar"
+_CSV_HEADER = "open_time,open,high,low,close,volume,close_time,quote_volume,trade_count,taker_buy_base,taker_buy_quote,ignore\\n"
 
 
 def _sha(data: bytes) -> str:
@@ -135,8 +136,19 @@ def build_valid_s1_fixture() -> dict[str, Any]:
         pair_id = "pair1:" + _enc_digest(
             "T0-ARCHIVE-PAIR-V1", zip_id, sidecar_id
         )
+        open_time = 1767225600000 + index * 900000
+        open_value = _decimal(10000 + index)
+        high_value = _decimal(10002 + index)
+        low_value = _decimal(9999 + index)
+        close_value = _decimal(10001 + index)
+        volume_value = "1"
+        available_at = open_time + 900000
+        raw_fields = [
+            str(open_time), open_value, high_value, low_value, close_value,
+            volume_value, str(available_at - 1), "0", "0", "0", "0", "0",
+        ]
         member_path = f"data/BTCUSDT-15m-{index:03d}.csv"
-        member_bytes = f"member-{index}".encode("utf-8")
+        member_bytes = _CSV_HEADER.encode("utf-8") + (",".join(raw_fields) + "\\n").encode("utf-8")
         member_sha = _sha(member_bytes)
         member_id = "mem1:" + _enc_digest(
             "T0-CSV-MEMBER-V1", pair_id, member_path, bytes.fromhex(member_sha)
@@ -206,17 +218,6 @@ def build_valid_s1_fixture() -> dict[str, Any]:
             "disposition": "VERIFIED", "failure_code": None,
         })
 
-        open_time = 1767225600000 + index * 900000
-        open_value = _decimal(10000 + index)
-        high_value = _decimal(10002 + index)
-        low_value = _decimal(9999 + index)
-        close_value = _decimal(10001 + index)
-        volume_value = "1"
-        available_at = open_time + 900000
-        raw_fields = [
-            str(open_time), open_value, high_value, low_value, close_value,
-            volume_value, str(available_at - 1), "0", "0", "0", "0", "0",
-        ]
         raw_digest = _enc_digest("T0-RAW-CSV-ROW-V1", *raw_fields)
         source_row_id = "row1:" + _enc_digest(
             "T0-SOURCE-ROW-V1", member_id, 2, bytes.fromhex(raw_digest)
@@ -345,6 +346,10 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
         test.assertEqual(object_by_id[pair["sidecar_object_id"]]["verification_status"], "VERIFIED")
         test.assertEqual(pair["sidecar_asserted_zip_sha256"], pair["measured_zip_sha256"])
     for member in payload["members"]:
+        source_row = next(row for row in payload["source_rows"] if row["member_id"] == member["member_id"])
+        member_bytes = _CSV_HEADER.encode("utf-8") + (",".join(source_row["raw_fields"]) + "\\n").encode("utf-8")
+        test.assertEqual(member["member_size_bytes"], len(member_bytes))
+        test.assertEqual(member["member_sha256"], _sha(member_bytes))
         test.assertEqual(
             member["member_id"],
             "mem1:" + _enc_digest(
@@ -352,7 +357,6 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
                 bytes.fromhex(member["member_sha256"]),
             ),
         )
-        test.assertEqual(member["member_size_bytes"], len(f"member-{payload['members'].index(member)}".encode("utf-8")))
         test.assertEqual(member["encoding"], "UTF-8")
         test.assertEqual(member["bom_present"], 0)
         test.assertEqual(member["newline"], "LF")
