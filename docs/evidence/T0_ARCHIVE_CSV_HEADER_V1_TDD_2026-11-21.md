@@ -1,46 +1,60 @@
-# T0_ARCHIVE_CSV_HEADER_V1 — TDD implementation record
+# T0_ARCHIVE_CSV_HEADER_V1 — TDD implementation and verification record
 
 Date: 2026-11-21
-Status: IMPLEMENTATION COMMITTED — TEST EXECUTION NOT VERIFIED
+Status: **FOCUSED TESTS PASS — FULL REPOSITORY REGRESSION NOT RUN**
 
-## Approval and frozen contract
+## Frozen contract
 
-Owner approved the exact 12-field T0_ARCHIVE_CSV_HEADER_V1 tuple from the approved real-source sample, strict exact-match on the first CSV record only, no aliases, no case folding, no trimming and no heuristic row skipping. Approval also covers bounded TDD parser implementation and the focused tests listed in the approved scope.
+Owner approved T0_ARCHIVE_CSV_HEADER_V1 with strict exact-match on the complete first CSV record only. Frozen ordered tuple:
 
-Tuple: open_time, open, high, low, close, volume, close_time, quote_volume, count, taker_buy_volume, taker_buy_quote_volume, ignore.
+`open_time,open,high,low,close,volume,close_time,quote_volume,count,taker_buy_volume,taker_buy_quote_volume,ignore`
 
-## Scope implemented
+No aliases, case folding, trimming, fuzzy matching, partial matches, or heuristic row skipping.
 
-- Added ARCHIVE_CSV_HEADER_V1.
-- Added immutable ArchiveCsvDocument metadata result and parse_archive_csv_document.
-- Preserved parse_archive_csv(...) tuple return and existing row model.
-- Only the first parsed CSV record is compared to the entire exact ordered tuple.
-- Exact match skips exactly one header record; all other first records are validated as data.
-- Repeated/later header, malformed row, wrong column count, blank rows, malformed CSV, and unsupported variants are not skipped.
-- Existing timestamp, timeframe, close-time, Decimal, OHLC, volume, taker-volume and ordering validations retained.
-- Added 15 focused synthetic unit tests; existing 19 tests were not edited.
-- Added focused GitHub Actions workflow .github/workflows/t0-archive-csv-header-contract.yml, running both test modules on Python 3.13.
+## Implementation
 
-## Source records
+- Added `ARCHIVE_CSV_HEADER_V1`.
+- Added immutable `ArchiveCsvDocument` and `parse_archive_csv_document` metadata API.
+- Preserved legacy `parse_archive_csv(...)` tuple return and row model.
+- Exact first-record match skips exactly one header. Every other record undergoes strict data validation.
+- Later/repeated header, malformed rows, wrong field count, blank rows and malformed CSV are rejected.
+- Existing timestamp, timeframe alignment, inclusive close-time, Decimal, OHLC, volume, taker-volume and ordering checks retained.
+- Added 15 focused synthetic tests; original 19 parser tests unchanged.
+- Added focused Actions workflow on Ubuntu 24.04 / Python 3.13.
 
-- Baseline parser blob: 7d59706778a98a18185e0b2fe744c3c43c2eb870.
-- New header test commit: 237dbfed3df5c54e8afaaf7516efb6d21f14bb53.
-- Parser implementation commits: 5375e2e276ae96c3b82e68cf312bb3591f75b5e3, 05484f0c97decf888eab4bc181c3090c6004d592, final regex correction 0ee4de390ed5cdd90138136883fb395e2d6ff011.
-- Focused workflow commit: 54317ad0aaaa8d547889b41336c0aaed4b1d09bc.
-- Latest source SHA before evidence/handoff documentation: 54317ad0aaaa8d547889b41336c0aaed4b1d09bc.
+## Source and workflow evidence
 
-## Verification status
+- Baseline parser blob: `7d59706778a98a18185e0b2fe744c3c43c2eb870`.
+- Test module commit: `237dbfed3df5c54e8afaaf7516efb6d21f14bb53`.
+- Parser implementation commit: `5375e2e276ae96c3b82e68cf312bb3591f75b5e3`.
+- Regex corrections: `05484f0c97decf888eab4bc181c3090c6004d592`, `0ee4de390ed5cdd90138136883fb395e2d6ff011`.
+- Workflow commit / exact tested source SHA: `54317ad0aaaa8d547889b41336c0aaed4b1d09bc`.
+- Workflow run: [44925135819](https://github.com/kenznguyen/btcquant-application/actions/runs/44925135819).
+- Event: push; run attempt 1; completed success at 2026-11-21T16:32:46Z.
+- Job: `parser-tests`; job ID `136909445610`; completed success.
+- Runner: Ubuntu 24.04.5; CPython 3.13.18.
+- Checkout log confirms exact SHA `54317ad0aaaa8d547889b41336c0aaed4b1d09bc`.
+- Command: `python -B -m unittest -v market_data.test_archive_csv_parser market_data.test_archive_csv_header_contract`.
+- Result: **Ran 34 tests in 0.003s — OK** (19 legacy + 15 new).
+- Artifacts: none published by this workflow.
 
-- Contract tuple: PASS — grounded in approved real-source sample.
-- Implementation committed: PASS — code present.
-- Focused RED execution: NOT VERIFIED — no Actions run log retrieved.
-- Focused GREEN execution: NOT VERIFIED — no Actions run log retrieved.
-- Existing 19-test regression: NOT VERIFIED at new source SHA.
+## Review and status
+
+- Contract tuple/source sample evidence: PASS (approved one-archive header inspection; run 44924695179).
+- Parser implementation committed: PASS.
+- Focused TDD GREEN: PASS on exact source SHA above.
+- Existing 19 parser tests: PASS as part of the same 34-test run.
+- New 15 strict-header tests: PASS as part of the same 34-test run.
+- Self-review: PASS — API compatibility preserved; exact first-record tuple comparison; no fuzzy handling; body records remain validated; no external I/O added.
 - Full repository regression: NOT RUN.
-- Independent review: SELF-REVIEW PENDING.
-- Workflow run ID/job/artifact: NOT VERIFIED / none recorded.
-- Canonical T0, archive inventory, source archives, SQLite, importer, Contract 1.2.0, T1/T2, VPS/runtime, deployment, exchange credentials and trading: NOT TOUCHED.
+- Real archive compatibility: VERIFIED only for the approved M15 monthly 2022-08 sample header; H1/daily archive header variants NOT VERIFIED.
+- Workflow artifact: none.
+- Independent review is not a mandatory gate under the current project handoff policy.
+
+## Scope protection
+
+No source archive download, archive inventory mutation, Canonical T0 modification, SQLite creation/import, importer, Contract 1.2.0 implementation, T1/T2 connection, VPS/runtime/deployment, exchange credential, or trading behavior was touched.
 
 ## Next step
 
-Retrieve the GitHub Actions run triggered by the workflow commit (or manually run the workflow once if it did not trigger). Inspect exact source SHA and test logs. Do not mark PASS until both test modules pass on the exact tested SHA. Fix any failure with another bounded TDD cycle and exact-SHA verification.
+Parser header support is ready for the next separately approved staging/import design step. Do not generalize this header evidence to H1/daily archives without additional source samples. Full repository regression remains a separate, unrun check.
