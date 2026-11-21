@@ -2320,11 +2320,11 @@ class PaperLedger:
     def strategy_state(self):
         return self.snapshot().get("strategyState", {"owner": None, "dcaUsed": False, "initialMarginQuote": "0"})
 
-    def record_account_mark(self, mark_price, candle_close_ms, observed_at_ms, dataset_version, initial_capital="100"):
+    def record_account_mark(self, mark_price, candle_close_ms, observed_at_ms, dataset_version, initial_capital="100", *, mark_provenance=None):
         from paper_execution.account_equity import record_account_mark
         return record_account_mark(
             self, mark_price, candle_close_ms, observed_at_ms,
-            dataset_version, initial_capital,
+            dataset_version, initial_capital, mark_provenance=mark_provenance,
         )
 
     def record_equity(self, mark_price, candle_close_ms, observed_at_ms, dataset_version, initial_capital="100"):
