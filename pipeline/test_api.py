@@ -351,17 +351,38 @@ class FiveLayerApiTest(unittest.TestCase):
         self.assertEqual(result["order"]["status"], "FILLED")
         self.assertEqual(self.request("/v1/paper/evaluate", "POST", {"source": "UNKNOWN"})[0], 400)
 
-    def test_equity_endpoint_fails_closed_without_dual_ledger_mark_provenance(self):
+    def test_equity_endpoint_returns_verified_mark_provenance(self):
         code, result = self.request("/v1/equity")
-        self.assertEqual(code, 503, result)
-        self.assertEqual(result["error"], "PAPER_STORE_UNAVAILABLE")
+        self.assertEqual(code, 200, result)
+        self.assertTrue(result["available"])
+        self.assertTrue(result["riskReady"], result)
+        self.assertEqual(result["initialCapital"], "100")
+        self.assertEqual(result["accountEquityQuote"], "100")
+        provenance = result["markProvenance"]
+        self.assertEqual(provenance["sourceId"], "T0_CANONICAL_MARKET_DATA")
+        self.assertEqual(provenance["sourceSnapshotId"], provenance["sourceVersion"])
+        self.assertTrue(provenance["sourcePayloadSha256"].startswith("sha256:"))
         with sqlite3.connect(self.paper_db) as connection:
             self.assertEqual(
-                connection.execute("SELECT COUNT(*) FROM paper_equity_history").fetchone()[0], 0
+                connection.execute(
+                    "SELECT COUNT(*) FROM paper_account_consumed_market_marks"
+                ).fetchone()[0],
+                1,
             )
-            self.assertIsNone(connection.execute(
-                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='paper_schema_migrations'"
-            ).fetchone())
+            self.assertEqual(
+                connection.execute(
+                    "SELECT last_mark_id FROM paper_account_risk_state WHERE account_id=1"
+                ).fetchone()[0],
+                connection.execute(
+                    "SELECT mark_id FROM paper_account_consumed_market_marks"
+                ).fetchone()[0],
+            )
+            self.assertEqual(
+                connection.execute(
+                    "SELECT version FROM paper_schema_migrations WHERE version=10"
+                ).fetchone()[0],
+                10,
+            )
 
     def test_audit_and_data_quality_endpoints_return_real_store_state(self):
         self.request("/v1/paper/pause","POST",{"paused":True})
