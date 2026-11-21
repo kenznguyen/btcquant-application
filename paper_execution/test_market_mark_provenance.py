@@ -35,7 +35,8 @@ class MarketMarkProvenanceTests(unittest.TestCase):
         self.assertEqual(provenance.candle_close_ms, 1_800_000_900_000)
         self.assertEqual(provenance.dataset_version, "sha256:" + "a" * 64)
         self.assertTrue(provenance.source_snapshot_id.startswith("sha256:"))
-        self.assertEqual(provenance.source_snapshot_id, "sha256:" + provenance.source_payload_sha256)
+        self.assertEqual(provenance.source_snapshot_id, provenance.dataset_version)
+        self.assertEqual(len(provenance.source_payload_sha256), 64)
 
     def test_provenance_digest_is_deterministic_and_key_order_independent(self):
         original = self.window()
@@ -55,7 +56,8 @@ class MarketMarkProvenanceTests(unittest.TestCase):
         changed = self.window()
         changed["candles"][0]["close"] = "101.26"
         second = build_market_mark_provenance(changed, source_id="T0_CANONICAL_MARKET_DATA")
-        self.assertNotEqual(first.source_snapshot_id, second.source_snapshot_id)
+        self.assertEqual(first.source_snapshot_id, second.source_snapshot_id)
+        self.assertNotEqual(first.source_payload_sha256, second.source_payload_sha256)
         changed_dataset = self.window()
         changed_dataset["datasetVersion"] = "sha256:" + "b" * 64
         third = build_market_mark_provenance(changed_dataset, source_id="T0_CANONICAL_MARKET_DATA")
