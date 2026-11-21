@@ -678,6 +678,10 @@ class SQLiteStateRepository:
                         ),
                     )
 
+            latest_sequence = connection.execute(
+                "SELECT COALESCE(MAX(event_sequence), 0) FROM ps_events WHERE account_scope_id = ?",
+                (session.account_scope_id,),
+            ).fetchone()[0]
             connection.execute(
                 """
                 INSERT INTO ps_sessions (
@@ -690,7 +694,7 @@ class SQLiteStateRepository:
                     session.session_id, session.account_scope_id, session.status.value,
                     session.started_at_ms, session.ended_at_ms, session.stop_requested_at_ms,
                     session.initiator, session.source_snapshot_id, session.config_hash, session.code_version,
-                    session.last_committed_event_sequence, session.schema_version,
+                    latest_sequence, session.schema_version,
                 ),
             )
             connection.execute(
