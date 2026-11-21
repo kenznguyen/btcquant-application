@@ -39,6 +39,10 @@ def start_running_session(repository, session_id, account_scope_id):
         (SessionStatus.READY, SessionStatus.RUNNING),
     ):
         kwargs = {}
+        if target is SessionStatus.RESTORING:
+            kwargs["preflight_attestation"] = ready_evidence_for(
+                repository.get_session(session_id), token,
+            ).preflight
         if target is SessionStatus.READY:
             kwargs["readiness_evidence"] = ready_evidence_for(
                 repository.get_session(session_id), token,
