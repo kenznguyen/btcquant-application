@@ -499,6 +499,21 @@ class SQLiteStateRepository:
                 "SELECT name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"
             )
         }
+        required = {"ps_session_attestations"}
+        missing = required - found
+        if missing:
+            raise EvidenceSchemaMigrationRequiredError(
+                "explicit migrate_v1_session_evidence() required before READY: "
+                + ", ".join(sorted(missing))
+            )
+
+    @staticmethod
+    def _require_evidence_append_only(connection: sqlite3.Connection) -> None:
+        found = {
+            row[0] for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"
+            )
+        }
         required = {
             "ps_session_attestations",
             "ps_session_attestations_no_update",
@@ -507,7 +522,7 @@ class SQLiteStateRepository:
         missing = required - found
         if missing:
             raise EvidenceSchemaMigrationRequiredError(
-                "explicit migrate_v1_session_evidence() required before READY: "
+                "session evidence append-only schema is incomplete: "
                 + ", ".join(sorted(missing))
             )
 
@@ -787,7 +802,7 @@ class SQLiteStateRepository:
                     raise SessionTransitionError(
                         "RESTORING -> READY requires a complete typed readiness evidence bundle"
                     )
-                self._require_evidence_schema(connection)
+                self._require_evidence_append_only(connection)
                 session_record = SessionRecord(
                     session_id=session["session_id"],
                     account_scope_id=session["account_scope_id"],
