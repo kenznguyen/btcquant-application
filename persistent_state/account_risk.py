@@ -109,6 +109,33 @@ class AccountRiskSnapshot:
             raise ValueError("ledger_reconciled must be boolean")
 
 
+def validate_snapshot_binding(
+    snapshot: AccountRiskSnapshot,
+    *,
+    account_scope_id: str,
+    session_id: str,
+    fencing_generation: int,
+) -> AccountRiskSnapshot:
+    """Return only a verified, reconciled snapshot bound to the exact request."""
+    if not isinstance(snapshot, AccountRiskSnapshot):
+        raise ValueError("typed AccountRiskSnapshot is required")
+    _nonempty("account_scope_id", account_scope_id)
+    _nonempty("session_id", session_id)
+    if type(fencing_generation) is not int or fencing_generation < 1:
+        raise ValueError("fencing_generation must be an integer >= 1")
+    if snapshot.account_scope_id != account_scope_id:
+        raise ValueError("account risk snapshot belongs to another account scope")
+    if snapshot.session_id != session_id:
+        raise ValueError("account risk snapshot belongs to another session")
+    if snapshot.fencing_generation != fencing_generation:
+        raise ValueError("account risk snapshot belongs to another fencing generation")
+    if not snapshot.verified:
+        raise ValueError("account risk snapshot provenance is not verified")
+    if not snapshot.ledger_reconciled:
+        raise ValueError("account risk snapshot ledgers are not reconciled")
+    return snapshot
+
+
 class AccountRiskSnapshotProvider(Protocol):
     """Read-only port; implementations must fail closed on unavailable evidence."""
 
@@ -127,4 +154,5 @@ __all__ = [
     "AccountRiskProvenance",
     "AccountRiskSnapshot",
     "AccountRiskSnapshotProvider",
+    "validate_snapshot_binding",
 ]
