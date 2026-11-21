@@ -383,16 +383,23 @@ def _read_account_risk_snapshot_connection(db, *, now_ms):
             raise ValueError("CONSUMED_MARK_FIELDS")
         source_window = canonical_mark.get("sourceWindow")
         source_as_of = source_window.get("asOfMs") if isinstance(source_window, dict) else None
-        source_dataset_hash = hashlib.sha256(
-            json.dumps(source_window, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
-        ).hexdigest() if isinstance(source_window, dict) else None
+        from paper_execution.mark_provenance import MarketMarkProvenance, validate_consumed_mark
+        typed_provenance = MarketMarkProvenance(
+            source_id=source_id, source_snapshot_id=source_snapshot_id,
+            dataset_version=mark_dataset, source_as_of_ms=source_as_of,
+            mark_price=stored_price, candle_close_ms=stored_candle,
+            source_payload_sha256=payload_hash, canonical_payload=canonical_payload,
+        )
+        validate_consumed_mark(
+            typed_provenance, mark_price=text(mark), candle_close_ms=candle,
+            dataset_version=risk["dataset_version"], observed_at_ms=observed,
+        )
         if (canonical_mark.get("sourceId") != source_id
                 or not isinstance(source_window, dict)
                 or set(source_window) != {
                     "exchange", "marketType", "symbol", "timeframe",
                     "startMs", "endMs", "asOfMs", "candles",
                 }
-                or source_dataset_hash != mark_dataset.removeprefix("sha256:")
                 or not isinstance(source_window.get("candles"), list)
                 or not source_window["candles"]
                 or consumed_candle != source_window["candles"][-1]
