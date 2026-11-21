@@ -6220,3 +6220,18 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 - Review coverage is **PARTIAL**, not exhaustive. PostgreSQL is **NOT VERIFIED / PARKED**; no fresh local test suite, live DB, Feeder, VPS/runtime, T1/T2, deployment or exchange operation was performed.
 - T0 overall status remains **NOT VERIFIED**; this review does not authorize SQLite reconstruction, archive staging/materialization, runtime, deployment, PostgreSQL activation, T1/T2 connection or trading.
 - No application source/test/workflow/dependency, database/data or runtime was changed in this review increment.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-21 — Expanded T0 source review completion
+
+- Expanded AI-assisted static review completed for the in-scope T0 source modules, associated tests and T0 workflows. T1 orderbook consumer subtree excluded.
+- Review source snapshot: `4d41294a7b82566666e50a79b87f62b668672077`; current main immediately before this update: `71fd8bcef1e891472f635eb594b1bd183512d595`.
+- Recursive tree comparison for `market_data/**` and `.github/workflows/t0-*`: **51/51 files identical, zero changed blobs** between source snapshot and current main.
+- Expanded review report: `docs/reviews/T0_AI_ASSISTED_SOURCE_REVIEW_2026-11-21.md`; update commit `7a3c2064f70ac82138a1844b84d404dd025252f0`.
+- SQLite-first T0 inspected source: no Critical/Required findings identified. Static review is complete for the in-scope T0 modules; this is AI-assisted review, not human second-person review.
+- New conditional blocker: **PG-REQ-01** — before any PostgreSQL/TimescaleDB activation, commit/review the complete SQL migration set, make empty migration discovery fail closed (or define/test explicit zero-migration behavior), and add PostgreSQL qualification for schema, role/grant/SECURITY DEFINER safety, lease fencing, transaction rollback and conflicts. Evidence: `market_data/migrations.py` searches `market_data/migrations/[0-9][0-9][0-9]_*.sql`, but no tracked migration SQL assets/directory exist at reviewed SHA; empty discovery can return `(0, 0)` after creating bookkeeping schema. Existing PostgreSQL-specific storage tests are only factory/patched-failure tests. PostgreSQL remains **PARKED / BLOCKED**, not activated.
+- Additional historical CI evidence (each remains tied to its own SHA): API 69/69 run `44861746989` at `4d41294a7b82566666e50a79b87f62b668672077`; SQLite aggregate 174/174 run `44546084972` at `c77ab92b621b2e79167d6b8eb910be015b428f62`; feeder lifecycle 91/91 run `44447104778` at `2668dd538a99d6021921432b3485f4ed84198364`; REST-tail validator 10/10 run `44723882441` at `265268c0b527c4a323493c4643a67a46ee15a223`; dependency compatibility PASS run `44504927709` at `215cf14c621a63b5e000198fb3a0caf70f1bc081`; Uvicorn/Nginx isolated CI PASS run `44550458804` at `65661cd4a2492f9552fe05186581c66d14fbe293`.
+- No new CI workflow was run in this review increment. Do not present historical runs as a fresh full-suite rerun on current main.
+- Real Binance REST tail remains NOT VERIFIED and closed by owner decision; no further retrieval. Former Canonical DB remains LOST; reconstructed DB NOT CREATED.
+- T0 overall readiness/data reconstruction/runtime/deployment/production: **NOT VERIFIED**.
+- No source/test/workflow/dependency changes, DB/data changes, PostgreSQL activation, Feeder runtime, VPS, T1/T2 integration or trading actions occurred. Do not activate PostgreSQL or runtime without separate approval.
