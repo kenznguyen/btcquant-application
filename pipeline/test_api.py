@@ -104,6 +104,17 @@ class FiveLayerApiTest(unittest.TestCase):
             )
         PaperLedger(self.paper_db, strategy_id="STRATEGY_CORE", source_sha="a" * 40)
 
+    def test_dual_ledger_fixture_establishes_verified_account_risk_cutover(self):
+        self.enable_dual_ledger()
+        from paper_execution.ledger import read_account_risk_snapshot
+
+        risk = read_account_risk_snapshot(self.paper_db, now_ms=self.now)
+        self.assertTrue(risk["available"], risk)
+        self.assertTrue(risk["riskReady"], risk)
+        self.assertIsNone(risk["unavailableReason"])
+        self.assertEqual(risk["accountEquityQuote"], "100")
+        self.assertEqual(risk["dailyLossUsdt"], "0")
+
     def valid_ai_decision(self):
         """Build an AI research candidate; it must never be submitted to the paper Ledger."""
         return {"source": "AI_FREQAI", "action": "BUY", "reason": "ALIGNED_PAPER_SIGNAL",
