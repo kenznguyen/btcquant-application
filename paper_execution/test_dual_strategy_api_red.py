@@ -1,3 +1,4 @@
+import hashlib
 import io
 import json
 import os
@@ -8,6 +9,28 @@ from pathlib import Path
 from unittest.mock import patch
 
 from pipeline import api
+
+
+def canonical_t0_window(start_ms, as_of_ms, close_price):
+    end_ms = start_ms + 900_000
+    payload = {
+        "exchange": "binance", "marketType": "USDT_PERPETUAL",
+        "symbol": "BTCUSDT", "timeframe": "15m",
+        "startMs": start_ms, "endMs": end_ms, "asOfMs": as_of_ms,
+        "candles": [{
+            "openTimeMs": start_ms, "closeTimeMs": end_ms,
+            "availableAtMs": end_ms,
+            "open": "100", "high": "106", "low": "99",
+            "close": close_price, "volume": "1",
+        }],
+    }
+    digest = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return {
+        **payload, "datasetVersion": "sha256:" + digest,
+        "coverage": {"expected": 1, "returned": 1, "complete": True, "gaps": []},
+    }
 
 
 class DualStrategyApiScopeRedTest(unittest.TestCase):
@@ -149,22 +172,17 @@ class DualStrategyApiScopeRedTest(unittest.TestCase):
     def test_equity_snapshot_uses_shared_account_mark_path(self):
         from unittest.mock import Mock
 
-        window = {
-            "exchange": "binance", "marketType": "USDT_PERPETUAL",
-            "symbol": "BTCUSDT", "timeframe": "15m",
-            "candles": [{"openTimeMs": 1_799_999_040_000, "close": "105", "closeTimeMs": 1_799_999_940_000}],
-            "coverage": {"complete": True},
-            "datasetVersion": "sha256:" + "e" * 64,
-        }
+        timestamp = 1_800_000_000_000
+        window = canonical_t0_window(timestamp - 900_000, timestamp, "105")
         account = Mock()
         account.record_account_mark.return_value = {"accountEquityQuote": "100"}
-        with patch.object(api, "market_window", return_value=window), \
+        with patch.object(api, "market_window", return_value=window), \\
              patch.object(api, "ledger", return_value=account):
-            result = api.equity_snapshot(1_800_000_000_000)
+            result = api.equity_snapshot(timestamp)
         self.assertEqual(result["accountEquityQuote"], "100")
         account.record_account_mark.assert_called_once_with(
-            "105", 1_799_999_940_000, 1_800_000_000_000,
-            "sha256:" + "e" * 64, "100",
+            "105", timestamp, timestamp,
+            window["datasetVersion"], "100",
             mark_provenance=__import__("paper_execution.mark_provenance", fromlist=["build_market_mark_provenance"]).build_market_mark_provenance(
                 window, source_id="T0_CANONICAL_MARKET_DATA"
             ),
@@ -172,23 +190,14 @@ class DualStrategyApiScopeRedTest(unittest.TestCase):
         account.record_equity.assert_not_called()
 
 
-
-
     def test_first_dual_ledger_mark_is_persisted_but_risk_stays_blocked_without_cutover(self):
         self.activate_dual_schema()
         account = api.ledger()
         observed = 1_800_000_000_000
         from paper_execution.mark_provenance import build_market_mark_provenance
-        mark_window = {
-            "symbol": "BTCUSDT", "timeframe": "15m",
-            "datasetVersion": "sha256:" + "f" * 64,
-            "candles": [{
-                "openTimeMs": observed-900_000, "closeTimeMs": observed-60_000,
-                "open": "99", "high": "101", "low": "98", "close": "100", "volume": "1",
-            }],
-        }
+        mark_window = canonical_t0_window(observed - 900_000, observed, "100")
         result = account.record_account_mark(
-            "100", observed-60_000, observed, mark_window["datasetVersion"], "100",
+            "100", observed, observed, mark_window["datasetVersion"], "100",
             mark_provenance=build_market_mark_provenance(
                 mark_window, source_id="T0_CANONICAL_MARKET_DATA"
             ),
@@ -207,6 +216,7 @@ class DualStrategyApiScopeRedTest(unittest.TestCase):
                    FROM paper_account_risk_state WHERE account_id=1"""
             ).fetchone()
         self.assertEqual(risk, ("100", "100", "100", observed, 0, None))
+
 
 
     def test_core_decision_does_not_activate_dual_ledger_migration(self):
