@@ -6,6 +6,8 @@ import sqlite3
 
 from pipeline.values import number, stamp
 from paper_execution import equity as equity_history
+from paper_execution.mark_provenance import validate_consumed_mark
+from paper_execution.account_history import record_consumed_market_mark
 
 
 def _account_ledger_totals(connection, mark, text):
@@ -89,7 +91,7 @@ def _active_reservation_totals(connection):
 
 def record_account_mark(
     ledger, mark_price, candle_close_ms, observed_at_ms, dataset_version,
-    initial_capital="100",
+    initial_capital="100", *, mark_provenance=None,
 ):
     """Atomically reconcile one account-wide mark across all strategy ledgers."""
     # Late import avoids a cycle because PaperLedger delegates to this module.
@@ -180,6 +182,7 @@ def record_account_mark(
         elif not risk_ready and not unavailable:
             unavailable = "ACCOUNT_RISK_NOT_READY"
 
+        record_consumed_market_mark(connection, provenance, observed_at_ms=observed)
         connection.execute(
             """UPDATE paper_account_risk_state
                SET last_equity_quote=?,high_water_mark_quote=?,last_mark_price=?,
@@ -192,6 +195,8 @@ def record_account_mark(
         ledger.audit(connection, observed_at, "ACCOUNT_MARK", {
             "markPrice": text(mark), "candleCloseMs": candle_at,
             "datasetVersion": dataset_version, "accountEquityQuote": text(equity),
+            "sourceSnapshotId": provenance.source_snapshot_id,
+            "sourcePayloadSha256": "sha256:" + provenance.source_payload_sha256,
             "reservedNotionalQuote": text(reserved_notional),
             "reservedMarginQuote": text(reserved_margin), "riskReady": risk_ready,
         })
