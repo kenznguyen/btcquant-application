@@ -42,6 +42,7 @@ class MarketMarkProvenance:
     source_id: str
     source_snapshot_id: str
     dataset_version: str
+    source_as_of_ms: int
     mark_price: str
     candle_close_ms: int
     source_payload_sha256: str
@@ -59,7 +60,8 @@ class MarketMarkProvenance:
                 or len(self.source_payload_sha256) != 64
                 or any(c not in "0123456789abcdef" for c in self.source_payload_sha256)):
             raise ValueError("MARK_PROVENANCE_HASH_INVALID")
-        if type(self.candle_close_ms) is not int or self.candle_close_ms < 0:
+        if (type(self.source_as_of_ms) is not int or self.source_as_of_ms < self.candle_close_ms
+                or type(self.candle_close_ms) is not int or self.candle_close_ms < 0):
             raise ValueError("MARK_PROVENANCE_TIME_INVALID")
         if _canonical_price(self.mark_price) != self.mark_price:
             raise ValueError("MARK_PROVENANCE_PRICE_NOT_CANONICAL")
@@ -83,10 +85,10 @@ def build_market_mark_provenance(window: object, *, source_id: str) -> MarketMar
     if source != "T0_CANONICAL_MARKET_DATA":
         raise ValueError("MARK_SOURCE_ID_UNSUPPORTED")
     start, end, as_of = window.get("startMs"), window.get("endMs"), window.get("asOfMs")
-    if (type(start) is not int or type(end) is not int or start < 0 or end <= start
+    if (type(start) is not int or type(end) is not int or type(as_of) is not int
+            or start < 0 or end <= start or as_of < 0
             or start % 900_000 or end % 900_000
-            or end - start > 2_000 * 900_000
-            or (as_of is not None and (type(as_of) is not int or as_of < 0))):
+            or end - start > 2_000 * 900_000):
         raise ValueError("MARK_SOURCE_WINDOW_BOUNDS_INVALID")
     if not isinstance(coverage, dict) or coverage != {
         "expected": (end-start)//900_000,
@@ -145,6 +147,7 @@ def build_market_mark_provenance(window: object, *, source_id: str) -> MarketMar
         "symbol": symbol,
         "timeframe": timeframe,
         "datasetVersion": dataset,
+        "sourceAsOfMs": as_of,
         "consumedCandle": candle,
     }
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False)
@@ -153,6 +156,7 @@ def build_market_mark_provenance(window: object, *, source_id: str) -> MarketMar
         source_id=source,
         source_snapshot_id=dataset,
         dataset_version=dataset,
+        source_as_of_ms=as_of,
         mark_price=price,
         candle_close_ms=close_ms,
         source_payload_sha256=digest,
@@ -166,13 +170,16 @@ def validate_consumed_mark(
     mark_price: object,
     candle_close_ms: object,
     dataset_version: object,
+    observed_at_ms: object,
 ) -> MarketMarkProvenance:
     if not isinstance(provenance, MarketMarkProvenance):
         raise ValueError("TYPED_MARK_PROVENANCE_REQUIRED")
     if (_canonical_price(mark_price) != provenance.mark_price
             or type(candle_close_ms) is not int
             or candle_close_ms != provenance.candle_close_ms
-            or dataset_version != provenance.dataset_version):
+            or dataset_version != provenance.dataset_version
+            or type(observed_at_ms) is not int
+            or provenance.source_as_of_ms > observed_at_ms):
         raise ValueError("CONSUMED_MARK_PROVENANCE_MISMATCH")
     return provenance
 
