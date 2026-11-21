@@ -95,3 +95,25 @@ Target does not currently contain these `core_runtime/` paths. Do not create the
 - T0/T1 runtime, databases, model training, paper orders, live trading: **NOT ACCESSED / NOT AUTHORIZED**
 
 Next: submit this manifest for owner review. After approval, the first implementation slice may be limited to the pure Core adapter plus target-owned tests, with TDD (RED→GREEN) and no runner, ledger, dependency or runtime changes. All other modules require their own gates.
+
+
+---
+
+## Addendum — M2.4 AI Strategy Signal Contract RED (2026-11-21)
+
+Owner approved the bounded M2.4 contract + test-only RED scope. This addendum supersedes the earlier manifest line that AI Strategy was only a source-side RED contract and target work had not started; it does not authorize GREEN implementation or runtime integration.
+
+| Deliverable | Target path | Blob SHA / status |
+|---|---|---|
+| AI signal contract | `docs/architecture/AI_STRATEGY_SIGNAL_CONTRACT_V1.md` | `e5df7ec59c04a4f08b6ec0fc98e7e5702b3543dc` |
+| Target-owned RED tests | `pipeline/test_ai_signal_contract_red.py` | `bd4c6325739a7d1eadf5ced64c71e7e4742e7a31` |
+| Expected-RED workflow | `.github/workflows/t2-ai-signal-contract-red.yml` | `d8323caa1bc96f909219afd1028923971a247ad4` |
+| Evidence | `docs/evidence/T2_M2_4_AI_SIGNAL_CONTRACT_RED_2026-11-21.md` | recorded on main |
+
+- Final exact tested target SHA: `6fa66d2855a0d0804da6cee9ed37a723bbaf03d9`.
+- Workflow run [44914696468](https://github.com/kenznguyen/btcquant-application/actions/runs/44914696468), job `136877715288`: SUCCESS as an expected-RED verification wrapper.
+- 10 unittest methods ran; 27 expanded subtest error cases all showed the expected missing module `pipeline.ai_signal_contract`.
+- Artifact ID `14711520763`; SHA-256 `822c74c766555c60e1f0f2c88af4f325aba8e7dafba3bd8d1b613287314018f0`.
+- M2.4: **PASS — contract + RED specification**. GREEN implementation **NOT IMPLEMENTED / NOT AUTHORIZED**. Full repository regression and independent second-person review remain **NOT VERIFIED**.
+- The signal report is AI-owned and independent of Core; validated output is signal-only. It is not an order, intent, reservation or ledger mutation. Every future exposure-increasing trade remains subject to the common Shared Risk Engine and Kill Switch.
+- Next permitted increment: separate owner approval for M2.5 pure validator GREEN implementation. Do not add calibration registry cryptographic implementation, AI paper admission, dual-ledger writes, runner, runtime, DB, T0/T1 connection, deployment or trading under M2.4.
