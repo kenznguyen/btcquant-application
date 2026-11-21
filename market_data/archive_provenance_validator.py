@@ -288,17 +288,13 @@ def validate_provenance(payload: Mapping[str, object]) -> ProvenanceValidationRe
     for member in members:
         if member.get("disposition") == "VERIFIED":
             pair_key = member.get("pair_id")
-            try:
-                hash(pair_key)
-            except TypeError:
+            if not isinstance(pair_key, str) or not pair_key:
                 continue
             verified_members_by_pair.setdefault(pair_key, []).append(member)
     for pair in pairs:
         if pair.get("disposition") == "VERIFIED":
             pair_id = pair.get("pair_id")
-            try:
-                hash(pair_id)
-            except TypeError:
+            if not isinstance(pair_id, str) or not pair_id:
                 pair_id = None
             matching = verified_members_by_pair.get(pair_id, [])
             if type(pair.get("member_count")) is not int or pair.get("member_count") != 1 or len(matching) != 1:
@@ -307,18 +303,14 @@ def validate_provenance(payload: Mapping[str, object]) -> ProvenanceValidationRe
     links_by_source: dict[object, list[Mapping[str, object]]] = {}
     for link in links:
         source_key = link.get("source_row_id")
-        try:
-            hash(source_key)
-        except TypeError:
+        if not isinstance(source_key, str) or not source_key:
             continue
         links_by_source.setdefault(source_key, []).append(link)
     for source_row in source_rows:
         if source_row.get("disposition") != "ACCEPTED":
             continue
         source_id = source_row.get("source_row_id")
-        try:
-            hash(source_id)
-        except TypeError:
+        if not isinstance(source_id, str) or not source_id:
             source_id = None
         matching = links_by_source.get(source_id, [])
         if len(matching) != 1:
@@ -327,9 +319,14 @@ def validate_provenance(payload: Mapping[str, object]) -> ProvenanceValidationRe
         link = matching[0]
         source_identity = _record_identity(source_row)
         link_identity = _record_identity(link)
+        source_value_id = source_row.get("candle_value_id")
+        link_value_id = link.get("candle_value_id")
         if (source_identity is None or link_identity is None
                 or source_identity != link_identity
-                or source_row.get("candle_value_id") != link.get("candle_value_id")):
+                or not isinstance(source_value_id, str)
+                or not source_value_id.startswith("cv1:")
+                or not _is_sha256(source_value_id[4:])
+                or source_value_id != link_value_id):
             errors.add("ACCEPTED_SOURCE_ROW_LINK_CARDINALITY_INVALID")
 
     values_by_identity: dict[tuple[object, ...], set[tuple[object, ...]]] = {}
