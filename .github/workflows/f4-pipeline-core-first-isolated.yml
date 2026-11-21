@@ -12,6 +12,8 @@ on:
       - "paper_execution/ledger.py"
       - "paper_execution/account_equity.py"
       - "paper_execution/mark_provenance.py"
+      - "paper_execution/account_history.py"
+      - "paper_execution/risk_contract.py"
       - "pipeline/values.py"
       - "market_data/store.py"
       - "market_data/test_support.py"
