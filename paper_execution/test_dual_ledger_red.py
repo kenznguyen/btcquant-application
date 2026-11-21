@@ -538,13 +538,11 @@ class DualLedgerRedTest(unittest.TestCase):
         self.assertEqual(snapshot["unavailableReason"], "CUTOVER_NOT_RECONCILED")
 
     def test_snapshot_fails_closed_when_mark_is_stale(self):
-        with sqlite3.connect(self.path) as connection:
-            connection.execute(
-                """UPDATE paper_account_risk_state
-                   SET mark_observed_at_ms=?,mark_candle_close_ms=?
-                   WHERE account_id=1""",
-                (self.now - 31 * 60_000, self.now - 32 * 60_000),
-            )
+        self.update_consumed_mark(
+            self.path, mark_price="100",
+            observed_at_ms=self.now - 31 * 60_000,
+            dataset_suffix="4" * 64,
+        )
         with self.assertRaisesRegex(sqlite3.DatabaseError, "ACCOUNT_RISK_MARK_STALE_OR_INVALID"):
             ledger.read_account_risk_snapshot(self.path, now_ms=self.now)
 
