@@ -96,7 +96,7 @@ class FiveLayerApiTest(unittest.TestCase):
         return int(status.split()[0]), json.loads(data)
 
     def enable_dual_ledger(self):
-        PaperLedger(self.paper_db, strategy_id="STRATEGY_CORE")
+        PaperLedger(self.paper_db, strategy_id="STRATEGY_CORE", source_sha="a" * 40)
 
     def valid_ai_decision(self):
         """Build an AI research candidate; it must never be submitted to the paper Ledger."""
