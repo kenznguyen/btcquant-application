@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-21 — Two T0 independent-review PRs opened
+
+- Review target snapshot for both PRs: `b79c7e5d0bc7cf5e6beee0d4e05505a1b1aa6556` (main at PR creation).
+- PR #3 — [INDEPENDENT REVIEW ONLY — T0 Candle Contract, FastAPI & Application Adapter](https://github.com/kenznguyen/btcquant-application/pull/3). Head branch `review/t0-candle-fastapi-adapter-20261121`, head SHA `5aa49ee34031e11db2563776ee204b8dc0d4d38e`; request document `docs/reviews/requests/T0_CANDLE_FASTAPI_APPLICATION_ADAPTER_INDEPENDENT_REVIEW_2026-11-21.md`. Documentation-only; 1 file, 85 additions.
+- PR #4 — [INDEPENDENT REVIEW ONLY — T0 SQLite Storage, Write Gateway, Lease/Fencing & Recovery](https://github.com/kenznguyen/btcquant-application/pull/4). Head branch `review/t0-sqlite-storage-fencing-recovery-20261121`, head SHA `52784c94c5cec58601ecb5767262b385653878bf`; request document `docs/reviews/requests/T0_SQLITE_STORAGE_FENCING_RECOVERY_INDEPENDENT_REVIEW_2026-11-21.md`. Documentation-only; 1 file, 97 additions.
+- Both PRs are OPEN, not merged. No reviewer usernames were supplied; requested_reviewers is empty. They require genuine independent reviewers to submit explicit GitHub reviews.
+- PR #3 scope: Candle Contract 1.1.0, FastAPI read-only/auth/limits/error/lifecycle/dependency CI, Application Common API parity, exact source/test blob verification and adversarial tests.
+- PR #4 scope: SQLite backend/storage/schema/migrations/explicit initializer, Write Gateway, lease/fencing atomicity, feeder/scheduler/recovery, gap/cursor/retry/idempotency and fail-closed lifecycle.
+- Both PRs pin source snapshot `b79c7e5d0bc7cf5e6beee0d4e05505a1b1aa6556`; their own branch changes are review request documents only. Do not mistake PR diff for implementation source changes.
+- Restrictions: no merge as implementation, no source fixes in review PRs, no Canonical SQLite/data access or mutation, no Feeder/VPS/runtime/deployment, no REST 451 retry/bypass, no PostgreSQL activation, no T1/T2 runtime connection or trading.
+- Status: review requests **OPEN / AWAITING INDEPENDENT REVIEW**; T0 overall independent validation remains **NOT VERIFIED** until reviewer findings and explicit verdicts are submitted.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — T0 Application Foundation current-source audit recorded
 
 - Current review snapshot: `d6e7516e0cdbcde58d4b78327c18c22aa3a4c2a0`; review package: `docs/reviews/T0_APPLICATION_FOUNDATION_CURRENT_REVIEW_PACKAGE_2026-11-21.md`, commit `7cf9e3a4e51bd5b395d8ee968852777d6defc18c`.
