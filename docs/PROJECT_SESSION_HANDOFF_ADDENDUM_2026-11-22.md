@@ -154,3 +154,14 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - Evidence record updated in commit `c71cccaf476d66d9ab11ca75cfd85c4ee742cce2`, blob `400b8f6b0e6f194cd2b47d6f35c0f1bf9aa8ef09`.
 - Status: exact-SHA workflow execution PASS; fixture structure PASS; S4 RED assertions expose unimplemented S3 invariants; V1 regression PASS 24/24; S3 GREEN NOT AUTHORIZED; archive/Canonical T0/DDL/SQLite/importer/T1/T2 runtime/VPS/deployment/trading remain untouched.
 - Next: inspect the RED assertions as executable specifications and request separate explicit approval before any S3 GREEN implementation.
+
+
+## Final S4 RED review / S3 GREEN scope proposal — 2026-11-22
+
+- Review: `docs/reviews/T0_PROVENANCE_VALIDATOR_S3_GREEN_SCOPE_REVIEW_2026-11-22.md`, commit `d1bc77871bf678a6540d0f260a367f2e08f3182f`.
+- Self-review cross-walked eleven targeted S3 tests plus aggregate. Exact baseline: S4 test blob `08d02470e87e317afe8023ed6d6f14db847f5597`; V1 validator blob `c2c05dd8e62ebb8d1dce835909e1185a1a67b597`; S3 contract blob `43719373949c0c2d553b463ab5ac66aadd64da2b`; V1 interface blob `632eb6d38461ea3c65638ca073abc5fe4ae98729`; tested source SHA `4534904fccc74a57a3a09793dd63e24414ab2cb1`.
+- Required findings: valid S1 fixture is never passed through validator (R1); OHLCV mutation leaves source-row/member provenance stale and is not isolated (R2); V1/S1 discriminator and unknown/partial-version behavior need freeze (R3); authoritative expected object size/SHA source unclear (R4); raw-fields compact representation underspecified (R5); coverage-manifest shape and duplicate dispositions need concrete definitions (R6).
+- Proposed separate S3 GREEN package: contract clarifications R3–R6; S4 test-specification completion including positive valid-fixture proof and corrected OHLCV isolation; pure validator extension with eleven appended codes; focused + V1 + market_data tests; existing isolated exact-SHA Actions evidence. Full details and exclusions are in the review document.
+- This increment changed documentation only. No validator/test/workflow/schema/DDL/SQLite/importer/archive/Canonical T0/T1/T2/VPS/runtime/deployment/trading change or access.
+- Status: **SELF-REVIEW COMPLETE; S3 GREEN NOT AUTHORIZED; AWAITING OWNER DECISION**.
+- Evidence update commit: `d327bc130cba39bd5469f6062a4ebdcca3cb8f0c`, blob `6ebd49334a8c09db9facd23ff83f7dba22979915`.
