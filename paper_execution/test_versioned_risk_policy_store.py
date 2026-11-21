@@ -114,16 +114,14 @@ class VersionedRiskPolicyStoreTests(unittest.TestCase):
                 published_at_ms=1_800_000_000_100,
             )
 
-    def test_percent_high_water_drawdown_is_explicit_but_not_implicitly_converted(self):
+    def test_percent_high_water_drawdown_is_rejected_until_engine_contract_supports_it(self):
         percent_policy = dict(
             self.policy,
             drawdownLimit={"mode": "PERCENT_HWM", "value": "12.5"},
         )
-        result = self.publish(percent_policy)
-        loaded = load_active_versioned_risk_policy(self.db)
-        self.assertEqual(result["policyVersion"], "paper-risk-v1")
-        self.assertEqual(loaded["payload"]["drawdownLimit"]["mode"], "PERCENT_HWM")
-        self.assertEqual(loaded["payload"]["drawdownLimit"]["value"], "12.5")
+        with self.assertRaisesRegex(ValueError, "RISK_POLICY_DRAWDOWN_MODE_UNSUPPORTED"):
+            self.publish(percent_policy)
+        self.assertIsNone(load_active_versioned_risk_policy(self.db))
 
     def test_invalid_policy_schema_and_git_provenance_are_rejected(self):
         invalid = [
