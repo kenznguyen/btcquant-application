@@ -868,7 +868,7 @@ def migrate_consumed_market_mark_provenance(connection, source_sha):
         canonical_payload TEXT NOT NULL,
         recorded_at_ms INTEGER NOT NULL,
         CHECK(observed_at_ms>=candle_close_ms),
-        CHECK(source_snapshot_id='sha256:' || payload_sha256)
+        CHECK(source_snapshot_id=dataset_version)
     )""")
     risk_columns = {row[1] for row in connection.execute(
         "PRAGMA table_info(paper_account_risk_state)"
@@ -916,7 +916,7 @@ def record_consumed_market_mark(connection, provenance, *, observed_at_ms):
         dataset_version=provenance.dataset_version,
     )
     mark_id = hashlib.sha256(
-        (provenance.source_snapshot_id + ":" + str(observed)).encode("utf-8")
+        (provenance.source_snapshot_id + ":" + provenance.source_payload_sha256 + ":" + str(observed)).encode("utf-8")
     ).hexdigest()
     row = (
         mark_id, 1, observed, provenance.candle_close_ms, provenance.mark_price,
