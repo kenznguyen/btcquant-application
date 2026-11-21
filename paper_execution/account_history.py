@@ -808,7 +808,7 @@ def migrate_daily_baseline_audit(connection, source_sha):
 
 CONSUMED_MARK_PROVENANCE_MIGRATION_VERSION = 10
 CONSUMED_MARK_PROVENANCE_MIGRATION_CHECKSUM = hashlib.sha256(
-    b"dual-ledger-v10:immutable-consumed-market-mark-provenance"
+    b"dual-ledger-v10:immutable-consumed-market-mark-provenance-with-risk-state-pointer"
 ).hexdigest()
 
 
@@ -838,7 +838,12 @@ def migrate_consumed_market_mark_provenance(connection, source_sha):
                     "mark_id", "account_id", "observed_at_ms", "candle_close_ms",
                     "mark_price", "source_id", "source_snapshot_id", "dataset_version",
                     "payload_sha256", "canonical_payload", "recorded_at_ms",
-                }.issubset(columns)):
+                }.issubset(columns)
+                or "last_mark_id" not in {
+                    row[1] for row in connection.execute(
+                        "PRAGMA table_info(paper_account_risk_state)"
+                    )
+                }):
             raise sqlite3.DatabaseError("CONSUMED_MARK_PROVENANCE_SCHEMA_INCOMPLETE")
         return
     table = connection.execute(
