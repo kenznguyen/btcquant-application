@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 4 design review: REQUEST CHANGES
+
+- Exact reviewed design commit: `f4ab46715657675d15c907faeff8aa545c7cb161`; blob `90bdb1495770f977cb3ef1d307b28189a2478c2c`.
+- Review report: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_4_2026-11-22.md`, commit `72e9889c066f2f755c1e8d121d5bb6f6b5c3dd92`.
+- Verdict: **REQUEST CHANGES — PHASE B REVISION 4 NOT APPROVED**.
+- R-15 HIGH: REST snapshot requires source-generated immutable capture ID but does not identify a Binance-native ID field or a collector-issued ID contract. Separate exchange-native identity, collector capture identity and T0 delivery identity; bind capture ID to immutable request/response evidence.
+- R-16 MEDIUM: §4.5 retry wording “same immutable message identity” remains ambiguous; align it to immutable source-delivery locator and separately state native-event deduplication.
+- R-12/R-13/R-14: materially/addressed at design level as detailed in review report; R-15/R-16 prevent approval.
+- Synthetic matrix: 74 proposed cases, NOT EXECUTED; add R-15 capture-ID collision/replay/restart cases and align R-16 terminology.
+- B-01..B-20: all retained and OPEN, none removed/resolved/owner-accepted.
+- Tests/workflows/artifacts: NOT RUN / NONE. Independent second-person reviewer identity: NOT VERIFIED.
+- Documentation-only review; no implementation, DB, runtime, T1, VPS, Phase C or trading action.
+- Contract freeze NOT APPROVED; implementation/database/runtime/Phase C NOT AUTHORIZED.
+- Next: documentation-only revision for R-15/R-16, then submit a new exact design SHA for review.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B second-round self-review: REQUEST CHANGES
 
 - Exact reviewed design commit: 75e593517ec31d2e2a75ed0050e80ab5dd52edf2.
