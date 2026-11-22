@@ -10,7 +10,7 @@
 - Detailed S1.1 design acceptance: **OWNER ACCEPTED / DESIGN FROZEN** on 2026-11-22.
 - Acceptance remains documentation-only: no DDL, SQLite, importer, tests, workflow, archive/data operation, runtime or deployment.
 - B3 archive format NOT VERIFIED; B5 actual coverage values NOT VERIFIED; B8 importer/build NOT AUTHORIZED; B9 separate review track unchanged.
-- B4/B6/B7 decision package is committed for owner decision: `docs/design/T0_B4_B6_B7_RESOURCE_RETENTION_DESTINATION_DECISION_PACKAGE_2026-11-22.md` (blob `9119b5789825951e66a061e4b9d989256934adec`); self-review `docs/reviews/T0_B4_B6_B7_DECISION_PACKAGE_SELF_REVIEW_2026-11-22.md` (blob `6c6eb22d8643206aba517b3ea8625b70a64735c5`). Status: B4 proposed/pending; B6 proposed/pending; B7 Option A recommended but owner selection and later preflight pending. No operational activity authorized.
+- Owner accepted B4/B6/B7 on 2026-11-22. Record: `docs/decisions/T0_B4_B6_B7_OWNER_ACCEPTANCE_2026-11-22.md` (commit `a16d19bdabf99031bb55957de0c14df17e7ccd11`). B4 numeric ceilings/fail-closed policy DESIGN FROZEN; B6 preserve source/staging/private evidence until explicit deletion approval, sanitized CI artifacts max 30 days; B7 Option A selected (encrypted owner-controlled personal workstation, manual-only). Exact host/path and later preflight remain pending and are not authorized. No archive access, data operation or implementation authorized.
 - No workflow run/job/artifact. All existing exclusions remain in force.
 
 ---
@@ -25,7 +25,7 @@
 - S3 R3–R6, V1 interface, T0ENC1, identity prefixes, `T0_STAGING_SCHEMA_V2` and `user_version=2` unchanged.
 - S1.1 is documentation-only. **No DDL, SQLite, importer, tests, workflow, archive access, data operation or runtime change.**
 - S1.1 detailed design: **OWNER ACCEPTANCE PENDING**. Scope approval is not treated as acceptance of every detailed design choice.
-- B3 archive format coverage NOT VERIFIED; B4 resource budgets OPEN; B5 actual coverage manifest NOT VERIFIED; B6 retention/artifact policy OPEN; B7 destination/preflight OPEN; B8 importer/build NOT AUTHORIZED. Existing independent review track unchanged.
+- B3 archive format coverage NOT VERIFIED; B4 policy ACCEPTED / IMPLEMENTATION NOT AUTHORIZED; B5 actual coverage manifest NOT VERIFIED; B6 policy ACCEPTED / NO DELETION AUTHORIZED; B7 Option A selected / exact host-path and preflight pending; B8 importer/build NOT AUTHORIZED. Existing independent review track unchanged.
 - Latest handoff addendum update commit: `e8f91a3dadb01d680dadd29b428643594487987f`.
 - Next: owner review of S1.1 document only. No later phase is authorized.
 
