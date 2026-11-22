@@ -72,3 +72,18 @@ Add synthetic tests for row projection correctness, read-only connection behavio
 ## Exclusions
 
 No archive/sidecar listing, download, extraction, parsing or sampling; no host/workstation/SSH/filesystem/disk/encryption/runner preflight; no B8 acquisition workflow/dispatch or runner registration; no real-data staging build/persistence; no upload, retention, deletion or cleanup; no Canonical T0 recovery/create/replace/migration/merge/promotion/cutover; no MAY-10, REST tail, T1/T2 runtime, VPS, deployment, credentials, exchange access or trading.
+
+
+## Follow-up projection behavior tests — exact-SHA PASS
+
+- Test commit/source SHA: `2b0c06cc3db6a73d5573dc75f7188306553bac13`.
+- Workflow run: [45006997612](https://github.com/kenznguyen/btcquant-application/actions/runs/45006997612).
+- Job: `137160698731`, conclusion SUCCESS; requested and checked-out SHA exactly match.
+- Test blob: `c70c6e5b11b37e11bc6ef0695aede77c9d0cd6b0`.
+- Focused importer-core: 20/20 PASS.
+- Focused adapter: 15/15 PASS. New tests verify exact inventory_raw_bytes preservation, initial BUILDING event mapping, empty relation mapping, missing singleton rejection, missing initial BUILDING rejection, no implicit sqlite3.connect, connection remains usable and transaction state is unchanged.
+- Focused schema: 14/14 PASS.
+- Full `market_data` regression: 450/450 PASS.
+- Artifact endpoint: 0 artifacts.
+- This closes the immediate behavioral-test gap for empty/singleton-run projection and connection ownership. It does not yet verify populated mapping for all eleven relation DTOs, ordering with multiple rows, all SQL read-only mutation guards, or complete S3/V1 payload assembly.
+- F2 remains PARTIAL: S3/V1 payload assembly and graph validator are still NOT IMPLEMENTED; independent review NOT RUN; S1.2 NOT FROZEN.
