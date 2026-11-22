@@ -123,20 +123,26 @@ This approval request does **not** include:
 - [ ] Exact-SHA GitHub Actions run/job/artifact inspected and evidence committed.
 - [ ] No excluded resource or runtime operation occurred.
 
-## 4. Approval decision requested
+## 4. Approval decision — APPROVED 2026-11-22
 
-Please approve or reject this bounded work package:
+Owner explicitly approved this bounded work package on 2026-11-22:
 
 **S3 GREEN = contract clarifications R3–R6 + S4 test-specification completion (including R1/R2) + pure validator implementation + synthetic tests + isolated exact-SHA CI/evidence only.**
 
-Approval does not authorize any excluded database, archive, importer, runtime, deployment or trading work. Until explicit approval, the validator and all test source remain unchanged.
+Approval did not authorize any excluded database, archive, importer, runtime, deployment or trading work.
 
-## 5. Current status
+## 5. Final implementation and verification status — 2026-11-22
 
-- Final RED source review: **SELF-REVIEW COMPLETE — REQUIRED SPECIFICATION GAPS IDENTIFIED**.
-- S4 workflow exact-source execution: **PASS — harness/source identity verified**.
-- S4 fixture structural check: **PASS**.
-- Twelve S4 assertions: **12 expected failures against V1-only validator; not S3 behavior verification**.
-- V1 regression: **24/24 PASS**.
-- S3 GREEN implementation: **NOT AUTHORIZED**.
-- DDL/SQLite/archive/importer/Canonical T0/runtime: **NOT AUTHORIZED / NOT TOUCHED**.
+- R3–R6 contract clarifications: **COMMITTED / FROZEN**. R6 includes explicit coverage ranges and exact gap/extra set semantics.
+- S4 test-spec completion: **PASS** — positive complete S1 fixture, isolated OHLCV chain, per-code negative assertions, strict raw inventory/JSON cases, object/attempt/pair/member/row/candle/link/run boundaries, coverage range/gap tests, aggregate ordering/dedup and permutation checks.
+- Pure S1 validator implementation: **PASS** — V1 API and catalogue retained; eleven S3 codes appended; fail-closed dispatch; deterministic in-memory validation; no I/O or input mutation.
+- Exact-SHA GitHub Actions: **PASS** — run `44976345735`, job `137067027769`, exact source SHA `10e99c68e7acbd8a25e192075dede214f3fccad5`.
+- S3 synthetic suite: **30/30 PASS**, exit 0.
+- V1 RED/GREEN compatibility: **24/24 PASS**, exit 0; original V1 test blobs unchanged.
+- Full `market_data` regression: **387/387 PASS**, exit 0. Two SQLite `ResourceWarning` messages were emitted; they did not fail tests.
+- Artifact: `t0-s3-green-verification-44976345735`, ID `14735512352`, 3,678 bytes, SHA-256 `5d12d74c405e8e9bd7bd6443b3f6fe4b85681eeba1b35df5dc78a7057f11e8bf`; downloaded, ZIP integrity/content inspected, checksum matched GitHub metadata.
+- Source blobs at tested SHA: validator `b94bac0f82ae141984552409f99a5cff70435b3b`; S3 tests `328442917535d555d09b18f0213e1ddfd75a9416`; S3 contract `84f881ad3e81cf42f1ec674a5b36ae5547478e33`; workflow `b73bf266c47dd6cdb440928e2107306f4906a5b6`; V1 RED `abbaeab16f026757923c679330f124a3d99e0774`; V1 GREEN `da854052564a34c49c1e2f40da1c80315da04182`.
+- Runtime: CPython 3.13.18, Ubuntu 26.04.1. Workflow installed pinned test dependencies FastAPI 0.116.1 and httpx 0.28.1.
+- Same-session **SELF-REVIEW COMPLETE**. No independent second-person review is claimed.
+- DDL/SQLite/archive/importer/Canonical T0/MAY-10/REST tail/T1/T2/VPS/runtime/deployment/retention/trading: **NOT AUTHORIZED / NOT TOUCHED**.
+- Disposition: bounded S3 GREEN implementation and verification **PASS**. This is not archive acquisition/validation, staging DB acceptance, or promotion authorization.
