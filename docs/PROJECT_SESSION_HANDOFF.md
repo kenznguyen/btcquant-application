@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — canonical manifest + run lifecycle binding GREEN; snapshot digest formula unresolved
+
+- Latest tested source SHA: `589adf4124eb186df6f072069fdb5193a9953c3a`; adapter source blob `0ddd724c7e69d681333fa845c91a83852dd3420c`; adapter test blob `0bcac7250f493e3a81cb57540f573bdee18bee1f`.
+- RED: canonical-manifest/lifecycle digest tests at `4752235995044868b5d059f5f9bd9661c5ce4f28`, run [45007845805](https://github.com/kenznguyen/btcquant-application/actions/runs/45007845805), job `137163340224`; candidate snapshot consistency test at `218790587755ad17ea318394c6a3335037596d70`, run [45007966306](https://github.com/kenznguyen/btcquant-application/actions/runs/45007966306), job `137163690155`.
+- GREEN: run [45008004977](https://github.com/kenznguyen/btcquant-application/actions/runs/45008004977), job `137163809455`, SUCCESS; exact SHA checkout matches.
+- Runtime CPython 3.13.18 / SQLite 3.45.1; importer-core 20/20, adapter 25/25, schema 14/14, full `market_data` regression 460/460 PASS; artifacts 0.
+- Added deterministic compact sorted-key coverage-manifest JSON enforcement; VALIDATED event requires validator payload SHA; CANDIDATE/VALIDATED snapshot hashes must match; duplicate VALIDATED event rejected.
+- Critical unresolved design: candidate snapshot digest preimage/serialization is not defined in approved design. Current graph validator checks SHA field validity/presence and CANDIDATE↔VALIDATED equality only; it does not recompute digest. Do not invent a formula. Requires owner-approved amendment before implementing recomputation.
+- F2 **PARTIAL**; S1.2 **NOT FROZEN**; independent review **NOT RUN**; B8 **NOT APPROVED**; real-data staging **NOT AUTHORIZED**.
+- Evidence: `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md`.
+- Next: continue synthetic graph invariant tests (multi-row ordering, failed/quarantined branches, orphan/duplicate failure observations, event transitions) while retaining digest recomputation as a design blocker; then run all F1–F7 tests at final exact SHA and request independent review.
+- All previous exclusions remain unchanged: no real archive/sidecar access/acquisition, host/workstation/SSH/filesystem/runner preflight, B8 workflow/dispatch/runner, real-data staging, uploads/deletion/cleanup, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS/deployment, credentials, exchange or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — populated SQLite → eleven DTO relations GREEN; F2 still needs exhaustive graph cases/review
 
 - Latest test source SHA: `6a71fe066e0ce80f9b3d580404682e5e2c216976`; test blob `69d708a198c201059df34e6210c699f9e533e2ac`; adapter source blob `78e82833fded534fc777dee2d2c7ed90dfd7ac61`.
