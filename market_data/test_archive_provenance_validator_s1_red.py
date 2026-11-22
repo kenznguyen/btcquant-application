@@ -530,6 +530,7 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
 
     def test_csv_member_evidence_invalid_isolated(self) -> None:
         self.payload["members"][0]["parser_source_sha"] = "not-a-sha"
+        self.payload["source_rows"][0]["parser_source_sha"] = "not-a-sha"
         self.assert_s1_error("CSV_MEMBER_EVIDENCE_INVALID")
 
     def test_source_row_provenance_invalid_isolated(self) -> None:
