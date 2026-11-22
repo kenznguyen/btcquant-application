@@ -218,6 +218,97 @@ class PhysicalIdentityGrammarTests(unittest.TestCase):
             replace(candle, candle_value_id="cv1:" + "g" * 64)
 
 
+class MultiRowProjectionOrderingTests(unittest.TestCase):
+    def test_all_remaining_multirow_relations_follow_explicit_order_keys(self):
+        import sqlite3
+        from dataclasses import fields
+        from market_data.archive_staging_adapter import (
+            _FLAG_DTO_INTEGER_FIELDS, _IDENTITY_PREFIXES, _INTEGER_DTO_FIELDS,
+            _NULLABLE_DTO_FIELDS, _POSITIVE_DTO_INTEGER_FIELDS,
+            _RELATION_SPECS, _read_relation,
+        )
+
+        connection = sqlite3.connect(":memory:")
+        try:
+            specs = {name: (dto, columns, order) for name, dto, columns, order in _RELATION_SPECS}
+            cases = (
+                ("archive_pairs", [
+                    {"pair_id": "pair1:" + "b" * 64},
+                    {"pair_id": "pair1:" + "a" * 64},
+                ], "pair_id", ["pair1:" + "a" * 64, "pair1:" + "b" * 64]),
+                ("csv_members", [
+                    {"pair_id": "pair1:" + "1" * 64, "central_directory_ordinal": 2,
+                     "candidate_id": "cand1:" + "b" * 64},
+                    {"pair_id": "pair1:" + "1" * 64, "central_directory_ordinal": 1,
+                     "candidate_id": "cand1:" + "a" * 64},
+                ], "central_directory_ordinal", [1, 2]),
+                ("source_rows", [
+                    {"member_id": "mem1:" + "1" * 64, "physical_record_ordinal": 2,
+                     "source_row_id": "row1:" + "b" * 64},
+                    {"member_id": "mem1:" + "1" * 64, "physical_record_ordinal": 1,
+                     "source_row_id": "row1:" + "a" * 64},
+                ], "physical_record_ordinal", [1, 2]),
+                ("candles", [
+                    {"exchange": "binance", "market_type": "usdm", "symbol": "BTCUSDT",
+                     "timeframe": "15m", "open_time_ms": 200},
+                    {"exchange": "binance", "market_type": "usdm", "symbol": "BTCUSDT",
+                     "timeframe": "15m", "open_time_ms": 100},
+                ], "open_time_ms", [100, 200]),
+                ("candle_provenance_links", [
+                    {"source_row_id": "row1:" + "b" * 64, "link_id": "lnk1:" + "b" * 64},
+                    {"source_row_id": "row1:" + "a" * 64, "link_id": "lnk1:" + "a" * 64},
+                ], "source_row_id", ["row1:" + "a" * 64, "row1:" + "b" * 64]),
+            )
+
+            def default_value(name):
+                if name in _IDENTITY_PREFIXES:
+                    prefix, _ = _IDENTITY_PREFIXES[name]
+                    return prefix + "c" * 64
+                if name.endswith("sha256") or name == "raw_row_digest":
+                    return "d" * 64
+                if name in {"parser_source_sha", "importer_source_sha", "trigger_sha", "checkout_sha"}:
+                    return "e" * 40
+                if name == "inventory_raw_bytes":
+                    return b"synthetic"
+                if name in _INTEGER_DTO_FIELDS:
+                    if name == "response_status":
+                        return 200
+                    if name in _POSITIVE_DTO_INTEGER_FIELDS:
+                        return 1
+                    return 1 if name in _FLAG_DTO_INTEGER_FIELDS else 0
+                if name in _NULLABLE_DTO_FIELDS:
+                    return None
+                return "synthetic"
+
+            for table, overrides, sort_field, expected in cases:
+                dto_type, columns, order_by = specs[table]
+                definitions = []
+                for field in fields(dto_type):
+                    kind = "INTEGER" if field.name in _INTEGER_DTO_FIELDS else (
+                        "BLOB" if field.name == "inventory_raw_bytes" else "TEXT"
+                    )
+                    definitions.append(f'"{field.name}" {kind}')
+                connection.execute(f'CREATE TABLE "{table}" ({", ".join(definitions)})')
+                rows = []
+                for override in overrides:
+                    row = {field.name: default_value(field.name) for field in fields(dto_type)}
+                    row.update(override)
+                    rows.append(row)
+                names = tuple(field.name for field in fields(dto_type))
+                placeholders = ",".join("?" for _ in names)
+                connection.executemany(
+                    f'INSERT INTO "{table}" ({",".join(names)}) VALUES ({placeholders})',
+                    [tuple(row[name] for name in names) for row in rows],
+                )
+                projected = _read_relation(connection, table, dto_type, columns, order_by)
+                self.assertEqual(
+                    [getattr(item, sort_field) for item in projected], expected,
+                    msg=f"{table} projection order is not deterministic",
+                )
+        finally:
+            connection.close()
+
+
 if __name__ == "__main__":
     unittest.main()
 
