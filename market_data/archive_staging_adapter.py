@@ -995,8 +995,15 @@ def validate_staging_graph(projection: StagingProjection) -> GraphValidationResu
     if sum(item.event_type == "BUILDING" for item in events) != 1:
         errors.add("RUN_EVENT_TRANSITION_INVALID")
     candidate_events = [item for item in events if item.event_type == "CANDIDATE"]
+    validated_events = [item for item in events if item.event_type == "VALIDATED"]
     if len(candidate_events) != 1 or (events and events[-1].event_type not in ("CANDIDATE", "VALIDATED")):
         errors.add("RUN_CANDIDATE_EVENT_INVALID")
+    if len(validated_events) > 1:
+        errors.add("RUN_EVENT_TRANSITION_INVALID")
+    if (candidate_events and validated_events
+            and validated_events[0].candidate_snapshot_sha256
+            != candidate_events[0].candidate_snapshot_sha256):
+        errors.add("RUN_EVENT_TRANSITION_INVALID")
     parsed_times = []
     for event in events:
         try:
