@@ -895,3 +895,13 @@
 - Requested review scope: R-17 producer ownership/registration, T1-only SD-07 capture production, T0 identity preservation, seven new SD-07 cases, R-15/R-16 and 91 proposed synthetic cases.
 - Review status: PENDING; independent verdict NOT VERIFIED. Synthetic cases NOT EXECUTED; B-01..B-20 OPEN; contract freeze NOT APPROVED.
 - No implementation/database/runtime/Phase C/deployment/trading authorization.
+
+
+## Phase B Revision 6 — automated review completed with findings
+
+- PR #6: OPEN / NOT MERGED / DO NOT MERGE; reviewed head `e46758f47038d5ba143d3790b1e3e2a4e94833d4`.
+- Codex automated review: COMPLETED WITH 3 unresolved P2 findings; not an independent human design review.
+- P2 findings: (1) producer ID + sequence must be independently unique; anchor/time/limit are immutable attributes, not identity dimensions; (2) authenticate producer origin via verifiable attestation or trusted authenticated handoff; (3) positive SD-07 cases require proof of single-writer fencing and durable sequence non-reuse.
+- Graphify AI review skipped for docs-only PR; static health gate PASS, but tests/formal proofs NOT RUN.
+- No fixes yet. B-01..B-20 OPEN; 91 synthetic cases NOT EXECUTED; contract freeze NOT APPROVED.
+- Next: prepare docs-only Revision 7 to address findings, then re-review. No implementation/runtime authorization.
