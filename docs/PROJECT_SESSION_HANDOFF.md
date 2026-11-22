@@ -6975,3 +6975,18 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - **Verification status: NOT VERIFIED.** 10 tests committed; no local execution. Available Actions lookup cannot retrieve push-triggered workflow runs (only PR-triggered run list); combined status is empty. No run/job ID, checked-out SHA, test count or artifact can be claimed.
 - No SQLite connection/DDL/staging DB, archive/sidecar, host/workstation/runner, B8, Canonical, T1/T2, VPS/runtime, credentials, exchange, trading, upload or deletion operation.
 - Next: owner to provide the Actions run URL/ID for exact-SHA verification, or provide an execution path that can read push-triggered workflow runs. After verified GREEN, proceed with disposable synthetic SQLite staging schema and tests.
+
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.2 adapter exact-SHA synthetic workflow PASS
+
+- Evidence: `docs/evidence/T0_S1_2_ADAPTER_EXACT_SHA_WORKFLOW_2026-11-22.md`.
+- Workflow run [45000330203](https://github.com/kenznguyen/btcquant-application/actions/runs/45000330203), attempt 1, push on `main`, conclusion SUCCESS.
+- Job `Importer-core synthetic tests`, ID `137140241389`, conclusion SUCCESS.
+- Exact run head SHA, job head SHA and intended source SHA all match: `cd0c54e9b9cb579685e9a8d262a3a166afdf9df1`.
+- Exact-SHA validation, exact checkout, and checked-out SHA verification steps all completed successfully.
+- Focused importer-core tests, focused S1.2 adapter tests, and complete `market_data` regression steps all completed successfully. API metadata did not expose step log bodies; exact numeric test counts are NOT VERIFIED.
+- Artifact endpoint returned zero artifacts; no artifact ID, digest or downloadable test log is available.
+- Status: **S1.2 adapter synthetic CI PASS at exact SHA; detailed test counts/artifact NOT VERIFIED.** This closes the immediate CI-verification blocker only; it does not freeze S1.2 or authorize real archives, B8, Canonical T0, production SQLite, real-data builds, T1/T2, VPS/runtime, credentials, exchange/trading, upload or deletion.
+- Next: proceed with the already approved synthetic-only SQLite staging schema and disposable database tests using TDD; independent review and physical-schema closure remain required before S1.2 freeze.
