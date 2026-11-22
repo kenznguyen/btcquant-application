@@ -7029,3 +7029,22 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - S1.2 remains **NOT FROZEN** pending independent review, complete DB-to-S3/V1 projection/graph validation and final physical-schema closure.
 - Next: independent/static review of the exact schema and adapter SHA; if required, add exhaustive per-column NULL tests with TDD. No real-data or runtime step follows automatically.
 - Boundaries unchanged: no real archives/sidecars, real Historical data build, Canonical T0, MAY-10, REST tail, B8 runner, host/workstation, T1/T2, VPS/runtime, deployment, credentials, exchange/trading, upload, retention change, deletion or cleanup.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.2 SQLite staging schema v2 exhaustive NULL matrix PASS
+
+- Latest exact tested source SHA: `d7cdea3a467aa0ee2a8b177aaec23fdfea3201ce`.
+- Final workflow run [45001731289](https://github.com/kenznguyen/btcquant-application/actions/runs/45001731289), run #21; job `Importer-core synthetic tests`, ID `137144538991`; conclusion **SUCCESS**.
+- Requested SHA and checked-out SHA exactly match: `d7cdea3a467aa0ee2a8b177aaec23fdfea3201ce`.
+- Runtime: CPython 3.13.18 / SQLite 3.45.1; STRICT minimum gate PASS.
+- Focused suites: importer-core 20 PASS; adapter 10 PASS; SQLite staging schema **14 PASS**.
+- Full `market_data` regression: **445 PASS**, Python 3.12.16, hash-locked test dependencies.
+- NULL matrix now individually tests every mandatory field in VERIFIED archive object, VERIFIED archive pair, VERIFIED CSV member and ACCEPTED source-row branches. Other tests cover exact lowercase digest grammar, HTTP response status 100–599, STRICT, composite same-object FK, append-only triggers, schema fingerprint, integrity_check, foreign_key_check and disposable file-backed DB.
+- Final source blobs: schema module `56e7600fcf0d200098cfd4b875359b204956eb79`; schema test `324637a40abe1e3f387b9f16f7ba1e4aa621c317`; workflow `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
+- Evidence latest commit: `f98cfef3ef8060250e708cfb35d6db9b7d93d300`, file `docs/evidence/T0_S1_2_SQLITE_STAGING_SCHEMA_V2_CI_2026-11-22.md`.
+- Artifact endpoint: 0 artifacts; no artifact ID or digest.
+- The expanded NULL-matrix fixture initially failed in runs #19 and #20 because generated synthetic object keys collided on UNIQUE. This was a test-fixture defect, corrected in commit `d7cdea3a467aa0ee2a8b177aaec23fdfea3201ce`; run #21 verifies the corrected matrix and all regression tests.
+- Status: synthetic SQLite staging schema v2 and full `market_data` regression **PASS at exact SHA**. No real data or existing database was used.
+- S1.2 remains **NOT FROZEN** pending independent review, complete DB-to-S3/V1 projection/graph validation and final physical-schema closure.
+- Next: independent/static review of the exact implementation/test SHA. Continue only within approved synthetic scope unless a separate owner decision changes the boundary.
+- Boundaries unchanged: no real archive/sidecar, real Historical build, Canonical T0, MAY-10, REST tail, B8 runner, host/workstation, T1/T2, VPS/runtime, deployment, credentials, exchange/trading, upload, retention change, deletion or cleanup.
