@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — F1–F7 synthetic matrix GREEN at latest SHA; independent review snapshot refresh required
+
+- Latest tested implementation source SHA: `284d9d243d529b84de4318e65266993fad71a757`.
+- Exact-SHA CI run [45011049882](https://github.com/kenznguyen/btcquant-application/actions/runs/45011049882), job `137173247655`, SUCCESS; requested SHA = checkout SHA.
+- Results: importer-core 20/20; S1.2 adapter 43/43; staging schema 32/32; full `market_data` regression 496/496 PASS. CPython 3.13.18 / SQLite 3.45.1 focused; CPython 3.12.16 full regression. Artifact count 0.
+- Latest source blobs: schema `f530f4f2f394dfb018e5bc750d04974df8b1adcd`; schema tests `e1555b424aacb15b06894ddfc34a99b2989e9ad5`; adapter `70bcf83c37936593e394c8476134046a7da70f4c`; adapter tests `19cd18b40cb61252094b5805eb9d3cc35a7ff39b`; unchanged S3/V1 validator `b94bac0f82ae141984552409f99a5cff70435b3b`; S1 fixture `41f5b21eaa418bb32f4f40e00de7e920ca39c4bf`; workflow `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
+- F1–F7 synthetic matrix PASS. F6 exact-bool opt-in guard is GREEN. F7 now installs the append-only authorizer before COMMIT; injected authorizer failure rolls back all schema objects and user_version. RED run `45011014408`; GREEN run `45011049882`.
+- Physical schema spec synchronized with owner-approved Amendments A/B; F2 contract/evidence updated.
+- Independent review PR #5: [DO NOT MERGE](https://github.com/kenznguyen/btcquant-application/pull/5). Current PR snapshot head at last check `89a83dd`; it is stale because latest source SHA is now `284d9d2`. Refresh schema source/test snapshots, F2 contract/evidence snapshots, REVIEW_SCOPE blob mapping and PR body to this exact source SHA. Request Codex review again after refresh.
+- Codex review status is running but previously on a superseded PR head; do not accept until the bot reports the current PR head. Graphify status also refers to an earlier head and is not accepted.
+- Remaining design blocker: candidate snapshot digest preimage/serialization remains unspecified. Current validator checks shape/presence and CANDIDATE↔VALIDATED equality only; do not invent formula.
+- F2: **PARTIAL / SYNTHETIC CI PASS** pending independent review and candidate digest design decision. S1.2: **NOT FROZEN**. Independent review: **PENDING**. B8: **NOT APPROVED**. Real-data staging: **NOT AUTHORIZED**.
+- Evidence: `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md`.
+- Next: refresh review PR #5 to source SHA `284d9d2`, verify all 14 blob pairs, request Codex review on current head, then triage findings and rerun exact-SHA CI for any fix.
+- Exclusions unchanged: no real archive/sidecar access/acquisition, host/workstation/SSH/filesystem/runner preflight, B8 workflow/dispatch/runner, real-data staging, uploads/retention/deletion/cleanup, Canonical T0, MAY-10/REST tail/T1/T2 runtime/VPS/deployment/credentials/exchange/trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — F1–F7 synthetic matrix GREEN at latest SHA; independent review requested
 
 - Current `main` HEAD before this handoff update: `7d0b346438da5843cadad66b5db98352601b2f97`.
