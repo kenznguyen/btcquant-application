@@ -517,3 +517,18 @@
 - Evidence: byte-for-byte source/mirror comparison PASS. Synthetic matrix 91 cases DESIGN ONLY / NOT EXECUTED. Tests/workflows/artifacts NOT RUN / NONE. Contract freeze NOT APPROVED.
 - Restrictions unchanged: review only; no implementation, fixture/test execution, database/data movement, T1/T2 runtime, deployment, Phase C or trading.
 - Next step: obtain the independent design review on PR #6; triage findings and preserve B-01..B-20 OPEN until explicitly resolved/accepted. Do not merge or implement without separate owner approval.
+
+
+## Phase B Revision 6 — automated PR review result (2026-11-22)
+
+- PR: [#6 — DO NOT MERGE](https://github.com/kenznguyen/btcquant-application/pull/6).
+- Reviewed head: `e46758f47038d5ba143d3790b1e3e2a4e94833d4`; source design remains commit `9b69c18ea16731bf28efba7a92077e96a74107ce`, blob `7012a228561620f4447a0e363a2c5f27d734912a`.
+- Codex automated review: **COMPLETED WITH FINDINGS**, reviewer bot `chatgpt-codex-connector`; 3 unresolved P2 inline findings. This is not an independent human design review.
+- P2-1 (§5.2, mirrored document line 267): composite identity can mask reuse of `(capture_producer_id, capture_sequence)` if anchor/time/limit changes. Treat producer pair as independently unique; compare other fields as immutable attributes and flag mismatch as conflict.
+- P2-2 (§5.2, line 273): self-asserted producer ID plus digest does not authenticate T1 origin. Require verifiable producer attestation or trusted authenticated handoff bound to capture identity, scope/version and response digest; otherwise quarantine.
+- P2-3 (SD-07 synthetic cases 33–34, lines 438–439): positive acceptance cases omit proof of namespace uniqueness, single-writer fencing and durable sequence non-reuse. Require verified fencing/non-reuse or keep captures quarantined.
+- All three inline review threads are unresolved. No fixes have been applied.
+- Graphify review: AI code review skipped because PR changes documentation only; static health gate PASS, but tests were not run and formal proofs were not run. Its result is not design approval.
+- PR remains OPEN / NOT MERGED. Codex has findings; no independent human reviewer/verdict verified. Contract freeze NOT APPROVED; B-01..B-20 remain OPEN; synthetic matrix remains DESIGN ONLY / NOT EXECUTED.
+- CI workflow run/artifact for this design review: none verified. Do not report test PASS.
+- Next step: prepare a documentation-only Revision 7 proposal addressing the three P2 findings, preserve the exact Revision 6 source, then self-check and request another review. No code/database/runtime/Phase C/deployment/trading work without separate owner authorization.
