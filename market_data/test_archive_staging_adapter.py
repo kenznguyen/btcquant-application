@@ -664,14 +664,14 @@ class PopulatedSQLiteProjectionIntegrationTests(unittest.TestCase):
                     candidate_snapshot_sha256,validator_payload_sha256
                 ) VALUES (?,?,?,?,NULL,?,NULL)""",
                 (
-                    (run_id, 1, "BUILDING", "2026-11-22T00:00:00.000Z", None),
                     (run_id, 2, "CANDIDATE", "2026-11-22T00:00:01.000Z", "f" * 64),
+                    (run_id, 1, "BUILDING", "2026-11-22T00:00:00.000Z", None),
                 ),
             )
             object_rows = []
             for oid, key, kind, paired_key, digest, attempt_id in (
-                (zip_id, zip_key, "ZIP", sidecar_key, zip_sha, zip_attempt),
                 (sidecar_id, sidecar_key, "CHECKSUM_SIDECAR", zip_key, sidecar_sha, sidecar_attempt),
+                (zip_id, zip_key, "ZIP", sidecar_key, zip_sha, zip_attempt),
             ):
                 object_rows.append((
                     oid, inventory_id, inventory_sha, "synthetic-entry-" + kind,
@@ -696,8 +696,8 @@ class PopulatedSQLiteProjectionIntegrationTests(unittest.TestCase):
             )
             attempt_rows = []
             for aid, oid, key, digest in (
-                (zip_attempt, zip_id, zip_key, zip_sha),
                 (sidecar_attempt, sidecar_id, sidecar_key, sidecar_sha),
+                (zip_attempt, zip_id, zip_key, zip_sha),
             ):
                 attempt_rows.append((
                     aid, oid, 1, "workflow-run-1", "workflow-job-1",
@@ -718,7 +718,7 @@ class PopulatedSQLiteProjectionIntegrationTests(unittest.TestCase):
             )
             connection.executemany(
                 "INSERT INTO object_successful_attempt (object_id,attempt_id) VALUES (?,?)",
-                ((zip_id, zip_attempt), (sidecar_id, sidecar_attempt)),
+                ((sidecar_id, sidecar_attempt), (zip_id, zip_attempt)),
             )
             connection.execute(
                 """INSERT INTO archive_pairs (
@@ -770,13 +770,17 @@ class PopulatedSQLiteProjectionIntegrationTests(unittest.TestCase):
                 (link_id, "binance", "usdm", "BTCUSDT", "15m", 0,
                  source_row_id, candle_value_id, "UNIQUE"),
             )
-            connection.execute(
+            connection.executemany(
                 """INSERT INTO failure_observations (
                     subject_kind,subject_id,failure_ordinal,failure_code,
                     failure_detail_code,observed_at_utc,evidence_sha256
                 ) VALUES (?,?,?,?,?,?,?)""",
-                ("RUN", run_id, 1, "SYNTHETIC_TEST_NOTE", "TEST_ONLY",
-                 "2026-11-22T00:00:01.000Z", "1" * 64),
+                (
+                    ("RUN", run_id, 2, "SYNTHETIC_TEST_NOTE_2", "TEST_ONLY",
+                     "2026-11-22T00:00:01.000Z", "2" * 64),
+                    ("RUN", run_id, 1, "SYNTHETIC_TEST_NOTE_1", "TEST_ONLY",
+                     "2026-11-22T00:00:01.000Z", "1" * 64),
+                ),
             )
             connection.commit()
 
@@ -790,7 +794,13 @@ class PopulatedSQLiteProjectionIntegrationTests(unittest.TestCase):
             self.assertEqual(projection.source_rows[0].raw_fields_json, raw_fields_json)
             self.assertEqual(projection.candles[0].available_at_ms, 900000)
             self.assertEqual(projection.links[0].link_id, link_id)
-            self.assertEqual(projection.failure_observations[0].failure_code, "SYNTHETIC_TEST_NOTE")
+            self.assertEqual(
+                [item.failure_ordinal for item in projection.failure_observations], [1, 2]
+            )
+            self.assertEqual(
+                [item.failure_code for item in projection.failure_observations],
+                ["SYNTHETIC_TEST_NOTE_1", "SYNTHETIC_TEST_NOTE_2"],
+            )
             self.assertEqual([item.event_seq for item in projection.run_events], [1, 2])
             self.assertFalse(connection.in_transaction)
             self.assertEqual(connection.execute("SELECT 1").fetchone()[0], 1)
