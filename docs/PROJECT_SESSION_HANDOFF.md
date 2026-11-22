@@ -1,3 +1,27 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 3 submitted for independent design review
+
+- Revised design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
+- Exact design commit: `98cde283e9b2dc2d0201e4359e3f1195016ff0ea`.
+- Exact design blob SHA: `2e61e13ec8dc42a37ea03130edc1491b73a903bc`.
+- Revision 3 self-review: `docs/reviews/T0_PHASE_B_DESIGN_SELF_REVIEW_ROUND_3_2026-11-22.md`, commit `7d9a8f1013a5665ac6303c63a1da3894dec3665b`; verdict READY TO SUBMIT FOR INDEPENDENT DESIGN REVIEW, NOT design approval.
+- Independent review request: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_3_REQUEST_2026-11-22.md`, commit `9c8ca98e082f72f8fc031c0092ad14c521530c6f`; status REQUESTED / PENDING.
+- Revision 3 corrections:
+  - R-07: aggTrade E=event time, T=trade time; T1 CSV timestamp_ms is candidate T only, E unavailable unless independently captured.
+  - R-08: snapshot completeness means complete capture of the exact bounded top-N response, not full exchange book; manifest binds source/endpoint, requested limit, bid/ask/total counts, digest, completion and non-RPI scope; derived book remains bounded.
+  - R-09: source-delivery/import cursor separated from contiguous book-sequence watermark, including durable quarantine, restart and replay semantics.
+  - R-10: separate raw message bytes, levels, numeric token/precision, aggregate buffer bytes, snapshot rows/bytes and parser-structure ceilings; fail-closed on limit.
+  - R-11: all T1 quantity→q mappings consistently candidate / NOT VERIFIED; nq never derived.
+  - R-01..R-06 conceptual gaps reconciled: stream_epoch is provenance not identity; snapshot identity/completeness remains source-blocked; q/nq distinguished; ordinary depth explicitly non-RPI; E/T/receive/T0 clocks separated; gap/reorder policy includes resource ceilings and separate cursors.
+- Synthetic matrix: **66 proposed cases** (SD-05 14, SD-06 25, SD-07 19, cross-domain 8), **NOT EXECUTED**.
+- Blockers: B-01..B-20 remain open pending evidence or bounded owner acceptance. In particular SD-06 canonical acceptance remains blocked pending update-ID uniqueness proof; current T1 CSV snapshots remain not canonically acceptable pending source-generated capture identity/completeness; source mappings, numeric limits, digest encoding, API compatibility and atomic persistence remain unfrozen.
+- Independent second-person review: **NOT PERFORMED YET**.
+- Tests/workflows/artifacts: **NOT RUN / NONE**.
+- Scope: documentation-only. No code, DTO, parser, validator, fixture, tests, DDL, database, data movement, T1 source/runtime, network, credentials, T1→T0/T2 runtime, VPS/deployment, Phase C or trading action.
+- Latest main before this handoff update: `9c8ca98e082f72f8fc031c0092ad14c521530c6f`.
+- Next: obtain independent review of exact design commit/blob above; do not freeze contracts or start implementation/Phase C before separate owner decision.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B second-round self-review: REQUEST CHANGES
 
 - Exact reviewed design commit: 75e593517ec31d2e2a75ed0050e80ab5dd52edf2.
