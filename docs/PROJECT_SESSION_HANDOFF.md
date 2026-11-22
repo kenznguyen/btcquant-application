@@ -13,6 +13,27 @@
 7. Preserve repository ownership boundaries. Do not copy another repository's implementation merely because its interface is consumed here.
 8. On every session start: read this section, then the newest dated decision/evidence records referenced below; verify live GitHub branch/HEAD and current workflow evidence before claiming a status.
 
+
+## 1A. Approval request standard — MANDATORY
+
+Whenever owner approval is required, the request must explain both the **purpose** and the **significance** of the proposed action. Do not ask for a bare or generic “approve implementation?” decision.
+
+Every approval request must state:
+
+1. **Purpose** — why this action is needed now; the specific problem, dependency, or decision it addresses.
+2. **Significance** — what the action enables, protects, validates, or changes; why the decision matters to system integrity, safety, progress, or future work.
+3. **Exact scope** — the bounded action, target repository/branch/files/components, and whether it is documentation, architecture, source code, tests, data, runtime, deployment, connectivity, or execution.
+4. **Impact and dependencies** — affected layers (T0/T1/T2/UI/operations), repository ownership, interfaces, upstream/downstream dependencies, and any behavior or data that could be affected.
+5. **Risks and reversibility** — technical/security/operational risks, data-loss or compatibility risks, rollback or recovery approach, and whether the action is reversible.
+6. **Explicit exclusions** — what will not be changed or performed; state clearly what this approval does not authorize, especially adjacent runtime, data, deployment, exchange-connectivity, or trading actions.
+7. **If deferred or rejected** — what remains blocked, the consequence for project progress, and whether a safe alternative exists.
+8. **Alternatives and recommendation** — viable options, material trade-offs, and the recommended option with a concise rationale.
+9. **Decision requested** — one precise, bounded approval decision, with any conditions or limits that must accompany it.
+
+Keep approval categories separate. Architecture/design approval does not authorize implementation. Source-change approval does not authorize deployment or runtime activation. Test approval does not authorize data mutation. Deployment/runtime approval does not authorize exchange connectivity or order execution. Exchange connectivity and any execution authorization require their own explicit decisions and remain subject to the project's paper-first restrictions.
+
+Do not request approval again for work already covered by a valid, current owner decision. If scope or authority is ambiguous, stop at the boundary and ask one focused question. Record the resulting decision, its scope, exclusions, date, and superseded state in this authority section and the dated decision log as appropriate.
+
 ## 2. Current project direction and non-negotiable boundaries
 
 - Product direction: **BTCUSDT Quant System — Dual-Strategy Intelligence**. Strategy Core remains RSI + ADX + Smart DCA. The independent AI Strategy may generate its own LONG/SHORT signals even when Core has no signal. AI signals do not bypass the common risk boundary.
@@ -997,8 +1018,7 @@ This authority index is an interpretation of owner decisions already recorded in
 - The empty-only initializer refuses existing DB paths and verifies an empty schema. It was exercised only by tests using disposable temporary paths. No canonical DB was created; CLI was not run on a real path.
 - Expanded `.github/workflows/t0-sqlite-aggregate.yml`: update commit / exact checkout SHA `42c8172a4b4b0234fa50e64eb6172f970f45ab66`; workflow blob `32be957fbad1b04161b621c7e1c95f20aa9d9cf9`.
 - Exact-SHA run [44507725020](https://github.com/kenznguyen/btcquant-application/actions/runs/44507725020), job `135503600404`: **SUCCESS**, 191/191 tests, 0 failures/errors, 3.131s.
-- Suite explicitly covers initializer/store/fenced writes, API/Storage, write gateway, sync, lease/fencing, recovery, health, retry, scheduler, synthetic controlled ingestion and deterministic feeder lifecycle. PostgreSQL-specific API/Storage tests are excluded.
-- Artifact `t0-sqlite-aggregate-evidence`, ID `14520188043`, size 6,093 bytes, SHA-256 `0389c4fc4cab0190ea7ada4115b24b53095a9ffb035cba3f7b1dcd01b22ceacb`, expires 2026-12-03T10:40:03Z. ZIP independently hashed and payload inspected; exact SHA, 191 count and exit 0 confirmed.
+- Suite explicitly covers initializer/store/fenced writes, API/Storage, write gateway, sync, lease/fencing, recovery, health, retry, scheduler, synthetic controlled ingestion and deterministic feeder lifecycle. PostgreSQL-specific API/Storage tests are excluded.- Artifact `t0-sqlite-aggregate-evidence`, ID `14520188043`, size 6,093 bytes, SHA-256 `0389c4fc4cab0190ea7ada4115b24b53095a9ffb035cba3f7b1dcd01b22ceacb`, expires 2026-12-03T10:40:03Z. ZIP independently hashed and payload inspected; exact SHA, 191 count and exit 0 confirmed.
 - Immutable Python 3.12.16 image; Docker `--network none`, read-only source/root, non-root, no credentials, no canonical DB. Tests use temporary SQLite and fake/synthetic exchange responses only.
 - Evidence report: `docs/evidence/T0_SQLITE_FOUNDATION_EXPANSION_2026-11-19.md`, commit `6c2df8129e336231ad0e55b39e844b14663244d5`.
 - Provenance addendum: `docs/T0_MIGRATION_PROVENANCE.md`, commit `31a913256611e2b508596b9cd7715a7ff27ae8ac`.
@@ -1997,8 +2017,7 @@ Reconcile the four-artifact Actions allowlist with all eligible source artifacts
 
 - Updated amendment: `docs/architecture/T0_SIGNATURE_TRUST_POLICY_MONOTONIC_ANCHOR_AMENDMENT_A1_2026-11-11.md`.
 - Consistency-review commit: `9941c6fe890be32cd87b37f3051e496527f264d6`; latest amendment blob: `ca0e73778c3e1430f1d9e8ac4aaa90721bfc113a`.
-- Re-read governing Checkpoint Contract v1 blob `5948dd904e1819b626aecc1a85e10c95735191a3`, L4 crosswalk blob `b1f4daac9624d8deedfaf14234e0b6bb79ff81ca`, latest amendment and this handoff.
-- Findings/corrections recorded: (CR-01) A1 cannot unilaterally supersede v1's outside-both VPS/GitHub custody requirement; VPS + GitHub-only is now explicitly a proposed alternative requiring owner ratification, and v1 remains controlling until formal amendment. (CR-02) Trust Policy body excludes its own digest/signature; detached statement/descriptor carries digest. (CR-03) all logical integers serialize as canonical unsigned decimal strings under T0-JCS-1. (CR-04) binary envelope fields use strict unpadded base64url. (CR-05) v1 signing provenance/authorization fields are mapped to signed statement or separately signed referenced evidence; post-signing verification references remain in append-only Verification Records. (CR-06) anchor Evidence Object descriptor and custody receipt/readback requirements remain unless owner formally amends v1.
+- Re-read governing Checkpoint Contract v1 blob `5948dd904e1819b626aecc1a85e10c95735191a3`, L4 crosswalk blob `b1f4daac9624d8deedfaf14234e0b6bb79ff81ca`, latest amendment and this handoff.- Findings/corrections recorded: (CR-01) A1 cannot unilaterally supersede v1's outside-both VPS/GitHub custody requirement; VPS + GitHub-only is now explicitly a proposed alternative requiring owner ratification, and v1 remains controlling until formal amendment. (CR-02) Trust Policy body excludes its own digest/signature; detached statement/descriptor carries digest. (CR-03) all logical integers serialize as canonical unsigned decimal strings under T0-JCS-1. (CR-04) binary envelope fields use strict unpadded base64url. (CR-05) v1 signing provenance/authorization fields are mapped to signed statement or separately signed referenced evidence; post-signing verification references remain in append-only Verification Records. (CR-06) anchor Evidence Object descriptor and custody receipt/readback requirements remain unless owner formally amends v1.
 - Consistency-review disposition: **PARTIAL / NOT FROZEN**. CR-01 remains an owner decision; production signature algorithm/profile, root ceremony, signer/anchor identities and trusted-time/TSA decisions remain open. This was same-session static review, not qualifying independent review.
 - No implementation, code/test/workflow/CI/runtime/VPS/SQLite/key/trust-root/policy/anchor/provider/TSA/destructive action occurred. No CI run/artifact is claimed.
 - Next: obtain explicit owner disposition on whether to formally amend Checkpoint Contract v1's outside-both custody requirement. Until then, v1 governs that claim and A1 cannot be frozen as a fully reconciled contract. After owner disposition, perform final contract freeze and qualifying independent review; implementation still requires separate approval.
@@ -2997,7 +3016,6 @@ Next: owner review of R1 research choices. Do not execute experiments until thos
 
 
 ## AI Strategy Research Gate R1 — freeze proposal recorded (2026-11-11)
-
 Following owner approval of R0, a documentation-only R1 freeze proposal was added:
 - Proposal: `docs/architecture/AI_STRATEGY_RESEARCH_R1_FREEZE_PROPOSAL.md`, commit `82f770adc8b2936243174b97e3e83a1ee46f1f63`.
 - Evidence: `docs/evidence/AI_STRATEGY_RESEARCH_R1_FREEZE_PROPOSAL_2026-11-11.md`, commit `b11225bcca208ef6ef973b314b6dd03b84b239d7`.
@@ -3997,8 +4015,7 @@ Next: if owner wants to proceed beyond planning, first approve a bounded provisi
 - Parser blob: `f114bd08de56ff641e29697f63ac6d11d127e3cc`; test blob: `4125d56f94ea4c06df6fa6f3c02232e23ec61108`.
 - TDD RED: focused unittest import failed as expected while parser module was absent. GREEN: exact focused unittest command **22/22 PASS**. `py_compile` on both files PASS. Local isolated Python runtime: 3.13.5. No dependency installation.
 - Implements strict UTF-8 JSON, D05 structure, all 11 D10 values, duplicate-key rejection before mapping conversion, one fixed reason code, no raw-input echo, no trust/execution authority, and all G0.44 D11 ceilings.
-- The frozen S1 measurement recipe has empty claims objects and no non-empty claims schemas; parser therefore rejects non-empty claims fail-closed. No unratified claims schema was invented.
-- Focused source review performed; independent reviewer sign-off NOT PERFORMED. Full repository suite and GitHub Actions were not run because the G0.45 D14 scope excluded broader suite/CI changes.
+- The frozen S1 measurement recipe has empty claims objects and no non-empty claims schemas; parser therefore rejects non-empty claims fail-closed. No unratified claims schema was invented.- Focused source review performed; independent reviewer sign-off NOT PERFORMED. Full repository suite and GitHub Actions were not run because the G0.45 D14 scope excluded broader suite/CI changes.
 - **G0.45: PASS — bounded S1 synthetic parser implementation and focused verification.** Production verifier/cryptography/trust/runtime remain NOT IMPLEMENTED / NOT AUTHORIZED. T0 protected; T1/T2 unchanged; ledgers separate; paper-only and `AI_EXECUTION_ENABLED=false` unchanged.
 
 
@@ -4997,7 +5014,6 @@ Boundaries unchanged: T0 and T1 remain independent (no T1→T0); T0 unchanged; n
 
 
 ### AI Ledger CANCEL — RED contract and integrity boundary (2026-11-12)
-
 - Scope: test-only work on the existing branch `feature/t0-centralized-data-feeder-p1-20261101`. No production source, T0/T1/T2, VPS/runtime, model inference, or trading execution changes.
 - Policy fixed for this test phase: an active dual-strategy order with a missing reservation or a reservation whose `strategy_id` / `intent_id` does not match its persisted order must fail closed and roll back. Expiry sweep remains account-wide; only expired reservations from the other strategy may be mutated by housekeeping. A non-expired reservation from the other strategy must remain untouched. Repeated CANCEL must not release or audit twice.
 - Tests added/updated: `paper_execution/test_dual_ledger_red.py`, `paper_execution/test_dual_strategy_api_red.py`, `paper_execution/test_dual_ledger_migration_red.py`, and `pipeline/test_core_sizing.py`. Legacy fixtures now supply explicit AI admitted leverage / 3x fixture leverage and use sizes within the AI 1% margin budget.
@@ -5997,8 +6013,7 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Persistent State Contract and Session Lifecycle designed
 
 - Design record: `docs/architecture/PERSISTENT_STATE_CONTRACT_AND_SESSION_LIFECYCLE_2026-11-20.md`, commit `960a3549ed4aee1d6ec5c43a987b7ca3390109f1`.
-- Owner-selected mode remains On-Demand Execution: manual Start/Stop; durable state across sessions; no scheduler, background runner, systemd/autostart, or 24/7 service.
-- Contract uses an authoritative durable event history plus versioned immutable checkpoints; event replay is ordered and idempotent. A checkpoint is accepted only after checksum and committed event-sequence verification.
+- Owner-selected mode remains On-Demand Execution: manual Start/Stop; durable state across sessions; no scheduler, background runner, systemd/autostart, or 24/7 service.- Contract uses an authoritative durable event history plus versioned immutable checkpoints; event replay is ordered and idempotent. A checkpoint is accepted only after checksum and committed event-sequence verification.
 - Core and AI retain independent state namespaces, decision histories and position ledgers. Smart DCA restores only from reconciled Core position/event history; AI cannot inherit Core DCA state.
 - Idempotency requires atomic unique intent claims, canonical payload-hash comparison and durable dedupe history. Same key/same payload reuses the recorded outcome; same key/different payload is a conflict. This is deduplicated paper-state processing, not a claim of distributed exactly-once execution.
 - Session lifecycle: IDLE → START_REQUESTED → PREFLIGHT → RESTORING → READY → RUNNING → CHECKPOINTING → CLOSED. Interrupted sessions recover from the last valid checkpoint plus committed event tail; invalid or ambiguous state fails closed. Single-writer ownership uses an atomic claim and fencing generation.
