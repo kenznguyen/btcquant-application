@@ -6962,3 +6962,16 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - Design amendment is committed, but not yet independently reviewed or executable-tested. S1.2 remains **NOT FROZEN**.
 - Next: inspect repository test/workflow conventions; implement immutable adapter DTO/projection and synthetic tests using TDD; then add disposable synthetic SQLite schema tests. Keep all real-data and B8 exclusions.
 - No adapter source, adapter tests, DDL execution, SQLite connection, archive access, runner/host preflight or runtime operation has yet occurred under this authorization.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — First S1.2 adapter DTO/projection increment committed; verification blocked
+
+- Evidence: `docs/evidence/T0_S1_2_ADAPTER_DTO_PROJECTION_CHECKPOINT_2026-11-22.md`, commit `997af16fbd1f8b3ea18037668f797cbd5f4d8d12`.
+- Current main source checkpoint: `cd0c54e9b9cb579685e9a8d262a3a166afdf9df1`; evidence commit is on main after it.
+- Added immutable DTOs and pure projections in `market_data/archive_staging_adapter.py`; test-first cases in `market_data/test_archive_staging_adapter.py`; extended `.github/workflows/t0-importer-core-synthetic.yml`.
+- Test-first commit `6be5cbf6c806f24a8b78acf6ab43cf5115908840`; workflow extension `6b102988430ece3b0a2eac66e41b92aacff3a528`; adapter implementation `374c39ae0c97f42e02a9f221b3ed7356d0cfccd3`; regex correction `cd0c54e9b9cb579685e9a8d262a3a166afdf9df1`.
+- Source blob `9d61bb36cfb2ff80c0a1b303e52f34d8d44d2b28`; test blob `271e465825ededd3042abc35cd6dc8c451aa07a3`; workflow blob `2af6aa2eb0e852d97f5ae1614cf4731f2b7d3166`.
+- Scope implemented so far: signed-64-bit SQLite integer guard; immutable AttemptRecord/SourceRowRecord/PairRecord; attempt/pair/source-row projection helpers; attempt count/success relation derivation. This is a partial adapter increment, not full DB↔S3/V1 coverage.
+- **Verification status: NOT VERIFIED.** 10 tests committed; no local execution. Available Actions lookup cannot retrieve push-triggered workflow runs (only PR-triggered run list); combined status is empty. No run/job ID, checked-out SHA, test count or artifact can be claimed.
+- No SQLite connection/DDL/staging DB, archive/sidecar, host/workstation/runner, B8, Canonical, T1/T2, VPS/runtime, credentials, exchange, trading, upload or deletion operation.
+- Next: owner to provide the Actions run URL/ID for exact-SHA verification, or provide an execution path that can read push-triggered workflow runs. After verified GREEN, proceed with disposable synthetic SQLite staging schema and tests.
