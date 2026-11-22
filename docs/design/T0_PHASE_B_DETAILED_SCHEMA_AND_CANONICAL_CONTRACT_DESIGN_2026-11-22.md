@@ -174,13 +174,13 @@ Candidate sequence rules, subject to exact Binance USD-M stream-contract verific
 - T0 acknowledgement may advance only after the accepted diff (or durable quarantine/gap outcome) and associated checkpoint state are committed atomically or through a reviewed recovery protocol.
 - Lost acknowledgement retries the same immutable message identity; it must resolve as replay, not a second book update.
 
-### 4.5 Depth visibility scope — non-RPI by default
+### 4.6 Depth visibility scope — non-RPI by default
 
 The Phase B SD-06/SD-07 default dataset is the ordinary Binance USD-M depth feed and therefore represents **non-RPI depth only**. Binance documents RPI orders as excluded from the ordinary depth stream and provides a separate RPI Diff Book Depth stream. Consequently, this dataset is not a complete view of all displayed liquidity and must not be described as such.
 
 RPI-inclusive depth is OUT OF SCOPE for Phase B. It requires a separately reviewed source-domain/stream identity, sequence, snapshot and merge contract; do not merge RPI observations into the ordinary book or infer missing RPI liquidity. The same non-RPI limitation applies to snapshots unless their source contract proves otherwise.
 
-### 4.6 Bounded out-of-order, gap and recovery policy
+### 4.7 Bounded out-of-order, gap and recovery policy
 
 1. The source adapter preserves original arrival order and arrival metadata. It must not sort or rewrite raw source observations by event time.
 2. The sequence processor may hold a bounded reorder buffer keyed by native sequence range to tolerate limited transport reordering. Both a maximum buffered-event count and maximum residence age are mandatory configuration bounds. Their numeric values are NOT FROZEN and must be derived from measured source behavior and owner-reviewed resource limits; no arbitrary default is accepted.
@@ -193,7 +193,7 @@ RPI-inclusive depth is OUT OF SCOPE for Phase B. It requires a separately review
 
 Numeric buffer bounds, gap wait values and exact exchange bridge behavior remain explicit freeze blockers.
 
-### 4.7 Book-state semantics
+### 4.8 Book-state semantics
 
 Canonical diff history and a reconstructed in-memory/current book are different artifacts. T0 canonical history retains accepted source diffs and their provenance. Any derived book view must identify the exact snapshot anchor, stream epoch, last applied update ID, applied dataset version and continuity status. It must not be represented as a raw source event.
 
