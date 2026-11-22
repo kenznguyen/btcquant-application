@@ -6990,3 +6990,21 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - Artifact endpoint returned zero artifacts; no artifact ID, digest or downloadable test log is available.
 - Status: **S1.2 adapter synthetic CI PASS at exact SHA; detailed test counts/artifact NOT VERIFIED.** This closes the immediate CI-verification blocker only; it does not freeze S1.2 or authorize real archives, B8, Canonical T0, production SQLite, real-data builds, T1/T2, VPS/runtime, credentials, exchange/trading, upload or deletion.
 - Next: proceed with the already approved synthetic-only SQLite staging schema and disposable database tests using TDD; independent review and physical-schema closure remain required before S1.2 freeze.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.2 synthetic SQLite staging schema v2 CI PASS
+
+- Owner scope: implement the SQLite staging schema v2 module, test-first RED/GREEN, synthetic-only disposable DB tests and complete `market_data` regression. No real archive or Canonical data access.
+- Test-first commits: schema tests `bb4d743c151e387bbf1ca66fe6715680fb9a7fb3`; workflow inclusion `d78170cf084f988ef83f8fe79ee85a1d43b1f584`.
+- RED evidence: workflow run `45000748833`, job `137141528897`, exact SHA `d78170cf084f988ef83f8fe79ee85a1d43b1f584`; schema suite failed as expected with `ModuleNotFoundError: No module named 'market_data.archive_staging_schema'`; pre-existing importer-core/adapter focused suites passed; full regression skipped.
+- Schema implementation and hardening commits: `ec619151e33e6c924e2a3fa36b1a708db1c16b95`, `fd908d68ad443def7d5955b1784c4385959cd1f0`, `9c250066905432753662d38a60d6227df731b8b8`, `1e96ed2bcf445c850c1a91193c5b67383f1bc79b`, `6969769c602eca9e23bb613b52b590360d77177e`, `e8a6517ca1b7801e091bbedb35b107e343534093`, `d0fc2dac6fe12130352467ebe68f7f9b8a6c8f41`, `fdb4c0cde31d8a1a5b9a1079fa05fcbe5a82ba50`.
+- Final exact-SHA workflow run `45001365840`, job `137143405676`, exact checked-out SHA `fdb4c0cde31d8a1a5b9a1079fa05fcbe5a82ba50`: **SUCCESS**.
+- Runtime evidence: CPython 3.13.18, SQLite 3.45.1 (minimum 3.37.0). Focused importer-core 20 tests PASS; adapter 10 tests PASS; schema 10 tests PASS; complete `market_data` regression 441 tests PASS using Python 3.12.16 with committed hash-locked test dependencies.
+- Schema tests cover STRICT, NULL-safe verified/accepted checks, composite same-object FK, append-only database triggers (after disabling connection authorizer), deterministic fingerprint, integrity_check, foreign_key_check and a disposable file-backed temporary database.
+- Schema implementation blob `463a0cb564d2061437a1a9a5a78eca67789c9a36`; schema tests blob `779ea6de4a1b26283d3c43de9ca45dd6462ea219`; workflow blob `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
+- Implementation amendment: `docs/design/T0_STAGING_SCHEMA_V2_EXECUTABLE_IMPLEMENTATION_AMENDMENT_2026-11-22.md`, commit `5ebd48fba8b4b396485bf44ba10ddd2ca4074ae9`. It records append-only triggers in the fingerprint manifest, lowercase digest grammar, controlled empty-DB initialization and exact verifier checks.
+- Evidence: `docs/evidence/T0_S1_2_SQLITE_STAGING_SCHEMA_V2_CI_2026-11-22.md`, commit `a270b8225c99a79d77bfb647b6ae44448b7c6ac7`.
+- Artifacts: none (Actions artifact endpoint returned zero).
+- Status: synthetic SQLite staging schema implementation and CI regression **PASS at exact SHA**. S1.2 remains **NOT FROZEN** pending independent review, complete DB-to-S3/V1 projection/graph validation and final physical-schema closure. This is not a real-data staging build or production migration.
+- Next: perform focused independent/static review of the exact implementation SHA; resolve any findings with TDD. Keep all real-data, B8, Canonical T0, T1/T2, VPS/runtime, deployment, credential, exchange and trading exclusions unchanged.
+- No real archive/sidecar, raw historical data, Canonical T0, MAY-10, REST tail, B8 runner, host/workstation, T1/T2, VPS, deployment, credentials, exchange or trading state accessed or changed. No upload, retention change, deletion or cleanup.
