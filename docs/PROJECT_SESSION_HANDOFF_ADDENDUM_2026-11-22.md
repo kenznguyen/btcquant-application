@@ -331,3 +331,13 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - B4 resource ceilings and B6 retention policy remain unchanged. No raw archive/sidecar/full SQLite/raw candle/private evidence upload; sanitized CI artifacts max 30 days, but artifact upload remains separately gated. No deletion/cleanup.
 - No workflow/test implementation or dispatch, artifact upload, archive access, host/SSH/preflight, DDL/SQLite, importer, staging build, Canonical promotion, runtime/deployment, credentials or trading occurred.
 - Next: prepare a bounded G1 implementation request for owner review only. Preparing the request does not authorize implementation or dispatch.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — G1 synthetic-only CI approval request prepared
+
+- Owner accepted GitHub-first, destination-deferred architecture/governance direction: `docs/decisions/T0_GITHUB_FIRST_DESTINATION_DEFERRED_OWNER_ACCEPTANCE_2026-11-22.md`, commit `cf7df375d2afbcaa5b6f86fb5130f8f121733de3`.
+- Bounded G1 request: `docs/requests/T0_G1_SYNTHETIC_ONLY_CI_IMPLEMENTATION_APPROVAL_REQUEST_2026-11-22.md`, commit `3fe4d3a5fcfef02c184bf151cea8bacd205ab50a`.
+- G1 is **REQUEST FOR OWNER APPROVAL — NOT AUTHORIZED**. Proposed scope: pure Python B4 resource/retry/timeout policy, synthetic CSV parser cases, in-memory importer-core/coverage logic, Python/SQLite version metadata only (no SQLite connection), tests, manual exact-SHA workflow, and sanitized evidence artifact (<=30 days) if explicitly approved.
+- No implementation, tests, workflow YAML, workflow dispatch, artifact upload or artifact-retention setting change has occurred. No archive/sidecar, host, filesystem, SQLite, importer, staging, runtime or trading action occurred.
+- B3 real archive-format coverage remains NOT VERIFIED; B5 source-derived coverage remains NOT VERIFIED; concrete destination remains DEFERRED / NOT SELECTED; B8 real importer/SQLite build remains NOT AUTHORIZED.
+- Next gate: explicit owner approval/rejection of the exact G1 request. Partial approval must name accepted items. Do not begin implementation before approval.
