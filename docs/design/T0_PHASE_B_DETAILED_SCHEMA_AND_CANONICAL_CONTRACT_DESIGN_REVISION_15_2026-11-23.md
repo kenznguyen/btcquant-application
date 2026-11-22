@@ -606,7 +606,7 @@ B-13/B-16 closure is scope-only, not implementation or technical verification. B
 - [x] Candidate identity and domain-specific sequence/grouping semantics described.
 - [x] Timestamp/provenance limitations called out without fabricated receive times.
 - [x] Replay/conflict/quarantine/acknowledgement behavior drafted.
-- [x] 101-case synthetic matrix defined and owner-approved (14/31/46/10); fixture creation and execution remain pending satisfactory independent review of exact Revision 14 SHA/blob.
+- [x] 101-case synthetic matrix defined and owner-approved (14/31/46/10); fixture creation and execution remain pending satisfactory independent review of exact Revision 15 SHA/blob.
 - [x] Contract-freeze blockers recorded.
 - [ ] B-01 through B-20 resolved or explicitly accepted as bounded exclusions by owner.
 - [ ] Canonical DTO/envelope, digest encoding, snapshot capture/group identity and diff stream epoch contract reviewed/frozen.
@@ -625,7 +625,7 @@ B-13/B-16 closure is scope-only, not implementation or technical verification. B
 
 ## 13. Explicit exclusions
 
-This Phase B document authorizes no production implementation or runtime changes. The sole bounded test exception is the owner-approved isolated synthetic 101-case scope, sequenced after satisfactory independent review of exact Revision 14 SHA/blob. It authorizes no:
+This Phase B document authorizes no production implementation or runtime changes. The sole bounded test exception is the owner-approved isolated synthetic 101-case scope, sequenced after satisfactory independent review of exact Revision 15 SHA/blob. It authorizes no:
 - production code, DTO, parser, validator, adapter, dependency, API or workflow changes; test-only fixtures/harness are limited to the approved matrix and remain isolated;
 - T0 DDL/schema/database creation, open-for-write, migration, import, promotion, cutover or canonical data mutation;
 - T1 source-code change, collector activation, file copy, importer execution or T1→T0 runtime connection;
@@ -697,7 +697,7 @@ B-13 and B-16 are closed as scope decisions only; excluded capabilities are not 
 
 > Source: `docs/design/T0_PHASE_B_CANONICAL_DTO_DIGEST_CHECKPOINT_ATOMIC_PERSISTENCE_DESIGN_V1_2026-11-22.md`, original blob `594066d98201a8cf0940b62fc36d9358033f06e0`.
 >
-> This annex incorporates the complete proposal into the Revision 14 review surface. It is a **PROPOSED DESIGN INPUT — NOT CONTRACT-FROZEN**. The independent reviewer must review it together with the inherited Phase B design. No production implementation or database operation is authorized.
+ > This annex incorporates the complete proposal into the Revision 15 review surface. It is a **PROPOSED DESIGN INPUT — NOT CONTRACT-FROZEN**. The independent reviewer must review it together with the inherited Phase B design. No production implementation or database operation is authorized.
 
 ## Annex A source proposal — complete text
 
