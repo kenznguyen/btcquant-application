@@ -224,3 +224,14 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - S3 30/30, V1 24/24 and full market_data 387/387 all PASS; exit codes 0.
 - Artifact ID `14735332978`, size 3,681 bytes, SHA-256 `a359d04c458a8545e386a288ef5ad6219d6f7bb9d31a6525778444eefeb40cf8`; downloaded and verified.
 - This is the final exact-SHA run for implementation + approval-status documentation. Subsequent commits only update review/evidence/handoff documentation; no tested code, test, contract or workflow blobs changed.
+
+
+## T0 post-S3 blocker audit — 2026-11-22
+
+- Read-only audit document: `docs/reviews/T0_POST_S3_BLOCKER_AUDIT_2026-11-22.md`, commit `a66234d0ee10fbcd22f67f978a3ced73570cca22`.
+- `docs/T0_ACTIVE_SCOPE_INDEX.md` refreshed with a current override, commit `2ac943c66fd82da249b8c3845b2f5a208870329a`, blob `c5057e8f34f041d0f322836fd7e57c204eb6f0b1`.
+- S3 remains PASS at exact tested source SHA `d1651196af3059e00b22f65461dbd897e5c599df`: S3 30/30, V1 24/24, market_data 387/387. This does not authorize any subsequent archive, importer, SQLite or runtime phase.
+- Main remaining staging blockers: (B1) reconcile original S1 DDL with failed/incomplete evidence amendment and S3 R4–R6; add full append-only acquisition-attempt and successful-attempt relationship; freeze persisted coverage manifest. (B2) pin SQLite STRICT minimum/runtime verification. (B3) real header/member-format coverage beyond the one M15 monthly 2022-08 sample. (B4) decompression/ratio/disk/concurrency/retry/timeout budgets. (B5) fresh archive-derived coverage/gap manifest. (B6) source/evidence retention and artifact TTL. (B7) new owner-controlled host/path because former VPS is deleted and old path is not active. (B8) separately approved importer and SQLite build. (B9) independent T0 application review PR #3/#4 remains a separate open gate.
+- REST tail remains closed by owner decision; MAY-10 excluded; former Canonical SQLite remains LOST. Any output remains `RECONSTRUCTED — PARTIAL COVERAGE`.
+- Recommended next bounded task: **S1.1 documentation-only schema reconciliation**. This requires explicit approval for that design-freeze work; it does not authorize executable DDL, SQLite, importer, archive access/acquisition, workflow dispatch, host preflight, data build, cleanup or promotion.
+- Audit non-actions: no archive/sidecar access, REST call, SQLite/Canonical access, importer, DDL, runtime, VPS, deployment, retention change, deletion, credential or trading operation.
