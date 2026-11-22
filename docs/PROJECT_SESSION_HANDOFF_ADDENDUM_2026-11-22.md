@@ -293,3 +293,16 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - No archive/sidecar access, download, decompression, source-format verification, host/SSH/mount/filesystem inspection, workflow dispatch/artifact upload, retention-setting change, DDL, SQLite, importer, staging build, cleanup/deletion, T1/T2 runtime, deployment or trading.
 - B3 remains NOT VERIFIED; B5 remains NOT VERIFIED; B8 remains NOT AUTHORIZED. S1.1 stays owner-accepted and frozen. This proposal does not authorize any later phase.
 - Next: owner decides B4, B6 and B7 independently. Any deferred/rejected item remains open; no limit or destination is inferred.
+
+
+## T0 B4 / B6 / B7 — Owner accepted all three decisions (2026-11-22)
+
+- Owner explicitly accepted all three proposals in the B4/B6/B7 decision package.
+- Acceptance record: `docs/decisions/T0_B4_B6_B7_OWNER_ACCEPTANCE_2026-11-22.md`, commit `a16d19bdabf99031bb55957de0c14df17e7ccd11`.
+- Updated design/policy document: `docs/design/T0_B4_B6_B7_RESOURCE_RETENTION_DESTINATION_DECISION_PACKAGE_2026-11-22.md`, blob `948842998984b5b98d07a91ace82d2f822383932`.
+- B4: **OWNER ACCEPTED — DESIGN FROZEN**. Numeric ceilings and fail-closed rules are accepted, including 100 MiB cumulative response cap, bounded ZIP/decompression/time/retry/concurrency limits, 8 GiB workspace, 13 GiB preflight free disk, 5 GiB disk reserve and inode thresholds. They are not measured against actual source archive objects.
+- B6: **OWNER ACCEPTED — POLICY FROZEN**. Preserve source archives, sidecars, private provenance evidence, staging and operational logs until a separate explicit deletion decision. Sanitized CI artifact maximum retention is 30 days. No automatic deletion of source/staging/private evidence.
+- B7: **OPTION A OWNER-SELECTED** — owner-controlled personal workstation with encrypted local volume, dedicated restricted account/root and manual/on-demand execution. Exact host/device and absolute path remain unspecified. Host access and preflight are not authorized or performed.
+- Scope remains documentation/design only. No archive/sidecar access, host access, SSH, filesystem/mount inspection, preflight, workflow dispatch, artifact upload/setting change, DDL, SQLite, importer, staging build, cleanup/deletion, T1/T2 runtime, deployment or trading.
+- B3 archive format remains NOT VERIFIED; B5 source-derived coverage remains NOT VERIFIED; B8 importer/build remains NOT AUTHORIZED. Former Canonical SQLite remains LOST; any future reconstructed output must be labelled `RECONSTRUCTED — PARTIAL COVERAGE`. MAY-10 excluded; REST tail closed.
+- Next: any future host preflight requires a separate explicit owner authorization and exact host/path. No acquisition or build authorization is implied by this acceptance.
