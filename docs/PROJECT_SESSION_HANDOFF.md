@@ -1,13 +1,17 @@
-# CURRENT STATUS OVERRIDE — 2026-11-22 — B4 resource policy implemented; exact-SHA GREEN pending
+# CURRENT STATUS OVERRIDE — 2026-11-22 — B4 resource policy exact-SHA GREEN verified
 
-- Implementation source SHA: `9c47817bfaea9e4bf830aa812508ae1ef4796e20`; parent `d7932f826b16ba0abad4d14f8aac0822c09cc525`; final module blob `87743432ec273bf5bd737d26bf2d489cc9fb34cf`.
-- Source scope: only `market_data/archive_resource_policy.py` was changed in the implementation commits. Helpers implement frozen resource ceilings, fail-closed metadata validation, ZIP member path/type/symlink/encryption/compression classification, bounded transient retry delays, and concurrency=1 checks.
-- Evidence: `docs/evidence/T0_G1_B4_RESOURCE_POLICY_IMPLEMENTATION_2026-11-22.md`, commit `84bb5f2d3999c8b3360169d7cd51abe18bd6b8ca`.
-- Prior RED remains verified: run `44990722096`, job `137110968023`, exact tested source SHA `d5db3e8af76c44d75c00bd457b3dccabba762f50`; baseline 46/46 PASS and expected B4 import RED; sanitized artifact `14742195259`, SHA-256 `fbc3947a9e68c6a9a3a8cf4e34452e868169e294c0bf6ed9737a424a8433d4ae`.
-- **GREEN is BLOCKED / NOT VERIFIED.** This session's GitHub integration has no `workflow_dispatch` action. No tests, workflow run, job, or artifact have been verified for implementation SHA `9c47817bfaea9e4bf830aa812508ae1ef4796e20`. Empty commit statuses are not a test result.
-- Owner action: GitHub Actions → `T0 G1 synthetic-only exact-SHA CI` → Run workflow with `source_sha=9c47817bfaea9e4bf830aa812508ae1ef4796e20`. Inspect exact checkout, baseline and B4 test results (expected total 60), job conclusion and sanitized artifact/digest; then update this section with exact run/job/artifact evidence.
-- G1 remains **PARTIAL / NOT COMPLETE**. Do not begin importer-core TDD until B4 GREEN is verified.
-- All prior exclusions remain in force: no archive/sidecar reads, host/filesystem preflight, network acquisition, SQLite open/create/write/DDL, real-data importer/build, Canonical T0 mutation/promotion, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity or trading.
+- Implementation source SHA: `9c47817bfaea9e4bf830aa812508ae1ef4796e20`; parent `d7932f826b16ba0abad4d14f8aac0822c09cc525`; module blob `87743432ec273bf5bd737d26bf2d489cc9fb34cf`. Only `market_data/archive_resource_policy.py` changed in source implementation commits.
+- GREEN workflow: [run 44991196748](https://github.com/kenznguyen/btcquant-application/actions/runs/44991196748), run #4, attempt 1, `workflow_dispatch`, overall conclusion `success`; job `Synthetic-only tests` ID `137112408904`, conclusion `success`.
+- Exact-SHA proof: workflow input `source_sha=9c47817bfaea9e4bf830aa812508ae1ef4796e20`; checkout ref and runner's `git rev-parse HEAD` both match this exact SHA. Dispatch branch HEAD `b3dbda87c8cbb78d43906d040120823b05062af5` is not the tested source SHA; the exact-SHA input and checkout proof establish the tested source.
+- Test result: **60/60 PASS** in 0.023s — parser 19, header contract 15, provenance validator 12, B4 resource policy 14. CPython 3.13.18; SQLite library 3.45.1; minimum-version metadata check PASS; no database opened.
+- Artifact: ID `14741792967`, name `t0-g1-synthetic-only-44991196748`, 3,250 bytes, 8 files, expiry `2026-12-22T05:51:50Z`; SHA-256 `97f2864bebe506b045dc3ab4224d5ca747eae94a421f19adc124eed65c0977e0`. ZIP downloaded and inspected; contents limited to approved evidence manifests, runtime metadata, summary and tests log.
+- Artifact source manifest confirms requested and checked-out SHA match. Parser blob `10fe2313103c45d5455f17ff71f3fd0af2e6f038`; provenance blob `b94bac0f82ae141984552409f99a5cff70435b3b`; B4 test blob `d9a4e8975cdba58eee5546818114442abf7dcab8`; workflow blob `a3067442ca30b2579e8c70c507f1a94ce29392e7`.
+- Workflow step/summary text retains stale `RED` labels, but actual checked-out source, complete 60-test log, successful job/run and artifact prove GREEN. Correct these stale labels in a separate narrowly scoped maintenance task.
+- Updated evidence: `docs/evidence/T0_G1_B4_RESOURCE_POLICY_IMPLEMENTATION_2026-11-22.md`, commit `63e986c6e9e32bffea7d23e3b11f8495e2d34294`, blob `5c24b9b900b4335d8edaff3d9bd20af39e51c656`.
+- **Status: B4 implementation COMMITTED; exact-SHA GREEN PASS; 60/60 tests PASS; B4 gate CLOSED.** This does not authorize importer-core, archive access, host/filesystem preflight, network acquisition, SQLite open/create/write/DDL, real-data importer/build, Canonical T0 mutation/promotion, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity or trading.
+- Next: await a separately scoped approval before starting importer-core TDD. Preserve all exclusions above.
+
+---
 
 ---
 
