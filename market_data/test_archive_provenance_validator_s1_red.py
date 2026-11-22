@@ -224,6 +224,7 @@ def build_valid_s1_fixture() -> dict[str, Any]:
                 "outcome": "TRANSFERRED", "response_status": 200,
                 "response_bytes_received": len(body), "is_complete_object": 1,
                 "partial_body_sha256": None, "complete_object_sha256": digest,
+                "expected_size_bytes": len(body), "expected_sha256": digest,
                 "failure_code": None,
             })
 
