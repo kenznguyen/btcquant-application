@@ -670,3 +670,16 @@
 - GitHub can host design, source, synthetic tests, exact-SHA workflow evidence and blocker tracking. B3 real archive format and B5 source-derived coverage remain NOT VERIFIED until real source evidence exists. B8 importer/build remains NOT AUTHORIZED.
 - No workflow YAML, test, workflow dispatch, artifact upload, archive access, host/SSH/preflight, DDL/SQLite, importer, staging build, deletion, runtime or deployment was performed or authorized by this proposal.
 - Next decision: owner acceptance/rejection of the GitHub-first, destination-deferred model. If accepted, request a separate bounded approval for G1 synthetic-only CI; keep real-data acquisition/build separately gated.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Owner accepted GitHub-first, destination-deferred model
+
+- Owner acceptance: `docs/decisions/T0_GITHUB_FIRST_DESTINATION_DEFERRED_OWNER_ACCEPTANCE_2026-11-22.md`, commit `cf7df375d2afbcaa5b6f86fb5130f8f121733de3`.
+- Accepted direction: GitHub is the control plane for decisions, source, design contracts, synthetic test source, separately approved CI, exact-SHA evidence and blocker tracking. Concrete workstation/VPS/staging host/path is deferred; no machine is selected.
+- This does not reverse the accepted B7 Option A preference (encrypted owner-controlled personal workstation) but defers naming the actual device/path until real-data execution is justified.
+- GitHub Actions may be considered for bounded synthetic/source-code CI only after separate G1 implementation approval. Standard hosted runner suitability for full archive acquisition/SQLite staging remains NOT VERIFIED; total SSD capacity does not prove the B4 free-disk/inode thresholds.
+- G1 synthetic importer/parser/resource/runtime tests and workflow implementation: **NOT AUTHORIZED — SEPARATE OWNER APPROVAL REQUIRED**.
+- B3 real archive-format coverage: **NOT VERIFIED**. B5 source-derived coverage: **NOT VERIFIED**. B8 real importer/SQLite build: **NOT AUTHORIZED**.
+- B4 resource ceilings and B6 retention policy remain unchanged. No raw archive/sidecar/full SQLite/raw candle/private evidence upload; sanitized CI artifacts max 30 days, but artifact upload remains separately gated. No deletion/cleanup.
+- No workflow/test implementation or dispatch, artifact upload, archive access, host/SSH/preflight, DDL/SQLite, importer, staging build, Canonical promotion, runtime/deployment, credentials or trading occurred.
+- Next: prepare a bounded G1 implementation request for owner review only. Preparing the request does not authorize implementation or dispatch.
