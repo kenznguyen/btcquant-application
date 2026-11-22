@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.2 self-review at d7cdea3 BLOCKED BEFORE REAL-DATA BUILD
+
+- Read-only self-review: `docs/reviews/T0_S1_2_SQLITE_STAGING_SCHEMA_SELF_REVIEW_D7CDEA3_2026-11-22.md`.
+- Reviewed source SHA: `d7cdea3a467aa0ee2a8b177aaec23fdfea3201ce`; review commit is recorded in Git history immediately before this handoff update.
+- Review type: same-session SELF-REVIEW, not independent. No tests/workflow were executed during review; no SQLite/archive/host/real data accessed.
+- Findings F1–F7: physical schema/design drift (triggers prohibited by §4.1 but implemented); complete DB↔S3/V1 DTO/projection and S12-07 graph validator absent; cross-record acceptance incomplete; exactly-one-run/initial-BUILDING event validator absent; digest/identity grammar not consistently enforced; initializer accepts arbitrary explicit paths rather than proving disposable scope; schema initialization lacks explicit atomic rollback.
+- Positive: STRICT tables, FK enforcement, many NULL-safe constraints, composite successful-attempt FK, exact-SHA CI workflow.
+- Status: synthetic CI PASS remains historical evidence at the recorded source SHA; self-review **BLOCKED**; complete projection/graph validator **NOT IMPLEMENTED**; S1.2 **NOT FROZEN**; independent review **NOT RUN**.
+- Real-data build/persistence remains BLOCKED. B8 acquisition runner remains NOT APPROVED; archive format/coverage, host/path/encryption/resource preflight and real staging each require separately approved gates. This review does not authorize any real-data access or database operation.
+- Next: resolve F1 by explicit design amendment; complete DTO/projection/graph validator and test-first fixes F1–F7 with synthetic fixtures; exact-SHA CI; independent review; then request separate approvals for B8, real archive validation, host/path preflight and real-data staging. Canonical T0 promotion remains separate.
+- Current source code remains the tested source SHA above; following commits are documentation-only.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — S1 persistence-readiness review BLOCKED BEFORE PERSISTENCE
 
 - Read-only review: `docs/reviews/T0_S1_PERSISTENCE_READINESS_COMPATIBILITY_REVIEW_2026-11-22.md`, commit `aef46279e2d123e8067ac9438678b63259fd0e6f`.
