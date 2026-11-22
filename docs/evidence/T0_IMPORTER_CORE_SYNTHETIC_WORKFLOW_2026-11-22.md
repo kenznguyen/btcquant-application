@@ -52,3 +52,22 @@ Create one isolated workflow that:
 ## Next step
 
 Add only the focused synthetic importer-core tests, commit them to `main`, and inspect the push-triggered run. Confirm its checked-out SHA exactly equals the test commit and capture the expected RED. Only then implement the minimum approved in-memory importer core and inspect the subsequent exact-SHA GREEN run plus complete `market_data` regression.
+
+
+## Test-first RED evidence — 2026-11-22
+
+- Test-only commit / exact tested source SHA: `ea670901974944ae71dab58241f0e4e2cbd1e85f`.
+- Test file blob: `e0537c9e74a652009961cb79bdd3e873118fc2dd`.
+- Workflow run: [44992280345](https://github.com/kenznguyen/btcquant-application/actions/runs/44992280345), run #1, event `push`, conclusion `failure`.
+- Workflow ID: `426569112`.
+- Job: `Importer-core synthetic tests`, ID `137115734474`, conclusion `failure`.
+- Exact-SHA verification step passed: requested SHA and `git rev-parse HEAD` both equal `ea670901974944ae71dab58241f0e4e2cbd1e85f`.
+- Python: CPython 3.13.18.
+- Focused test failed as intended during import because `market_data.archive_importer_core` does not yet exist (`ModuleNotFoundError`). This is a valid RED proving the missing implementation boundary; it is not evidence that individual behavioral assertions have run yet.
+- Full `market_data` regression was skipped because the focused test step failed.
+- No artifacts were uploaded or produced.
+- RED status: **PASS — exact-SHA RED confirmed**.
+
+## Next implementation gate
+
+Implement only `market_data/archive_importer_core.py` to satisfy the approved in-memory contract and this focused test suite. Then verify the push-triggered GREEN run checks out the exact implementation commit and completes the full `market_data` suite.
