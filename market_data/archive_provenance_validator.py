@@ -820,21 +820,52 @@ def _s1_validate(payload, errors):
     manifest, run = payload.get("coverage_manifest"), payload.get("run")
     run_bad = not isinstance(manifest, Mapping) or not isinstance(run, Mapping)
     if isinstance(manifest, Mapping):
+        manifest_keys = {
+            "manifest_version", "coverage_ranges", "approved_gaps", "approved_extras",
+            "expected_object_count", "expected_pair_count", "expected_member_count",
+            "expected_row_count", "expected_candle_count", "expected_link_count",
+        }
+        if set(manifest) != manifest_keys or manifest.get("manifest_version") != "T0-COVERAGE-MANIFEST-V1":
+            run_bad = True
         expected_counts = {
             "expected_object_count": len(objects), "expected_pair_count": len(pairs),
             "expected_member_count": len(members), "expected_row_count": len(rows),
             "expected_candle_count": len(candles), "expected_link_count": len(links)}
-        if manifest.get("manifest_version") != "T0-COVERAGE-MANIFEST-V1":
-            run_bad = True
         for name, actual in expected_counts.items():
             if not _is_nonnegative_int(manifest.get(name)) or manifest.get(name) != actual:
                 run_bad = True
-        for name in ("approved_gaps", "approved_extras"):
+
+        ranges_by_timeframe = {}
+        range_records = manifest.get("coverage_ranges")
+        if not isinstance(range_records, list) or not range_records:
+            run_bad = True
+            range_records = []
+        for item in range_records:
+            if not isinstance(item, Mapping) or set(item) != {"timeframe", "start_open_time_ms", "end_open_time_ms"}:
+                run_bad = True
+                continue
+            tf, start, end = item.get("timeframe"), item.get("start_open_time_ms"), item.get("end_open_time_ms")
+            interval = _TIMEFRAME_INTERVAL_MS.get(tf) if isinstance(tf, str) else None
+            if (interval is None or not _is_nonnegative_int(start) or not _is_nonnegative_int(end)
+                    or start > end or start % interval != 0 or end % interval != 0
+                    or (end - start) % interval != 0):
+                run_bad = True
+                continue
+            ranges_by_timeframe.setdefault(tf, []).append((start, end))
+        for tf, ranges in ranges_by_timeframe.items():
+            ranges.sort()
+            if any(ranges[index][0] <= ranges[index - 1][1] for index in range(1, len(ranges))):
+                run_bad = True
+
+        def point_is_in_ranges(tf, timestamp):
+            return any(start <= timestamp <= end for start, end in ranges_by_timeframe.get(tf, ()))
+
+        gap_points, extra_points = set(), set()
+        for name, destination in (("approved_gaps", gap_points), ("approved_extras", extra_points)):
             entries = manifest.get(name)
             if not isinstance(entries, list):
                 run_bad = True
                 continue
-            seen = set()
             for entry in entries:
                 if not isinstance(entry, Mapping) or set(entry) != {"timeframe", "open_time_ms", "reason", "evidence_ref"}:
                     run_bad = True
@@ -844,11 +875,36 @@ def _s1_validate(payload, errors):
                 if (interval is None or not _is_nonnegative_int(timestamp) or timestamp % interval != 0
                         or not _is_text(entry.get("reason")) or not _is_text(entry.get("evidence_ref"))):
                     run_bad = True
-                if interval is not None and _is_nonnegative_int(timestamp) and _is_text(entry.get("reason")) and _is_text(entry.get("evidence_ref")):
-                    marker = (tf, timestamp, entry.get("reason"), entry.get("evidence_ref"))
-                    if marker in seen:
-                        run_bad = True
-                    seen.add(marker)
+                    continue
+                point = (tf, timestamp)
+                if point in destination or point in gap_points or point in extra_points:
+                    run_bad = True
+                destination.add(point)
+                inside = point_is_in_ranges(tf, timestamp)
+                if (name == "approved_gaps" and not inside) or (name == "approved_extras" and inside):
+                    run_bad = True
+
+        actual_points = set()
+        for candle in candle_records:
+            tf, timestamp = candle.get("timeframe"), candle.get("open_time_ms")
+            if not isinstance(tf, str) or not _is_nonnegative_int(timestamp):
+                run_bad = True
+                continue
+            point = (tf, timestamp)
+            if point in actual_points:
+                run_bad = True
+            actual_points.add(point)
+            inside = point_is_in_ranges(tf, timestamp)
+            if (inside and point in gap_points) or (not inside and point not in extra_points):
+                run_bad = True
+        if any(point in actual_points for point in gap_points) or any(point not in actual_points for point in extra_points):
+            run_bad = True
+        expected_point_count = sum(
+            ((end - start) // _TIMEFRAME_INTERVAL_MS[tf]) + 1
+            for tf, ranges in ranges_by_timeframe.items() for start, end in ranges
+        ) - len(gap_points) + len(extra_points)
+        if expected_point_count != len(actual_points):
+            run_bad = True
     if isinstance(run, Mapping):
         if (run.get("schema_contract_id") != "T0_STAGING_SCHEMA_V2"
                 or run.get("status") != "CANDIDATE" or not _is_text(run.get("run_id"))):
