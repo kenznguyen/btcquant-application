@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 10 owner decisions recorded
+
+- Owner decision: `docs/decisions/T0_PHASE_B_BOUNDED_EXCLUSIONS_AND_IDENTITY_SUPERSESSION_OWNER_DECISION_2026-11-22.md`.
+- Inventory identity amendment: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_PHASE_B_IDENTITY_AMENDMENT_V2_2026-11-22.md`.
+- Revision 9 reviewed baseline: commit `5405928cf1ec61cf979453812d158caa8db18d4a`, blob `86c490be08961b02d03ba0a7986befe3e142b9df`.
+- B-13: **CLOSED — owner-accepted bounded exclusion** (read API/dataset-version compatibility deferred to a separate contract).
+- B-16: **CLOSED — owner-accepted bounded exclusion** (ordinary non-RPI depth only; no all-liquidity claim).
+- B-17: **OPEN — conditionally accepted T-only/E-excluded scope; exact pinned T1 parser proof required** before closure.
+- Inventory identity supersession accepted for Phase B SD-06/SD-07 only; the amendment record above supersedes conflicting Inventory v1 identity examples for those domains.
+- Revision 10 is documentation-only. Contract Freeze **NOT APPROVED**; implementation/runtime/data operations **NOT AUTHORIZED**.
+- 101-case matrix remains NOT EXECUTED; independent second-person review and all remaining technical evidence gates remain outstanding.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 9 full design review PASS WITH CONDITIONS
 
 - Revision 9 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_9_2026-11-22.md`, exact commit `5405928cf1ec61cf979453812d158caa8db18d4a`, blob `86c490be08961b02d03ba0a7986befe3e142b9df`.
