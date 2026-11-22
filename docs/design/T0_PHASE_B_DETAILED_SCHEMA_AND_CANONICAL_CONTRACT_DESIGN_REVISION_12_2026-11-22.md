@@ -84,7 +84,7 @@ The CSV schema is a documentation snapshot, not proof that every live collector 
 
 ### 3.1 Native source-field completeness and mapping
 
-Binance USD-M aggTrade defines `E` as event time and `T` as trade time. These clocks are distinct. The pinned T1 CSV schema explicitly documents `timestamp_ms` as trade time. Therefore the CSV timestamp is only a candidate mapping to native `T`; it is not `E`. Exact T1 parser/source verification has not been performed.
+Binance USD-M aggTrade defines `E` as event time and `T` as trade time. These clocks are distinct. The read-only source audit of T1 commit `c91a8c22d3b6236c98ab9a4d4d69b25d47f7f738` verifies that the inspected parser maps native `T` to `trade_time` and `to_csv()` writes `trade_time` to `timestamp_ms`; it does not map `E` to that column. This is source-level evidence only: deployed/imported binary provenance remains NOT VERIFIED, and CSV numeric formatting is lossy for price/quantity.
 
 | Binance native field | Meaning | Present in inspected T1 source/CSV? | Phase B treatment |
 |---|---|---|---|
@@ -137,7 +137,7 @@ Candidate identity:
 ### 3.4 Time and provenance
 
 - Binance native `E` is event time; native `T` is trade time. They must remain separate fields.
-- The pinned T1 CSV schema says `timestamp_ms` is trade time; it is a candidate mapping to `T` only. Its exact parser fidelity is NOT VERIFIED.
+- The inspected T1 source maps native `T` to `timestamp_ms` at source level; `E` is not represented as a separate CSV field. Deployed/imported build provenance remains NOT VERIFIED.
 - The current documented CSV has no separate `E` field. Mark event time unavailable; never relabel `timestamp_ms` as `E`.
 - Current CSV has no explicit collector receive timestamp or WebSocket stream epoch.
 - Preserve source object SHA-256, immutable object locator, row locator, source schema/parser version and T0 receipt/commit times.
@@ -426,7 +426,7 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 ### SD-05 — Aggregate trades (14 cases)
 
 1. Valid native event with distinct `E` and `T`; assert they remain separate.
-2. T1 CSV `timestamp_ms` maps only to candidate `T`; assert `E` remains unavailable unless independently captured.
+2. Preserve the inspected source mapping `T → trade_time → timestamp_ms`; assert `E` remains unavailable unless independently captured. This synthetic case does not certify deployed/imported binary provenance.
 3. Distinct `E`/`T` values catch any reversal or timestamp substitution.
 4. CSV `quantity` is retained as unverified candidate; assert it is not treated as proven native `q`.
 5. `q` and `nq` differ; assert neither is copied into the other.
