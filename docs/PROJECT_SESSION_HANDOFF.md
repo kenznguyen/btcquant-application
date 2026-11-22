@@ -1,3 +1,26 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 5: R-15/R-16 corrected, self-check PASS
+
+- Exact Phase B design path: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
+- Revision 5 design commit: `51a11272a7cc9204d2b42a255942614e36f40b6f`.
+- Exact revision 5 design blob SHA: `9aeb036267e9dfce73e0b2405c7f4c9ef27cc5ab`.
+- Revision 4 base reviewed: commit `f4ab46715657675d15c907faeff8aa545c7cb161`, blob `90bdb1495770f977cb3ef1d307b28189a2478c2c`.
+- Changes:
+  - R-15: explicitly separates exchange-native REST response/book anchor (`lastUpdateId`), producer-issued capture identity (candidate `capture_producer_id + capture_sequence`), and T0 immutable source-delivery/import locator.
+  - Direct REST capture identity is issued by the component acquiring and preserving the response; it is not falsely attributed to Binance. The identity binds exact request parameters, native response anchor, immutable response bytes/digest and producer evidence.
+  - T1 reconstructed-local-book capture identity is issued by T1 and binds upstream anchor, stream epoch, last contiguous applied update, continuity state, local-book generation, retained-depth policy and serialized payload digest.
+  - Same capture identity + same evidence is replay; same identity + changed evidence is conflict; distinct acquisitions get distinct capture identities even if anchor/time/payload match.
+  - R-16: §4.5 and §4.8 now retry using the same immutable source-delivery locator; native event deduplication and capture deduplication remain separate.
+- Synthetic matrix: **84 proposed cases** (SD-05 14, SD-06 28, SD-07 32, cross-domain 10), **NOT EXECUTED**.
+- B-01..B-20: section compared byte-identically with revision 4; all 20 remain OPEN, none removed/resolved/owner-accepted. B-07 remains open because producer uniqueness/fencing and source evidence are not verified.
+- Self-review: `docs/reviews/T0_PHASE_B_DESIGN_SELF_REVIEW_ROUND_5_2026-11-22.md`, commit `86f8aef95f1e99fc587d7741115a816c1754fc1d`; verdict SELF-CHECK PASS / READY FOR NEXT DESIGN REVIEW, not owner approval or independent review.
+- Static checks: revision header, R-15 identity domains, direct REST/T1 producer binding, R-16 retry terminology, matrix counts, no ambiguous old phrase, and B-01..B-20 byte identity all PASS.
+- Tests/workflows/artifacts: **NOT RUN / NONE**. No synthetic fixtures/tests were created or executed.
+- Scope: documentation-only. No code, DTO, parser, validator, fixtures, tests, DDL, database, data movement, T1 source/runtime, network, credentials, T1→T0/T2 runtime, VPS/deployment, Phase C or trading action.
+- Contract freeze: **NOT APPROVED**. Implementation/database/runtime/Phase C: **NOT AUTHORIZED**.
+- Next: submit exact revision 5 commit/blob for design review. Keep B-01..B-20 open until evidence-backed resolution or bounded owner acceptance.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 4 design review: REQUEST CHANGES
 
 - Exact reviewed design commit: `f4ab46715657675d15c907faeff8aa545c7cb161`.
