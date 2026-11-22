@@ -884,3 +884,14 @@
 - No implementation, tests, workflow YAML, workflow dispatch, artifact upload or artifact-retention setting change has occurred. No archive/sidecar, host, filesystem, SQLite, importer, staging, runtime or trading action occurred.
 - B3 real archive-format coverage remains NOT VERIFIED; B5 source-derived coverage remains NOT VERIFIED; concrete destination remains DEFERRED / NOT SELECTED; B8 real importer/SQLite build remains NOT AUTHORIZED.
 - Next gate: explicit owner approval/rejection of the exact G1 request. Partial approval must name accepted items. Do not begin implementation before approval.
+
+
+## Phase B Revision 6 — independent design review request
+
+- Exact source commit: `9b69c18ea16731bf28efba7a92077e96a74107ce`; document blob: `7012a228561620f4447a0e363a2c5f27d734912a`.
+- Review request: [PR #6](https://github.com/kenznguyen/btcquant-application/pull/6) — OPEN / DO NOT MERGE.
+- Review branch head: `e46758f47038d5ba143d3790b1e3e2a4e94833d4`.
+- Byte-for-byte mirror verification: PASS.
+- Requested review scope: R-17 producer ownership/registration, T1-only SD-07 capture production, T0 identity preservation, seven new SD-07 cases, R-15/R-16 and 91 proposed synthetic cases.
+- Review status: PENDING; independent verdict NOT VERIFIED. Synthetic cases NOT EXECUTED; B-01..B-20 OPEN; contract freeze NOT APPROVED.
+- No implementation/database/runtime/Phase C/deployment/trading authorization.
