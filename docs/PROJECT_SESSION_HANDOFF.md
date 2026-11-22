@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Importer-core synthetic workflow created; tests pending
+
+- Owner explicitly approved a dedicated GitHub Actions workflow for synthetic importer-core tests.
+- Workflow: `.github/workflows/t0-importer-core-synthetic.yml`, commit `84bcfc91ba08b21b96d699101548415d1f19821d`, blob `97941bc97cc8f9ac5d447218145232db0daf776e`.
+- Workflow evidence/scope: `docs/evidence/T0_IMPORTER_CORE_SYNTHETIC_WORKFLOW_2026-11-22.md`, commit `9ef7d719f1a0fb3868fbb4b07d6cb83bd5bff13b`.
+- It runs only on `main` pushes affecting importer-core source/tests, and supports manual dispatch with optional exact source SHA. It verifies the checked-out SHA, uses Python 3.13, runs focused tests then complete `market_data` discovery. Permissions are contents:read. No artifacts, secrets, DB services or real data.
+- Existing G1 workflow was not changed. No importer source/tests have been added; no workflow run has been dispatched or observed. RED/GREEN remain NOT VERIFIED / NOT RUN.
+- Current main HEAD before this handoff update: `9ef7d719f1a0fb3868fbb4b07d6cb83bd5bff13b`.
+- Next: add focused synthetic importer-core tests only, commit to main, verify push-triggered exact-SHA RED; then implement minimal in-memory core and verify GREEN + full market_data regression.
+- All exclusions remain: real archives/sidecars/network acquisition, filesystem/host preflight, SQLite/DDL/staging, schema/provenance freeze, Canonical T0/MAY-10, T1/T2, VPS/runtime/deployment, credentials, exchange/trading, deletion/cleanup.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — B4 resource policy exact-SHA GREEN verified
 
 - Implementation source SHA: `9c47817bfaea9e4bf830aa812508ae1ef4796e20`; parent `d7932f826b16ba0abad4d14f8aac0822c09cc525`; module blob `87743432ec273bf5bd737d26bf2d489cc9fb34cf`. Only `market_data/archive_resource_policy.py` changed in source implementation commits.
