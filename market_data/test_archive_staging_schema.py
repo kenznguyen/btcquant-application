@@ -27,6 +27,13 @@ class StagingSchemaV2Tests(unittest.TestCase):
         ).fetchall()
         self.assertGreaterEqual(len(rows), 11)
         self.assertTrue(all("STRICT" in sql.upper() for _, sql in rows))
+        triggers = self.db.execute(
+            "SELECT name FROM sqlite_schema WHERE type='trigger' ORDER BY name"
+        ).fetchall()
+        self.assertEqual(
+            triggers,
+            [("trg_run_events_no_delete",), ("trg_run_events_no_update",)],
+        )
 
     def test_rejects_null_mandatory_values_in_verified_object_check_branch(self):
         with self.assertRaises(sqlite3.IntegrityError):
@@ -68,6 +75,9 @@ class StagingSchemaV2Tests(unittest.TestCase):
             "INSERT INTO run_events(run_id,event_seq,event_type,occurred_at_utc) VALUES(?,1,'BUILDING','2026-01-01T00:00:00Z')",
             (run_id,),
         )
+        # Remove the connection-local authorizer to prove the database triggers
+        # independently enforce append-only semantics for every SQLite connection.
+        self.db.set_authorizer(None)
         for sql in (
             "UPDATE run_events SET reason_code='mutated' WHERE event_seq=1",
             "DELETE FROM run_events WHERE event_seq=1",
