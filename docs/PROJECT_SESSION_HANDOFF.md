@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Importer-core synthetic in-memory TDD PASS
+
+- Owner approved bounded synthetic-only in-memory importer-core TDD and separately approved the dedicated GitHub Actions workflow.
+- Current implementation source SHA: `0fc21ac6ba91e82e531fe58a02f9303462c71ea7`.
+- Implementation: `market_data/archive_importer_core.py`, blob `a7d7245fe7379f3d3b67c0a111e906a4364f6d10`.
+- Focused tests: `market_data/test_archive_importer_core.py`, blob `3dfc58b570789d8ea6d172e442266743b9157bf5`.
+- Exact-SHA RED: test commit `ea670901974944ae71dab58241f0e4e2cbd1e85f`, run `44992280345`; additional edge-case RED `eda33259c8c98faf55187e959183ddd1560afad1`, run `44992551765`.
+- Final exact-SHA GREEN: run `44992591222`, job `137116685659`; checked-out SHA exactly `0fc21ac6ba91e82e531fe58a02f9303462c71ea7`; focused `20/20 PASS`; full `market_data` `421/421 PASS`.
+- CI dependency setup correction: workflow commit `002e00679e7cb1e4ad09040a832ae416e597a300`; committed FastAPI test lock and SHA manifest verified; full regression runs Python 3.12.16, focused importer tests Python 3.13.
+- Evidence: `docs/evidence/T0_IMPORTER_CORE_SYNTHETIC_WORKFLOW_2026-11-22.md`; latest evidence commit `c34ee322468339b0875ea7cbe8d59f351ce3501f`.
+- Self-review: pure stdlib + existing parser imports; no filesystem, ZIP, network, environment, clock, SQLite or database APIs; no archive/runtime data touched. No independent review is claimed.
+- Current work status: synthetic importer-core TDD **PASS**. B3 real archive compatibility and B5 source-derived coverage remain NOT VERIFIED; B8 SQLite/importer build NOT AUTHORIZED.
+- Next: stop at this in-memory boundary. S1 provenance/schema freeze, real archive validation, SQLite/staging/build, Canonical T0/MAY-10, T1/T2, VPS/runtime/deployment, credentials/exchange/trading and deletion/cleanup all require separate approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Importer-core synthetic workflow created; tests pending
 
 - Owner explicitly approved a dedicated GitHub Actions workflow for synthetic importer-core tests.
