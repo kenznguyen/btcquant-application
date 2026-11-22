@@ -429,6 +429,74 @@ class StagingSchemaV2Tests(unittest.TestCase):
 
 
 
+    def test_source_row_sha_and_identity_columns_require_lowercase_hex(self):
+        self.db.execute("PRAGMA foreign_keys=OFF")
+        base = {
+            "source_row_id": "row1:" + "1" * 64,
+            "member_id": "mem1:" + "2" * 64,
+            "physical_record_ordinal": 2,
+            "data_row_ordinal": 1,
+            "raw_fields_json": "[]",
+            "raw_row_digest": "3" * 64,
+            "parser_contract_id": "T0_ARCHIVE_CSV_HEADER_V1",
+            "parser_source_sha": "4" * 40,
+            "importer_contract_id": "T0_ARCHIVE_IMPORTER_V1",
+            "importer_source_sha": "5" * 40,
+            "disposition": "REJECTED",
+            "rejection_code": "SYNTHETIC_REJECTED",
+        }
+        columns = tuple(base)
+        sql = (
+            f"INSERT INTO source_rows ({','.join(columns)}) "
+            f"VALUES ({','.join('?' for _ in columns)})"
+        )
+        for field in ("source_row_id", "parser_source_sha", "importer_source_sha"):
+            values = dict(base)
+            values[field] = ("row1:" if field == "source_row_id" else "") + "g" * (64 if field == "source_row_id" else 40)
+            with self.subTest(field=field), self.assertRaises(sqlite3.IntegrityError):
+                self.db.execute(sql, tuple(values[name] for name in columns))
+
+    def test_candle_and_link_value_ids_require_lowercase_hex_suffix(self):
+        candle_values = (
+            "binance", "usdm", "BTCUSDT", "15m", 0, "1", "2", "1", "2", "1",
+            900000, "BAR_CLOSE_BOUNDARY", "cv1:" + "g" * 64,
+        )
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                """INSERT INTO candles (
+                    exchange,market_type,symbol,timeframe,open_time_ms,open,high,low,
+                    close,volume,available_at_ms,availability_kind,candle_value_id
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                candle_values,
+            )
+        self.db.execute("PRAGMA foreign_keys=OFF")
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                """INSERT INTO candle_provenance_links (
+                    link_id,exchange,market_type,symbol,timeframe,open_time_ms,
+                    source_row_id,candle_value_id,duplicate_disposition
+                ) VALUES (?,?,?,?,?,?,?,?,?)""",
+                ("lnk1:" + "g" * 64, "binance", "usdm", "BTCUSDT", "15m", 0,
+                 "row1:" + "1" * 64, "cv1:" + "2" * 64, "UNIQUE"),
+            )
+
+    def test_object_inventory_digest_and_identity_require_lowercase_hex(self):
+        values = (
+            "obj1:" + "g" * 64, "inv1:" + "1" * 64, "g" * 64, "entry",
+            "synthetic.zip", "ZIP", "15m", "synthetic", "000", "synthetic.CHECKSUM",
+            0, "QUARANTINED", "SYNTHETIC_FAILURE",
+        )
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                """INSERT INTO archive_objects (
+                    object_id,inventory_id,inventory_blob_sha256,inventory_entry_identity,
+                    object_key,object_kind,timeframe,partition,period,paired_object_key,
+                    response_bytes_total,verification_status,failure_code
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                values,
+            )
+
+
 class StagingSafetyAndAtomicityTests(unittest.TestCase):
     def test_file_database_requires_explicit_disposable_path_policy(self):
         with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
