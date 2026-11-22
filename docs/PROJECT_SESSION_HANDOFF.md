@@ -1,4 +1,17 @@
-# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 14 after PR #11 review
+# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 15 after PR #12 review
+
+- PR #12 Codex review completed on exact head `8a5a37d9f959b93c9f0cad2cccb3d0561f7b7a01` with three unresolved P2 findings (comments `4659442763`, `4659442766`, `4659442768`). PR #12 remains OPEN / NOT MERGED / DO NOT MERGE; R14 is immutable.
+- R15 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_15_2026-11-23.md`; exact source commit `5bbbd6ac253b4f8c8d9aeccb28d77170b1897919`; exact design blob `2b1cb4a8d0a7d40f9ebfb29ccaf9d9d14930cfc0`.
+- R15 resolves all three PR #12 P2s: (1) the 101-case matrix, checklist, §14.3 and Annex A §10 now gate execution on satisfactory independent review of exact R15 SHA/blob; (2) `SourceDeliveryIntegrityConflictV1` is immutable and has no mutable disposition/resolution fields; a separate append-only `SourceDeliveryIntegrityConflictResolutionV1` records resolution and status is a derived projection; (3) `source_object.sha256` and `raw_object_sha256` must equal SHA-256 of the same exact immutable source-object bytes, otherwise intake fails closed.
+- Findings/resolution report: `docs/reviews/T0_PHASE_B_REVISION_14_CODEX_FINDINGS_AND_R15_RESOLUTION_2026-11-23.md`; report commit `aa270a267c29a629bc79abc101b37b5ab32092ba`, blob `b104b3c5756f83b62536057ef617b1b5ffc57ff5`.
+- Review-only PR #13: https://github.com/kenznguyen/btcquant-application/pull/13 — OPEN / NOT MERGED / DO NOT MERGE. Branch: `review/t0-phase-b-r15-three-p2-20261123`; base: `review/t0-phase-b-r10-baseline-20261122`. Codex review trigger comment `7084064410` posted; exact-R15 review result NOT YET VERIFIED.
+- Owner-approved synthetic scope remains 101 cases (SD-05 14, SD-06 31, SD-07 46, cross-domain 10). Fixtures/tests NOT CREATED / NOT RUN; execution remains gated on satisfactory independent review of exact R15 SHA/blob.
+- Workflow runs/jobs/artifacts for R15: NONE VERIFIED. Formal proofs: NOT RUN. Contract Freeze: NOT APPROVED.
+- No production implementation, DTO/parser/validator/persistence changes, DDL/database mutation, data movement, T0/T1 runtime, T2 integration, VPS/autostart, deployment, exchange connectivity or trading is authorized.
+
+---
+
+## Historical status snapshot — Revision 14 after PR #11 review
 
 - PR #11: OPEN / NOT MERGED / DO NOT MERGE. Codex review completed on exact R13 PR head `982ea9e250bfca19bdd6ecb973956143dfe27df6`; three unresolved P2 findings. Review comments: `4659122865`, `4659122867`, `4659122869`.
 - Reviewed R13 design: source commit `0476b76a96f5a1f9a1a5afd3b6843a15194f2f06`, blob `2c3e81c52ca10083e0d1c78ca3ef31858a47520d`.
