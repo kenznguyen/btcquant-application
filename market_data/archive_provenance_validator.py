@@ -516,7 +516,9 @@ def _s1_validate(payload, errors):
                 or obj.get("verification_status") != "VERIFIED"
                 or type(obj.get("response_status")) is not int
                 or not 200 <= obj.get("response_status") <= 299
+                or not _is_nonnegative_int(obj.get("response_bytes_total"))
                 or obj.get("response_bytes_total") != obj.get("measured_size_bytes")
+                or not _is_positive_int(obj.get("attempt_count"))
                 or not _is_text(obj.get("local_relative_path"))
                 or type(obj.get("exclusive_create")) is not int or obj.get("exclusive_create") != 1
                 or obj.get("failure_code") is not None):
@@ -558,6 +560,7 @@ def _s1_validate(payload, errors):
                 transferred.append(attempt)
                 if (not _is_text(attempt.get("finished_at_utc"))
                         or type(attempt.get("is_complete_object")) is not int or attempt.get("is_complete_object") != 1
+                        or not _is_nonnegative_int(attempt.get("response_bytes_received"))
                         or attempt.get("response_bytes_received") != obj.get("measured_size_bytes")
                         or type(attempt.get("response_status")) is not int
                         or not 200 <= attempt.get("response_status") <= 299
@@ -602,13 +605,17 @@ def _s1_validate(payload, errors):
                 or zo.get("paired_object_key") != so.get("object_key")
                 or so.get("paired_object_key") != zo.get("object_key")
                 or pid != _s1_id("pair1:", "T0-ARCHIVE-PAIR-V1", zo.get("object_id"), so.get("object_id"))
+                or not _is_nonnegative_int(pair.get("measured_zip_size_bytes"))
                 or pair.get("measured_zip_size_bytes") != zo.get("measured_size_bytes")
                 or pair.get("measured_zip_sha256") != zo.get("measured_sha256")
+                or not _is_nonnegative_int(pair.get("measured_sidecar_size_bytes"))
                 or pair.get("measured_sidecar_size_bytes") != so.get("measured_size_bytes")
                 or pair.get("measured_sidecar_sha256") != so.get("measured_sha256")
                 or pair.get("sidecar_asserted_zip_sha256") != zo.get("measured_sha256")
-                or pair.get("sidecar_assertion_matches") != 1 or pair.get("zip_crc_ok") != 1
-                or pair.get("structural_ok") != 1 or pair.get("disposition") != "VERIFIED"):
+                or type(pair.get("sidecar_assertion_matches")) is not int or pair.get("sidecar_assertion_matches") != 1
+                or type(pair.get("zip_crc_ok")) is not int or pair.get("zip_crc_ok") != 1
+                or type(pair.get("structural_ok")) is not int or pair.get("structural_ok") != 1
+                or type(pair.get("member_count")) is not int or pair.get("disposition") != "VERIFIED"):
             pair_bad = True
     if len(pairs) != 202 or len(pair_by_id) != 202:
         pair_bad = True
@@ -645,7 +652,7 @@ def _s1_validate(payload, errors):
     if len(members) != 202 or len(member_by_id) != 202:
         member_bad = True
     for pid, pair in pair_by_id.items():
-        if pair.get("member_count") != 1 or len(members_by_pair.get(pid, [])) != 1:
+        if type(pair.get("member_count")) is not int or pair.get("member_count") != 1 or len(members_by_pair.get(pid, [])) != 1:
             member_bad = True
     if pair_bad:
         errors.add("ARCHIVE_PAIR_EVIDENCE_INVALID")
