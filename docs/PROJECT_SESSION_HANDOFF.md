@@ -1,3 +1,14 @@
+# SOURCE SCHEMA MAPPING CHECKPOINT — 2026-11-22
+
+- T1 native CSV schema inspected: `kenznguyen/binance-futures-collector/docs/SCHEMA.md`, source blob SHA `895f87a8281a3f9b6d37d96b5f68568e4285bee6`.
+- Inventory/contract refined to match documented T1 columns and timestamp semantics. Funding and OI timestamps are sample times; long/short and taker ratio timestamps are bucket starts; klines use bar-open time; trades/liquidations/depth diffs use event/trade time.
+- Important blocker: T1 liquidation CSV schema omits native order/trade event ID. Timestamp + symbol + side + price + quantity may collide; liquidation domain must remain quarantined until a collision-safe source identity is approved or the source contract is extended.
+- Order-book snapshots are one row per level; T0 must group levels by snapshot event/time/update ID before canonical acceptance.
+- Updated design commit: `16ba0af5290a9869a564ad853ca3d77d1ffd4a78`.
+- Design remains OWNER REVIEW REQUIRED; no code/tests/workflows, runtime, network, DB or data actions.
+
+---
+
 # DESIGN CHECKPOINT — 2026-11-22 — Source Domain Inventory & Canonical Ingestion Contract v1
 
 - Design document: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_AND_CANONICAL_INGESTION_CONTRACT_V1_2026-11-22.md`
