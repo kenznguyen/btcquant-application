@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.1 documentation reconciled; awaiting owner design acceptance
+
+- S1.1 design: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`, blob `505c23a00772667d0da3f5cc4a48f2d724b84c2a`.
+- S1.1 self-review: `docs/reviews/T0_S1_1_SCHEMA_RECONCILIATION_SELF_REVIEW_2026-11-22.md`, blob `a46dd4ce9b64bad09a6ccec078476fa10dc67a65`; verdict **SELF-REVIEW PASS WITH LIMITATIONS**, not independent review.
+- Latest handoff record commit: `163cf81e700e8b17619f81dfa3d90921a89e60b1`.
+- B1 resolved at design level: failed/incomplete evidence nullable; attempts append-only; successful attempt separate relation; pair/member failure semantics; coverage manifest persistence; cross-table invariants.
+- B2 resolved at policy level: SQLite STRICT minimum 3.37.0; exact Python/SQLite pin and per-connection FK checks required later. Exact versions deferred to separately approved implementation.
+- Original S1 DDL is marked historical/superseded where inconsistent with S1.1.
+- Detailed S1.1 design acceptance: **PENDING OWNER REVIEW**.
+- No DDL, SQLite, importer, tests, workflow, archive/data operation, runtime or deployment.
+- B3 archive format NOT VERIFIED; B4 resource limits OPEN; B5 actual coverage values NOT VERIFIED; B6 retention OPEN; B7 destination OPEN; B8 importer/build NOT AUTHORIZED; B9 separate review track unchanged.
+- No workflow run/job/artifact. All existing exclusions remain in force.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — S1.1 design reconciliation committed; owner acceptance pending
 
 - S1.1 document: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`, final blob `30093c2bce7f62b97612a2db863dcb17853b306d`.
