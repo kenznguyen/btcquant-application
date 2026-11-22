@@ -217,6 +217,26 @@ class PhysicalIdentityGrammarTests(unittest.TestCase):
         with self.assertRaises(AdapterValidationError):
             replace(candle, candle_value_id="cv1:" + "g" * 64)
 
+    def test_all_physical_identity_families_reject_non_hex_suffixes(self):
+        from dataclasses import replace
+        from market_data.archive_staging_adapter import AdapterValidationError
+
+        projection = CompleteS3V1ProjectionFixtureTests._projection_from_valid_s1_fixture()
+        cases = (
+            (projection.run, "inventory_id", "inv1:" + "g" * 64),
+            (projection.objects[0], "object_id", "obj1:" + "g" * 64),
+            (projection.attempts[0], "attempt_id", "att1:" + "g" * 64),
+            (projection.pairs[0], "pair_id", "pair1:" + "g" * 64),
+            (projection.members[0], "candidate_id", "cand1:" + "g" * 64),
+            (projection.members[0], "member_id", "mem1:" + "g" * 64),
+            (projection.source_rows[0], "source_row_id", "row1:" + "g" * 64),
+            (projection.candles[0], "candle_value_id", "cv1:" + "g" * 64),
+            (projection.links[0], "link_id", "lnk1:" + "g" * 64),
+        )
+        for dto, field, value in cases:
+            with self.subTest(field=field), self.assertRaises(AdapterValidationError):
+                replace(dto, **{field: value})
+
 
 class MultiRowProjectionOrderingTests(unittest.TestCase):
     def test_all_remaining_multirow_relations_follow_explicit_order_keys(self):
