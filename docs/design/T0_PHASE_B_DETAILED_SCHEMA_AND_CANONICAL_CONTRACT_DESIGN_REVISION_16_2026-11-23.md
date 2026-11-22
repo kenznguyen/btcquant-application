@@ -77,7 +77,7 @@ The prior Revision 10 status is retained only as historical context. Current aut
 - Phase A baseline: `docs/design/T0_PHASE_A_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
 - T1 source schema: `kenznguyen/binance-futures-collector/docs/SCHEMA.md`, blob SHA `895f87a8281a3f9b6d37d96b5f68568e4285bee6`.
 - Implementation: **NOT AUTHORIZED / NOT STARTED**.
-- Synthetic matrix: **101 CASES OWNER-APPROVED; FIXTURES NOT CREATED / EXECUTION NOT RUN; SEQUENCED AFTER REVISION 12 INDEPENDENT REVIEW**.
+- Synthetic matrix: **101 CASES OWNER-APPROVED; FIXTURES NOT CREATED / EXECUTION NOT RUN; SEQUENCED AFTER SATISFACTORY INDEPENDENT REVIEW OF EXACT REVISION 16 SHA/BLOB**.
 - Tests/workflows/artifacts: **NOT RUN / NONE**.
 
 ## 1. Purpose, authority and invariants
@@ -631,11 +631,11 @@ B-13/B-16 closure is scope-only, not implementation or technical verification. B
 ## 12. Revision 9 historical review status and immutable history
 
 - Revision 8 source preserved unchanged: commit `9a5c65f3bc00876d98a070eee46072c5d8be368e`, blob `8f40248f2781cdf4111ef022b77843acea8279b2`.
-- Revision 9 remains immutable; exact commit/blob and its review history are recorded in the project handoff and Revision 9 review reports. Its historical owner-pending language is superseded only by the explicit Revision 10 owner decision and the consolidated Revision 14 current-status sections.
+- Revision 9 remains immutable; exact commit/blob and its review history are recorded in the project handoff and Revision 9 review reports. Its historical owner-pending language is superseded only by the explicit Revision 10 owner decision and the consolidated Revision 16 current-status sections.
 - Revision 10 remains immutable at commit `b32d9af088099f92b09d113ecfa27056cfd9b83d` / blob `a8934cb862c330f1d1fa72aa1f3fdb2b22f9ac96`.
 - Revisions 6–10 remain immutable historical artifacts. This document does not edit the Source Domain Inventory, T1 repository, Phase A baseline or any source implementation.
 - Current blocker status is authoritative in §14 and Annex A §9. B-13/B-16 are closed as bounded exclusions; B-17 and all remaining technical blockers remain open/partial as stated.
-- Contract Freeze: NOT APPROVED. Production implementation/runtime: NOT AUTHORIZED. The bounded 101-case synthetic test scope is separately owner-approved, with execution sequenced after independent review of Revision 12.
+- Contract Freeze: NOT APPROVED. Production implementation/runtime: NOT AUTHORIZED. The bounded 101-case synthetic test scope is separately owner-approved, with execution sequenced after satisfactory independent review of exact Revision 16 SHA/blob.
 
 ## 13. Explicit exclusions
 
@@ -683,7 +683,7 @@ For Phase B only:
 
 B-13 and B-16 are closed as scope decisions only; excluded capabilities are not implemented or technically verified. B-11/B-12/B-19 are design-specified only and must not be marked technically closed. B-17 remains open pending build provenance. No other blocker is waived.
 
-### 14.2.1 PR #12 findings resolved in Revision 15
+### 14.2.1 PR #13 findings resolved in Revision 16
 
 1. All operative 101-case gates now reference satisfactory independent review of exact Revision 16 SHA/blob, including the consolidated matrix, this §14.3 and Annex A §10. R12–R15 references in historical snapshots are historical only.
 2. `SourceDeliveryIntegrityConflictV1` is an immutable append-only evidence fact. Resolution is represented only by a separate append-only `SourceDeliveryIntegrityConflictResolutionV1`; status is derived and never written back to the conflict row.
@@ -691,7 +691,7 @@ B-13 and B-16 are closed as scope decisions only; excluded capabilities are not 
 
 ### 14.3 Contract Freeze readiness
 
-- Revision 9 full design review: PASS WITH CONDITIONS; it is historical and not a substitute for independent review of Revision 15.
+- Revision 9 full design review: PASS WITH CONDITIONS; it is historical and not a substitute for independent review of Revision 16.
 - Revision 10 exact-SHA review: PASS WITH CONDITIONS for continued documentation; NOT READY FOR CONTRACT FREEZE.
 - 101 synthetic cases: OWNER-APPROVED; fixtures/tests NOT CREATED and execution NOT RUN; sequence after satisfactory independent review of exact Revision 16 SHA/blob.
 - Exact T1 source mapping: PASS at inspected source level; deployed/imported binary/build provenance NOT VERIFIED.
@@ -711,7 +711,7 @@ B-13 and B-16 are closed as scope decisions only; excluded capabilities are not 
 
 > Source: `docs/design/T0_PHASE_B_CANONICAL_DTO_DIGEST_CHECKPOINT_ATOMIC_PERSISTENCE_DESIGN_V1_2026-11-22.md`, original blob `594066d98201a8cf0940b62fc36d9358033f06e0`.
 >
-> This annex incorporates the complete proposal into the Revision 15 review surface. It is a **PROPOSED DESIGN INPUT — NOT CONTRACT-FROZEN**. The independent reviewer must review it together with the inherited Phase B design. No production implementation or database operation is authorized.
+> This annex incorporates the complete proposal into the Revision 16 review surface. It is a **PROPOSED DESIGN INPUT — NOT CONTRACT-FROZEN**. The independent reviewer must review it together with the inherited Phase B design. No production implementation or database operation is authorized.
 
 ## Annex A source proposal — complete text
 
