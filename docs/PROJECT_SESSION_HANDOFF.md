@@ -1,3 +1,96 @@
+# HANDOFF AUTHORITY — READ THIS FIRST — 2026-11-22
+
+> This section is the controlling session-start index. Do not infer current permission or status from the age, heading, or position of historical entries below. The detailed dated log is an audit trail, not a flat list of simultaneously active instructions.
+
+## 1. Source of truth and conflict-resolution rules
+
+1. Apply the latest explicit owner decision, but only within its stated scope. A later narrow approval does not silently approve adjacent work.
+2. This authority section controls over older handoff entries when it explicitly marks them **SUPERSEDED**, **PARKED**, **BLOCKED**, or **NOT VERIFIED**.
+3. For a status claim, require evidence tied to the exact source SHA. A workflow PASS at an older SHA is historical evidence, not proof of current HEAD.
+4. If two same-date entries conflict, do not choose the more optimistic statement. Mark the item **CONFLICT / NOT VERIFIED**, inspect the referenced workflow run, job, artifact and exact SHA, then update this section with a new dated decision record.
+5. Distinguish **owner-approved architecture**, **approved implementation scope**, **implemented code**, **focused CI**, **independent review**, **runtime readiness**, and **execution authorization**. They are separate states.
+6. Do not treat a suggested next step, assistant recommendation, draft, review request, or historical plan as owner approval.
+7. Preserve repository ownership boundaries. Do not copy another repository's implementation merely because its interface is consumed here.
+8. On every session start: read this section, then the newest dated decision/evidence records referenced below; verify live GitHub branch/HEAD and current workflow evidence before claiming a status.
+
+## 2. Current project direction and non-negotiable boundaries
+
+- Product direction: **BTCUSDT Quant System — Dual-Strategy Intelligence**. Strategy Core remains RSI + ADX + Smart DCA. The independent AI Strategy may generate its own LONG/SHORT signals even when Core has no signal. AI signals do not bypass the common risk boundary.
+- Core and AI remain distinct signal producers with separate ledgers. Any ENTRY or exposure-increasing ADD/DCA must pass the **Shared Risk Engine** and **Kill Switch** gates. A signal/DTO is not an order, an order intent, a reservation, or permission to execute.
+- Preserve Core First: do not alter or replace the existing Core strategy to introduce AI. Complete/verify the Core operational proof gates before promoting Dual-Strategy behavior into an integrated runtime. A standalone AI signal contract/validator is not proof of end-to-end dual-strategy operation.
+- Execution posture: **manual, on-demand session start; durable state between sessions**. Starting a session/preflight must not automatically resume a strategy worker. No autonomous scheduling, auto-start, systemd/autostart, or unattended execution is authorized by this decision.
+- Paper-first only. No live trading, real exchange orders, or exchange credential use. Do not infer permission for paper runtime activation from a contract/test approval.
+- Risk constraint: the approved margin budget for each new order is 1% of account equity, subject to the complete Shared Risk Engine policy and all other gates. Do not infer leverage from margin or reintroduce the superseded fixed 13x Core leverage.
+- T0 is an independent data asset and remains outside application ownership/copying. No canonical data mutation/replacement, reconstruction, Feeder/VPS/runtime start, or T0 operational change without a separate explicit approval.
+- T1 collector implementation and ownership remain in `kenznguyen/binance-futures-collector`. The application repository may hold only approved consumer contracts, DTOs, validation, adapters and fixtures. T1 HTTP Provider work is allowed to continue within its approved scope; this does **not** authorize T1-to-T2 runtime connection, T0 ownership/storage changes, or execution.
+- Keep the project personal-use only; do not introduce SaaS, multi-tenant, subscription, or commerce architecture.
+
+## 3. Repository ownership map
+
+| Concern | Authoritative repository | Boundary |
+|---|---|---|
+| Application foundations, shared risk/state contracts, AI signal contract/validator work recorded here | `kenznguyen/btcquant-application` | Do not claim another repository's runtime is integrated here |
+| Existing Strategy Core / Telegram signals | `kenznguyen/btcusdt-telegram-signals2` | Preserve Core behavior; its branch/evidence must be checked independently |
+| T1 Binance Futures collector | `kenznguyen/binance-futures-collector` | Keep collector implementation here; application consumes approved interfaces only |
+| BTCUSDT Chart Pro Android | `kenznguyen/btcusdt-chart-pro-android` | Independent project; do not merge its artifacts/pipeline into the 5-layer system |
+
+The current default branch shown by repository metadata for this application repository is `main`. Always verify the live HEAD before editing. Do not create a branch/PR or change branch strategy unless the owner asks or a concrete technical need is documented.
+
+## 4. Current workstream status — do not overstate
+
+### T2 independent AI signal contract / validator
+- M2.4 AI Strategy Signal Contract V1 plus expected-RED specification: **PASS as a contract/test specification**, not a production integration.
+- M2.5 validator status is **CONFLICT / NOT VERIFIED** in the dated log below. One entry reports workflow run 44916378593 with 22/22 PASS but also a REQUEST CHANGES finding (unbounded Decimal formatting at `pipeline/ai_signal_contract.py:186`). Another same-date entry says the run ID/artifact are NOT VERIFIED and marks M2.5 PARTIAL. Until exact run/artifact and the reviewed source revision are reconciled, do not report M2.5 as PASS or deployable. The recorded REQUEST CHANGES finding remains open unless a later exact-SHA fix and review closes it.
+- The validator is a pure signal validator: LONG/SHORT DTO or WAIT diagnostic only. It does not create order intent, sizing, leverage, margin, reservation, ledger mutation or exchange instruction.
+- No calibration cryptographic verifier, AI risk admission, dual-ledger runtime, runner, or end-to-end Core/AI integration is implied by M2.4/M2.5.
+
+### Core, risk and execution foundations
+- Core Adapter parity test record M2.3: focused 10/10 CI PASS at its exact historical SHA. The workflow path-filter review finding (missing dependencies `pipeline/core_signal.py` and `pipeline/values.py`) was marked REQUEST CHANGES. Do not call the current adapter workflow fully reviewed until that finding is corrected and verified.
+- SharedRiskEngine / AccountRiskSnapshot contracts and focused tests are recorded as implemented at their exact SHAs. This does not establish an authoritative live account source, trusted active policy publication, production Provider wiring, Kill Switch end-to-end, or runtime admission readiness.
+- B2 risk integration and other D5 gates remain **BLOCKED/PARTIAL** where the dated evidence says so. Do not infer overall readiness from one focused test suite.
+- SessionOrchestrator D5 evidence gates have focused CI PASS at the recorded SHA, but operator authentication/UI integration and several downstream gates remain unverified or blocked. Session start stops at READY; explicit operator Resume and fresh risk attestation are separate gates.
+
+### T0
+- The former Canonical SQLite asset is recorded as **LOST**; reconstructed canonical data is **NOT CREATED** in the latest recorded decision. Do not revive older handoff entries that describe a surviving VPS database or feeder state as current.
+- Application T0 foundations may have source/tests and exact-SHA CI evidence, but real-data validation, canonical reconstruction, VPS/runtime readiness and live operational state must be separately verified.
+- Owner removed the mandatory Independent Review gate for T0 remediation on 2026-11-21. This removes only that process blocker; it does not declare T0 PASS or waive TDD, exact-SHA CI, integrity/fail-closed requirements or separate approvals. Label same-session review **SELF-REVIEW**, never independent review.
+- PostgreSQL/TimescaleDB remains parked/blocked unless a newer explicit owner decision says otherwise. No activation by implication.
+
+### T1
+- T1 collector ownership remains in its own repository. T1 HTTP Provider work may proceed only within its approved bounded scope. T1-to-T2 runtime connection remains unauthorized unless separately approved and verified.
+- Historical T1 runtime/collector evidence is not current operational proof. Verify exact repository SHA and latest CI/evidence before making a status claim.
+
+## 5. Session-start checklist
+
+Before proposing implementation or operational action:
+
+1. Confirm repository and branch; read this authority section and the newest decision records.
+2. Identify the latest owner decision for the exact workstream. Record what it supersedes and what it explicitly does **not** authorize.
+3. Read the referenced decision/evidence/review documents; resolve same-date contradictions before status promotion.
+4. Verify current branch HEAD, source/blob SHA, workflow run/job conclusion and artifact/checksum where applicable.
+5. Classify each gate separately: **APPROVED**, **IMPLEMENTED**, **CI PASS**, **SELF-REVIEW**, **INDEPENDENT REVIEW**, **RUNTIME VERIFIED**, **AUTHORIZED**.
+6. If evidence is absent or contradictory, use **NOT VERIFIED** or **BLOCKED**; do not guess and do not repeat historical claims as current.
+7. Work in the existing branch by default. Use bounded scope and TDD RED → GREEN → regression. No unrelated refactor or scope expansion.
+8. After each completed increment, update this handoff with: scope/decision, exact source SHA, workflow run/job, artifact ID + SHA-256, test result, review type/verdict, PASS/PARTIAL/BLOCKED/NOT VERIFIED, next step and explicit exclusions.
+9. Never start VPS/SSH, services, Feeder, database mutation, deployment, exchange connectivity, runtime, or execution from a documentation/contract approval.
+
+## 6. Explicitly superseded or non-controlling historical states
+
+The dated log below intentionally retains historical records. The following must not be reused as current state without fresh evidence:
+
+- Earlier records describing the former Canonical SQLite as available, recoverable, or present on a VPS are superseded by the 2026-11-20 owner confirmation: **OLD CANONICAL = LOST; NEW RECONSTRUCTED DATA = NOT CREATED**.
+- Earlier T1 HTTP Provider pause is superseded by the later owner decision allowing the Provider work to continue within bounded scope. This does not authorize T1-to-T2 runtime connection.
+- Earlier blanket statements that an independent second-person review is a mandatory T0 blocker are superseded by the 2026-11-21 owner decision. Technical verification and truthful review labeling remain mandatory.
+- Earlier proposals that Core/AI execution may be automated or resumed on session start are superseded by the approved **manual on-demand execution with durable between-session state** decision.
+- Older T0 VPS/Feeder status, CI PASS results, source SHAs, review packages and branch states are historical snapshots. Never transfer them to current HEAD/runtime.
+- Older risk models using fixed Core leverage or sizing without the shared risk gate are superseded by the shared risk boundary and approved 1% per-new-order margin budget. No implicit leverage inference.
+
+## 7. Change-control note
+
+This authority index is an interpretation of owner decisions already recorded in project context and the dated handoff; it does not authorize new source behavior, runtime activity, data mutation, deployment or trading. If any statement here is contradicted by a newer explicit owner decision or a newer exact-SHA evidence record, update this section first and record the supersession explicitly. Preserve the dated audit trail below.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — Owner removes mandatory Independent Review gate for T0
 
 - Owner decision: **Independent Review is no longer a mandatory gate or blocker for T0 remediation and progress**.
@@ -997,8 +1090,7 @@
 - The 31-test suite requires Python standard library only. Flask is omitted because the API is direct WSGI. `psycopg` is deliberately excluded because PostgreSQL/TimescaleDB is outside scope.
 - Evidence report: `docs/evidence/T0_FEEDER_SYNC_RECOVERY_AND_DEPENDENCIES_2026-11-19.md`, commit `59a442294657809957e2df02a8eba53480cdbb70`.
 - Provenance addendum: `docs/T0_MIGRATION_PROVENANCE.md`, commit `f8b41461a7970628ae129077e8c412aa692852ef`, blob `bd4f8e01f394c5b22079b89ccc57026f54b73666`.
-- Status: isolated feeder/sync/recovery regression **PASS 31/31**; exact-SHA checkout **PASS**; artifact/digest/payload **PASS**; manifest readback **PASS**. Dependency resolver, installation, transitive lock, fresh-environment compatibility, runtime startup and minimum supported runtime Python **NOT VERIFIED**.
-- Limits: no T0 source/test changes, source repository changes, PostgreSQL/migrations, canonical DB/data, runtime, VPS, deployment, T1/T2 or trading access. No packages installed. Production readiness remains **NOT CERTIFIED**.
+- Status: isolated feeder/sync/recovery regression **PASS 31/31**; exact-SHA checkout **PASS**; artifact/digest/payload **PASS**; manifest readback **PASS**. Dependency resolver, installation, transitive lock, fresh-environment compatibility, runtime startup and minimum supported runtime Python **NOT VERIFIED**.- Limits: no T0 source/test changes, source repository changes, PostgreSQL/migrations, canonical DB/data, runtime, VPS, deployment, T1/T2 or trading access. No packages installed. Production readiness remains **NOT CERTIFIED**.
 - Next bounded step: if continuing dependency work, separately authorize a resolver/fresh-environment compatibility gate for the two declared direct dependencies. Do not install packages in the production/runtime environment or infer runtime readiness from the 31-test standard-library gate.
 
 ---
@@ -1997,8 +2089,7 @@ Reconcile the four-artifact Actions allowlist with all eligible source artifacts
 - A2-SR-01 correction: A2.1 Trust Policy MUST explicitly authorize only `T0_CHECKPOINT_ISSUER_ATTESTATION` for A2.1 checkpoint objects; legacy `T0_CHECKPOINT_OWNER_ATTESTATION` is rejected with `PURPOSE_NOT_SUPPORTED_BY_PROFILE`; historical A1 verification requires explicit A1 profile; no relabel, silent upgrade or downgrade. Four new negative cases A2.1-NV-01..04.- A2-SR-02 correction: defines `T0-TRUST-BOOTSTRAP-AUTHORIZATION-V1` and binds exact bootstrap digest/length, namespace, audience, root SPKI fingerprint, role, profile, sequence and recovery policy. Path A uses separately pre-pinned owner authority but is unavailable until its own canonical schema/preimage/profile/revocation contract is separately approved. Path B uses an owner-controlled provisioning ceremony whose exact canonical record is identified by the bootstrap record's owner-authorization evidence ID/digest and pinned/read back through an independent verifier-provisioning channel. Newly enrolled root cannot authenticate its own enrollment. Five new negative cases A2.1-NV-05..09.
 - Self-review report: `docs/evidence/T0_SIGNATURE_CONTRACT_A2_1_SELF_REVIEW_2026-11-11.md`; create commit `61d65d7a242be49466e74a52d1554120c868c876`; final report commit `5e22dbb3ff53a588f8121200e3b5a2a69316a25a`; report blob `9fa179c9daf657880533eb69394b42cdb644fa0b`.
 - Static source checks: PASS for legacy-purpose rejection and downgrade rules, bootstrap authorization schema/context bindings, independent Path A/Path B definitions, non-circular enrollment, fail-closed reason codes, all 9 A2.1 negative cases and inherited A2-NV-01..43. Separately re-fetched historical A2/A1/base-contract/crosswalk blobs match exact pins. These are document consistency checks only; no executable or cryptographic conformance tests.
-- Self-review disposition: **PASS WITH RESIDUAL GATES — READY FOR QUALIFYING INDEPENDENT REVIEW**. This is same-session self-review, not independent assurance/G3.
-- Remaining gates: Path A requires a separate contract; Path B requires actual owner-controlled ceremony and independently evidenced verifier pin/readback; production algorithm/profile, owner authority, root custody/recovery, signer/anchor authority and operational implementation remain unselected/unverified. Qualifying independent review of exact A2.1 blob and separate explicit implementation approval remain mandatory.
+- Self-review disposition: **PASS WITH RESIDUAL GATES — READY FOR QUALIFYING INDEPENDENT REVIEW**. This is same-session self-review, not independent assurance/G3.- Remaining gates: Path A requires a separate contract; Path B requires actual owner-controlled ceremony and independently evidenced verifier pin/readback; production algorithm/profile, owner authority, root custody/recovery, signer/anchor authority and operational implementation remain unselected/unverified. Qualifying independent review of exact A2.1 blob and separate explicit implementation approval remain mandatory.
 - Status: **DRAFT / DOCUMENTATION ONLY / NOT IMPLEMENTATION-APPROVED**. CI/workflow **NOT RUN** for this increment; no workflow run or artifact claimed.
 - No code/tests/workflow/CI, keys/signatures/trust roots/policy/anchor instances, provider/TSA, VPS/SSH/runtime, SQLite/canonical T0 data or destructive operation was changed or exercised. Paper-only posture and `AI_EXECUTION_ENABLED=false` unchanged.
 - Next: designate a qualifying independent reviewer and provide the exact A2.1 blob plus pinned base documents. Do not implement, generate keys/signatures, instantiate trust policy/anchor or exercise VPS/T0 until separately approved.
@@ -2999,7 +3090,6 @@ Owner approved documentation-only baseline capture on the existing branch `featu
 
 Next: perform G0.3 read-only classification only. Do not merge, rebase, cherry-pick, reset, force-push, recreate branches, or alter PR #139/T1 PR #1. Preserve paper-only posture and `AI_EXECUTION_ENABLED=false`.
 
-
 ## G0.4 — G0.3 classification evidence recorded (2026-11-11)
 
 Owner approved G0.4 documentation-only update on the existing T0/T2 branch `feature/t0-centralized-data-feeder-p1-20261101`.
@@ -3997,7 +4087,6 @@ Next: if owner wants to proceed beyond planning, first approve a bounded provisi
 
 
 ## G0.52 — D01–D14 closure audit and S2 readiness (2026-11-11)
-
 - Baseline HEAD: `7dd321f5960291873dd8f374e6dd62c6a988c7b8`. Read controlling handoff blob `b6af9a90f3b4202a1ee02beb5f7e9d48096cb202` before work.
 - Added `docs/evidence/G0_52_D01_D14_S2_READINESS_AUDIT_RECORD_2026-11-11.md` in documentation-only scope; report blob `9e716bd4903892ec338c37b6c59987204d42f6b4`.
 - Reconciled D01–D14 against G0.21/G0.22/G0.26/G0.27/G0.28/G0.31/G0.44/G0.45/G0.47/G0.49/G0.50/G0.51.
@@ -4997,8 +5086,7 @@ Boundaries unchanged: T0 and T1 remain independent (no T1→T0); T0 unchanged; n
 - Branch: `feature/t0-centralized-data-feeder-p1-20261101`.
 - Latest source commit for this increment: `9c1ef12935d587806572e1161dac61a118637d75`.
 - `pipeline/api.py` blob: `d0217944bbfa9b864b0f259e0091daf9a989d180`.
-- `paper_execution/test_dual_strategy_api_red.py` blob: `9ae306678791957e31d7e85691ad4efd2991c7d7`.
-- Test commit: `501c246b354165572bbc9a3fad0d2b865f68ebd9`; source fix commit: `3b89014817f4722f55784fe6acc9151e0a313c26`; compatibility correction: `9c1ef12935d587806572e1161dac61a118637d75`.
+- `paper_execution/test_dual_strategy_api_red.py` blob: `9ae306678791957e31d7e85691ad4efd2991c7d7`.- Test commit: `501c246b354165572bbc9a3fad0d2b865f68ebd9`; source fix commit: `3b89014817f4722f55784fe6acc9151e0a313c26`; compatibility correction: `9c1ef12935d587806572e1161dac61a118637d75`.
 
 ### Implemented and verified
 
@@ -5997,8 +6085,7 @@ Created `docs/plans/PAPER_DB_ISOLATION_AND_CORE_RUNTIME_F4_INTEGRATION_PLAN_2026
 
 # CURRENT STATUS OVERRIDE — 2026-11-20 — Persistent State replay/checkpoint milestone 3 PASS
 
-- Exact tested source SHA: `bb64e0c196d5d1536f9704d9abdc79263b14671c` on `main`.
-- Updated `persistent_state/repository.py`, blob `b14d7f63793991ed28c06c6d1ffb41101a7d80c7`; added `persistent_state/replay.py`, blob `e94e94a2e62943f63641e97911655e043e9a873b`; added `persistent_state/test_replay_checkpoint.py`, blob `b7dead609d4cb0adf9ee79ac977b2c4094e96027`; canonical JSON now rejects binary floats (`persistent_state/contracts.py`, blob `3222360843292a4d0e34c29d019007d71d6ab335`).
+- Exact tested source SHA: `bb64e0c196d5d1536f9704d9abdc79263b14671c` on `main`.- Updated `persistent_state/repository.py`, blob `b14d7f63793991ed28c06c6d1ffb41101a7d80c7`; added `persistent_state/replay.py`, blob `e94e94a2e62943f63641e97911655e043e9a873b`; added `persistent_state/test_replay_checkpoint.py`, blob `b7dead609d4cb0adf9ee79ac977b2c4094e96027`; canonical JSON now rejects binary floats (`persistent_state/contracts.py`, blob `3222360843292a4d0e34c29d019007d71d6ab335`).
 - Replay validates canonical state, strict contiguous sequence, account scope, duplicate event IDs and reducer result; replay from checkpoint starts after covered sequence.
 - Checkpoint generations are immutable/append-only, checksum-verified on read, must not cover uncommitted events, and aggregate-version map must match the committed event prefix. Active pointer advances monotonically; generation insert + pointer update are atomic; no pruning.
 - Test-first commit `5a503adda8577cdc6713313441b69b7ed546ee6a`; RED run [44716033557](https://github.com/kenznguyen/btcquant-application/actions/runs/44716033557) because replay module was absent.
