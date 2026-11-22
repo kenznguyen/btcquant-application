@@ -3,14 +3,14 @@
 Date: 2026-11-22  
 Repository: kenznguyen/btcquant-application  
 Branch: main  
-Status: **DESIGN PROPOSAL — FOR OWNER REVIEW; NOT IMPLEMENTATION AUTHORITY**  
+Status: **AMENDED DESIGN AUTHORITY — OWNER-APPROVED AMENDMENTS A/B; BOUNDED IMPLEMENTATION AUTHORIZED; S1.2 FREEZE PENDING**  
 Supersedes S1.1 only where this proposal is explicitly accepted. Until then, S1.1 remains the accepted baseline.
 
 ## 1. Purpose, authority and scope
 
 S1.2 closes findings B1–B10 from docs/reviews/T0_S1_PERSISTENCE_READINESS_COMPATIBILITY_REVIEW_2026-11-22.md. It specifies exact parser/importer/S3/SQLite mappings, duplicate and coverage semantics, append-only lifecycle, complete proposed SQLite STRICT schema v2, schema fingerprint, and gated implementation sequence.
 
-**Documentation only.** No implementation, tests, workflow, executable DDL, SQLite connection/creation, archive access, workstation preflight, source acquisition, staging build, Canonical T0, runtime or data was changed or accessed.
+This specification is the design baseline as amended by owner-approved Amendments A and B and the bounded owner authorization. Implementation and synthetic verification evidence are recorded separately. The design does not authorize real archive access, host preflight, acquisition, real-data staging, Canonical T0 operations or runtime deployment.
 
 ### 1.1 Contract precedence
 
@@ -180,259 +180,293 @@ Preserve exact raw inventory bytes and exact raw_fields_json; do not reserialize
 
 ### 4.1 Preconditions
 
-SQLite >= 3.37.0 and exactly equals a later approved pin; exact Python patch pinned separately. Every connection sets PRAGMA foreign_keys=ON before transactions and reads back 1. All tables STRICT; decimals TEXT; no REAL. No AUTOINCREMENT, rowid identities, triggers, views, virtual tables or generated columns. No ON DELETE CASCADE. No migration. DDL applies only to a newly approved staging DB, never Canonical or any existing DB. Execute statements in listed order; set user_version=2 only after successful creation.
+SQLite >= 3.37.0 and exactly equals a later approved pin; exact Python patch pinned separately. Every connection sets PRAGMA foreign_keys=ON before transactions and reads back 1. All tables STRICT; decimals TEXT; no REAL. No AUTOINCREMENT, rowid identities, views, virtual tables or generated columns. Exactly two append-only lifecycle triggers are required as defined in §4.2; no other triggers are permitted. No ON DELETE CASCADE. No migration. DDL applies only to a newly approved staging DB, never Canonical or any existing DB. Set foreign_keys=ON before beginning the transaction. Apply all tables, indexes and triggers, set user_version=2, and COMMIT atomically; on any failure ROLLBACK the entire initialization.
 
-### 4.2 Complete DDL
+### 4.2 Complete DDL — owner-amended physical schema v2
 
 ~~~sql
--- T0_STAGING_SCHEMA_V2 — DESIGN ONLY; NOT AUTHORIZED TO EXECUTE
+-- Exact TABLE_DDL statements, in execution and fingerprint order.
+
 CREATE TABLE reconstruction_run (
-  run_id TEXT PRIMARY KEY CHECK(length(run_id)=69 AND substr(run_id,1,5)='run1:'),
-  inventory_id TEXT NOT NULL CHECK(length(inventory_id)=69 AND substr(inventory_id,1,5)='inv1:'),
-  inventory_blob_sha256 TEXT NOT NULL CHECK(length(inventory_blob_sha256)=64),
-  inventory_raw_bytes BLOB NOT NULL,
-  label TEXT NOT NULL CHECK(label='RECONSTRUCTED — PARTIAL COVERAGE'),
-  parser_contract_id TEXT NOT NULL CHECK(parser_contract_id='T0_ARCHIVE_CSV_HEADER_V1'),
-  parser_source_sha TEXT NOT NULL CHECK(length(parser_source_sha)=40),
-  importer_source_sha TEXT NOT NULL CHECK(length(importer_source_sha)=40),
-  schema_contract_id TEXT NOT NULL CHECK(schema_contract_id='T0_STAGING_SCHEMA_V2'),
-  schema_fingerprint_sha256 TEXT NOT NULL CHECK(length(schema_fingerprint_sha256)=64),
-  created_at_utc TEXT NOT NULL,
-  coverage_manifest_json TEXT NOT NULL,
-  coverage_manifest_sha256 TEXT NOT NULL CHECK(length(coverage_manifest_sha256)=64)
-) STRICT;
+      singleton_key INTEGER PRIMARY KEY CHECK(singleton_key=1),
+      run_id TEXT NOT NULL UNIQUE CHECK(length(run_id)=69 AND substr(run_id,1,5)='run1:' AND substr(run_id,6) NOT GLOB '*[^0-9a-f]*'),
+      inventory_id TEXT NOT NULL CHECK(length(inventory_id)=69 AND substr(inventory_id,1,5)='inv1:' AND substr(inventory_id,6) NOT GLOB '*[^0-9a-f]*'),
+      inventory_blob_sha256 TEXT NOT NULL CHECK(length(inventory_blob_sha256)=64 AND inventory_blob_sha256 NOT GLOB '*[^0-9a-f]*'),
+      inventory_raw_bytes BLOB NOT NULL,
+      label TEXT NOT NULL CHECK(label='RECONSTRUCTED — PARTIAL COVERAGE'),
+      parser_contract_id TEXT NOT NULL CHECK(parser_contract_id='T0_ARCHIVE_CSV_HEADER_V1'),
+      parser_source_sha TEXT NOT NULL CHECK(length(parser_source_sha)=40 AND parser_source_sha NOT GLOB '*[^0-9a-f]*'),
+      importer_source_sha TEXT NOT NULL CHECK(length(importer_source_sha)=40 AND importer_source_sha NOT GLOB '*[^0-9a-f]*'),
+      schema_contract_id TEXT NOT NULL CHECK(schema_contract_id='T0_STAGING_SCHEMA_V2'),
+      schema_fingerprint_sha256 TEXT NOT NULL CHECK(length(schema_fingerprint_sha256)=64 AND schema_fingerprint_sha256 NOT GLOB '*[^0-9a-f]*'),
+      created_at_utc TEXT NOT NULL,
+      coverage_manifest_json TEXT NOT NULL,
+      coverage_manifest_sha256 TEXT NOT NULL CHECK(length(coverage_manifest_sha256)=64 AND coverage_manifest_sha256 NOT GLOB '*[^0-9a-f]*')
+    ) STRICT;
 
 CREATE TABLE run_events (
-  run_id TEXT NOT NULL REFERENCES reconstruction_run(run_id),
-  event_seq INTEGER NOT NULL CHECK(event_seq>0),
-  event_type TEXT NOT NULL CHECK(event_type IN ('BUILDING','CANDIDATE','QUARANTINED','VALIDATED')),
-  occurred_at_utc TEXT NOT NULL,
-  reason_code TEXT,
-  candidate_snapshot_sha256 TEXT CHECK(candidate_snapshot_sha256 IS NULL OR length(candidate_snapshot_sha256)=64),
-  validator_payload_sha256 TEXT CHECK(validator_payload_sha256 IS NULL OR length(validator_payload_sha256)=64),
-  PRIMARY KEY(run_id,event_seq),
-  CHECK(event_type NOT IN ('CANDIDATE','VALIDATED') OR candidate_snapshot_sha256 IS NOT NULL),
-  CHECK(event_type<>'VALIDATED' OR validator_payload_sha256 IS NOT NULL)
-) STRICT;
+      run_id TEXT NOT NULL REFERENCES reconstruction_run(run_id),
+      event_seq INTEGER NOT NULL CHECK(event_seq>0),
+      event_type TEXT NOT NULL CHECK(event_type IN ('BUILDING','CANDIDATE','QUARANTINED','VALIDATED')),
+      occurred_at_utc TEXT NOT NULL,
+      reason_code TEXT,
+      candidate_snapshot_sha256 TEXT CHECK(candidate_snapshot_sha256 IS NULL OR (candidate_snapshot_sha256 IS NOT NULL AND length(candidate_snapshot_sha256)=64 AND candidate_snapshot_sha256 NOT GLOB '*[^0-9a-f]*')),
+      validator_payload_sha256 TEXT CHECK(validator_payload_sha256 IS NULL OR (validator_payload_sha256 IS NOT NULL AND length(validator_payload_sha256)=64 AND validator_payload_sha256 NOT GLOB '*[^0-9a-f]*')),
+      PRIMARY KEY(run_id,event_seq),
+      CHECK(event_type NOT IN ('CANDIDATE','VALIDATED') OR candidate_snapshot_sha256 IS NOT NULL),
+      CHECK(event_type<>'VALIDATED' OR validator_payload_sha256 IS NOT NULL)
+    ) STRICT;
 
 CREATE TABLE archive_objects (
-  object_id TEXT PRIMARY KEY CHECK(length(object_id)=69 AND substr(object_id,1,5)='obj1:'),
-  inventory_id TEXT NOT NULL,
-  inventory_blob_sha256 TEXT NOT NULL CHECK(length(inventory_blob_sha256)=64),
-  inventory_entry_identity TEXT NOT NULL,
-  object_key TEXT NOT NULL UNIQUE,
-  object_kind TEXT NOT NULL CHECK(object_kind IN ('ZIP','CHECKSUM_SIDECAR')),
-  timeframe TEXT NOT NULL CHECK(timeframe IN ('15m','1h')),
-  partition TEXT NOT NULL,
-  period TEXT NOT NULL,
-  paired_object_key TEXT NOT NULL,
-  requested_key TEXT,
-  expected_size_bytes INTEGER CHECK(expected_size_bytes IS NULL OR expected_size_bytes>=0),
-  expected_sha256 TEXT CHECK(expected_sha256 IS NULL OR length(expected_sha256)=64),
-  measured_size_bytes INTEGER CHECK(measured_size_bytes IS NULL OR measured_size_bytes>=0),
-  measured_sha256 TEXT CHECK(measured_sha256 IS NULL OR length(measured_sha256)=64),
-  response_bytes_total INTEGER NOT NULL CHECK(response_bytes_total>=0),
-  response_status INTEGER,
-  local_relative_path TEXT,
-  exclusive_create INTEGER CHECK(exclusive_create IS NULL OR exclusive_create IN (0,1)),
-  retrieval_source TEXT,
-  workflow_run_id TEXT,
-  workflow_job_id TEXT,
-  workflow_event TEXT,
-  trigger_sha TEXT CHECK(trigger_sha IS NULL OR length(trigger_sha)=40),
-  checkout_sha TEXT CHECK(checkout_sha IS NULL OR length(checkout_sha)=40),
-  retrieved_at_utc TEXT,
-  verification_status TEXT NOT NULL CHECK(verification_status IN ('VERIFIED','QUARANTINED')),
-  failure_code TEXT,
-  CHECK(requested_key IS NULL OR requested_key=object_key),
-  CHECK(
-    (verification_status='VERIFIED' AND requested_key=object_key
-     AND expected_size_bytes IS NOT NULL AND expected_sha256 IS NOT NULL
-     AND measured_size_bytes IS NOT NULL AND measured_sha256 IS NOT NULL
-     AND response_status IS NOT NULL AND local_relative_path IS NOT NULL
-     AND exclusive_create=1 AND workflow_run_id IS NOT NULL
-     AND workflow_job_id IS NOT NULL AND trigger_sha IS NOT NULL
-     AND checkout_sha IS NOT NULL AND retrieved_at_utc IS NOT NULL
-     AND failure_code IS NULL)
-    OR (verification_status='QUARANTINED' AND failure_code IS NOT NULL)
-  )
-) STRICT;
+      object_id TEXT PRIMARY KEY CHECK(length(object_id)=69 AND substr(object_id,1,5)='obj1:' AND substr(object_id,6) NOT GLOB '*[^0-9a-f]*'),
+      inventory_id TEXT NOT NULL CHECK(length(inventory_id)=69 AND substr(inventory_id,1,5)='inv1:' AND substr(inventory_id,6) NOT GLOB '*[^0-9a-f]*'),
+      inventory_blob_sha256 TEXT NOT NULL CHECK(length(inventory_blob_sha256)=64 AND inventory_blob_sha256 NOT GLOB '*[^0-9a-f]*'),
+      inventory_entry_identity TEXT NOT NULL,
+      object_key TEXT NOT NULL UNIQUE,
+      object_kind TEXT NOT NULL CHECK(object_kind IN ('ZIP','CHECKSUM_SIDECAR')),
+      timeframe TEXT NOT NULL CHECK(timeframe IN ('15m','1h')),
+      partition TEXT NOT NULL,
+      period TEXT NOT NULL,
+      paired_object_key TEXT NOT NULL,
+      requested_key TEXT,
+      expected_size_bytes INTEGER CHECK(expected_size_bytes IS NULL OR expected_size_bytes>=0),
+      expected_sha256 TEXT CHECK(expected_sha256 IS NULL OR (length(expected_sha256)=64 AND expected_sha256 NOT GLOB '*[^0-9a-f]*')),
+      measured_size_bytes INTEGER CHECK(measured_size_bytes IS NULL OR measured_size_bytes>=0),
+      measured_sha256 TEXT CHECK(measured_sha256 IS NULL OR (length(measured_sha256)=64 AND measured_sha256 NOT GLOB '*[^0-9a-f]*')),
+      response_bytes_total INTEGER NOT NULL CHECK(response_bytes_total>=0),
+      response_status INTEGER CHECK(response_status IS NULL OR response_status BETWEEN 100 AND 599),
+      local_relative_path TEXT,
+      exclusive_create INTEGER CHECK(exclusive_create IS NULL OR exclusive_create IN (0,1)),
+      retrieval_source TEXT,
+      workflow_run_id TEXT,
+      workflow_job_id TEXT,
+      workflow_event TEXT,
+      trigger_sha TEXT CHECK(trigger_sha IS NULL OR (length(trigger_sha)=40 AND trigger_sha NOT GLOB '*[^0-9a-f]*')),
+      checkout_sha TEXT CHECK(checkout_sha IS NULL OR (length(checkout_sha)=40 AND checkout_sha NOT GLOB '*[^0-9a-f]*')),
+      retrieved_at_utc TEXT,
+      verification_status TEXT NOT NULL CHECK(verification_status IN ('VERIFIED','QUARANTINED')),
+      failure_code TEXT,
+      CHECK(requested_key IS NULL OR requested_key=object_key),
+      CHECK(
+        (verification_status='VERIFIED'
+         AND requested_key IS NOT NULL AND requested_key=object_key
+         AND expected_size_bytes IS NOT NULL AND expected_sha256 IS NOT NULL
+         AND measured_size_bytes IS NOT NULL AND measured_sha256 IS NOT NULL
+         AND response_status IS NOT NULL AND local_relative_path IS NOT NULL
+         AND exclusive_create IS NOT NULL AND exclusive_create=1
+         AND workflow_run_id IS NOT NULL AND workflow_job_id IS NOT NULL
+         AND workflow_event IS NOT NULL AND trigger_sha IS NOT NULL
+         AND checkout_sha IS NOT NULL AND retrieved_at_utc IS NOT NULL
+         AND failure_code IS NULL)
+        OR (verification_status='QUARANTINED' AND failure_code IS NOT NULL)
+      )
+    ) STRICT;
 
 CREATE TABLE acquisition_attempts (
-  attempt_id TEXT PRIMARY KEY CHECK(length(attempt_id)=69 AND substr(attempt_id,1,5)='att1:'),
-  object_id TEXT NOT NULL REFERENCES archive_objects(object_id),
-  attempt_number INTEGER NOT NULL CHECK(attempt_number>0),
-  workflow_run_id TEXT NOT NULL,
-  workflow_job_id TEXT NOT NULL,
-  workflow_event TEXT NOT NULL CHECK(workflow_event='workflow_dispatch'),
-  trigger_sha TEXT NOT NULL CHECK(length(trigger_sha)=40),
-  checkout_sha TEXT NOT NULL CHECK(length(checkout_sha)=40),
-  requested_key TEXT NOT NULL,
-  started_at_utc TEXT NOT NULL,
-  finished_at_utc TEXT,
-  outcome TEXT NOT NULL CHECK(outcome IN ('STARTED','HTTP_FAILED','TRANSFER_FAILED','TRANSFERRED','VALIDATION_FAILED','UNKNOWN')),
-  response_status INTEGER,
-  response_bytes_received INTEGER CHECK(response_bytes_received IS NULL OR response_bytes_received>=0),
-  is_complete_object INTEGER NOT NULL CHECK(is_complete_object IN (0,1)),
-  partial_body_sha256 TEXT CHECK(partial_body_sha256 IS NULL OR length(partial_body_sha256)=64),
-  complete_object_sha256 TEXT CHECK(complete_object_sha256 IS NULL OR length(complete_object_sha256)=64),
-  failure_code TEXT,
-  UNIQUE(object_id,attempt_number),
-  CHECK((outcome='STARTED' AND finished_at_utc IS NULL AND is_complete_object=0)
-     OR (outcome<>'STARTED' AND finished_at_utc IS NOT NULL)),
-  CHECK((outcome='TRANSFERRED' AND is_complete_object=1
-         AND response_bytes_received IS NOT NULL AND complete_object_sha256 IS NOT NULL
-         AND failure_code IS NULL)
-     OR (outcome<>'TRANSFERRED' AND is_complete_object=0 AND complete_object_sha256 IS NULL))
-) STRICT;
+      attempt_id TEXT PRIMARY KEY CHECK(length(attempt_id)=69 AND substr(attempt_id,1,5)='att1:' AND substr(attempt_id,6) NOT GLOB '*[^0-9a-f]*'),
+      object_id TEXT NOT NULL REFERENCES archive_objects(object_id),
+      attempt_number INTEGER NOT NULL CHECK(attempt_number>0),
+      workflow_run_id TEXT NOT NULL,
+      workflow_job_id TEXT NOT NULL,
+      workflow_event TEXT NOT NULL CHECK(workflow_event='workflow_dispatch'),
+      trigger_sha TEXT NOT NULL CHECK(length(trigger_sha)=40 AND trigger_sha NOT GLOB '*[^0-9a-f]*'),
+      checkout_sha TEXT NOT NULL CHECK(length(checkout_sha)=40 AND checkout_sha NOT GLOB '*[^0-9a-f]*'),
+      requested_key TEXT NOT NULL,
+      expected_size_bytes INTEGER NOT NULL CHECK(expected_size_bytes>=0),
+      expected_sha256 TEXT NOT NULL CHECK(length(expected_sha256)=64 AND expected_sha256 NOT GLOB '*[^0-9a-f]*'),
+      started_at_utc TEXT NOT NULL,
+      finished_at_utc TEXT,
+      outcome TEXT NOT NULL CHECK(outcome IN ('STARTED','FAILED','TRANSFERRED','UNKNOWN')),
+      failure_subtype TEXT CHECK(failure_subtype IS NULL OR failure_subtype IN ('HTTP_FAILED','TRANSFER_FAILED','VALIDATION_FAILED')),
+      response_status INTEGER,
+      response_bytes_received INTEGER CHECK(response_bytes_received IS NULL OR response_bytes_received>=0),
+      is_complete_object INTEGER NOT NULL CHECK(is_complete_object IN (0,1)),
+      partial_body_sha256 TEXT CHECK(partial_body_sha256 IS NULL OR (length(partial_body_sha256)=64 AND partial_body_sha256 NOT GLOB '*[^0-9a-f]*')),
+      complete_object_sha256 TEXT CHECK(complete_object_sha256 IS NULL OR (length(complete_object_sha256)=64 AND complete_object_sha256 NOT GLOB '*[^0-9a-f]*')),
+      failure_code TEXT,
+      UNIQUE(object_id,attempt_number),
+      UNIQUE(object_id,attempt_id),
+      CHECK((outcome='STARTED' AND finished_at_utc IS NULL AND is_complete_object=0 AND failure_subtype IS NULL AND failure_code IS NULL)
+         OR (outcome='FAILED' AND finished_at_utc IS NOT NULL AND is_complete_object=0 AND failure_subtype IS NOT NULL AND failure_code IS NOT NULL)
+         OR (outcome='TRANSFERRED' AND finished_at_utc IS NOT NULL AND is_complete_object=1 AND failure_subtype IS NULL AND response_bytes_received IS NOT NULL AND complete_object_sha256 IS NOT NULL AND failure_code IS NULL)
+         OR (outcome='UNKNOWN' AND finished_at_utc IS NOT NULL AND is_complete_object=0 AND failure_subtype IS NULL))
+    ) STRICT;
 
 CREATE TABLE object_successful_attempt (
-  object_id TEXT PRIMARY KEY REFERENCES archive_objects(object_id),
-  attempt_id TEXT NOT NULL UNIQUE REFERENCES acquisition_attempts(attempt_id)
-) STRICT;
+      object_id TEXT PRIMARY KEY REFERENCES archive_objects(object_id),
+      attempt_id TEXT NOT NULL UNIQUE,
+      FOREIGN KEY(object_id,attempt_id) REFERENCES acquisition_attempts(object_id,attempt_id)
+    ) STRICT;
 
 CREATE TABLE archive_pairs (
-  pair_id TEXT PRIMARY KEY CHECK(length(pair_id)=70 AND substr(pair_id,1,6)='pair1:'),
-  zip_object_id TEXT NOT NULL UNIQUE REFERENCES archive_objects(object_id),
-  sidecar_object_id TEXT NOT NULL UNIQUE REFERENCES archive_objects(object_id),
-  zip_size_bytes INTEGER CHECK(zip_size_bytes IS NULL OR zip_size_bytes>=0),
-  zip_sha256 TEXT CHECK(zip_sha256 IS NULL OR length(zip_sha256)=64),
-  sidecar_size_bytes INTEGER CHECK(sidecar_size_bytes IS NULL OR sidecar_size_bytes>=0),
-  sidecar_sha256 TEXT CHECK(sidecar_sha256 IS NULL OR length(sidecar_sha256)=64),
-  sidecar_asserted_zip_sha256 TEXT CHECK(sidecar_asserted_zip_sha256 IS NULL OR length(sidecar_asserted_zip_sha256)=64),
-  assertion_matches INTEGER CHECK(assertion_matches IS NULL OR assertion_matches IN (0,1)),
-  zip_crc_ok INTEGER CHECK(zip_crc_ok IS NULL OR zip_crc_ok IN (0,1)),
-  candidate_member_count INTEGER CHECK(candidate_member_count IS NULL OR candidate_member_count>=0),
-  structural_ok INTEGER CHECK(structural_ok IS NULL OR structural_ok IN (0,1)),
-  disposition TEXT NOT NULL CHECK(disposition IN ('VERIFIED','QUARANTINED')),
-  failure_code TEXT,
-  CHECK((disposition='VERIFIED' AND zip_size_bytes IS NOT NULL AND zip_sha256 IS NOT NULL
-         AND sidecar_size_bytes IS NOT NULL AND sidecar_sha256 IS NOT NULL
-         AND sidecar_asserted_zip_sha256 IS NOT NULL AND assertion_matches=1
-         AND zip_crc_ok=1 AND candidate_member_count=1 AND structural_ok=1
-         AND failure_code IS NULL)
-     OR (disposition='QUARANTINED' AND failure_code IS NOT NULL)),
-  CHECK(zip_object_id<>sidecar_object_id)
-) STRICT;
+      pair_id TEXT PRIMARY KEY CHECK(length(pair_id)=70 AND substr(pair_id,1,6)='pair1:' AND substr(pair_id,7) NOT GLOB '*[^0-9a-f]*'),
+      zip_object_id TEXT NOT NULL UNIQUE REFERENCES archive_objects(object_id),
+      sidecar_object_id TEXT NOT NULL UNIQUE REFERENCES archive_objects(object_id),
+      zip_size_bytes INTEGER CHECK(zip_size_bytes IS NULL OR zip_size_bytes>=0),
+      zip_sha256 TEXT CHECK(zip_sha256 IS NULL OR (length(zip_sha256)=64 AND zip_sha256 NOT GLOB '*[^0-9a-f]*')),
+      sidecar_size_bytes INTEGER CHECK(sidecar_size_bytes IS NULL OR sidecar_size_bytes>=0),
+      sidecar_sha256 TEXT CHECK(sidecar_sha256 IS NULL OR (length(sidecar_sha256)=64 AND sidecar_sha256 NOT GLOB '*[^0-9a-f]*')),
+      sidecar_asserted_zip_sha256 TEXT CHECK(sidecar_asserted_zip_sha256 IS NULL OR (length(sidecar_asserted_zip_sha256)=64 AND sidecar_asserted_zip_sha256 NOT GLOB '*[^0-9a-f]*')),
+      assertion_matches INTEGER CHECK(assertion_matches IS NULL OR assertion_matches IN (0,1)),
+      zip_crc_ok INTEGER CHECK(zip_crc_ok IS NULL OR zip_crc_ok IN (0,1)),
+      candidate_member_count INTEGER CHECK(candidate_member_count IS NULL OR candidate_member_count>=0),
+      structural_ok INTEGER CHECK(structural_ok IS NULL OR structural_ok IN (0,1)),
+      disposition TEXT NOT NULL CHECK(disposition IN ('VERIFIED','QUARANTINED')),
+      failure_code TEXT,
+      CHECK((disposition='VERIFIED'
+             AND zip_size_bytes IS NOT NULL AND zip_sha256 IS NOT NULL
+             AND sidecar_size_bytes IS NOT NULL AND sidecar_sha256 IS NOT NULL
+             AND sidecar_asserted_zip_sha256 IS NOT NULL
+             AND assertion_matches IS NOT NULL AND assertion_matches=1
+             AND zip_crc_ok IS NOT NULL AND zip_crc_ok=1
+             AND candidate_member_count IS NOT NULL AND candidate_member_count=1
+             AND structural_ok IS NOT NULL AND structural_ok=1
+             AND failure_code IS NULL)
+         OR (disposition='QUARANTINED' AND failure_code IS NOT NULL)),
+      CHECK(zip_object_id<>sidecar_object_id)
+    ) STRICT;
 
 CREATE TABLE csv_members (
-  candidate_id TEXT PRIMARY KEY CHECK(length(candidate_id)=70 AND substr(candidate_id,1,6)='cand1:'),
-  member_id TEXT UNIQUE CHECK(member_id IS NULL OR (length(member_id)=69 AND substr(member_id,1,5)='mem1:')),
-  pair_id TEXT NOT NULL REFERENCES archive_pairs(pair_id),
-  central_directory_ordinal INTEGER NOT NULL CHECK(central_directory_ordinal>0),
-  member_path TEXT,
-  member_size_bytes INTEGER CHECK(member_size_bytes IS NULL OR member_size_bytes>=0),
-  member_sha256 TEXT CHECK(member_sha256 IS NULL OR length(member_sha256)=64),
-  encoding TEXT,
-  bom_present INTEGER CHECK(bom_present IS NULL OR bom_present IN (0,1)),
-  newline TEXT,
-  delimiter TEXT,
-  header_present INTEGER CHECK(header_present IS NULL OR header_present IN (0,1)),
-  header_contract_id TEXT,
-  parser_contract_id TEXT,
-  parser_source_sha TEXT CHECK(parser_source_sha IS NULL OR length(parser_source_sha)=40),
-  data_row_count INTEGER CHECK(data_row_count IS NULL OR data_row_count>=0),
-  first_open_time_ms INTEGER CHECK(first_open_time_ms IS NULL OR first_open_time_ms>=0),
-  last_open_time_ms INTEGER CHECK(last_open_time_ms IS NULL OR last_open_time_ms>=0),
-  disposition TEXT NOT NULL CHECK(disposition IN ('VERIFIED','QUARANTINED')),
-  failure_code TEXT,
-  UNIQUE(pair_id,central_directory_ordinal),
-  CHECK((member_id IS NOT NULL AND member_path IS NOT NULL
-         AND member_size_bytes IS NOT NULL AND member_sha256 IS NOT NULL)
-     OR member_id IS NULL),
-  CHECK((disposition='VERIFIED' AND member_id IS NOT NULL AND encoding='UTF-8'
-         AND bom_present IS NOT NULL AND newline IS NOT NULL AND delimiter=','
-         AND header_present IS NOT NULL AND parser_contract_id='T0_ARCHIVE_CSV_HEADER_V1'
-         AND parser_source_sha IS NOT NULL AND data_row_count>0
-         AND first_open_time_ms IS NOT NULL AND last_open_time_ms IS NOT NULL
-         AND failure_code IS NULL)
-     OR (disposition='QUARANTINED' AND failure_code IS NOT NULL)),
-  CHECK((header_present=1 AND header_contract_id='T0_ARCHIVE_CSV_HEADER_V1')
-     OR (header_present=0 AND header_contract_id IS NULL)
-     OR (header_present IS NULL AND header_contract_id IS NULL)),
-  CHECK(data_row_count IS NULL OR
-     (data_row_count=0 AND first_open_time_ms IS NULL AND last_open_time_ms IS NULL)
-     OR (data_row_count>0 AND first_open_time_ms IS NOT NULL AND last_open_time_ms IS NOT NULL))
-) STRICT;
+      candidate_id TEXT PRIMARY KEY CHECK(length(candidate_id)=70 AND substr(candidate_id,1,6)='cand1:' AND substr(candidate_id,7) NOT GLOB '*[^0-9a-f]*'),
+      member_id TEXT UNIQUE CHECK(member_id IS NULL OR (length(member_id)=69 AND substr(member_id,1,5)='mem1:' AND substr(member_id,6) NOT GLOB '*[^0-9a-f]*')),
+      pair_id TEXT NOT NULL REFERENCES archive_pairs(pair_id),
+      central_directory_ordinal INTEGER NOT NULL CHECK(central_directory_ordinal>0),
+      member_path TEXT,
+      member_size_bytes INTEGER CHECK(member_size_bytes IS NULL OR member_size_bytes>=0),
+      member_sha256 TEXT CHECK(member_sha256 IS NULL OR (length(member_sha256)=64 AND member_sha256 NOT GLOB '*[^0-9a-f]*')),
+      encoding TEXT,
+      bom_present INTEGER CHECK(bom_present IS NULL OR bom_present IN (0,1)),
+      newline TEXT,
+      delimiter TEXT,
+      header_present INTEGER CHECK(header_present IS NULL OR header_present IN (0,1)),
+      header_contract_id TEXT,
+      parser_contract_id TEXT,
+      parser_source_sha TEXT CHECK(parser_source_sha IS NULL OR (length(parser_source_sha)=40 AND parser_source_sha NOT GLOB '*[^0-9a-f]*')),
+      data_row_count INTEGER CHECK(data_row_count IS NULL OR data_row_count>=0),
+      first_open_time_ms INTEGER CHECK(first_open_time_ms IS NULL OR first_open_time_ms>=0),
+      last_open_time_ms INTEGER CHECK(last_open_time_ms IS NULL OR last_open_time_ms>=0),
+      disposition TEXT NOT NULL CHECK(disposition IN ('VERIFIED','QUARANTINED')),
+      failure_code TEXT,
+      UNIQUE(pair_id,central_directory_ordinal),
+      CHECK((member_id IS NOT NULL AND member_path IS NOT NULL AND member_size_bytes IS NOT NULL AND member_sha256 IS NOT NULL) OR member_id IS NULL),
+      CHECK((disposition='VERIFIED'
+             AND member_id IS NOT NULL AND member_path IS NOT NULL
+             AND member_size_bytes IS NOT NULL AND member_sha256 IS NOT NULL
+             AND encoding IS NOT NULL AND encoding='UTF-8'
+             AND bom_present IS NOT NULL AND bom_present=0
+             AND newline IS NOT NULL AND newline='LF'
+             AND delimiter IS NOT NULL AND delimiter=','
+             AND header_present IS NOT NULL AND header_present=1
+             AND header_contract_id IS NOT NULL AND header_contract_id='T0_ARCHIVE_CSV_HEADER_V1'
+             AND parser_contract_id IS NOT NULL AND parser_contract_id='T0_ARCHIVE_CSV_HEADER_V1'
+             AND parser_source_sha IS NOT NULL AND data_row_count IS NOT NULL AND data_row_count>0
+             AND first_open_time_ms IS NOT NULL AND last_open_time_ms IS NOT NULL
+             AND failure_code IS NULL)
+         OR (disposition='QUARANTINED' AND failure_code IS NOT NULL)),
+      CHECK((header_present=1 AND header_contract_id='T0_ARCHIVE_CSV_HEADER_V1')
+         OR (header_present=0 AND header_contract_id IS NULL)
+         OR (header_present IS NULL AND header_contract_id IS NULL)),
+      CHECK(data_row_count IS NULL OR
+         (data_row_count=0 AND first_open_time_ms IS NULL AND last_open_time_ms IS NULL)
+         OR (data_row_count>0 AND first_open_time_ms IS NOT NULL AND last_open_time_ms IS NOT NULL))
+    ) STRICT;
 
 CREATE TABLE source_rows (
-  source_row_id TEXT PRIMARY KEY CHECK(length(source_row_id)=69 AND substr(source_row_id,1,5)='row1:'),
-  member_id TEXT NOT NULL REFERENCES csv_members(member_id),
-  physical_record_ordinal INTEGER NOT NULL CHECK(physical_record_ordinal>0),
-  data_row_ordinal INTEGER NOT NULL CHECK(data_row_ordinal>0),
-  raw_fields_json TEXT NOT NULL,
-  raw_row_digest TEXT NOT NULL CHECK(length(raw_row_digest)=64),
-  parser_contract_id TEXT NOT NULL CHECK(parser_contract_id='T0_ARCHIVE_CSV_HEADER_V1'),
-  parser_source_sha TEXT NOT NULL CHECK(length(parser_source_sha)=40),
-  importer_source_sha TEXT NOT NULL CHECK(length(importer_source_sha)=40),
-  exchange TEXT,
-  market_type TEXT,
-  symbol TEXT,
-  timeframe TEXT,
-  open_time_ms INTEGER CHECK(open_time_ms IS NULL OR open_time_ms>=0),
-  candle_value_id TEXT CHECK(candle_value_id IS NULL OR (length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:')),
-  disposition TEXT NOT NULL CHECK(disposition IN ('ACCEPTED','REJECTED')),
-  rejection_code TEXT,
-  UNIQUE(member_id,physical_record_ordinal),
-  UNIQUE(member_id,data_row_ordinal),
-  CHECK((disposition='ACCEPTED' AND exchange='binance' AND market_type='usdm'
-         AND symbol='BTCUSDT' AND timeframe IN ('15m','1h')
-         AND open_time_ms IS NOT NULL AND candle_value_id IS NOT NULL AND rejection_code IS NULL)
-     OR (disposition='REJECTED' AND candle_value_id IS NULL AND rejection_code IS NOT NULL))
-) STRICT;
+      source_row_id TEXT PRIMARY KEY CHECK(length(source_row_id)=69 AND substr(source_row_id,1,5)='row1:' AND substr(source_row_id,6) NOT GLOB '*[^0-9a-f]*'),
+      member_id TEXT NOT NULL REFERENCES csv_members(member_id),
+      physical_record_ordinal INTEGER NOT NULL CHECK(physical_record_ordinal>0),
+      data_row_ordinal INTEGER NOT NULL CHECK(data_row_ordinal>0),
+      raw_fields_json TEXT NOT NULL,
+      raw_row_digest TEXT NOT NULL CHECK(length(raw_row_digest)=64 AND raw_row_digest NOT GLOB '*[^0-9a-f]*'),
+      parser_contract_id TEXT NOT NULL CHECK(parser_contract_id='T0_ARCHIVE_CSV_HEADER_V1'),
+      parser_source_sha TEXT NOT NULL CHECK(length(parser_source_sha)=40 AND parser_source_sha NOT GLOB '*[^0-9a-f]*'),
+      importer_contract_id TEXT NOT NULL CHECK(importer_contract_id='T0_ARCHIVE_IMPORTER_V1'),
+      importer_source_sha TEXT NOT NULL CHECK(length(importer_source_sha)=40 AND importer_source_sha NOT GLOB '*[^0-9a-f]*'),
+      exchange TEXT,
+      market_type TEXT,
+      symbol TEXT,
+      timeframe TEXT,
+      open_time_ms INTEGER CHECK(open_time_ms IS NULL OR open_time_ms>=0),
+      candle_value_id TEXT CHECK(candle_value_id IS NULL OR (length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:' AND substr(candle_value_id,5) NOT GLOB '*[^0-9a-f]*')),
+      disposition TEXT NOT NULL CHECK(disposition IN ('ACCEPTED','REJECTED')),
+      rejection_code TEXT,
+      UNIQUE(member_id,physical_record_ordinal),
+      UNIQUE(member_id,data_row_ordinal),
+      CHECK((disposition='ACCEPTED'
+             AND exchange IS NOT NULL AND exchange='binance'
+             AND market_type IS NOT NULL AND market_type='usdm'
+             AND symbol IS NOT NULL AND symbol='BTCUSDT'
+             AND timeframe IS NOT NULL AND timeframe IN ('15m','1h')
+             AND open_time_ms IS NOT NULL AND candle_value_id IS NOT NULL
+             AND rejection_code IS NULL)
+         OR (disposition='REJECTED' AND candle_value_id IS NULL AND rejection_code IS NOT NULL))
+    ) STRICT;
 
 CREATE TABLE candles (
-  exchange TEXT NOT NULL CHECK(exchange='binance'),
-  market_type TEXT NOT NULL CHECK(market_type='usdm'),
-  symbol TEXT NOT NULL CHECK(symbol='BTCUSDT'),
-  timeframe TEXT NOT NULL CHECK(timeframe IN ('15m','1h')),
-  open_time_ms INTEGER NOT NULL CHECK(open_time_ms>=0),
-  open TEXT NOT NULL,
-  high TEXT NOT NULL,
-  low TEXT NOT NULL,
-  close TEXT NOT NULL,
-  volume TEXT NOT NULL,
-  available_at_ms INTEGER NOT NULL CHECK(available_at_ms>open_time_ms),
-  availability_kind TEXT NOT NULL CHECK(availability_kind='BAR_CLOSE_BOUNDARY'),
-  candle_value_id TEXT NOT NULL CHECK(length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:'),
-  PRIMARY KEY(exchange,market_type,symbol,timeframe,open_time_ms)
-) STRICT;
+      exchange TEXT NOT NULL CHECK(exchange='binance'),
+      market_type TEXT NOT NULL CHECK(market_type='usdm'),
+      symbol TEXT NOT NULL CHECK(symbol='BTCUSDT'),
+      timeframe TEXT NOT NULL CHECK(timeframe IN ('15m','1h')),
+      open_time_ms INTEGER NOT NULL CHECK(open_time_ms>=0),
+      open TEXT NOT NULL,
+      high TEXT NOT NULL,
+      low TEXT NOT NULL,
+      close TEXT NOT NULL,
+      volume TEXT NOT NULL,
+      available_at_ms INTEGER NOT NULL CHECK(available_at_ms>open_time_ms),
+      availability_kind TEXT NOT NULL CHECK(availability_kind='BAR_CLOSE_BOUNDARY'),
+      candle_value_id TEXT NOT NULL CHECK(length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:' AND substr(candle_value_id,5) NOT GLOB '*[^0-9a-f]*'),
+      PRIMARY KEY(exchange,market_type,symbol,timeframe,open_time_ms)
+    ) STRICT;
 
 CREATE TABLE candle_provenance_links (
-  link_id TEXT PRIMARY KEY CHECK(length(link_id)=69 AND substr(link_id,1,5)='lnk1:'),
-  exchange TEXT NOT NULL,
-  market_type TEXT NOT NULL,
-  symbol TEXT NOT NULL,
-  timeframe TEXT NOT NULL,
-  open_time_ms INTEGER NOT NULL,
-  source_row_id TEXT NOT NULL UNIQUE REFERENCES source_rows(source_row_id),
-  candle_value_id TEXT NOT NULL CHECK(length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:'),
-  duplicate_disposition TEXT NOT NULL CHECK(duplicate_disposition IN ('UNIQUE','IDENTICAL_DUPLICATE')),
-  FOREIGN KEY(exchange,market_type,symbol,timeframe,open_time_ms)
-    REFERENCES candles(exchange,market_type,symbol,timeframe,open_time_ms)
-) STRICT;
+      link_id TEXT PRIMARY KEY CHECK(length(link_id)=69 AND substr(link_id,1,5)='lnk1:' AND substr(link_id,6) NOT GLOB '*[^0-9a-f]*'),
+      exchange TEXT NOT NULL,
+      market_type TEXT NOT NULL,
+      symbol TEXT NOT NULL,
+      timeframe TEXT NOT NULL,
+      open_time_ms INTEGER NOT NULL,
+      source_row_id TEXT NOT NULL UNIQUE REFERENCES source_rows(source_row_id),
+      candle_value_id TEXT NOT NULL CHECK(length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:' AND substr(candle_value_id,5) NOT GLOB '*[^0-9a-f]*'),
+      duplicate_disposition TEXT NOT NULL CHECK(duplicate_disposition IN ('UNIQUE','IDENTICAL_DUPLICATE')),
+      FOREIGN KEY(exchange,market_type,symbol,timeframe,open_time_ms)
+        REFERENCES candles(exchange,market_type,symbol,timeframe,open_time_ms)
+    ) STRICT;
 
 CREATE TABLE failure_observations (
-  subject_kind TEXT NOT NULL CHECK(subject_kind IN ('RUN','OBJECT','ATTEMPT','PAIR','MEMBER','SOURCE_ROW','CANDLE','LINK')),
-  subject_id TEXT NOT NULL,
-  failure_ordinal INTEGER NOT NULL CHECK(failure_ordinal>0),
-  failure_code TEXT NOT NULL,
-  failure_detail_code TEXT,
-  observed_at_utc TEXT NOT NULL,
-  evidence_sha256 TEXT CHECK(evidence_sha256 IS NULL OR length(evidence_sha256)=64),
-  PRIMARY KEY(subject_kind,subject_id,failure_ordinal)
-) STRICT;
+      subject_kind TEXT NOT NULL CHECK(subject_kind IN ('RUN','OBJECT','ATTEMPT','PAIR','MEMBER','SOURCE_ROW','CANDLE','LINK')),
+      subject_id TEXT NOT NULL,
+      failure_ordinal INTEGER NOT NULL CHECK(failure_ordinal>0),
+      failure_code TEXT NOT NULL,
+      failure_detail_code TEXT,
+      observed_at_utc TEXT NOT NULL,
+      evidence_sha256 TEXT CHECK(evidence_sha256 IS NULL OR (length(evidence_sha256)=64 AND evidence_sha256 NOT GLOB '*[^0-9a-f]*')),
+      PRIMARY KEY(subject_kind,subject_id,failure_ordinal)
+    ) STRICT;
+
+-- Exact INDEX_DDL statements, in execution and fingerprint order.
 
 CREATE INDEX idx_archive_objects_pair_key ON archive_objects(paired_object_key,object_kind);
+
 CREATE INDEX idx_acquisition_attempts_object_number ON acquisition_attempts(object_id,attempt_number);
+
 CREATE INDEX idx_archive_pairs_zip_sidecar ON archive_pairs(zip_object_id,sidecar_object_id);
+
 CREATE INDEX idx_csv_members_pair_disposition ON csv_members(pair_id,disposition);
+
 CREATE INDEX idx_source_rows_member_ordinal ON source_rows(member_id,physical_record_ordinal);
+
 CREATE INDEX idx_source_rows_candle_identity ON source_rows(exchange,market_type,symbol,timeframe,open_time_ms);
+
 CREATE INDEX idx_candle_links_candle_identity ON candle_provenance_links(exchange,market_type,symbol,timeframe,open_time_ms);
+
 CREATE INDEX idx_failure_observations_subject_code ON failure_observations(subject_kind,subject_id,failure_code);
 
-PRAGMA user_version=2;
+-- Exact TRIGGER_DDL statements, in execution and fingerprint order.
+
+CREATE TRIGGER trg_run_events_no_update BEFORE UPDATE ON run_events BEGIN SELECT RAISE(ABORT,'run_events are append-only'); END;
+
+CREATE TRIGGER trg_run_events_no_delete BEFORE DELETE ON run_events BEGIN SELECT RAISE(ABORT,'run_events are append-only'); END;
 ~~~
 
 ### 4.3 DDL versus cross-table validator
@@ -464,6 +498,7 @@ Canonical manifest fields:
 - sqlite_minimum_version = "3.37.0"
 - tables = exact CREATE TABLE statements in §4.2 order
 - indexes = exact CREATE INDEX statements in §4.2 order
+- triggers = exact CREATE TRIGGER statements in §4.2 order
 - pragmas = ["PRAGMA user_version=2;"]
 
 Canonicalize as RFC 8785 JCS UTF-8, no BOM/no trailing newline. Array order is significant. DDL text uses LF, UTF-8, no trailing spaces; do not normalize SQL tokens, whitespace inside literals or identifier case.
@@ -482,7 +517,7 @@ schema_fingerprint_sha256 =
 
 Store the 64-hex result in reconstruction_run.schema_fingerprint_sha256; do not embed the value in the manifest (avoids self-reference).
 
-Later read-only verification reconstructs the expected manifest from version-controlled approved DDL, recomputes fingerprint, reads user_version/sqlite_schema/table metadata, compares exact table/index set and SQL, rejects extra/missing objects, views/triggers/altered constraints, and compares the run row. Never trust only the stored fingerprint string.
+Later read-only verification reconstructs the expected manifest from version-controlled approved DDL, recomputes fingerprint, reads user_version/sqlite_schema/table metadata, compares exact table/index/trigger sets and SQL, rejects any view, extra/missing object, altered constraint or trigger, and compares the run row. Never trust only the stored fingerprint string.
 
 ## 6. S3/V1 compatibility
 
