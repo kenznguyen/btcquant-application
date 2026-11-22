@@ -6940,3 +6940,15 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - No source, tests, workflow, adapter, adapter tests, DDL implementation, SQLite connection/database, archive/sidecar, host/runner, Canonical T0, MAY-10, T1/T2, VPS/runtime, credentials, exchange or trading state changed or accessed. Workflow run/artifact: **NONE**.
 - Persistence remains **DEFERRED / NOT AUTHORIZED**. Adapter, adapter tests, SQLite implementation, runner provisioning and archive/build work remain separate approval gates.
 - Next: owner decision on the S1.2 revision request. Re-review the revised exact SHA before any S1.2 freeze decision.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Owner authorized gated S1.2 adapter and synthetic SQLite staging
+
+- Owner authorization: `docs/decisions/T0_S1_2_ADAPTER_SQLITE_STAGING_OWNER_AUTHORIZATION_2026-11-22.md`, commit `a8612aa4a0b13602527e7da3a46ec82db1c8fa0d`.
+- Authorization scope: remediate S12-01..S12-07; immutable adapter DTO and unchanged S3/V1 projection; synthetic-only TDD; disposable synthetic SQLite staging schema/tests; schema fingerprint, STRICT/CHECK/FK, append-only events and integrity.
+- Work must remain on existing `main`; no new branch or divergent PR.
+- Starting main commit recorded in authorization: `32e403839b1da71f8058227ac808590ecf301a9b`; authorization record is committed directly to main.
+- S1.2 remains **NOT FROZEN** until review findings are closed. B8 real acquisition runner remains **NOT APPROVED**; no fake workflow IDs.
+- SQLite scope is disposable synthetic test databases only. This is not a production runtime pin or permission to access existing/Canonical databases.
+- Explicit exclusions remain: real archive/sidecar access or acquisition; workstation/host/SSH/filesystem/runner preflight or provisioning; real Historical build/coverage acceptance; uploads/deletion; Canonical T0/MAY-10/REST tail; T1/T2/VPS/runtime/deployment/credentials/exchange/trading.
+- No implementation or tests have yet been performed under this authorization. Record exact source SHA, commit, workflow run/job, checked-out SHA, test results and artifact digest at each milestone.
