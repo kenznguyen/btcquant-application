@@ -6952,3 +6952,13 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - SQLite scope is disposable synthetic test databases only. This is not a production runtime pin or permission to access existing/Canonical databases.
 - Explicit exclusions remain: real archive/sidecar access or acquisition; workstation/host/SSH/filesystem/runner preflight or provisioning; real Historical build/coverage acceptance; uploads/deletion; Canonical T0/MAY-10/REST tail; T1/T2/VPS/runtime/deployment/credentials/exchange/trading.
 - No implementation or tests have yet been performed under this authorization. Record exact source SHA, commit, workflow run/job, checked-out SHA, test results and artifact digest at each milestone.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.2 compatibility amendment A committed
+
+- Owner authorization: `docs/decisions/T0_S1_2_ADAPTER_SQLITE_STAGING_OWNER_AUTHORIZATION_2026-11-22.md`, commit `a8612aa4a0b13602527e7da3a46ec82db1c8fa0d`.
+- Amendment: `docs/design/T0_ARCHIVE_STAGING_S1_2_COMPATIBILITY_AMENDMENT_A_2026-11-22.md`, commit `a37600f85fa66e94f17995d13ceca2d91c18177e`.
+- Amendment covers S12-01..S12-08: NULL-safe CHECK requirements; S3-compatible attempt outcomes and explicit projection; headerless quarantine; truthful source-only conflict reason; singleton run; B8 deferred/not approved; composite same-object attempt FK and application-only invariant catalogue; signed-64-bit adapter boundary.
+- Design amendment is committed, but not yet independently reviewed or executable-tested. S1.2 remains **NOT FROZEN**.
+- Next: inspect repository test/workflow conventions; implement immutable adapter DTO/projection and synthetic tests using TDD; then add disposable synthetic SQLite schema tests. Keep all real-data and B8 exclusions.
+- No adapter source, adapter tests, DDL execution, SQLite connection, archive access, runner/host preflight or runtime operation has yet occurred under this authorization.
