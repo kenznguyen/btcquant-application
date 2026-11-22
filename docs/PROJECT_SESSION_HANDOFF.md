@@ -1,4 +1,17 @@
-# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 11 consolidated; 101 synthetic cases approved
+# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 13; PR #10 completed with 4 P2 findings
+
+- PR #10: OPEN / NOT MERGED / DO NOT MERGE. Codex review completed on exact R12 head `29c47fcf9a761af00f72c043142ac2cca7b708ab` / design blob `0c726fc05e76c41986130f8ee165d3dc67ce7044`, with 4 unresolved P2 findings. Review summary comment `7082411398`.
+- R13 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_13_2026-11-23.md`; exact source commit `0476b76a96f5a1f9a1a5afd3b6843a15194f2f06`; exact design blob `2c3e81c52ca10083e0d1c78ca3ef31858a47520d`.
+- R13 fixes: (1) handoff and active index now point to R13; (2) SD-05 case #4 asserts inspected-source `q → quantity` mapping while preserving deployed-build and decimal-fidelity uncertainty; (3) source cursor is a per-partition contiguous terminal frontier backed by durable per-delivery completion state, so out-of-order records cannot be skipped; (4) cross-domain case #9 tests changed bytes/digest at the same stable delivery locator as an integrity conflict.
+- Findings/resolution report: `docs/reviews/T0_PHASE_B_REVISION_12_CODEX_FINDINGS_AND_R13_RESOLUTION_2026-11-23.md`; report commit `566e49772927ccafe08f96087df5893dd237a565`.
+- R13 review-only branch: `review/t0-phase-b-r13-codex-findings-20261123`. Independent review of exact R13 SHA/blob: PENDING. Next action is a new review-only PR; do not merge.
+- 101 isolated synthetic cases remain owner-approved (SD-05 14, SD-06 31, SD-07 46, cross-domain 10), but fixture creation/execution remains gated on satisfactory independent review of exact R13 SHA/blob. Fixtures/tests NOT CREATED / NOT RUN.
+- Workflow runs/jobs/artifacts: NONE verified for R13. Tests/formal proofs: NOT RUN. Contract Freeze: NOT APPROVED.
+- No production implementation, DTO/parser/validator/persistence changes, DDL/database mutation, data movement, T0/T1 runtime, T2 integration, VPS/autostart, deployment or trading is authorized.
+
+---
+
+## Historical status snapshot — Revision 12 (superseded by Revision 13)
 
 - Owner approval decision: `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_2026-11-22.md`, commit `ae90cf57da7f076bd57eccf4774890c4197ae81c`, blob `c0be1b2bf548993bb79be79739c85e447678b652`.
 - Approved exact bounded scope: 101 isolated synthetic cases — SD-05 14, SD-06 31, SD-07 46, cross-domain 10. Approval includes test-only fixtures/DTO-validator-persistence harness and execution, no production code/runtime.
