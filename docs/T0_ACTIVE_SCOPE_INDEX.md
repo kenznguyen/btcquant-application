@@ -1,8 +1,8 @@
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 11 consolidated; 101 synthetic cases approved
 
-- Owner approval decision: `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_2026-11-22.md`, commit `cc132c0d9a3ef04be3cf12e08c5bf135659a6b04`, blob `c98c26afe489dc98fe052f13403e609b61dae1cc`.
+- Owner approval decision: `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_2026-11-22.md`, commit `ae90cf57da7f076bd57eccf4774890c4197ae81c`, blob `c0be1b2bf548993bb79be79739c85e447678b652`.
 - Approved exact bounded scope: 101 isolated synthetic cases — SD-05 14, SD-06 31, SD-07 46, cross-domain 10. Approval includes test-only fixtures/DTO-validator-persistence harness and execution, no production code/runtime.
-- Consolidated Revision 11: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_11_2026-11-22.md`; exact source commit `b20e4b4f70a440ff05f8cd115e21bea7e76026a2`, blob `7567580c1dc570a18a041547256b200d013c5f44`.
+- Consolidated Revision 11: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_11_2026-11-22.md`; exact source commit `0ac119c7cd31ba63d5aead6796c7b5560abf2a18`, blob `9d9639b4d26b42a90929f50a32b801e359b23197`.
 - Revision 11 merges Revision 10's Phase B domain design with the full DTO/digest/checkpoint/atomic-persistence proposal v1 as Annex A. Revision 9 and Revision 10 remain immutable.
 - R11 blocker status: B-01 PARTIAL; B-02 OPEN; B-03 PARTIAL; B-04..B-10 OPEN; B-11/B-12 DESIGN SPECIFIED — NOT VERIFIED; B-13 CLOSED (owner-accepted bounded exclusion); B-14/B-15 OPEN; B-16 CLOSED (owner-accepted bounded exclusion); B-17 OPEN (source mapping PASS, deployed/imported build provenance NOT VERIFIED); B-18 OPEN; B-19 DESIGN SPECIFIED — NOT VERIFIED; B-20 OPEN.
 - Sequencing: request independent second-person review of the exact Revision 11 SHA/blob first. The approved 101-case fixture creation/execution is sequenced after that review. Fixtures/tests currently NOT CREATED / NOT RUN.
