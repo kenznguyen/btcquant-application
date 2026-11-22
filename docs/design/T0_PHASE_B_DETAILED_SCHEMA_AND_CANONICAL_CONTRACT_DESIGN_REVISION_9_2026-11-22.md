@@ -565,7 +565,7 @@ For all three, closure requires an explicit owner decision recorded with the exa
 ## 12. Revision 9 review status and immutable history
 
 - Revision 8 source preserved unchanged: commit `9a5c65f3bc00876d98a070eee46072c5d8be368e`, blob `8f40248f2781cdf4111ef022b77843acea8279b2`.
-- Revision 9 is a documentation-only candidate. Its exact commit/blob and self-review evidence must be added after creation; no review PASS or owner approval is asserted in this source file.
+- Revision 9 is a documentation-only candidate. Its exact source commit/blob is recorded in the matching self-review and full-review reports; self-review is not owner approval or independent second-person review.
 - Revisions 6, 7 and 8 remain immutable historical artifacts. This document does not edit the Source Domain Inventory, T1 repository, Phase A baseline or any source implementation.
 - B-01..B-20 remain OPEN until evidence-backed closure or explicit owner acceptance of a bounded exclusion. The three proposals B-13/B-16/B-17 are not accepted by default.
 - Contract Freeze: NOT APPROVED. Implementation: NOT AUTHORIZED.
