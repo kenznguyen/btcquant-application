@@ -84,7 +84,7 @@ failure_observations and run_events remain physical audit relations and are not 
 
 - The projection API accepts only an already-open caller-owned connection; it has no path parameter and never calls `sqlite3.connect`.
 - `connect_staging_database` defaults to `:memory:`. File-backed use requires explicit `allow_disposable_path=True`.
-- The explicit file policy accepts only a new, non-symlink file named `synthetic-staging-*` directly under a `t0-staging-v2-*` directory in the system temporary root. It uses exclusive file creation; existing files, symlinks, alternate directories and implicit file paths are rejected.
+- The explicit file policy requires an exact Python `bool` value of `True` and accepts only a new, non-symlink file named `synthetic-staging-*` directly under a `t0-staging-v2-*` directory in the system temporary root. It uses exclusive file creation; truthy non-bools, existing files, symlinks, alternate directories and implicit file paths are rejected.
 - This is a synthetic test policy, not a real-data staging builder or permission to access an existing database.
 
 ### 4.2 Atomic schema initialization (F7)
@@ -134,10 +134,10 @@ All tests must use synthetic fixtures only. No tests may read the canonical T0 d
 - F5 identity/digest boundary: **SYNTHETIC TEST PASS** for lower-case hexadecimal identity suffixes and digest grammar at SQL and DTO boundaries.
 - F6 guarded disposable path: **SYNTHETIC TEST PASS** for default in-memory use, explicit opt-in, temporary-root/name policy, exclusive creation, existing-file and symlink rejection.
 - F7 atomic schema initialization: **SYNTHETIC TEST PASS** for rollback on table/index/trigger DDL failure and commit failure after user_version assignment.
-- Latest tested source SHA: `d91c92a813ffe44c4ee786861e5e710654423c26`.
-- Exact-SHA CI: run [45010072833](https://github.com/kenznguyen/btcquant-application/actions/runs/45010072833), job `137170245583`, SUCCESS; requested SHA and checked-out SHA match.
+- Latest tested source SHA: `5074bf35f94f94a5b8905548b9628794274bc825`.
+- Exact-SHA CI: run [45010626565](https://github.com/kenznguyen/btcquant-application/actions/runs/45010626565), job `137171941617`, SUCCESS; requested SHA and checked-out SHA match.
 - Runtime: CPython 3.13.18 / SQLite 3.45.1 for focused tests; CPython 3.12.16 for full regression.
-- Results: importer-core 20/20; S1.2 adapter 43/43; SQLite staging schema 30/30; full `market_data` regression 494/494 PASS.
+- Results: importer-core 20/20; S1.2 adapter 43/43; SQLite staging schema 31/31; full `market_data` regression 495/495 PASS.
 - No CI artifact was produced.
 - Remaining design gap: candidate snapshot digest preimage/serialization is not defined by approved design. Current code checks digest shape/presence and equality between CANDIDATE and VALIDATED events; it does not recompute the snapshot digest.
 - Independent review: **NOT RUN**. S1.2: **NOT FROZEN**. B8: **NOT APPROVED**. Real-data staging: **NOT AUTHORIZED**.
