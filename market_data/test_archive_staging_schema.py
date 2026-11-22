@@ -394,7 +394,7 @@ class StagingSchemaV2Tests(unittest.TestCase):
         )
         for i, field in enumerate(source_fields, start=1):
             left = chr(97 + i)
-            right = chr(65 + i)
+            right = chr(112 + i)
             zip_id = self._insert_quarantined_object(left)
             sidecar_id = self._insert_quarantined_object(right)
             pair_id = "pair1:" + f"{200 + i:064x}"
