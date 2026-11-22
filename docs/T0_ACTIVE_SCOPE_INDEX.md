@@ -9,7 +9,8 @@
 - Original S1 DDL is marked historical/superseded where inconsistent with S1.1.
 - Detailed S1.1 design acceptance: **OWNER ACCEPTED / DESIGN FROZEN** on 2026-11-22.
 - Acceptance remains documentation-only: no DDL, SQLite, importer, tests, workflow, archive/data operation, runtime or deployment.
-- B3 archive format NOT VERIFIED; B4 resource limits OPEN; B5 actual coverage values NOT VERIFIED; B6 retention OPEN; B7 destination OPEN; B8 importer/build NOT AUTHORIZED; B9 separate review track unchanged.
+- B3 archive format NOT VERIFIED; B5 actual coverage values NOT VERIFIED; B8 importer/build NOT AUTHORIZED; B9 separate review track unchanged.
+- B4/B6/B7 decision package is committed for owner decision: `docs/design/T0_B4_B6_B7_RESOURCE_RETENTION_DESTINATION_DECISION_PACKAGE_2026-11-22.md` (blob `9119b5789825951e66a061e4b9d989256934adec`); self-review `docs/reviews/T0_B4_B6_B7_DECISION_PACKAGE_SELF_REVIEW_2026-11-22.md` (blob `6c6eb22d8643206aba517b3ea8625b70a64735c5`). Status: B4 proposed/pending; B6 proposed/pending; B7 Option A recommended but owner selection and later preflight pending. No operational activity authorized.
 - No workflow run/job/artifact. All existing exclusions remain in force.
 
 ---
