@@ -15,6 +15,18 @@ from typing import Any, Mapping, Sequence
 MAX_SQLITE_INTEGER = (1 << 63) - 1
 _SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 _SHA1_RE = re.compile(r"[0-9a-f]{40}\Z")
+_IDENTITY_PREFIXES = {
+    "run_id": ("run1:", 69),
+    "inventory_id": ("inv1:", 69),
+    "object_id": ("obj1:", 69),
+    "attempt_id": ("att1:", 69),
+    "pair_id": ("pair1:", 70),
+    "candidate_id": ("cand1:", 70),
+    "member_id": ("mem1:", 69),
+    "source_row_id": ("row1:", 69),
+    "link_id": ("lnk1:", 69),
+    "candle_value_id": ("cv1:", 68),
+}
 _ATTEMPT_OUTCOMES = frozenset({"STARTED", "FAILED", "TRANSFERRED", "UNKNOWN"})
 _FAILURE_SUBTYPES = frozenset({"HTTP_FAILED", "TRANSFER_FAILED", "VALIDATION_FAILED"})
 
@@ -387,6 +399,14 @@ class _StrictPhysicalDTO:
             if type(value) is not str:
                 raise TypeError(f"{name} must be text")
             _required_text(value, name)
+            identity = _IDENTITY_PREFIXES.get(name)
+            if identity is not None:
+                prefix, expected_length = identity
+                if (len(value) != expected_length or not value.startswith(prefix)
+                        or re.fullmatch(r"[0-9a-f]{64}", value[len(prefix):]) is None):
+                    raise AdapterValidationError(
+                        "ADAPTER_IDENTITY_INVALID", f"{name} has invalid identity grammar"
+                    )
             if name.endswith("sha256") or name == "raw_row_digest":
                 _sha(value, _SHA256_RE, name)
             elif name in {
