@@ -7,7 +7,9 @@
 - Revised design blob SHA: 56f2012d6625e5af328d7d5881d892a38a2121e9
 - Prior review: docs/reviews/T0_PHASE_B_DESIGN_REVIEW_2026-11-22.md, commit 347dbcec6f7ddedac4ac1c8e90ee57c549ae49ef
 - Prior verdict: **REQUEST CHANGES**
-- Current second-round review status: **REQUESTED / PENDING — NO SECOND-ROUND VERDICT YET**
+- Self-review report: `docs/reviews/T0_PHASE_B_DESIGN_SELF_REVIEW_ROUND_2_2026-11-22.md`, commit `2f6317b28502bc06202daf673f1f32c41f847c88`.
+- Self-review verdict: **REQUEST CHANGES — PHASE B DESIGN NOT APPROVED**. Findings R-07..R-11 added; R-01..R-06 disposition recorded individually.
+- Independent second-person review: **NOT PERFORMED**; this report is explicitly a self-review.
 - Implementation: **NOT AUTHORIZED / NOT STARTED**
 - Synthetic tests: **DESIGNED ONLY / NOT EXECUTED**
 - Workflows/artifacts: **NOT RUN / NONE**
