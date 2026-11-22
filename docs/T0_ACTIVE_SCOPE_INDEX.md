@@ -1,4 +1,21 @@
-# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 15 after PR #12 review
+# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 15 review completed
+
+- Codex reviewed exact PR #13 head `6554529d9d8bd136c85643fdc43a68256b7e1989`; review ID `PRR_kwDOVzv83s8AAAABZnV1sw`; submitted `2026-11-22T19:13:33Z`. Result: **COMPLETED WITH 3 UNRESOLVED P2 FINDINGS**.
+- R15 immutable design source remains commit `5bbbd6ac253b4f8c8d9aeccb28d77170b1897919`, blob `2b1cb4a8d0a7d40f9ebfb29ccaf9d9d14930cfc0`. Do not edit R15.
+- Findings:
+  1. P2-1: current-status gate at the R15 document top still references review of R12; change to exact R15 gate in successor.
+  2. P2-2: the 101-case matrix does not explicitly test `source_object.sha256 != raw_object_sha256` and fail-before-identity/completion/ACK. Add this assertion to an existing approved case; do not increase 101.
+  3. P2-3: filesystem atomic rename may overwrite an existing stable-path evidence object. Require exclusive/no-clobber publication or distinct immutable key, digest-check existing targets, and fail closed if preservation cannot be proven.
+- Review threads OPEN / UNRESOLVED: `PRRT_kwDOVzv83s66nG14` (comment `4659555256`), `PRRT_kwDOVzv83s66nG19` (comment `4659555264`), `PRRT_kwDOVzv83s66nG2D` (comment `4659555270`).
+- Findings report: `docs/reviews/T0_PHASE_B_REVISION_15_CODEX_FINDINGS_2026-11-23.md`; commit `80897253f4b3fe3b68762640f9f8b591b81ab786`.
+- Review-only PR #13: https://github.com/kenznguyen/btcquant-application/pull/13 — OPEN / NOT MERGED / DO NOT MERGE. Do not merge; preserve R15 unchanged. Any corrections belong in a new immutable successor revision.
+- Workflow runs/jobs/artifacts for exact PR #13 head: none returned. Tests/fixtures NOT CREATED / NOT RUN. Formal proofs NOT RUN.
+- Owner-approved 101 synthetic scope remains unchanged (SD-05 14, SD-06 31, SD-07 46, cross-domain 10); execution remains gated on satisfactory independent review of the exact corrected successor SHA/blob.
+- Contract Freeze NOT APPROVED. No production implementation, DDL/DB mutation, data movement, T0/T1 runtime, T2 integration, VPS/autostart, deployment, exchange connectivity or trading is authorized.
+
+---
+
+## Historical status snapshot — Revision 15 before completed Codex review
 
 - PR #12 Codex review completed on exact head `8a5a37d9f959b93c9f0cad2cccb3d0561f7b7a01` with three unresolved P2 findings (comments `4659442763`, `4659442766`, `4659442768`). PR #12 remains OPEN / NOT MERGED / DO NOT MERGE; R14 is immutable.
 - R15 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_15_2026-11-23.md`; exact source commit `5bbbd6ac253b4f8c8d9aeccb28d77170b1897919`; exact design blob `2b1cb4a8d0a7d40f9ebfb29ccaf9d9d14930cfc0`.
