@@ -12,8 +12,8 @@ from typing import Any, Mapping, Sequence
 
 
 MAX_SQLITE_INTEGER = (1 << 63) - 1
-_SHA256_RE = re.compile(r"[0-9a-f]{64}\\Z")
-_SHA1_RE = re.compile(r"[0-9a-f]{40}\\Z")
+_SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
+_SHA1_RE = re.compile(r"[0-9a-f]{40}\Z")
 _ATTEMPT_OUTCOMES = frozenset({"STARTED", "FAILED", "TRANSFERRED", "UNKNOWN"})
 _FAILURE_SUBTYPES = frozenset({"HTTP_FAILED", "TRANSFER_FAILED", "VALIDATION_FAILED"})
 
