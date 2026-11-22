@@ -235,3 +235,21 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - REST tail remains closed by owner decision; MAY-10 excluded; former Canonical SQLite remains LOST. Any output remains `RECONSTRUCTED — PARTIAL COVERAGE`.
 - Recommended next bounded task: **S1.1 documentation-only schema reconciliation**. This requires explicit approval for that design-freeze work; it does not authorize executable DDL, SQLite, importer, archive access/acquisition, workflow dispatch, host preflight, data build, cleanup or promotion.
 - Audit non-actions: no archive/sidecar access, REST call, SQLite/Canonical access, importer, DDL, runtime, VPS, deployment, retention change, deletion, credential or trading operation.
+
+
+## T0 S1.1 — provenance/schema reconciliation (documentation-only)
+
+- Owner explicitly approved: `S1.1 = hòa giải và đóng băng hợp đồng provenance/schema ở mức thiết kế; chỉ cập nhật tài liệu, chưa triển khai DDL hoặc thao tác dữ liệu.`
+- Reconciliation document: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`.
+- Initial commit: `255e505149d1739a18549baab6d81ba458f124d7`; follow-up clarification commit: `2971efa75a5f8f9f75277adba2ced72514797bab`; final document blob after clarification: `30093c2bce7f62b97612a2db863dcb17853b306d`.
+- Original S1 document now carries an authority notice: its historical DDL is superseded where it conflicts with S1.1. Notice commit: `5ef5641da3d881c5c07a3704289c396834331a66`; original S1 blob after notice: `55a9d1fa3db7e8c754ca30fc1c63b12b27082263`.
+- S1.1 resolves B1 at design level: nullable failed/incomplete object measurements; append-only `acquisition_attempts`; separate `object_successful_attempt` relation (no circular FK); tri-state pair results; zero/multiple candidate member evidence with non-unique pair reference; exact raw-row evidence; persisted canonical coverage manifest; run lifecycle and cross-table acceptance invariants.
+- S1.1 resolves B2 at policy/contract level: SQLite minimum 3.37.0 for STRICT, exact Python/SQLite runtime pins required in a later approved implementation scope, version check at process/connection, per-connection FK enable/readback, later integrity/FK checks. Exact runtime versions deliberately remain unselected pending separate implementation approval.
+- S3 R3–R6, V1 API/error catalogue, T0ENC1, identity prefixes, `T0_STAGING_SCHEMA_V2` and `user_version=2` are retained. No validator source/test/workflow was changed.
+- Review state: **documentation content committed; awaiting owner acceptance of the detailed S1.1 design**. Scope approval is not treated as blanket acceptance of every schema detail.
+- Exact main source HEAD after documentation updates: `5ef5641da3d881c5c07a3704289c396834331a66`. S1.1 final document blob: `30093c2bce7f62b97612a2db863dcb17853b306d`.
+- Verification: GitHub readback of S1.1 document and original S1 authority notice; content-level same-session self-review only. No executable tests, SQL parsing/execution, SQLite, workflow run/job/artifact.
+- Status: **B1 RESOLVED AT DESIGN LEVEL; B2 RESOLVED AT POLICY/CONTRACT LEVEL; S1.1 DOCUMENTATION COMMITTED / OWNER ACCEPTANCE PENDING**.
+- Remaining blockers: B3 archive format coverage NOT VERIFIED; B4 resource budgets OPEN; B5 actual coverage manifest NOT VERIFIED; B6 retention/artifact policy OPEN; B7 destination/preflight OPEN; B8 importer/build NOT AUTHORIZED; B9 application-foundation review remains separate and unchanged.
+- Explicit non-actions: no DDL/migration, SQLite, importer, tests, workflow, archive/sidecar access, materialization, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS, deployment, retention/deletion, credentials or trading.
+- Next gate: owner reviews and accepts/rejects S1.1 design. Further implementation or data activity requires a separate explicit approval.
