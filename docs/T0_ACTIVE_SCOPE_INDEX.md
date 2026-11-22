@@ -2,7 +2,7 @@
 
 - S1.1 design: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`, blob `505c23a00772667d0da3f5cc4a48f2d724b84c2a`.
 - S1.1 self-review: `docs/reviews/T0_S1_1_SCHEMA_RECONCILIATION_SELF_REVIEW_2026-11-22.md`, blob `a46dd4ce9b64bad09a6ccec078476fa10dc67a65`; verdict **SELF-REVIEW PASS WITH LIMITATIONS**, not independent review.
-- Latest handoff record commit: `163cf81e700e8b17619f81dfa3d90921a89e60b1`.
+- Latest dated handoff addendum update commit: `70dfe572359228c37581c135a40996d684386590`.
 - Latest authoritative `docs/PROJECT_SESSION_HANDOFF.md` T0 status update commit: `0c190a312747e205ca6068d54f509c5bf9756836`.
 - B1 resolved at design level: failed/incomplete evidence nullable; attempts append-only; successful attempt separate relation; pair/member failure semantics; coverage manifest persistence; cross-table invariants.
 - B2 resolved at policy level: SQLite STRICT minimum 3.37.0; exact Python/SQLite pin and per-connection FK checks required later. Exact versions deferred to separately approved implementation.
@@ -16,7 +16,7 @@
 
 # CURRENT STATUS OVERRIDE — 2026-11-22 — S1.1 design reconciliation committed; owner acceptance pending
 
-- S1.1 document: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`, final blob `30093c2bce7f62b97612a2db863dcb17853b306d`.
+- S1.1 document: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`, final blob `505c23a00772667d0da3f5cc4a48f2d724b84c2a`.
 - S1.1 initial commit `255e505149d1739a18549baab6d81ba458f124d7`; clarification commit `2971efa75a5f8f9f75277adba2ced72514797bab`.
 - Original S1 DDL is explicitly marked as historical and superseded where it conflicts with S1.1; authority-notice commit `5ef5641da3d881c5c07a3704289c396834331a66`.
 - B1 schema/failure-evidence/attempt-history/successful-attempt/coverage-manifest conflicts: **RESOLVED AT DESIGN LEVEL**.
