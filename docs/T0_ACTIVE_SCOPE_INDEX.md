@@ -1,8 +1,8 @@
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B design revision 2 submitted for second review
 
 - Revised design: docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md
-- Design commit: 6bf8f03c4270abbfe29eff624571e3a13c24b21d
-- Design blob SHA: a14c0030fbddad97d28675fa70ab9138cf22bf73
+- Design commit: 75e593517ec31d2e2a75ed0050e80ab5dd52edf2
+- Design blob SHA: 56f2012d6625e5af328d7d5881d892a38a2121e9
 - Second-round review request: docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_2_REQUEST_2026-11-22.md
 - Review-request commit: 8c358bdb3da2447e11e28c026d43e278150eb672
 - Prior first-round review: docs/reviews/T0_PHASE_B_DESIGN_REVIEW_2026-11-22.md, commit 347dbcec6f7ddedac4ac1c8e90ee57c549ae49ef; verdict REQUEST CHANGES.
