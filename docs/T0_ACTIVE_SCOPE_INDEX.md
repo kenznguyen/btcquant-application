@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 6: R-17 corrected, self-check PASS
+
+- Design commit: `9b69c18ea16731bf28efba7a92077e96a74107ce`; blob `7012a228561620f4447a0e363a2c5f27d734912a`.
+- R-17 correction: SD-07 direct REST capture and T1 reconstructed-local-book producer are bound to T1 / `kenznguyen/binance-futures-collector`. T0 validates registration and preserves producer identity; it must not mint/replace capture identity. Candidate registry binds producer ID, collector/repository, source kind, market/domain/symbol scope and producer version; unknown/mismatched producers fail closed.
+- Self-check report: `docs/reviews/T0_PHASE_B_DESIGN_SELF_REVIEW_ROUND_6_2026-11-22.md`, commit `b5aaf7cb5a7ef5b30ac37b8e5dd6a0d610d128df`; SELF-CHECK PASS / READY FOR NEXT DESIGN REVIEW, not owner approval or independent review.
+- Synthetic matrix: 91 proposed cases (14/28/39/10), NOT EXECUTED; cases 33–39 add producer ownership/registration, mismatch, concurrent clone, stale restore and T0 identity-preservation coverage.
+- B-01..B-20 remain OPEN and unchanged; B-07 remains OPEN pending producer uniqueness/fencing evidence.
+- Static checks PASS; tests/workflows/artifacts NOT RUN / NONE. No fixtures or test code created.
+- Documentation-only. Contract freeze NOT APPROVED; implementation/database/runtime/Phase C NOT AUTHORIZED.
+- Next: submit exact Revision 6 commit/blob for design review.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 5 review: REQUEST CHANGES
 
 - Exact reviewed design commit: `51a11272a7cc9204d2b42a255942614e36f40b6f`; blob `9aeb036267e9dfce73e0b2405c7f4c9ef27cc5ab`.
