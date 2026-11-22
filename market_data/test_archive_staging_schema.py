@@ -218,5 +218,75 @@ class StagingSchemaV2Tests(unittest.TestCase):
                 temporary_db.close()
 
 
+    def test_verified_object_rejects_non_hex_digests_and_invalid_http_status(self):
+        columns = (
+            "object_id,inventory_id,inventory_blob_sha256,inventory_entry_identity,"
+            "object_key,object_kind,timeframe,partition,period,paired_object_key,"
+            "requested_key,expected_size_bytes,expected_sha256,measured_size_bytes,"
+            "measured_sha256,response_bytes_total,response_status,local_relative_path,"
+            "exclusive_create,workflow_run_id,workflow_job_id,workflow_event,trigger_sha,"
+            "checkout_sha,retrieved_at_utc,verification_status"
+        )
+        base = [
+            "obj1:" + "a" * 64, "inv1:" + "b" * 64, "0" * 64, "synthetic-entry",
+            "synthetic.zip", "ZIP", "15m", "monthly", "2022-08", "synthetic.CHECKSUM",
+            "synthetic.zip", 1, "1" * 64, 1, "2" * 64, 1, 200,
+            "synthetic/object.zip", 1, "123", "456", "workflow_dispatch",
+            "3" * 40, "4" * 40, "2026-01-01T00:00:00Z", "VERIFIED",
+        ]
+        invalid_cases = (
+            (12, "g" * 64),  # expected SHA-256
+            (22, "g" * 40),  # trigger SHA-1
+            (16, 99),        # invalid HTTP status lower bound
+            (16, 600),       # invalid HTTP status upper bound
+        )
+        for index, invalid in invalid_cases:
+            values = list(base)
+            values[index] = invalid
+            placeholders = ",".join("?" for _ in values)
+            with self.subTest(column=columns.split(",")[index], value=invalid), self.assertRaises(sqlite3.IntegrityError):
+                self.db.execute(
+                    f"INSERT INTO archive_objects({columns}) VALUES({placeholders})",
+                    values,
+                )
+
+    def test_failed_attempt_rejects_non_hex_expected_sha256(self):
+        object_id = self._insert_quarantined_object("9")
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute("""
+                INSERT INTO acquisition_attempts(
+                    attempt_id,object_id,attempt_number,workflow_run_id,workflow_job_id,
+                    workflow_event,trigger_sha,checkout_sha,requested_key,expected_size_bytes,
+                    expected_sha256,started_at_utc,finished_at_utc,outcome,failure_subtype,
+                    response_status,response_bytes_received,is_complete_object,failure_code
+                ) VALUES(?, ?, 1, 'run', 'job', 'workflow_dispatch', ?, ?, 'synthetic.zip',
+                         1, ?, '2026-01-01T00:00:00Z', '2026-01-01T00:00:01Z',
+                         'FAILED', 'HTTP_FAILED', 503, 0, 0, 'HTTP_STATUS_NOT_SUCCESS')
+            """, ("att1:" + "9" * 64, object_id, "2" * 40, "3" * 40, "g" * 64))
+
+    def test_run_event_snapshot_digest_requires_lowercase_hex(self):
+        self.db.execute("""
+            INSERT INTO reconstruction_run(
+                run_id, inventory_id, inventory_blob_sha256, inventory_raw_bytes, label,
+                parser_contract_id, parser_source_sha, importer_source_sha, schema_contract_id,
+                schema_fingerprint_sha256, created_at_utc, coverage_manifest_json,
+                coverage_manifest_sha256
+            ) VALUES (
+                'run1:' || printf('%064d', 1), 'inv1:' || printf('%064d', 1),
+                printf('%064d', 0), X'01', 'RECONSTRUCTED — PARTIAL COVERAGE',
+                'T0_ARCHIVE_CSV_HEADER_V1', printf('%040d', 0), printf('%040d', 0),
+                'T0_STAGING_SCHEMA_V2', printf('%064d', 0), '2026-01-01T00:00:00Z',
+                '{}', printf('%064d', 0)
+            )
+        """)
+        run_id = self.db.execute("SELECT run_id FROM reconstruction_run").fetchone()[0]
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute("""
+                INSERT INTO run_events(
+                    run_id,event_seq,event_type,occurred_at_utc,candidate_snapshot_sha256
+                ) VALUES(?,1,'CANDIDATE','2026-01-01T00:00:00Z',?)
+            """, (run_id, "g" * 64))
+
+
 if __name__ == "__main__":
     unittest.main()
