@@ -1,3 +1,25 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 4 design review: REQUEST CHANGES
+
+- Exact reviewed design commit: `f4ab46715657675d15c907faeff8aa545c7cb161`.
+- Exact reviewed design blob SHA: `90bdb1495770f977cb3ef1d307b28189a2478c2c`.
+- Review report: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_4_2026-11-22.md`.
+- Review report commit: `72e9889c066f2f755c1e8d121d5bb6f6b5c3dd92`.
+- Verdict: **REQUEST CHANGES — PHASE B REVISION 4 NOT APPROVED**.
+- R-12: materially addressed by separate REST and reconstructed-local-book candidate contracts, but capture-ID issuer semantics remain unresolved under new R-15.
+- R-13: addressed; snapshot is bounded/source-scoped, not a full exchange-book anchor.
+- R-14: materially addressed; source-delivery locator, native event identity and stream epoch are separated; residual ambiguous phrase remains under R-16.
+- R-15 HIGH: direct REST source kind requires a source-generated immutable capture ID, but the design does not identify a Binance-native field/issuer. If collector-generated, issuer, uniqueness scope and binding to immutable request/response evidence must be specified separately from exchange-native identity and T0 delivery identity.
+- R-16 MEDIUM: §4.5 still says “same immutable message identity”; replace with “same immutable source-delivery locator” and state native-event dedup separately.
+- Prior findings R-01..R-14: see review report for dispositions; evidence-dependent blockers remain open.
+- Synthetic matrix: **74 proposed cases** (14/28/24/8), **NOT EXECUTED**; add capture-ID identity/replay/collision/restart coverage for R-15 and align retry wording for R-16.
+- B-01..B-20: retained and OPEN; none removed, resolved or owner-accepted.
+- Tests/workflows/artifacts: **NOT RUN / NONE**. Independent second-person reviewer identity: **NOT VERIFIED**.
+- Scope: documentation-only review. No source/design edit, code, DTO, parser, validator, tests, fixtures, DDL, database, data movement, T1 source/runtime, network, credentials, T1→T0/T2 runtime, VPS/deployment, Phase C or trading action.
+- Contract freeze: **NOT APPROVED**. Implementation/database/runtime/Phase C: **NOT AUTHORIZED**.
+- Next: revise only Phase B documentation and proposed synthetic cases for R-15/R-16, preserving B-01..B-20 unchanged and open; submit a new exact SHA for review.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 4 submitted for design review
 
 - Revised design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
