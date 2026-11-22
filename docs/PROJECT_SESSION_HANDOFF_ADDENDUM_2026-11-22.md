@@ -341,3 +341,16 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - No implementation, tests, workflow YAML, workflow dispatch, artifact upload or artifact-retention setting change has occurred. No archive/sidecar, host, filesystem, SQLite, importer, staging, runtime or trading action occurred.
 - B3 real archive-format coverage remains NOT VERIFIED; B5 source-derived coverage remains NOT VERIFIED; concrete destination remains DEFERRED / NOT SELECTED; B8 real importer/SQLite build remains NOT AUTHORIZED.
 - Next gate: explicit owner approval/rejection of the exact G1 request. Partial approval must name accepted items. Do not begin implementation before approval.
+
+
+## G1 Synthetic-only CI — implementation inventory checkpoint
+
+- Owner approval: `docs/decisions/T0_G1_SYNTHETIC_ONLY_CI_OWNER_APPROVAL_2026-11-22.md`, commit `119f0328f19293435c93575b203577f5026e0f06`; full bounded G1 scope approved.
+- Inventory/evidence: `docs/evidence/T0_G1_SYNTHETIC_ONLY_CI_IMPLEMENTATION_INVENTORY_2026-11-22.md`, commit `ceb26ff568f09e1e0f4852b3194d77202a38e520`.
+- Inspected `main`: existing strict parser `market_data/archive_csv_parser.py` blob `10fe2313103c45d5455f17ff71f3fd0af2e6f038`; existing parser tests `50199cd168fd52314a846760cc4baf51a8cd5e9a`; exact-header contract tests `fb102ace09f73e6233b5c577b6256665549c2ce0`; existing pure provenance validator `b94bac0f82ae141984552409f99a5cff70435b3b`.
+- `market_data/archive_resource_policy.py`, `market_data/archive_importer_core.py`, and `.github/workflows/t0-g1-synthetic-only.yml` were not found on inspected `main`.
+- Implementation plan: additive parser support only; create resource-policy and in-memory importer-core only after test-first contracts; do not duplicate provenance validator; manual exact-SHA workflow last.
+- Source inventory: **PASS — READ ONLY**. TDD RED/GREEN: **NOT RUN**. New source/tests/workflow: **NOT CREATED**. Workflow run/job/artifact: **NONE**.
+- Execution blocker: no repository checkout is mounted in this session and the available GitHub connector operations do not expose workflow_dispatch. Exact-repository TDD execution, regression and the authorized dispatch cannot currently be performed here. No unexecuted source behavior will be committed or called PASS.
+- No archive/sidecar/host/filesystem/SQLite/real importer/Canonical T0/T1/T2/VPS/runtime/deployment/credentials/trading action occurred.
+- Next: resume G1 implementation only when an exact-source test execution path and authorized manual dispatch capability are available; otherwise keep implementation **BLOCKED** and do not infer test results.
