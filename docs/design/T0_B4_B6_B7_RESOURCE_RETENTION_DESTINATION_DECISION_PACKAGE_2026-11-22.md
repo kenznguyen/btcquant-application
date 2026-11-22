@@ -46,7 +46,7 @@ This document is a decision package only. Numeric values are proposals, not meas
 | Per-ZIP processing wall time | **10 min** | Quarantine pair |
 | Entire acquisition run wall time | **6 h** | Stop run; do not silently resume or reuse failed run |
 | Workspace size | **8 GiB maximum** | Stop writes before exceeding ceiling |
-| Free disk at preflight | **10 GiB minimum** | Refuse start if less |
+| Free disk at preflight | **13 GiB minimum** | Refuse start if less; covers the 8 GiB workspace ceiling plus 5 GiB reserve |
 | Free disk reserve during run | **5 GiB minimum** | Stop before reserve is breached |
 | Free inodes at preflight | **10,000 minimum** | Refuse start if less |
 | Free inode reserve during run | **5,000 minimum** | Stop before reserve is breached |
@@ -171,7 +171,7 @@ A future separately approved preflight must verify and record:
 4. Encrypted volume and mount source; fail if not mounted.
 5. Directory owner, group, permissions and ACL.
 6. Path is not a symlink; no path traversal; run directory is new/create-only.
-7. At least 10 GiB free disk, at least 5 GiB reserve maintained, at least 10,000 free inodes and at least 5,000 reserve.
+7. At least 13 GiB free disk before start, at least 5 GiB reserve maintained, at least 10,000 free inodes and at least 5,000 reserve.
 8. Workspace quota at or below 8 GiB and no other workload shares the reserved workspace.
 9. No existing Canonical database or unrelated data will be overwritten.
 10. No network exposure, public sharing or unapproved cloud synchronization.
