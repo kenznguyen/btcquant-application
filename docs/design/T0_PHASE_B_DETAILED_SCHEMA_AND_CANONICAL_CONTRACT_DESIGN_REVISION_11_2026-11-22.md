@@ -12,13 +12,9 @@
 
 - Owner decision: `docs/decisions/T0_PHASE_B_BOUNDED_EXCLUSIONS_AND_IDENTITY_SUPERSESSION_OWNER_DECISION_2026-11-22.md`.
 - Inventory identity amendment: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_PHASE_B_IDENTITY_AMENDMENT_V2_2026-11-22.md`.
-- Revision 9 reviewed baseline: commit `5405928cf1ec61cf979453812d158caa8db18d4a`, blob `86c490be08961b02d03ba0a7986befe3e142b9df`.
-- B-13: **CLOSED — owner-accepted bounded exclusion** (read API/dataset-version compatibility deferred to a separate contract).
-- B-16: **CLOSED — owner-accepted bounded exclusion** (ordinary non-RPI depth only; no all-liquidity claim).
-- B-17: **OPEN — conditionally accepted T-only/E-excluded scope; exact pinned T1 parser proof required** before closure.
-- Inventory identity supersession accepted for Phase B SD-06/SD-07 only; the amendment record above supersedes conflicting Inventory v1 identity examples for those domains.
-- Revision 10 is documentation-only. Contract Freeze **NOT APPROVED**; implementation/runtime/data operations **NOT AUTHORIZED**.
-- 101-case matrix remains NOT EXECUTED; independent second-person review and all remaining technical evidence gates remain outstanding.
+## Revision 10 historical status snapshot (superseded by this Revision 11)
+
+The prior Revision 10 status is retained only as historical context. Current authority is in the Revision 11 header and §14.3. Revision 10 remains immutable. B-13/B-16 are now closed as bounded exclusions; B-17 remains open pending build provenance. The 101-case synthetic test scope is owner-approved, but fixture creation/execution are sequenced after independent review of Revision 11.
 
 ---
 
@@ -31,11 +27,11 @@
 - DTO/digest/checkpoint/atomic persistence proposal incorporated as Annex A from blob `594066d98201a8cf0940b62fc36d9358033f06e0`.
 - Scope: SD-05 aggregate trades; SD-06 order-book depth diffs; SD-07 order-book snapshots.
 - Authorization: owner-approved Phase A review and Phase B documentation-only authorization, decision commit `f2f5741cad47b86c70dae23dbaa9b497258cc80a`.
-- Reference only (non-binding proposal; owner review required): `docs/design/T0_SOURCE_DOMAIN_INVENTORY_AND_CANONICAL_INGESTION_CONTRACT_V1_2026-11-22.md`. For Phase B SD-06 and SD-07 identity, the detailed rules in this Revision 9 are the candidate successor rules and explicitly supersede the Inventory's conflicting identity examples for this bounded Phase B scope only. This is not an owner-approved contract or Contract Freeze.
+- Reference only (non-binding proposal): `docs/design/T0_SOURCE_DOMAIN_INVENTORY_AND_CANONICAL_INGESTION_CONTRACT_V1_2026-11-22.md`. For Phase B SD-06/SD-07 identity, the owner-approved supersession and Inventory amendment recorded with Revision 10 apply to this bounded scope only. This does not freeze the broader Inventory or authorize Contract Freeze.
 - Phase A baseline: `docs/design/T0_PHASE_A_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
 - T1 source schema: `kenznguyen/binance-futures-collector/docs/SCHEMA.md`, blob SHA `895f87a8281a3f9b6d37d96b5f68568e4285bee6`.
 - Implementation: **NOT AUTHORIZED / NOT STARTED**.
-- Synthetic matrix: **DESIGNED ONLY / NOT EXECUTED**.
+- Synthetic matrix: **101 CASES OWNER-APPROVED; FIXTURES NOT CREATED / EXECUTION NOT RUN; SEQUENCED AFTER REVISION 11 INDEPENDENT REVIEW**.
 - Tests/workflows/artifacts: **NOT RUN / NONE**.
 
 ## 1. Purpose, authority and invariants
@@ -578,7 +574,7 @@ B-13/B-16 closure is scope-only, not implementation or technical verification. B
 - [x] Candidate identity and domain-specific sequence/grouping semantics described.
 - [x] Timestamp/provenance limitations called out without fabricated receive times.
 - [x] Replay/conflict/quarantine/acknowledgement behavior drafted.
-- [x] Synthetic test matrix expanded to 101 proposed cases, including E/T separation, unverified q mapping, source-kind-specific REST/local-book completeness, T1 producer ownership/registration, immutable producer-pair attributes, producer-origin attestation/trusted handoff, namespace uniqueness/single-writer fencing/durable non-reuse, fail-closed behavior and three SD-06 overlap adjudication cases; explicitly marked NOT EXECUTED.
+- [x] 101-case synthetic matrix defined and owner-approved (14/31/46/10); fixture creation and execution remain pending independent review of exact Revision 11 SHA/blob.
 - [x] Contract-freeze blockers recorded.
 - [ ] B-01 through B-20 resolved or explicitly accepted as bounded exclusions by owner.
 - [ ] Canonical DTO/envelope, digest encoding, snapshot capture/group identity and diff stream epoch contract reviewed/frozen.
@@ -597,8 +593,8 @@ B-13/B-16 closure is scope-only, not implementation or technical verification. B
 
 ## 13. Explicit exclusions
 
-This Phase B document authorizes no:
-- code, DTO, parser, validator, adapter, fixture, test, dependency, API or workflow changes;
+This Phase B document authorizes no production implementation or runtime changes. The sole bounded test exception is the owner-approved isolated synthetic 101-case scope, sequenced after independent review of Revision 11. It authorizes no:
+- production code, DTO, parser, validator, adapter, dependency, API or workflow changes; test-only fixtures/harness are limited to the approved matrix and remain isolated;
 - T0 DDL/schema/database creation, open-for-write, migration, import, promotion, cutover or canonical data mutation;
 - T1 source-code change, collector activation, file copy, importer execution or T1→T0 runtime connection;
 - network/exchange calls, credentials, archive/data acquisition, data movement or upload;
@@ -1010,9 +1006,9 @@ A design-level resolution is not an implementation/test pass. B-03 is closed onl
 4. Define source-generated SD-07 manifest and stable immutable source object/row locators.
 5. Derive numeric limits from bounded source measurements and resource budgets; owner approval required.
 6. Independently review this DTO/digest/checkpoint/atomicity design.
-7. Obtain explicit owner authorization before implementing any DTO, validator, test fixture, DDL, persistence change or running the 101-case synthetic matrix.
+7. Owner approval for the isolated 101-case test scope is recorded in `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_2026-11-22.md`. Create fixtures and execute only after independent review of exact Revision 11 SHA/blob; no production DTO/validator/persistence implementation is authorized.
 
 ## 11. Explicit non-authorization
 
-No code, DTO implementation, parser change, validator, fixture, test execution, DDL, database mutation, source copy, import, data movement, collector activation, T0/T1 runtime, T2 connection, API, VPS process, systemd/autostart, deployment or trading action is authorized by this design. The 101-case matrix remains NOT EXECUTED. Contract Freeze remains NOT APPROVED.
+No production code, DTO/parser/validator/persistence implementation, DDL, database mutation, source copy, import, data movement, collector activation, T0/T1 runtime, T2 connection, API, VPS process, systemd/autostart, deployment or trading action is authorized by this design. The separately owner-approved 101-case synthetic test scope is limited to isolated test-only fixtures/harness and execution after independent review; it remains NOT EXECUTED. Contract Freeze remains NOT APPROVED.
 
