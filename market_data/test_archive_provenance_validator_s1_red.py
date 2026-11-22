@@ -517,8 +517,8 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         )
 
     def test_object_measurement_invalid_isolated(self) -> None:
-        # Isolate HTTP response validity; measured bytes and successful attempt stay aligned.
-        self.payload["objects"][0]["response_status"] = 302
+        # Isolate local create-path evidence without changing the transferred response.
+        self.payload["objects"][0]["local_relative_path"] = ""
         self.assert_s1_error("OBJECT_MEASUREMENT_INVALID")
 
     def test_object_attempt_history_invalid_isolated(self) -> None:
