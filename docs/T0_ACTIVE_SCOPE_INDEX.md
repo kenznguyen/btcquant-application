@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 5: R-15/R-16 corrected
+
+- Design commit: `51a11272a7cc9204d2b42a255942614e36f40b6f`; blob `9aeb036267e9dfce73e0b2405c7f4c9ef27cc5ab`.
+- Self-review: `docs/reviews/T0_PHASE_B_DESIGN_SELF_REVIEW_ROUND_5_2026-11-22.md`, commit `86f8aef95f1e99fc587d7741115a816c1754fc1d`; SELF-CHECK PASS / READY FOR NEXT DESIGN REVIEW, not independent review or owner approval.
+- R-15: separates exchange-native response/book anchor, producer-issued capture identity (`capture_producer_id + capture_sequence`), and T0 immutable source-delivery locator; defines REST/T1 issuer and evidence binding. Producer uniqueness/fencing and source evidence remain unverified; B-07 remains OPEN.
+- R-16: retry reuses same immutable source-delivery locator; native event identity and snapshot capture identity are deduplicated separately.
+- Synthetic matrix: 84 proposed cases (14/28/32/10), NOT EXECUTED.
+- B-01..B-20: exact byte comparison with revision 4 PASS; all 20 OPEN, unchanged.
+- Tests/workflows/artifacts: NOT RUN / NONE. No fixtures/tests created.
+- Documentation-only. Contract freeze NOT APPROVED; implementation/database/runtime/Phase C NOT AUTHORIZED.
+- Next: design review of exact revision 5 SHA/blob.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 4 design review: REQUEST CHANGES
 
 - Exact reviewed design commit: `f4ab46715657675d15c907faeff8aa545c7cb161`; blob `90bdb1495770f977cb3ef1d307b28189a2478c2c`.
