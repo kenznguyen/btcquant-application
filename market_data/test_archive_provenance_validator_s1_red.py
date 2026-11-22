@@ -537,6 +537,10 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.payload["source_rows"][0]["parser_source_sha"] = "not-a-sha"
         self.assert_s1_error("CSV_MEMBER_EVIDENCE_INVALID")
 
+    def test_csv_member_time_range_must_match_rows(self) -> None:
+        self.payload["members"][0]["first_open_time_ms"] += 900000
+        self.assert_s1_error("CSV_MEMBER_EVIDENCE_INVALID")
+
     def test_source_row_provenance_invalid_isolated(self) -> None:
         # Isolate the physical/data ordinal offset for a header-present CSV.
         self.payload["source_rows"][0]["physical_record_ordinal"] = 1
