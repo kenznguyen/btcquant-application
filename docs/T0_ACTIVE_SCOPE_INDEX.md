@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 12; PR #9 reviewed with findings; PR #10 re-review running
+
+- PR #9: CLOSED / NOT MERGED after Codex review completed with **3 P2 findings** on reviewed head `8a084c3f02de6d4f462b0f5731ed8f8569fb5fbf`. Review summary: Codex status completed; Graphify skipped AI review because documentation-only. No tests/formal proofs were run. Findings report: `docs/reviews/T0_PHASE_B_REVISION_11_CODEX_REVIEW_FINDINGS_2026-11-22.md`, commit `3ac749dbff54eeeddbd8f86bd87b3615de9e94dc`.
+- Revision 11 exact reviewed target: commit/blob `0ac119c7cd31ba63d5aead6796c7b5560abf2a18` / `9d9639b4d26b42a90929f50a32b801e359b23197`.
+- Revision 12 post-review candidate: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_12_2026-11-22.md`; source commit `29c47fcf9a761af00f72c043142ac2cca7b708ab`, blob `0c726fc05e76c41986130f8ee165d3dc67ce7044`.
+- R12 corrects all three R11 Codex P2 findings: (1) field-specific T1 aggTrade mapping status reconciled with source audit while retaining build-provenance/decimal-fidelity caveats; (2) SD-07 envelope producer/sequence pair must be non-null and equal snapshot identity; (3) delivery locator keyed by stable source object/version identity, with raw SHA-256 as integrity attribute.
+- PR #10: [Revision 12 independent re-review](https://github.com/kenznguyen/btcquant-application/pull/10), OPEN / NOT MERGED / DO NOT MERGE. Exact reviewed commit/blob above. Codex review status **RUNNING** on head `29c47fcf9a761af00f72c043142ac2cca7b708ab` as of 2026-11-22 16:52:50Z.
+- Owner approval for 101 isolated synthetic cases remains valid: SD-05 14, SD-06 31, SD-07 46, cross-domain 10. Fixture creation/execution are sequenced after satisfactory independent review of exact R12 SHA/blob. Fixtures/tests remain NOT CREATED / NOT RUN.
+- Approval sequencing amendment recorded in `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_2026-11-22.md`, commit `615fa75638205fa627b3bf6799b243765486e7c5`, blob `8f66b210c64abc948bd123044681a9e3588dc4fd`.
+- R12 blocker status unchanged: B-01 PARTIAL; B-02 OPEN; B-03 PARTIAL; B-04..B-10 OPEN; B-11/B-12 DESIGN SPECIFIED — NOT VERIFIED; B-13 CLOSED bounded exclusion; B-14/B-15 OPEN; B-16 CLOSED bounded exclusion; B-17 OPEN pending deployed/imported T1 build provenance; B-18 OPEN; B-19 DESIGN SPECIFIED — NOT VERIFIED; B-20 OPEN.
+- Workflow runs/jobs/artifacts: NONE verified for R12. Tests/proofs: NOT RUN. Contract Freeze: NOT APPROVED. Production implementation, DDL/database changes, data movement, T0/T1 runtime, T2 integration, VPS/autostart, strategy changes and trading remain NOT AUTHORIZED.
+- Next step: wait for Codex/independent re-review on exact R12 SHA/blob. If findings remain, address them in a new immutable successor and repeat review. Only after satisfactory review may the already-approved isolated 101-case fixtures/tests begin.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 11 consolidated; 101 synthetic cases approved
 
 - Owner approval decision: `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_2026-11-22.md`, commit `ae90cf57da7f076bd57eccf4774890c4197ae81c`, blob `c0be1b2bf548993bb79be79739c85e447678b652`.
