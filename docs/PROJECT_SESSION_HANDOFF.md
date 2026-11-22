@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase A detailed design ready for owner review
+
+- Phase A design: `docs/design/T0_PHASE_A_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`
+- Design commit: `4fdf1412539e784ab6a72338b8198f3c72c76349`
+- Status: **PHASE A DESIGN COMPLETE FOR OWNER REVIEW / CONTRACT FREEZE NOT APPROVED**.
+- Scope: SD-01 trade OHLCV; SD-02 mark-price klines; SD-03 index-price klines; SD-04 premium-index klines; SD-09 funding rates; SD-10 open interest.
+- Evidence pinned in design: T1 SCHEMA blob `895f87a8281a3f9b6d37d96b5f68568e4285bee6`; T1 README `5e03d3e00bb4b1fe6ed4ed389006e50d5683c5e3`; T0 `market_data/store.py` `4e1b0c54bd56455abe5be0e5c7d0807e63e0bc78`; T0 market-data README `6561214efdca5108672b83809a9c12047462d72b`.
+- Important boundaries: existing T0 Candle contract remains BTCUSDT M15/H1 closed trade candles; T1 1m klines lack explicit finality/receive-time fields and are not canonical-acceptance-ready; MARK/INDEX/PREMIUM_INDEX remain separate price-basis series; funding `next_funding_time` is settlement time, not sample identity; OI fields are retained independently and arithmetic precision needs evidence.
+- A-01..A-10 are open contract-freeze blockers/owner decisions. Digest encoding, provenance persistence, source overlap, file-close/checkpoint semantics and non-candle versioning remain unfrozen.
+- Synthetic test matrix drafted but NOT EXECUTED. Tests/workflows/artifacts: NOT RUN / NONE.
+- No code, DTO, parser, test, workflow, DDL, database, data movement, network, credentials, T1 runtime, T1→T0/T2, VPS, deployment, order submission or trading action.
+- Phase B must remain paused until owner reviews/approves Phase A design baseline. If approved, Phase B starts documentation-only.
+- Status: **PHASE A DESIGN PASS (DOCUMENTATION) / OWNER REVIEW REQUIRED / PHASE B BLOCKED PENDING REVIEW / IMPLEMENTATION NOT AUTHORIZED**.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Owner approved source-domain onboarding priority
 
 - Owner approval record: `docs/decisions/T0_SOURCE_DOMAIN_ONBOARDING_PRIORITY_OWNER_APPROVAL_2026-11-22.md`, commit `44e72107604f39ff4a412befa940a4b25d5a81b0`.
