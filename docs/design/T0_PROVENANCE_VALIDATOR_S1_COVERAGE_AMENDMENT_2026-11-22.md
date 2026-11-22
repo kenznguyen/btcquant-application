@@ -153,12 +153,13 @@ This is a contract amendment and synthetic RED-test authorization only. It does 
 - Canonical T0, MAY-10, REST tail, T1/T2, VPS/runtime, deployment or trading;
 - cleanup, deletion or retention-policy changes.
 
-## 9. Status
+## 9. Status — owner approval and implementation result
 
-- S3 extended contract: **DESIGN ONLY** until committed and read back.
-- S4 synthetic RED tests: **AUTHORIZED** by owner, but test execution status must be recorded separately.
-- GREEN implementation: **NOT AUTHORIZED**.
-- SQLite/DDL and archive acquisition: **NOT AUTHORIZED**.
+- S3 extended contract and R3–R6 clarifications: **FROZEN / COMMITTED**.
+- S4 synthetic test completion: **PASS**.
+- Pure S3 GREEN validator: **APPROVED / IMPLEMENTED / VERIFIED** at source SHA `10e99c68e7acbd8a25e192075dede214f3fccad5`.
+- Exact-SHA workflow run `44976345735`: S3 30/30 PASS; V1 24/24 PASS; full market_data 387/387 PASS; artifact SHA-256 `5d12d74c405e8e9bd7bd6443b3f6fe4b85681eeba1b35df5dc78a7057f11e8bf`.
+- DDL/SQLite and archive acquisition: **NOT AUTHORIZED / NOT TOUCHED**. The S3 GREEN approval does not authorize staging database creation, importer, archive access, promotion, runtime integration or trading.
 
 
 ## 10. S3 GREEN clarifications — R3–R6 (owner-approved)
