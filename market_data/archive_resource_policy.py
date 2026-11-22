@@ -15,6 +15,7 @@ from typing import Any
 RESOURCE_LIMITS = MappingProxyType({
     "response_bytes_total": 100 * 1024 * 1024,
     "zip_body_bytes": 64 * 1024 * 1024,
+    "member_compressed_bytes": 64 * 1024 * 1024,
     "sidecar_bytes": 64 * 1024,
     "zip_entry_count": 1024,
     "member_uncompressed_bytes": 256 * 1024 * 1024,
