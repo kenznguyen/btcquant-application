@@ -165,3 +165,53 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - This increment changed documentation only. No validator/test/workflow/schema/DDL/SQLite/importer/archive/Canonical T0/T1/T2/VPS/runtime/deployment/trading change or access.
 - Status: **SELF-REVIEW COMPLETE; S3 GREEN NOT AUTHORIZED; AWAITING OWNER DECISION**.
 - Evidence update commit: `d327bc130cba39bd5469f6062a4ebdcca3cb8f0c`, blob `6ebd49334a8c09db9facd23ff83f7dba22979915`.
+
+
+## S3 GREEN approved, implemented and verified — 2026-11-22
+
+### Owner decision
+
+- Owner explicitly approved: **S3 GREEN = complete R3–R6 contract + finish S4 synthetic tests + pure validator + synthetic tests + isolated exact-SHA GitHub Actions evidence**.
+- Approval is strictly bounded. It does not authorize DDL/SQLite/staging DB, archive or sidecar access/download/decompression, importer/acquisition, Canonical T0, MAY-10/REST tail, T1/T2 runtime/data integration, VPS/systemd/autostart/deployment/Postgres, retention/deletion, credentials or trading.
+
+### Source and contract
+
+- Contract clarification blob: `84f881ad3e81cf42f1ec674a5b36ae5547478e33`.
+- R3: exact discriminator dispatch; no silent S1-to-V1 downgrade.
+- R4: distinguish pre-transfer expected size/SHA assertions from measured object values and successful transfer evidence; no claim that the raw inventory pins these measurements.
+- R5: exact canonical compact JSON representation for the twelve raw source fields.
+- R6: exact coverage manifest keys, inclusive non-overlapping coverage ranges, approved gap/extra semantics based on exact candle natural-key set, duplicate disposition vocabulary and representative ordering.
+- Tested source SHA: `10e99c68e7acbd8a25e192075dede214f3fccad5`.
+- Validator blob: `b94bac0f82ae141984552409f99a5cff70435b3b`.
+- S3 test blob: `328442917535d555d09b18f0213e1ddfd75a9416`.
+- Workflow blob: `b73bf266c47dd6cdb440928e2107306f4906a5b6`.
+- V1 RED/GREEN blobs unchanged: `abbaeab16f026757923c679330f124a3d99e0774` / `da854052564a34c49c1e2f40da1c80315da04182`.
+- All source and evidence commits remain on `main`; no divergent branch created.
+
+### Exact-SHA verification
+
+- Workflow run [44976345735](https://github.com/kenznguyen/btcquant-application/actions/runs/44976345735), job `137067027769`, attempt `1`, conclusion `success`.
+- Requested source SHA and checked-out HEAD match exactly: `10e99c68e7acbd8a25e192075dede214f3fccad5`.
+- CPython 3.13.18 / Ubuntu 26.04.1. Pinned CI test dependencies: FastAPI 0.116.1 and httpx 0.28.1.
+- S3 synthetic tests: **30/30 PASS**, exit 0.
+- V1 RED/GREEN compatibility: **24/24 PASS**, exit 0.
+- Full market_data suite: **387/387 PASS**, exit 0. Two SQLite ResourceWarnings were emitted in unrelated tests; no test failed.
+- Artifact `t0-s3-green-verification-44976345735`, ID `14735512352`, 3,678 bytes, SHA-256 `5d12d74c405e8e9bd7bd6443b3f6fe4b85681eeba1b35df5dc78a7057f11e8bf`; downloaded, contents inspected, and local checksum matched GitHub metadata.
+- An earlier coverage-range attempt at SHA `d3fd1cf4656243ae8d80160d6539cc3d0c890560` failed with `NameError` (`candle_records`); fixed in final tested source SHA above. Do not use that failed run as acceptance evidence.
+
+### Status and next gate
+
+- R3–R6 contract: **PASS / FROZEN**.
+- S4 test completion: **PASS**.
+- Pure S3 validator: **PASS**.
+- S3 tests: **PASS 30/30**; V1 compatibility **PASS 24/24**; full market_data **PASS 387/387**.
+- Exact-SHA workflow, job, artifact and checksum: **PASS**.
+- Review: same-session **SELF-REVIEW** only; independent second-person review not claimed.
+- Overall bounded S3 GREEN package: **PASS**.
+- No full repository regression was run. No archive, database, Canonical T0, importer, runtime, VPS, deployment, retention or trading operation occurred.
+- Next allowed step requires a separate owner decision. This PASS does not authorize archive acquisition, importer, DDL/SQLite, staging DB, promotion, T1/T2 integration or runtime/deployment.
+
+### Evidence records
+
+- Scope review updated: `docs/reviews/T0_PROVENANCE_VALIDATOR_S3_GREEN_SCOPE_REVIEW_2026-11-22.md`, commit `dd7b2621afd557a483ca14d75345d131e554fceb`, blob `a792b501abdd8e3d7902c4b9d6aa5f4df168dfdd`.
+- Evidence updated: `docs/evidence/T0_PROVENANCE_VALIDATOR_S1_COVERAGE_S3_S4_2026-11-22.md`, commit `04badccd7ea57b42954b2b58ec62d7f49ebb7dee`, blob `5af1635225662435091d36165592414b6c87ba13`.
