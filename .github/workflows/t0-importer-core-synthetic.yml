@@ -7,6 +7,8 @@ on:
     paths:
       - market_data/archive_importer_core.py
       - market_data/test_archive_importer_core.py
+      - market_data/archive_staging_adapter.py
+      - market_data/test_archive_staging_adapter.py
       - requirements-market-data-fastapi-test.lock
       - requirements-market-data-fastapi.sha256
       - .github/workflows/t0-importer-core-synthetic.yml
@@ -68,6 +70,12 @@ jobs:
         run: |
           set -euo pipefail
           python -B -m unittest -v market_data.test_archive_importer_core
+
+      - name: Run focused synthetic S1.2 adapter tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -B -m unittest -v market_data.test_archive_staging_adapter
 
       - name: Set up Python 3.12.16 for full market_data regression
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
