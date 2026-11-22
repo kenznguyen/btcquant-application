@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — G1 TDD execution blocked before RED
+
+- Current main HEAD at checkpoint: `f4485ab0e0888c10ccd21a58897010b27067cf91` (evidence checkpoint commit; verify live HEAD before next change).
+- Owner approval remains valid for full bounded G1 scope: `docs/decisions/T0_G1_SYNTHETIC_ONLY_CI_OWNER_APPROVAL_2026-11-22.md`, blob `9f2dc8096c0a7b1c14cecc900bdfcd209a85fcca`.
+- Latest baseline CI remains PASS only for exact source `caefbfabebe3dfc09eec87981bac5591d450ea6b`: 46/46 existing parser/header/provenance tests; artifact `14741746213` verified. This does not test B4/importer logic.
+- Current source at inspection before checkpoint was `ab372a70db33a052ace8c0ebeb83e23caae44371`. Existing parser and provenance validator are present; `archive_resource_policy.py` and `archive_importer_core.py` are absent.
+- TDD work status: **BLOCKED BEFORE RED**. No source/test/workflow code was changed. No exact-source test execution path is available: GitHub connector has no workflow_dispatch or code-execution action, no local checkout is mounted, and isolated clone failed due DNS/network unavailability. Do not commit unexecuted tests/behavior or claim RED/GREEN/regression PASS.
+- Detailed checkpoint: `docs/evidence/T0_G1_TDD_EXECUTION_CHECKPOINT_2026-11-22.md`, commit `f4485ab0e0888c10ccd21a58897010b27067cf91`.
+- Next: obtain an exact-repository execution path or prepare a test-only RED commit for owner manual dispatch; then proceed in strict order B4 RED/GREEN, importer-core RED/GREEN, expanded workflow and regression. Keep exact SHA evidence.
+- All G1 exclusions remain unchanged: no archive/sidecar access, host/filesystem preflight, SQLite open/create/write/DDL, real-data importer/build, Canonical T0 mutation/promotion, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — G1 baseline CI and sanitized artifact verified PASS
 
 - Successful manual run: [44990109927](https://github.com/kenznguyen/btcquant-application/actions/runs/44990109927), run #2, attempt 1, conclusion **SUCCESS**; job ID `137109083853`.
