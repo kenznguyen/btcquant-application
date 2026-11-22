@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — New SQLite Canonical target approved (architecture only)
+
+- Owner decision: `docs/decisions/T0_NEW_SQLITE_CANONICAL_TARGET_OWNER_DECISION_2026-11-22.md`, commit `0498e68b0a3e967f27c7265759477a6e7ca05c6d`.
+- Goal approved: build a **new SQLite dataset** from the accepted archive-only reconstruction design. Initial status must be `RECONSTRUCTED — PARTIAL COVERAGE`; it is not recovery/restoration of the former database.
+- Former Canonical SQLite remains **LOST**; new reconstructed SQLite remains **NOT CREATED**.
+- Canonical recognition/promotion is a separate future owner decision, only after provenance, integrity, schema, coverage, gaps, duplicate/conflict, deterministic-build and read-only acceptance checks pass.
+- This is architecture direction only. It does not authorize archive/network access, materialization, host/path preflight, SQLite/DDL, importer/build, tests/workflows, data validation, deletion/upload, promotion, runtime/Feeder/VPS, T1/T2 connection, deployment, credentials or trading.
+- Existing S1.1 accepted design, B4 resource ceilings, B6 retention policy and B7 Option A destination model remain in force. Archive-format coverage beyond M15 monthly 2022-08 and actual source-derived coverage remain **NOT VERIFIED**; exact host/path and preflight remain pending; importer/build remains **NOT AUTHORIZED**.
+- No tests/workflows/jobs/artifacts or data/runtime actions were performed. Next: prepare a bounded implementation-readiness proposal only; no execution until each required phase is separately authorized.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — S1.1 design owner-accepted and frozen; implementation not authorized
 
 - S1.1 design: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`, blob `209c9d10cc0e54dc90148efa9ef6884f74aa143d`.
