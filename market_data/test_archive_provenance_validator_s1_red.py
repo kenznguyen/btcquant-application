@@ -307,6 +307,10 @@ def build_valid_s1_fixture() -> dict[str, Any]:
         "inventory_expected_id": _INVENTORY_ID,
         "coverage_manifest": {
             "manifest_version": "T0-COVERAGE-MANIFEST-V1",
+            "coverage_ranges": [{
+                "timeframe": "15m", "start_open_time_ms": 1767225600000,
+                "end_open_time_ms": 1767406500000,
+            }],
             "approved_gaps": [], "approved_extras": [],
             "expected_object_count": 404, "expected_pair_count": 202,
             "expected_member_count": 202, "expected_row_count": 202,
@@ -331,6 +335,10 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
     test.assertEqual(parsed_inventory["inventory_id"], payload["inventory_expected_id"])
     test.assertEqual(parsed_inventory["objects"], payload["inventory"]["objects"])
     test.assertEqual(payload["coverage_manifest"]["manifest_version"], "T0-COVERAGE-MANIFEST-V1")
+    test.assertEqual(payload["coverage_manifest"]["coverage_ranges"], [{
+        "timeframe": "15m", "start_open_time_ms": 1767225600000,
+        "end_open_time_ms": 1767406500000,
+    }])
     test.assertEqual(payload["coverage_manifest"]["expected_object_count"], 404)
     test.assertEqual(payload["coverage_manifest"]["expected_pair_count"], 202)
     test.assertEqual(payload["coverage_manifest"]["expected_member_count"], 202)
@@ -663,6 +671,10 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.payload["coverage_manifest"]["approved_gaps"] = [
             {"timeframe": "15m", "open_time_ms": 1, "reason": "gap", "evidence_ref": "fixture"}
         ]
+        self.assert_s1_error("RUN_ACCEPTANCE_INVARIANT_INVALID")
+
+    def test_unlisted_candle_outside_coverage_range_is_rejected(self) -> None:
+        self.payload["coverage_manifest"]["coverage_ranges"][0]["end_open_time_ms"] -= 900000
         self.assert_s1_error("RUN_ACCEPTANCE_INVARIANT_INVALID")
 
     def test_noncanonical_decimal_is_rejected_as_ohlcv(self) -> None:
