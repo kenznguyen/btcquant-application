@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 7 prepared; P2 corrections documented
+
+- Exact Revision 7 design path: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
+- Revision 6 immutable source baseline: commit `9b69c18ea16731bf28efba7a92077e96a74107ce`, blob `7012a228561620f4447a0e363a2c5f27d734912a`; preserved unchanged.
+- Revision 7 design commit: `8bc519dc1d4d14144306e58978b8423ee2799336`; blob `7fad5fa69698770c8fe02efd692cf4056b7ac7db`.
+- Revision 7 self-check: `docs/reviews/T0_PHASE_B_DESIGN_SELF_REVIEW_ROUND_7_2026-11-22.md`, commit `2772f0d227b73a0d2fbf08e927a5e623fad0489f`; blob `ecc45f544bf76fa7c7292c9f5fd1d9c44e0fcd3f`.
+- P2-1: capture identity key is exactly `(capture_producer_id, capture_sequence)`; anchor/time/limit/source/scope/digest/version fields are immutable attributes. Reuse of the pair with any changed attribute is conflict/quarantine, never a new capture.
+- P2-2: registered producer ID and digest alone do not authenticate T1 origin. Candidate verifiable producer attestation or trusted authenticated handoff must bind identity pair, scope, versions and immutable digest. Trust root, key/workload identity lifecycle, handoff, verifier and replay policy remain NOT SPECIFIED / NOT FROZEN; absent proof fails closed.
+- P2-3: canonical acceptance requires independently verifiable namespace uniqueness, single-writer fencing, durable monotonic sequence non-reuse, restore/clone rollback protection and commit-before-ack proof. Until evidenced, captures remain quarantined; B-07 remains OPEN.
+- Proposed synthetic matrix: 98 cases (SD-05 14, SD-06 28, SD-07 46, cross-domain 10), NOT EXECUTED.
+- B-01..B-20 remain OPEN and unchanged; verified by byte-for-byte comparison of the blocker section against Revision 6.
+- Static/document checks: PASS. Tests/workflows/artifacts: NOT RUN / NONE. Independent second-person review: NOT VERIFIED. Contract freeze: NOT APPROVED.
+- Scope: documentation-only. No code, DTO, parser, validator, tests, fixtures, DDL, database, data movement, T1 source/runtime, network, credentials, T1→T0/T2 runtime, VPS/deployment, Phase C or trading action.
+- Next: request design review of exact Revision 7 commit/blob. Do not merge review-only PR; no implementation/database/runtime authorization.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 6: R-17 corrected, self-check PASS
 
 - Exact design path: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
