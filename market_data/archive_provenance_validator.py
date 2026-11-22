@@ -669,7 +669,7 @@ def _s1_validate(payload, errors):
             continue
         digest = _s1_hash("T0-RAW-CSV-ROW-V1", *raw_fields)
         physical, ordinal = row.get("physical_record_ordinal"), row.get("data_row_ordinal")
-        member = member_by_id.get(mid)
+        member = member_by_id.get(mid) if _is_text(mid) else None
         if (digest != row.get("raw_row_digest") or member is None
                 or not _is_positive_int(physical) or not _is_positive_int(ordinal) or physical != ordinal + 1
                 or row.get("disposition") != "ACCEPTED" or row.get("rejection_code") is not None
