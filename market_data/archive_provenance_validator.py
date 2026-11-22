@@ -516,6 +516,7 @@ def _s1_validate(payload, errors):
                 or obj.get("verification_status") != "VERIFIED"
                 or type(obj.get("response_status")) is not int
                 or not 200 <= obj.get("response_status") <= 299
+                or obj.get("response_bytes_total") != obj.get("measured_size_bytes")
                 or not _is_text(obj.get("local_relative_path"))
                 or type(obj.get("exclusive_create")) is not int or obj.get("exclusive_create") != 1
                 or obj.get("failure_code") is not None):
@@ -558,12 +559,19 @@ def _s1_validate(payload, errors):
                 if (not _is_text(attempt.get("finished_at_utc"))
                         or type(attempt.get("is_complete_object")) is not int or attempt.get("is_complete_object") != 1
                         or attempt.get("response_bytes_received") != obj.get("measured_size_bytes")
+                        or type(attempt.get("response_status")) is not int
+                        or not 200 <= attempt.get("response_status") <= 299
+                        or attempt.get("response_status") != obj.get("response_status")
                         or attempt.get("complete_object_sha256") != obj.get("measured_sha256")
                         or attempt.get("expected_size_bytes") != obj.get("expected_size_bytes")
                         or attempt.get("expected_sha256") != obj.get("expected_sha256")):
                     attempt_bad = True
-            elif attempt.get("outcome") in ("FAILED", "UNKNOWN", "STARTED"):
-                if attempt.get("is_complete_object") == 1 or attempt.get("outcome") == "UNKNOWN":
+            elif attempt.get("outcome") in ("FAILED", "UNKNOWN"):
+                if (attempt.get("is_complete_object") == 1 or attempt.get("outcome") == "UNKNOWN"
+                        or not _is_text(attempt.get("finished_at_utc"))):
+                    attempt_bad = True
+            elif attempt.get("outcome") == "STARTED":
+                if attempt.get("is_complete_object") == 1 or attempt.get("finished_at_utc") is not None:
                     attempt_bad = True
             else:
                 attempt_bad = True
@@ -689,8 +697,15 @@ def _s1_validate(payload, errors):
         group = rows_by_member.get(mid, [])
         ordinals = sorted(r.get("data_row_ordinal") for r in group if type(r.get("data_row_ordinal")) is int)
         physicals = sorted(r.get("physical_record_ordinal") for r in group if type(r.get("physical_record_ordinal")) is int)
+        row_times = []
+        for item in group:
+            raw = item.get("raw_fields")
+            if isinstance(raw, list) and raw and raw[0].isdigit():
+                row_times.append(int(raw[0]))
         if (len(group) != member.get("data_row_count") or ordinals != list(range(1, len(group) + 1))
-                or physicals != list(range(2, len(group) + 2))):
+                or physicals != list(range(2, len(group) + 2)) or not row_times
+                or min(row_times) != member.get("first_open_time_ms")
+                or max(row_times) != member.get("last_open_time_ms")):
             row_bad = True
     if row_bad:
         errors.add("SOURCE_ROW_PROVENANCE_INVALID")
