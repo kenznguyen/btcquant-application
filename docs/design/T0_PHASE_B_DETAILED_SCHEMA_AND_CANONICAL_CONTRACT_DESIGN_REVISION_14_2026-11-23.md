@@ -27,20 +27,20 @@
 
 ## Revision 11 status snapshot — superseded by Revision 12
 
-Revision 11 was the consolidated review candidate submitted to PR #9. Its exact source SHA/blob and review findings are recorded above. This snapshot is retained for history only; Revision 12 is the current design authority.
+Revision 11 was the consolidated review candidate submitted to PR #9. Its exact source SHA/blob and review findings are recorded above. This snapshot is retained for history only; Revision 14 is the current design authority.
 
 - Owner decision: `docs/decisions/T0_PHASE_B_BOUNDED_EXCLUSIONS_AND_IDENTITY_SUPERSESSION_OWNER_DECISION_2026-11-22.md`.
 - Inventory identity amendment: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_PHASE_B_IDENTITY_AMENDMENT_V2_2026-11-22.md`.
 ## Revision 10 historical status snapshot (superseded by this Revision 12)
 
-The prior Revision 10 status is retained only as historical context. Current authority is in the Revision 12 header and §14.3. Revision 10 remains immutable. B-13/B-16 are now closed as bounded exclusions; B-17 remains open pending build provenance. The 101-case synthetic test scope is owner-approved, but fixture creation/execution are sequenced after independent review of Revision 12.
+The prior Revision 10 status is retained only as historical context. Current authority is in the Revision 12 header and §14.3. Revision 10 remains immutable. B-13/B-16 are now closed as bounded exclusions; B-17 remains open pending build provenance. The 101-case synthetic test scope is owner-approved, but fixture creation/execution are sequenced after satisfactory independent review of Revision 14.
 
 ---
 
-# T0 Phase B — Detailed Schema & Canonical Contract Design (Revision 12 post-review candidate)
+# T0 Phase B — Detailed Schema & Canonical Contract Design (Revision 14 review candidate)
 
-- Date: 2026-11-22 (revision 12)
-- Status: **POST-REVIEW CONSOLIDATED CANDIDATE — THREE CODEX P2 FINDINGS ADDRESSED IN DOCUMENTATION; NOT CONTRACT-FROZEN**
+- Date: 2026-11-23 (revision 14)
+- Status: **POST-PR #11 FINDINGS CONSOLIDATED CANDIDATE — THREE P2 FINDINGS ADDRESSED IN DOCUMENTATION; NOT CONTRACT-FROZEN**
 - Immutable history: Revisions 6–11 remain unchanged. Revision 12 is the documentation-only successor to Revision 11.
 - Revision 11 exact reviewed source: commit `0ac119c7cd31ba63d5aead6796c7b5560abf2a18`, blob `9d9639b4d26b42a90929f50a32b801e359b23197`.
 - Revision 10 immutable source: commit `b32d9af088099f92b09d113ecfa27056cfd9b83d`, blob `a8934cb862c330f1d1fa72aa1f3fdb2b22f9ac96`.
@@ -548,7 +548,7 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 6. Restart resumes source intake from the contiguous per-partition frontier plus durable out-of-order completion state, and book application from its separate marker.
 7. Buffered but unapplied events do not advance book watermark.
 8. Conflict/resource rejection leaves book unavailable until reviewed recovery with a new bounded snapshot and verified bridge.
-9. Lost acknowledgement retried with the same immutable source-delivery locator returns the prior durable intake outcome; changed bytes/digest at that same locator are an integrity conflict, not a new delivery. It does not allocate a new capture identity or apply a second book update.
+9. Lost acknowledgement retried with the same immutable source-delivery locator returns the prior durable intake outcome when bytes/digest are identical. Changed bytes/digest at that same locator are an integrity conflict, not a new delivery: preserve the conflicting bytes as a durable immutable evidence object, append a `SourceDeliveryIntegrityConflictV1` record referencing both the prior completion and new evidence, leave the original completion unchanged, create no second completion, do not allocate a new capture identity, and do not apply a second book update or advance a checkpoint.
 10. The same immutable capture delivered through two separately evidenced source-delivery locators deduplicates by capture identity while retaining both delivery-provenance references; changing only the delivery locator does not create a new capture.
 
 **Approved matrix total: 101 synthetic cases** (SD-05 14, SD-06 31, SD-07 46, cross-domain 10). Owner approval is recorded. Fixtures and execution are sequenced after independent review of the exact Revision 12 SHA/blob; currently NOT CREATED / NOT EXECUTED.
@@ -606,7 +606,7 @@ B-13/B-16 closure is scope-only, not implementation or technical verification. B
 ## 12. Revision 9 historical review status and immutable history
 
 - Revision 8 source preserved unchanged: commit `9a5c65f3bc00876d98a070eee46072c5d8be368e`, blob `8f40248f2781cdf4111ef022b77843acea8279b2`.
-- Revision 9 remains immutable; exact commit/blob and its review history are recorded in the project handoff and Revision 9 review reports. Its historical owner-pending language is superseded only by the explicit Revision 10 owner decision and the consolidated Revision 12 current-status sections.
+- Revision 9 remains immutable; exact commit/blob and its review history are recorded in the project handoff and Revision 9 review reports. Its historical owner-pending language is superseded only by the explicit Revision 10 owner decision and the consolidated Revision 14 current-status sections.
 - Revision 10 remains immutable at commit `b32d9af088099f92b09d113ecfa27056cfd9b83d` / blob `a8934cb862c330f1d1fa72aa1f3fdb2b22f9ac96`.
 - Revisions 6–10 remain immutable historical artifacts. This document does not edit the Source Domain Inventory, T1 repository, Phase A baseline or any source implementation.
 - Current blocker status is authoritative in §14 and Annex A §9. B-13/B-16 are closed as bounded exclusions; B-17 and all remaining technical blockers remain open/partial as stated.
@@ -614,7 +614,7 @@ B-13/B-16 closure is scope-only, not implementation or technical verification. B
 
 ## 13. Explicit exclusions
 
-This Phase B document authorizes no production implementation or runtime changes. The sole bounded test exception is the owner-approved isolated synthetic 101-case scope, sequenced after independent review of Revision 12. It authorizes no:
+This Phase B document authorizes no production implementation or runtime changes. The sole bounded test exception is the owner-approved isolated synthetic 101-case scope, sequenced after satisfactory independent review of exact Revision 14 SHA/blob. It authorizes no:
 - production code, DTO, parser, validator, adapter, dependency, API or workflow changes; test-only fixtures/harness are limited to the approved matrix and remain isolated;
 - T0 DDL/schema/database creation, open-for-write, migration, import, promotion, cutover or canonical data mutation;
 - T1 source-code change, collector activation, file copy, importer execution or T1→T0 runtime connection;
@@ -680,7 +680,7 @@ B-13 and B-16 are closed as scope decisions only; excluded capabilities are not 
 
 > Source: `docs/design/T0_PHASE_B_CANONICAL_DTO_DIGEST_CHECKPOINT_ATOMIC_PERSISTENCE_DESIGN_V1_2026-11-22.md`, original blob `594066d98201a8cf0940b62fc36d9358033f06e0`.
 >
-> This annex incorporates the complete proposal into the Revision 12 review surface. It is a **PROPOSED DESIGN INPUT — NOT CONTRACT-FROZEN**. The independent reviewer must review it together with the inherited Phase B design. No production implementation or database operation is authorized.
+> This annex incorporates the complete proposal into the Revision 14 review surface. It is a **PROPOSED DESIGN INPUT — NOT CONTRACT-FROZEN**. The independent reviewer must review it together with the inherited Phase B design. No production implementation or database operation is authorized.
 
 ## Annex A source proposal — complete text
 
