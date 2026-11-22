@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 8 full design review: REQUEST CHANGES
+
+- Full review report: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_9_2026-11-22.md`, commit `c808e2f28c25648c6461815ee6b09ce16a4c8850`, blob `e5d74023a67cc1542325ac6772fe5a959459394a`.
+- Reviewed Revision 8 design: commit `9a5c65f3bc00876d98a070eee46072c5d8be368e`, blob `8f40248f2781cdf4111ef022b77843acea8279b2`.
+- Verdict: **REQUEST CHANGES — NOT READY FOR CONTRACT FREEZE**.
+- Findings: R8-01 HIGH identity conflict between Phase B and referenced Source Domain Inventory (SD-06 stream_epoch inclusion and SD-07 snapshot identity); R8-02 MEDIUM stale Revision 7 metadata inside Revision 8 design file; R8-03 MEDIUM missing explicit SD-06 non-identical overlap test cases; R8-04 MEDIUM producer namespace authority/scope/registration lifecycle not operationally bounded.
+- B-01..B-20 remain OPEN. B-16 is a possible non-RPI bounded-exclusion candidate only after explicit owner acceptance; B-13 and B-17 may be separately considered for bounded exclusions; B-19 is logically specified but atomic persistence proof remains open.
+- Revision 8 B-07 pair-only identity correction is present; producer-origin, namespace uniqueness, fencing, durable non-reuse and rollback proof remain unverified.
+- Codex PR #8 review had no findings on exact head, but was focused on B-07/P2 consistency. Graphify AI review skipped docs-only; static health PASS; tests/formal proofs not run. No workflow run verified for exact head. Independent human review NOT VERIFIED.
+- 98 synthetic cases remain NOT EXECUTED. No tests/workflows/artifacts run in this review.
+- No implementation/runtime/database/T1/T2/deployment/trading authorization. PR #7/#8 remain DO NOT MERGE. Contract Freeze NOT APPROVED.
+- Handoff update commit: `d92659cd634da56f264c9a7a889bb1ba9d5fdab9`.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 6: R-17 corrected, self-check PASS
 
 - Design commit: `9b69c18ea16731bf28efba7a92077e96a74107ce`; blob `7012a228561620f4447a0e363a2c5f27d734912a`.
