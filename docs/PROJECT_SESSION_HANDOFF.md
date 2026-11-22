@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — G1 baseline CI and sanitized artifact verified PASS
+
+- Successful manual run: [44990109927](https://github.com/kenznguyen/btcquant-application/actions/runs/44990109927), run #2, attempt 1, conclusion **SUCCESS**; job ID `137109083853`.
+- Workflow dispatch branch HEAD: `1e19946bc5f627e96ef02e86600a86426a2964f6`. Explicit requested source checkout SHA: `caefbfabebe3dfc09eec87981bac5591d450ea6b`; logs confirm requested and actual HEAD match. Do not confuse dispatch branch HEAD with the pinned source SHA.
+- Workflow blob SHA in artifact: `bb9ace12c3b857a4f85c2581d6ead099aad9b254`.
+- CPython `3.13.18`; linked SQLite `3.45.1` (minimum 3.37.0): metadata policy **PASS**; no SQLite connection/database operation.
+- Existing synthetic parser/header/provenance suite: **46/46 PASS**.
+- Sanitized artifact **PASS**: ID `14741746213`, name `t0-g1-synthetic-only-44990109927`, 2,631 bytes, 7 files, retention through `2026-12-22T05:36:11Z`. GitHub digest and independently recomputed ZIP SHA-256: `db42f2763befe9fc8c294537b0dfac4e448adf736892f599f292ca98cc6e0071`. ZIP inspected; only approved SHA manifests, runtime metadata, test summary and synthetic logs found; no sensitive/source data found.
+- Evidence record: `docs/evidence/T0_G1_SYNTHETIC_ONLY_GITHUB_ACTIONS_HARNESS_2026-11-22.md`, commit `4c739965d1fcb0e560de8a523a0f48d500f2ffba`, blob `aaf25ddc7be2b601166606230dc64494705d9d6e`.
+- Current status: **G1 baseline CI harness PASS; G1 full scope PARTIAL / NOT COMPLETE**. B4 resource-policy and in-memory importer-core implementation/tests are not included yet. No B4/importer or real-data acceptance can be inferred.
+- Next: continue the already owner-approved G1 scope using TDD: add focused synthetic tests for B4 resource policy and pure in-memory importer core, then implement and extend the manual exact-SHA workflow. Preserve existing parser/provenance behavior; no real archive/sidecar or database/data operations.
+- Exclusions unchanged: no archive/sidecar access, source-data filesystem extraction, SQLite open/create/write/DDL, real-data importer/build, Canonical T0 mutation/promotion, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — G1 baseline run inspected; artifact fix committed
 
 - Manual run [44989899852](https://github.com/kenznguyen/btcquant-application/actions/runs/44989899852), attempt 1, workflow_dispatch. Run conclusion **FAILURE**; job ID `137108445328`.
