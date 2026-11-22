@@ -1,3 +1,23 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 4 submitted for design review
+
+- Revised design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
+- Exact design commit: `f4ab46715657675d15c907faeff8aa545c7cb161`.
+- Exact design blob SHA: `90bdb1495770f977cb3ef1d307b28189a2478c2c`.
+- Revision 4 self-review: `docs/reviews/T0_PHASE_B_DESIGN_SELF_REVIEW_ROUND_4_2026-11-22.md`, commit `5aee1497404232fbe7d249c403ab6fa342ba9c3a`; status READY TO SUBMIT FOR NEXT DESIGN REVIEW, not approval.
+- Revision 4 review request: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_4_REQUEST_2026-11-22.md`, commit `4b316bbcd712e6defb63c29869d5063475cfe0a7`; status REQUESTED / PENDING.
+- R-12: added separate candidate source-kind contracts for direct USD-M REST bounded-depth response and T1 reconstructed local book; unknown source kinds reject by default. Current T1 CSV `event_type` does not prove source kind; existing snapshot acceptance blockers remain.
+- R-13: removed “full-state anchor”; snapshot now anchors only its proven returned/declared retained-depth scope.
+- R-14: delivery retry uses immutable source-delivery locator; canonical dedupe uses verified exchange namespace/native update range; stream epoch is continuity provenance only.
+- Synthetic matrix: **74 proposed cases** (SD-05 14, SD-06 28, SD-07 24, cross-domain 8), **NOT EXECUTED**.
+- B-01..B-20: preserved byte-identically from revision 3; all 20 remain OPEN, none removed or owner-accepted.
+- Self-check: design readback; matrix count and section checks; no “full-state anchor” or “Retry same epoch/update range” wording remains; B-01..B-20 exact comparison PASS.
+- Tests/workflows/artifacts: NOT RUN / NONE. No test code or fixtures created.
+- Scope: documentation-only. No code, DTO, parser, validator, tests, fixtures, DDL, database, data movement, T1 source/runtime, network, credentials, T1→T0/T2 runtime, VPS/deployment, Phase C or trading action.
+- Contract freeze: NOT APPROVED. Implementation/database/runtime/Phase C: NOT AUTHORIZED.
+- Next: obtain review of exact revision 4 commit/blob; preserve all B-01..B-20 until evidence-backed resolution or bounded owner acceptance.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 3 design review: REQUEST CHANGES
 
 - Exact reviewed design commit: `98cde283e9b2dc2d0201e4359e3f1195016ff0ea`.
