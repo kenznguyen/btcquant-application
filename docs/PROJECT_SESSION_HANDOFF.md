@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Owner approved source-domain onboarding priority
+
+- Owner approval record: `docs/decisions/T0_SOURCE_DOMAIN_ONBOARDING_PRIORITY_OWNER_APPROVAL_2026-11-22.md`, commit `44e72107604f39ff4a412befa940a4b25d5a81b0`.
+- Design addendum: `docs/design/T0_SOURCE_DOMAIN_ONBOARDING_PRIORITY_ADDENDUM_2026-11-22.md`, commit `eb80f8eb6eb86a9a6d3d54951cb27d23c2032141`.
+- Approval fixes design/onboarding order only:
+  - Phase A: SD-01 trade OHLCV; SD-02 mark-price klines; SD-03 index-price klines; SD-04 premium-index klines; SD-09 funding rates; SD-10 open interest.
+  - Phase B: SD-05 aggregate trades; SD-06 order-book depth diffs; SD-07 order-book snapshots.
+  - Phase C: SD-08 liquidations/force orders; SD-11 long/short ratios; SD-12 taker buy/sell ratio; SD-13 source health/gaps/checkpoints.
+- Next authorized work: Phase A detailed native-schema mapping, provenance/identity/dedup/conflict/checkpoint contract refinement and synthetic test-case design — documentation only.
+- Phase B/C remain sequenced after Phase A design review. No implementation is authorized by this priority approval.
+- SD-08 liquidation canonical acceptance remains BLOCKED: T1 CSV lacks native order/trade event ID; do not invent collision-safe composite identity.
+- Overall source inventory/ingestion contract remains a design proposal; this priority order does not freeze schema, digest encoding, storage or transport.
+- No code, tests, workflows, DB/schema, data movement, network, runtime, credentials, T1 provider activation, T1→T0/T2 connectivity, VPS/deployment, order submission or trading actions occurred. Tests/workflows/artifacts: NOT RUN.
+- Preserve T0 as sole canonical owner, T1 code in its own repository, raw source evidence, no destructive deletion after acknowledgement, paper-first/no-live-trading guardrails.
+- Status: **PRIORITY APPROVED / PHASE A DESIGN NOT STARTED / IMPLEMENTATION NOT AUTHORIZED**.
+
+---
+
 # SOURCE SCHEMA MAPPING CHECKPOINT — 2026-11-22
 
 - T1 native CSV schema inspected: `kenznguyen/binance-futures-collector/docs/SCHEMA.md`, source blob SHA `895f87a8281a3f9b6d37d96b5f68568e4285bee6`.
