@@ -499,6 +499,11 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         assert_valid_fixture_shape(self, second)
         self.assertEqual(self.payload["inventory_expected_sha256"],
                          hashlib.sha256(self.payload["inventory_raw_bytes"]).hexdigest())
+        before = copy.deepcopy(self.payload)
+        result = validate_provenance(self.payload)
+        self.assertTrue(result.valid, result.error_codes)
+        self.assertEqual(result.error_codes, ())
+        self.assertEqual(self.payload, before)
 
     def test_inventory_raw_bytes_invalid_isolated(self) -> None:
         self.payload["inventory_raw_bytes"] = b"\xff"
@@ -572,6 +577,8 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         _renumber_attempt_and_reference(self.payload, 4, 2)
         self.payload["pairs"][3]["zip_crc_ok"] = 0
         self.payload["members"][5]["parser_source_sha"] = "invalid"
+        member5_id = self.payload["members"][5]["member_id"]
+        next(row for row in self.payload["source_rows"] if row["member_id"] == member5_id)["parser_source_sha"] = "invalid"
         self.payload["source_rows"][0]["physical_record_ordinal"] = 1
         _refresh_source_row_identity(self.payload, 0)
 
@@ -639,6 +646,7 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
 
     def test_object_expectation_must_match_measured_and_transfer_values(self) -> None:
         self.payload["objects"][0]["expected_size_bytes"] += 1
+        self.payload["attempts"][0]["expected_size_bytes"] += 1
         self.assert_s1_error("OBJECT_MEASUREMENT_INVALID")
 
     def test_raw_fields_json_must_be_canonical_compact_array(self) -> None:
