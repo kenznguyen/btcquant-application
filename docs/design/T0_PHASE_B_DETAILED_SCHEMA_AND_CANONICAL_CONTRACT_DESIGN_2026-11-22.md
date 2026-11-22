@@ -1,7 +1,7 @@
 # T0 Phase B — Detailed Schema & Canonical Contract Design
 
-- Date: 2026-11-22 (revision 4)
-- Status: **PHASE B DESIGN REVISION 4 — NEXT REVIEW REQUESTED**
+- Date: 2026-11-22 (revision 5)
+- Status: **PHASE B DESIGN REVISION 5 — R-15/R-16 CORRECTIONS COMPLETE / SELF-REVIEW REQUIRED**
 - Scope: SD-05 aggregate trades; SD-06 order-book depth diffs; SD-07 order-book snapshots.
 - Authorization: owner-approved Phase A review and Phase B documentation-only authorization, decision commit `f2f5741cad47b86c70dae23dbaa9b497258cc80a`.
 - Governing design: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_AND_CANONICAL_INGESTION_CONTRACT_V1_2026-11-22.md`.
