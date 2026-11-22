@@ -7008,3 +7008,24 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - Status: synthetic SQLite staging schema implementation and CI regression **PASS at exact SHA**. S1.2 remains **NOT FROZEN** pending independent review, complete DB-to-S3/V1 projection/graph validation and final physical-schema closure. This is not a real-data staging build or production migration.
 - Next: perform focused independent/static review of the exact implementation SHA; resolve any findings with TDD. Keep all real-data, B8, Canonical T0, T1/T2, VPS/runtime, deployment, credential, exchange and trading exclusions unchanged.
 - No real archive/sidecar, raw historical data, Canonical T0, MAY-10, REST tail, B8 runner, host/workstation, T1/T2, VPS, deployment, credentials, exchange or trading state accessed or changed. No upload, retention change, deletion or cleanup.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.2 SQLite staging schema v2 final CI PASS
+
+- Latest exact tested source SHA: `2844e51dfe2a6a9ab0f02376a722cce257019faa`.
+- Final workflow run [45001567714](https://github.com/kenznguyen/btcquant-application/actions/runs/45001567714), run #18; job `Importer-core synthetic tests`, ID `137144031470`; conclusion **SUCCESS**.
+- Run/job checked-out SHA exactly matches requested SHA `2844e51dfe2a6a9ab0f02376a722cce257019faa`.
+- CPython 3.13.18 / SQLite 3.45.1; STRICT minimum 3.37.0 gate PASS.
+- Focused results: importer-core 20 PASS; S1.2 adapter 10 PASS; SQLite staging schema **13 PASS**.
+- Full `market_data` regression: **444 PASS**, Python 3.12.16, committed hash-locked test dependencies.
+- Schema tests cover STRICT, representative NULL rejection in VERIFIED/ACCEPTED branches, composite same-object FK, append-only event triggers after removing the connection authorizer, deterministic fingerprint, integrity_check, foreign_key_check, disposable temporary DB, lowercase SHA grammar and HTTP response status range.
+- Latest implementation commit: `96b80530938b34f0c67ea2139e144835fbdc6f1b`; final test commit: `2844e51dfe2a6a9ab0f02376a722cce257019faa`.
+- Schema module blob: `56e7600fcf0d200098cfd4b875359b204956eb79`; schema test blob: `efe5b76005ec2dbe804aee135b790d88b4252212`; workflow blob: `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
+- Executable schema amendment latest commit: `02c31307494ad70b83ac70170cacdc7d88925a34`.
+- Evidence latest commit: `77c9f2214a46c7208248ed1e94a8bcfafa6880b2`, file `docs/evidence/T0_S1_2_SQLITE_STAGING_SCHEMA_V2_CI_2026-11-22.md`.
+- Artifact endpoint: **0 artifacts**; no artifact ID/digest.
+- RED evidence: run #9 `45000748833`, job `137141528897`, SHA `d78170cf084f988ef83f8fe79ee85a1d43b1f584`; schema tests failed because module did not yet exist (expected RED). The later digest/status test additions were committed before final implementation verification, but a separate pre-fix Actions RED run for those additional cases was not captured.
+- Status: controlled synthetic SQLite schema v2 implementation and final exact-SHA CI/full regression **PASS**. NULL guards are explicit in each acceptance CHECK branch, but tests currently exercise representative NULL fields rather than a complete per-column NULL mutation matrix. Keep that as a remaining verification improvement, not a claim of exhaustive NULL testing.
+- S1.2 remains **NOT FROZEN** pending independent review, complete DB-to-S3/V1 projection/graph validation and final physical-schema closure.
+- Next: independent/static review of the exact schema and adapter SHA; if required, add exhaustive per-column NULL tests with TDD. No real-data or runtime step follows automatically.
+- Boundaries unchanged: no real archives/sidecars, real Historical data build, Canonical T0, MAY-10, REST tail, B8 runner, host/workstation, T1/T2, VPS/runtime, deployment, credentials, exchange/trading, upload, retention change, deletion or cleanup.
