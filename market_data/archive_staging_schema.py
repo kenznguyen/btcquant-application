@@ -50,7 +50,7 @@ TABLE_DDL = (
     ) STRICT""",
     """CREATE TABLE archive_objects (
       object_id TEXT PRIMARY KEY CHECK(length(object_id)=69 AND substr(object_id,1,5)='obj1:' AND substr(object_id,6) NOT GLOB '*[^0-9a-f]*'),
-      inventory_id TEXT NOT NULL,
+      inventory_id TEXT NOT NULL CHECK(length(inventory_id)=69 AND substr(inventory_id,1,5)='inv1:' AND substr(inventory_id,6) NOT GLOB '*[^0-9a-f]*'),
       inventory_blob_sha256 TEXT NOT NULL CHECK(length(inventory_blob_sha256)=64 AND inventory_blob_sha256 NOT GLOB '*[^0-9a-f]*'),
       inventory_entry_identity TEXT NOT NULL,
       object_key TEXT NOT NULL UNIQUE,
