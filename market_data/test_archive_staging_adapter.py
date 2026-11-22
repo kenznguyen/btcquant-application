@@ -834,3 +834,21 @@ class CoverageManifestAndRunLifecycleTests(unittest.TestCase):
         result = validate_staging_graph(changed)
         self.assertFalse(result.valid)
         self.assertIn("RUN_EVENT_TRANSITION_INVALID", result.error_codes)
+
+
+    def test_validated_event_must_reference_same_candidate_snapshot(self):
+        from dataclasses import replace
+        from market_data.archive_staging_adapter import (
+            RunEvent, validate_staging_graph,
+        )
+
+        projection = S3V1ProjectionAndGraphREDTests._minimal_projection()
+        validated = RunEvent(
+            run_id=projection.run.run_id, event_seq=3, event_type="VALIDATED",
+            occurred_at_utc="2026-11-22T00:00:02.000Z", reason_code=None,
+            candidate_snapshot_sha256="e" * 64, validator_payload_sha256="f" * 64,
+        )
+        changed = replace(projection, run_events=projection.run_events + (validated,))
+        result = validate_staging_graph(changed)
+        self.assertFalse(result.valid)
+        self.assertIn("RUN_EVENT_TRANSITION_INVALID", result.error_codes)
