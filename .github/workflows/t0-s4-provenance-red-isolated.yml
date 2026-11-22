@@ -1,30 +1,42 @@
 name: T0 S3 GREEN isolated provenance and V1 regression
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "market_data/archive_provenance_validator.py"
+      - "market_data/test_archive_provenance_validator_s1_red.py"
+      - "market_data/test_archive_provenance_validator_red.py"
+      - "market_data/test_archive_provenance_validator_green.py"
+      - "docs/design/T0_PROVENANCE_VALIDATOR_S1_COVERAGE_AMENDMENT_2026-11-22.md"
+      - ".github/workflows/t0-s4-provenance-red-isolated.yml"
   workflow_dispatch:
     inputs:
       source_sha:
-        description: "Exact source commit SHA to test (40-character Git SHA)"
-        required: true
+        description: "Exact source commit SHA to test (leave blank for workflow SHA)"
+        required: false
+        default: ""
         type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: t0-s3-green-isolated-${{ inputs.source_sha }}
+  group: t0-s3-green-isolated-${{ inputs.source_sha || github.sha }}
   cancel-in-progress: false
 
 jobs:
   isolated-verification:
     name: S3 GREEN + V1 + market_data regression on one checkout
     runs-on: ubuntu-latest
+    env:
+      TEST_SOURCE_SHA: ${{ inputs.source_sha || github.sha }}
     timeout-minutes: 20
     steps:
       - name: Validate requested source SHA
         shell: bash
         env:
-          SOURCE_SHA: ${{ inputs.source_sha }}
+          SOURCE_SHA: ${{ env.TEST_SOURCE_SHA }}
         run: |
           set -euo pipefail
           if [[ ! "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
@@ -35,7 +47,7 @@ jobs:
       - name: Checkout exact source SHA
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_sha }}
+          ref: ${{ env.TEST_SOURCE_SHA }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -51,7 +63,7 @@ jobs:
           set -euo pipefail
           mkdir -p verification-artifacts
           {
-            echo "requested_source_sha=${{ inputs.source_sha }}"
+            echo "requested_source_sha=${{ env.TEST_SOURCE_SHA }}"
             echo "git_rev_parse_head=$(git rev-parse HEAD)"
             echo "git_status_begin"
             git status --short
@@ -112,7 +124,7 @@ jobs:
           v1_code="$(cat verification-artifacts/v1-regression.exit-code 2>/dev/null || echo NOT_RUN)"
           market_code="$(cat verification-artifacts/market-data-regression.exit-code 2>/dev/null || echo NOT_RUN)"
           {
-            echo "source_sha=${{ inputs.source_sha }}"
+            echo "source_sha=${{ env.TEST_SOURCE_SHA }}"
             echo "checked_out_sha=$(git rev-parse HEAD)"
             echo "s3_green_exit_code=$s3_code"
             echo "v1_regression_exit_code=$v1_code"
