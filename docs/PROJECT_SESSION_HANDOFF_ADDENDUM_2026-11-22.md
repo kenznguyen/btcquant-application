@@ -215,3 +215,12 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 
 - Scope review updated: `docs/reviews/T0_PROVENANCE_VALIDATOR_S3_GREEN_SCOPE_REVIEW_2026-11-22.md`, commit `dd7b2621afd557a483ca14d75345d131e554fceb`, blob `a792b501abdd8e3d7902c4b9d6aa5f4df168dfdd`.
 - Evidence updated: `docs/evidence/T0_PROVENANCE_VALIDATOR_S1_COVERAGE_S3_S4_2026-11-22.md`, commit `04badccd7ea57b42954b2b58ec62d7f49ebb7dee`, blob `5af1635225662435091d36165592414b6c87ba13`.
+
+
+### Final main-head verification after contract status update
+
+- Final exact-SHA workflow run [44976543815](https://github.com/kenznguyen/btcquant-application/actions/runs/44976543815), job `137067027769`, attempt `1`, tested current `main` SHA `d1651196af3059e00b22f65461dbd897e5c599df`.
+- Contract blob at this final tested SHA: `da89266c7c4d1394c731b1c2304cdb73b077d4f6`; validator `b94bac0f82ae141984552409f99a5cff70435b3b`; S3 test `328442917535d555d09b18f0213e1ddfd75a9416`; workflow `b73bf266c47dd6cdb440928e2107306f4906a5b6`.
+- S3 30/30, V1 24/24 and full market_data 387/387 all PASS; exit codes 0.
+- Artifact ID `14735332978`, size 3,681 bytes, SHA-256 `a359d04c458a8545e386a288ef5ad6219d6f7bb9d31a6525778444eefeb40cf8`; downloaded and verified.
+- This is the final exact-SHA run for implementation + approval-status documentation. Subsequent commits only update review/evidence/handoff documentation; no tested code, test, contract or workflow blobs changed.
