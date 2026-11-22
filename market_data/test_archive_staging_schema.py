@@ -498,6 +498,40 @@ class StagingSchemaV2Tests(unittest.TestCase):
             )
 
 
+    def test_schema_verifier_rejects_missing_append_only_trigger(self):
+        self.db.set_authorizer(None)
+        self.db.execute("DROP TRIGGER trg_run_events_no_update")
+        self.assertFalse(verify_staging_database(self.db))
+
+    def test_schema_verifier_rejects_altered_append_only_trigger(self):
+        self.db.set_authorizer(None)
+        self.db.execute("DROP TRIGGER trg_run_events_no_delete")
+        self.db.execute(
+            """CREATE TRIGGER trg_run_events_no_delete BEFORE DELETE ON run_events
+               BEGIN SELECT 1; END"""
+        )
+        self.assertFalse(verify_staging_database(self.db))
+
+    def test_schema_verifier_rejects_unapproved_extra_trigger(self):
+        self.db.set_authorizer(None)
+        self.db.execute(
+            """CREATE TRIGGER trg_unapproved_extra AFTER INSERT ON run_events
+               BEGIN SELECT 1; END"""
+        )
+        self.assertFalse(verify_staging_database(self.db))
+
+    def test_schema_fingerprint_changes_when_trigger_manifest_changes(self):
+        from unittest.mock import patch
+        import market_data.archive_staging_schema as schema
+
+        baseline = compute_schema_fingerprint()
+        altered = schema.TRIGGER_DDL + (
+            "CREATE TRIGGER trg_synthetic_manifest_probe AFTER INSERT ON run_events BEGIN SELECT 1; END",
+        )
+        with patch.object(schema, "TRIGGER_DDL", altered):
+            self.assertNotEqual(compute_schema_fingerprint(), baseline)
+
+
 class StagingSafetyAndAtomicityTests(unittest.TestCase):
     def test_file_database_requires_explicit_disposable_path_policy(self):
         with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
