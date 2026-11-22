@@ -1,3 +1,22 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 6: R-17 corrected, self-check PASS
+
+- Exact design path: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
+- Exact Revision 6 design commit: `9b69c18ea16731bf28efba7a92077e96a74107ce`.
+- Exact Revision 6 design blob SHA: `7012a228561620f4447a0e363a2c5f27d734912a`.
+- Trigger: R-17 HIGH from Revision 5 review report commit `c2360834ac7642edef5a97d34f57bafdec465a6d`.
+- Revision 6 self-check: `docs/reviews/T0_PHASE_B_DESIGN_SELF_REVIEW_ROUND_6_2026-11-22.md`, commit `b5aaf7cb5a7ef5b30ac37b8e5dd6a0d610d128df`; SELF-CHECK PASS / READY FOR NEXT DESIGN REVIEW; NOT owner-approved and NOT independent second-person review.
+- R-17 correction: both SD-07 direct REST acquisition and T1 reconstructed-local-book serialization are explicitly owned by T1 in `kenznguyen/binance-futures-collector`. T0 is canonical acceptance/validation boundary and does not mint or replace T1 `capture_producer_id`/`capture_sequence`. Candidate T0 registry binding covers producer ID, collector/repository identity, exact source kind, exchange/market/domain/symbol scope, producer implementation/version and identity-scheme version. Unknown/inactive/unregistered/mismatched producer fails closed.
+- Producer uniqueness, durable allocation, non-reuse and clone/stale-state fencing remain unproven; B-07 remains OPEN.
+- Synthetic matrix: 91 proposed cases (SD-05 14, SD-06 28, SD-07 39, cross-domain 10), NOT EXECUTED. Added SD-07 cases 33–39 for registered T1 REST/local-book producers, unknown producer, source-kind/domain/symbol mismatch, concurrent clones, stale-state sequence reuse and T0 identity substitution.
+- B-01..B-20: all OPEN and unchanged. The exact blocker section was compared byte-for-byte with Revision 5 before design save.
+- Static checks: Revision 6 header, ownership/registration binding, fail-closed rules, R-15 identity separation, R-16 retry locator wording, matrix arithmetic and blocker preservation PASS.
+- Tests/workflows/artifacts: NOT RUN / NONE. No fixtures/test code created.
+- Scope documentation-only. No code, DTO, parser, validator, tests, fixtures, DDL, database, data movement, T1 source/runtime, network, credentials, T1→T0/T2 runtime, VPS/deployment, Phase C or trading action.
+- Contract freeze: NOT APPROVED. Implementation/database/runtime/Phase C: NOT AUTHORIZED.
+- Next: submit exact Revision 6 commit/blob for design review; preserve B-01..B-20 OPEN; no implementation/Phase C without separate owner approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 5 design review: REQUEST CHANGES
 
 - Exact reviewed design commit: `51a11272a7cc9204d2b42a255942614e36f40b6f`.
