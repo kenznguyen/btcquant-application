@@ -87,3 +87,15 @@ No archive/sidecar listing, download, extraction, parsing or sampling; no host/w
 - Artifact endpoint: 0 artifacts.
 - This closes the immediate behavioral-test gap for empty/singleton-run projection and connection ownership. It does not yet verify populated mapping for all eleven relation DTOs, ordering with multiple rows, all SQL read-only mutation guards, or complete S3/V1 payload assembly.
 - F2 remains PARTIAL: S3/V1 payload assembly and graph validator are still NOT IMPLEMENTED; independent review NOT RUN; S1.2 NOT FROZEN.
+
+
+## Strict DTO field validation — exact-SHA GREEN
+
+- Test-first RED commit/source SHA: `88e214e0e02a5dbbfe5d3839bac3953b92251fd7`; run [45007175284](https://github.com/kenznguyen/btcquant-application/actions/runs/45007175284), job `137161232664`; exact checkout verified. Four focused assertions failed because bool/zero/negative integer and empty/incorrectly typed required fields were accepted.
+- GREEN source SHA: `a5f628b1c85c33879a9469ee1a6f90577f53d5d1`; run [45007240516](https://github.com/kenznguyen/btcquant-application/actions/runs/45007240516), job `137161422988`, SUCCESS; exact checkout SHA matches.
+- Adapter source blob: `c29463798b5e21f0421ab1433a2f2de2a7f23a84`; adapter test blob: `13f48580d447239a6d7011b18e652bba082e7c9e`.
+- Runtime: CPython 3.13.18 / SQLite 3.45.1.
+- Focused importer-core: 20/20 PASS; adapter: 18/18 PASS; staging schema: 14/14 PASS; full `market_data` regression: 453/453 PASS.
+- Artifact endpoint: 0 artifacts.
+- DTO constructor validation now rejects nulls in required columns, non-text fields, non-bytes inventory BLOB, bool/negative/out-of-range SQLite integers, zero positive ordinals, invalid flag values, invalid singleton key, invalid HTTP status and malformed SHA-1/SHA-256 text.
+- This is still not full F2. Populated relation mapping, all digest/ID recomputation, S3/V1 payload assembly, graph validation and independent review remain open.
