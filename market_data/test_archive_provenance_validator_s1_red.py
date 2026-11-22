@@ -96,6 +96,29 @@ def _refresh_source_row_identity(payload: dict[str, Any], index: int) -> None:
     _refresh_link_id(link)
 
 
+def _sync_raw_row_and_member(payload: dict[str, Any], index: int) -> None:
+    row = payload["source_rows"][index]
+    candle = payload["candles"][index]
+    raw_fields = [
+        str(candle["open_time_ms"]), candle["open"], candle["high"], candle["low"],
+        candle["close"], candle["volume"], str(candle["open_time_ms"] + 899999),
+        "0", "0", "0", "0", "0",
+    ]
+    row["raw_fields"] = raw_fields
+    row["raw_fields_json"] = json.dumps(raw_fields, ensure_ascii=False, separators=(",", ":"))
+    row["raw_row_digest"] = _enc_digest("T0-RAW-CSV-ROW-V1", *raw_fields)
+    member = next(item for item in payload["members"] if item["member_id"] == row["member_id"])
+    member_bytes = _CSV_HEADER.encode("utf-8") + (",".join(raw_fields) + "\n").encode("utf-8")
+    member["member_size_bytes"] = len(member_bytes)
+    member["member_sha256"] = _sha(member_bytes)
+    member["member_id"] = "mem1:" + _enc_digest(
+        "T0-CSV-MEMBER-V1", member["pair_id"], member["member_path"],
+        bytes.fromhex(member["member_sha256"]),
+    )
+    row["member_id"] = member["member_id"]
+    _refresh_source_row_identity(payload, index)
+
+
 def _renumber_attempt_and_reference(payload: dict[str, Any], index: int, number: int) -> None:
     attempt = payload["attempts"][index]
     obj = next(item for item in payload["objects"] if item["object_id"] == attempt["object_id"])
@@ -243,7 +266,9 @@ def build_valid_s1_fixture() -> dict[str, Any]:
         source_rows.append({
             "source_row_id": source_row_id, "member_id": member_id,
             "physical_record_ordinal": 2, "data_row_ordinal": 1,
-            "raw_fields": raw_fields, "raw_row_digest": raw_digest,
+            "raw_fields": raw_fields,
+            "raw_fields_json": json.dumps(raw_fields, ensure_ascii=False, separators=(",", ":")),
+            "raw_row_digest": raw_digest,
             "parser_contract_id": "T0_ARCHIVE_CSV_HEADER_V1",
             "parser_source_sha": _PARSER_SHA,
             "importer_contract_id": "T0_ARCHIVE_IMPORTER_V1",
@@ -281,6 +306,7 @@ def build_valid_s1_fixture() -> dict[str, Any]:
         "inventory_expected_sha256": inventory_sha,
         "inventory_expected_id": _INVENTORY_ID,
         "coverage_manifest": {
+            "manifest_version": "T0-COVERAGE-MANIFEST-V1",
             "approved_gaps": [], "approved_extras": [],
             "expected_object_count": 404, "expected_pair_count": 202,
             "expected_member_count": 202, "expected_row_count": 202,
@@ -304,6 +330,7 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
     parsed_inventory = json.loads(payload["inventory_raw_bytes"].decode("utf-8"))
     test.assertEqual(parsed_inventory["inventory_id"], payload["inventory_expected_id"])
     test.assertEqual(parsed_inventory["objects"], payload["inventory"]["objects"])
+    test.assertEqual(payload["coverage_manifest"]["manifest_version"], "T0-COVERAGE-MANIFEST-V1")
     test.assertEqual(payload["coverage_manifest"]["expected_object_count"], 404)
     test.assertEqual(payload["coverage_manifest"]["expected_pair_count"], 202)
     test.assertEqual(payload["coverage_manifest"]["expected_member_count"], 202)
@@ -349,6 +376,8 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
         test.assertEqual(attempt["outcome"], "TRANSFERRED")
         test.assertEqual(attempt["complete_object_sha256"], obj["measured_sha256"])
         test.assertEqual(attempt["response_bytes_received"], obj["measured_size_bytes"])
+        test.assertEqual(attempt["expected_size_bytes"], obj["expected_size_bytes"])
+        test.assertEqual(attempt["expected_sha256"], obj["expected_sha256"])
     for pair in payload["pairs"]:
         test.assertEqual(
             pair["pair_id"],
@@ -414,6 +443,7 @@ def assert_valid_fixture_shape(test: unittest.TestCase, payload: dict[str, Any])
         test.assertEqual(row["disposition"], "ACCEPTED")
         test.assertEqual(len(row["raw_fields"]), 12)
         test.assertEqual(row["physical_record_ordinal"], row["data_row_ordinal"] + 1)
+        test.assertEqual(row["raw_fields_json"], json.dumps(row["raw_fields"], ensure_ascii=False, separators=(",", ":")))
         test.assertEqual(row["raw_row_digest"], _enc_digest("T0-RAW-CSV-ROW-V1", *row["raw_fields"]))
         test.assertEqual(
             row["source_row_id"],
@@ -517,6 +547,7 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
     def test_candle_ohlcv_constraint_invalid_isolated(self) -> None:
         self.payload["candles"][0]["high"] = "1"
         self.payload["candles"][0]["low"] = "2"
+        _sync_raw_row_and_member(self.payload, 0)
         _refresh_candle_value_id(self.payload["candles"][0])
         _sync_candle_value_id(self.payload, 0)
         self.assert_s1_error("CANDLE_OHLCV_CONSTRAINT_INVALID")
@@ -547,6 +578,7 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
 
         self.payload["candles"][2]["high"] = "1"
         self.payload["candles"][2]["low"] = "2"
+        _sync_raw_row_and_member(self.payload, 2)
         _refresh_candle_value_id(self.payload["candles"][2])
         _sync_candle_value_id(self.payload, 2)
 
