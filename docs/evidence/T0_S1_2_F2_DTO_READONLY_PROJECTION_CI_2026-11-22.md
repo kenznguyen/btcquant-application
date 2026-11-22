@@ -194,3 +194,23 @@ No archive/sidecar listing, download, extraction, parsing or sampling; no host/w
 - Physical schema specification synchronized with Amendment A and B in documentation commit `f09136c563b026aa718629f6c774505f1b8362f3`; F2 implementation contract status updated in documentation commit `645d576be79533f187131207415e9b6b75b6cca7`. Current main HEAD at this evidence update is documentation-only beyond the tested source SHA; the seven code/workflow blobs above are identical at `d91c92a` and main.
 - Remaining blocker: candidate snapshot digest preimage/serialization is not defined by the approved design. Current validator checks shape/presence and CANDIDATE↔VALIDATED equality; it does not recompute the digest. This requires a separate owner-approved design decision.
 - Independent review has not yet run. S1.2 remains NOT FROZEN; B8 remains NOT APPROVED; real-data staging remains NOT AUTHORIZED.
+
+
+## F6 opt-in type hardening — exact-SHA RED/GREEN
+
+- RED test source SHA: `1a5ff9b34316c7948a137d6dba8d23724361e54a`; run [45010592494](https://github.com/kenznguyen/btcquant-application/actions/runs/45010592494), job `137171836948`, failed as expected because truthy non-bool opt-in values were accepted and created the disposable file.
+- GREEN tested source SHA: `5074bf35f94f94a5b8905548b9628794274bc825`.
+- Exact-SHA CI run [45010626565](https://github.com/kenznguyen/btcquant-application/actions/runs/45010626565), job `137171941617`, SUCCESS; requested SHA and checked-out SHA match.
+- Results: importer-core 20/20 PASS; S1.2 adapter 43/43 PASS; SQLite staging schema 31/31 PASS; full `market_data` regression 495/495 PASS.
+- Runtime CPython 3.13.18 / SQLite 3.45.1 focused; CPython 3.12.16 full regression. Artifact count 0.
+- F6 now requires `type(allow_disposable_path) is bool`; truthy values such as `"yes"` and `1` are rejected before file creation. Existing file/path/symlink guards remain.
+- Latest source blobs:
+  - schema `01720183179211a10aa90c38ba8474bbfe37b561`
+  - schema tests `d915bf4a45be979fc5a4a4bde21426050243f1c1`
+  - adapter `70bcf83c37936593e394c8476134046a7da70f4c`
+  - adapter tests `19cd18b40cb61252094b5805eb9d3cc35a7ff39b`
+  - unchanged S3/V1 validator `b94bac0f82ae141984552409f99a5cff70435b3b`
+  - synthetic S1 fixture `41f5b21eaa418bb32f4f40e00de7e920ca39c4bf`
+  - CI workflow `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
+- The prior `d91c92a` CI record remains valid as a historical checkpoint; this `5074bf3` run supersedes it as the latest tested source.
+- Independent review PR #5 currently references the prior `d91c92a` snapshot and must be updated to this latest exact source before its review result is accepted.
