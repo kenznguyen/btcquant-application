@@ -295,36 +295,37 @@ The matrix below is a design specification only. Each case must use isolated syn
 
 ### SD-05
 1. Valid BTCUSDT aggregate trade with native trade ID and documented `q` mapping.
-2. Source-field completeness test asserts `q` and `nq` are distinct; current CSV fixture has `quantity`/`q` but no `nq`, and the adapter reports `nq` unavailable rather than copying `q`.
+2. Source-field completeness asserts `q` and `nq` are distinct; current CSV fixture has `quantity`/`q` but no `nq`, and reports `nq` unavailable rather than copying `q`.
 3. Raw native fixture containing `nq` preserves it byte-for-byte/in a versioned raw field; no `nq` value is fabricated when absent.
-2. Duplicate ID and identical payload resolves to replay.
-3. Duplicate ID with changed price/quantity/side/time/maker flag resolves to conflict without overwrite.
-4. Missing/negative/non-integer IDs; first ID greater than last ID.
-5. Strict `is_buyer_maker` 0/1 parsing; reject truthy strings and values outside domain.
-6. Exact decimal parsing; reject NaN, Infinity, malformed exponent/overflow and nonpositive price/quantity.
-7. `timestamp_ms`/ISO UTC mismatch and event-time vs receive-time separation.
-8. Cross-field side/maker consistency tests only after source semantics are frozen.
+4. Duplicate aggregate ID and identical payload resolves to replay.
+5. Duplicate aggregate ID with changed price/quantity/side/time/maker flag resolves to conflict without overwrite.
+6. Missing/negative/non-integer IDs and first ID greater than last ID are rejected/quarantined.
+7. Strict `is_buyer_maker` 0/1 parsing rejects truthy strings and values outside domain.
+8. Exact decimal parsing rejects NaN, Infinity, malformed exponent/overflow and nonpositive price/quantity.
+9. `timestamp_ms`/ISO UTC mismatch is rejected; event time remains distinct from receive time.
+10. Cross-field side/maker consistency tests run only after source semantics are frozen.
 
 ### SD-06
-1. Valid diff with U/u/pu, `E` event time, `T` transaction time and bid/ask absolute quantities.
+1. Valid diff fixture carries U/u/pu, `E` event time, `T` transaction time and bid/ask absolute quantities.
 2. Current T1 CSV fixture maps `E` only; `T` is explicitly unavailable, never copied from `E` or import time.
-3. Ordinary-depth fixture is labeled non-RPI; an RPI observation is not silently merged and the derived-book metadata declares the RPI visibility limitation.
+3. Ordinary-depth fixture is labeled non-RPI; an RPI observation is not silently merged and derived-book metadata declares the RPI visibility limitation.
 4. Same canonical update range/payload observed in different local epochs resolves to replay when exchange identity scope is verified.
 5. Same canonical update range with changed payload across epochs resolves to conflict; epoch change alone never creates a new canonical identity.
 6. If update-ID uniqueness scope is unverified, cross-epoch repeated range is quarantined as identity-scope-unverified, not accepted.
 7. Arrival order is preserved in raw evidence; a bounded reorder buffer accepts only in-bound reordering and applies only contiguous sequence events.
-8. Reorder buffer count limit and age limit are independently enforced; count overflow and age expiry persist `GAP_UNRESOLVED`, stop application and mark book unavailable.
+8. Reorder-buffer count limit and age limit are independently enforced; count overflow and age expiry persist `GAP_UNRESOLVED`, stop application and mark book unavailable.
 9. A missing sequence remains `GAP_PENDING` only within both bounds; recovery waits within bounds, then requires a new complete snapshot/new epoch and verified bridge or remains unavailable.
 10. Checkpoint stays before the gap while pending/unresolved and cannot advance over buffered-but-unapplied or uncommitted events.
-2. Zero quantity removes exactly one price level.
-3. Valid sequence bridge from a snapshot and valid subsequent pu chain.
-4. Missing update, regressed ID, invalid overlap, wrong pu, stream epoch change.
-5. Same range/same payload replay; same range/different payload conflict.
-6. Same timestamp but different update IDs remains distinct.
-7. Malformed JSON, wrong tuple arity, duplicate prices, invalid decimal, negative quantity.
-8. Missing stream epoch fails closed; file offset alone cannot establish sequence continuity.
-9. Lost acknowledgement retry does not apply a diff twice.
-10. Checkpoint cannot advance beyond an uncommitted update or unresolved gap.
+11. Zero quantity removes exactly one price level; nonzero quantity replaces the absolute level quantity rather than adding a delta.
+12. Valid sequence bridge from a snapshot and valid subsequent pu chain are accepted only under the pinned exchange rules.
+13. Missing update, regressed ID, invalid overlap, wrong pu and unexpected stream-epoch transition fail closed.
+14. Same range/same payload is replay; same range/different payload is conflict.
+15. Same timestamp with different update IDs remains distinct.
+16. Malformed JSON, wrong tuple arity, duplicate prices, invalid decimal and negative quantity are rejected/quarantined.
+17. Missing stream epoch fails closed; file offset alone cannot establish sequence continuity.
+18. Lost acknowledgement retry does not apply a diff twice.
+19. Buffer overflow never evicts an event silently; the derived book becomes unavailable and a durable gap record is required.
+20. Restart with unresolved gap reloads the checkpoint/gap state and cannot resume from a later diff without a complete new snapshot and verified bridge.
 
 ### SD-07
 1. Multi-level bid/ask rows group into one complete snapshot only when capture ID, completion manifest, expected count and finalized object digest agree.
@@ -333,15 +334,15 @@ The matrix below is a design specification only. Each case must use isolated syn
 4. Explicit empty-side/empty-book manifest is accepted as such; absence of rows without an explicit declaration is not interpreted as empty.
 5. Ordinary snapshot source is marked non-RPI; the book is not labeled as complete all-liquidity visibility.
 6. Repeated capture with a new capture ID but identical update ID/time is a distinct capture observation only if source-generated identity/completeness evidence proves it; otherwise quarantine.
-2. Mixed timestamp/update ID/event type/symbol within group rejected.
-3. Duplicate side/price level rejected.
-4. Same identity and same full level set replay; changed set conflict.
-5. Missing capture ID or ambiguous repeated capture quarantined.
-6. Truncated/partial group and missing close marker cannot be accepted.
-7. Empty side/book is not inferred from absent rows.
-8. Snapshot anchor correctly links to a diff stream epoch only when source evidence establishes the relation.
-9. Different event types at same symbol/update ID remain distinguishable.
-10. Lost acknowledgement retry resolves to replay for the same complete capture identity.
+7. Mixed timestamp/update ID/event type/symbol within one group is rejected.
+8. Duplicate side/price level is rejected.
+9. Same identity and same full level set is replay; changed level set is conflict.
+10. Missing capture ID or ambiguous repeated capture is quarantined.
+11. Truncated/partial group and missing close/completion proof cannot be accepted.
+12. Empty side/book is not inferred from absent rows.
+13. Snapshot anchor links to a diff stream epoch only when source evidence establishes the relation.
+14. Different snapshot event types at the same symbol/update ID remain distinguishable.
+15. Lost acknowledgement retry resolves to replay for the same complete capture identity.
 
 These cases are proposed only. No tests, fixtures, parser, validator or workflow were created or run.
 
@@ -354,10 +355,7 @@ These cases are proposed only. No tests, fixtures, parser, validator or workflow
 | B-03 | `side` vs `is_buyer_maker` relation | Avoid inconsistent or inverted aggressor semantics | Verify exchange semantics and T1 mapping; owner accepts validation |
 | B-04 | Depth stream epoch provenance | Current CSV lacks an immutable capture/session epoch needed for continuity and recovery, but epoch must not be part of canonical event identity | Additive source-contract design; capture epoch lifecycle and cross-restart evidence |
 | B-05 | Binance depth snapshot/diff bridge and update-ID uniqueness scope | Both canonical update-range identity and sequence acceptance depend on exact USD-M semantics | Pin official USD-M protocol and T1 implementation; verify uniqueness namespace across reconnects and define initial/subsequent bridge algorithm |
-| B-14 | Bounded reorder/gap policy numeric limits | Count/age bounds and gap wait determine memory safety and recovery correctness | Measure source behavior; owner-review max buffered events, max residence age, wait policy and resource budget before freeze |
 | B-06 | Depth diff source message completeness and receive time | CSV does not prove complete original event bytes or collector receive timestamp | Inspect T1 source capture and decide additive provenance fields |
-| B-15 | Native `nq` and depth transaction-time `T` fidelity | Current T1 CSV omits aggTrade `nq` and depth `T`; `q` and `nq` differ, while `E` and `T` are separate clocks | Inspect pinned T1 source/raw retention; decide versioned canonical vs raw-only fields; current CSV must explicitly mark both unavailable where absent |
-| B-16 | RPI visibility and source-domain scope | Ordinary depth excludes RPI and is not a complete all-liquidity book | Keep Phase B non-RPI; separately approve any RPI stream and merge contract before inclusion |
 | B-07 | Snapshot capture identity | Current schema has no unique capture ID; timestamp + lastUpdateId may collide | Source-generated immutable capture ID bound to symbol/market/kind/update ID and immutable object evidence |
 | B-08 | Snapshot group completeness | One row per level, no count/checksum/end marker/empty-book marker | Source-generated completion manifest/group framing with expected row count (or equivalent), finalized object digest, explicit complete/empty declarations; EOF/rotation/elapsed time/row count alone prohibited |
 | B-09 | Snapshot-to-stream epoch linkage | Snapshot anchor must correspond to the intended diff stream | Define source lifecycle/session relationship and recovery semantics |
@@ -365,6 +363,9 @@ These cases are proposed only. No tests, fixtures, parser, validator or workflow
 | B-11 | Canonical digest/decimal serialization | Cross-language deterministic replay/conflict decisions | Separate versioned byte-encoding specification and review |
 | B-12 | Atomic provenance, identity, outcome and checkpoint persistence | No ack before durable evidence; no sequence skips | Logical transaction/recovery design aligned with T0 single-writer/fencing |
 | B-13 | T0 API and dataset-version compatibility | Microstructure data is not a Candle and must not silently alter candle API | Separate non-candle read contract/version and consumer compatibility review |
+| B-14 | Bounded reorder/gap policy numeric limits | Count/age bounds and gap wait determine memory safety and recovery correctness | Measure source behavior; owner-review max buffered events, max residence age, wait policy and resource budget before freeze |
+| B-15 | Native `nq` and depth transaction-time `T` fidelity | Current T1 CSV omits aggTrade `nq` and depth `T`; `q` and `nq` differ, while `E` and `T` are separate clocks | Inspect pinned T1 source/raw retention; decide versioned canonical vs raw-only fields; current CSV must explicitly mark both unavailable where absent |
+| B-16 | RPI visibility and source-domain scope | Ordinary depth excludes RPI and is not a complete all-liquidity book | Keep Phase B non-RPI; separately approve any RPI stream and merge contract before inclusion |
 
 ## 11. Phase B exit criteria and owner review
 
