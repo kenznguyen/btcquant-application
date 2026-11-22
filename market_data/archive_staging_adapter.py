@@ -668,7 +668,7 @@ def project_staging_database(connection: sqlite3.Connection) -> StagingProjectio
         raise
 
 
-__all__ = __all__ + (
+__all__ = (
     "RunEnvelope", "ObjectEvidence", "AttemptEvidence", "SuccessfulAttempt",
     "PairEvidence", "MemberCandidateEvidence", "SourceRowEvidence",
     "CandleEvidence", "CandleLinkEvidence", "FailureObservation", "RunEvent",
