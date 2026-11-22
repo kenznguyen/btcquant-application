@@ -411,7 +411,7 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 27. Lost acknowledgement replayed from a different stream epoch but same verified native update range and same payload is canonical replay; epoch difference is retained only as provenance.
 28. Retry of the same source-delivery locator after restart is idempotent even when the process/session epoch changed; source cursor and book watermark remain independently fenced.
 
-### SD-07 — Bounded order-book snapshots (39 cases)
+### SD-07 — Bounded order-book snapshots (46 cases)
 
 1. Multi-level bid/ask rows group only with source capture ID and completion manifest.
 2. Manifest binds exact source kind/endpoint and request parameters.
