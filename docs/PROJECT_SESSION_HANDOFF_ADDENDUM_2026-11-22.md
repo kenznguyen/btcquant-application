@@ -253,3 +253,14 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - Remaining blockers: B3 archive format coverage NOT VERIFIED; B4 resource budgets OPEN; B5 actual coverage manifest NOT VERIFIED; B6 retention/artifact policy OPEN; B7 destination/preflight OPEN; B8 importer/build NOT AUTHORIZED; B9 application-foundation review remains separate and unchanged.
 - Explicit non-actions: no DDL/migration, SQLite, importer, tests, workflow, archive/sidecar access, materialization, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS, deployment, retention/deletion, credentials or trading.
 - Next gate: owner reviews and accepts/rejects S1.1 design. Further implementation or data activity requires a separate explicit approval.
+
+
+### S1.1 review and final readback
+
+- Same-session review record: `docs/reviews/T0_S1_1_SCHEMA_RECONCILIATION_SELF_REVIEW_2026-11-22.md`, blob `a46dd4ce9b64bad09a6ccec078476fa10dc67a65`, commit `e1ec15f69e375433f1686513733cc4d85dd5f017`.
+- Review verdict: **SELF-REVIEW PASS WITH LIMITATIONS**. This is not an independent second-person review. It confirms documentation consistency only; no SQL or runtime correctness claim.
+- Final S1.1 design blob after deterministic candidate-ID clarification: `505c23a00772667d0da3f5cc4a48f2d724b84c2a`; clarification commit `c4bffd21b22ddb7d2a5b3413fe876e5c62622de4`.
+- Final readback confirms S1.1 design and review documents are present on `main`. No implementation/source/test/workflow changes were made.
+- Owner acceptance of the detailed design remains **PENDING**. B1/B2 resolved at design/policy level only; B3–B8 remain as recorded above; B9 separate and unchanged.
+- The original S1 DDL authority notice remains in place; do not implement its superseded success-only constraints.
+- No workflow run/job/artifact; no test, DDL, SQLite, archive, data or runtime operation.
