@@ -44,3 +44,18 @@ Manually run workflow `T0 G1 synthetic-only exact-SHA CI` from the repository Ac
 
 ## Guardrails
 No real archives or sidecars; no filesystem or host preflight; no network acquisition; no SQLite connection/create/write/DDL; no real-data importer/build; no Canonical T0 mutation/promotion; no T1/T2 runtime; no VPS/deployment; no credentials, exchange connectivity or trading. B3 archive format and B5 source-derived coverage remain NOT VERIFIED. G1 remains PARTIAL / NOT COMPLETE.
+
+
+## Verified GitHub-hosted RED execution — 2026-11-22
+
+- Run: [44990722096](https://github.com/kenznguyen/btcquant-application/actions/runs/44990722096), run #3, attempt 1, event `workflow_dispatch`; overall conclusion **FAILURE — expected for TDD RED**.
+- Dispatch branch HEAD: `42ae329460c964550124d4812b75556084ca2d2f`. Explicit requested source SHA and checked-out HEAD both equal `d5db3e8af76c44d75c00bd457b3dccabba762f50`; validation, checkout and exact-SHA verification steps all **PASS**.
+- Job ID: `137110968023`, `Synthetic-only tests`.
+- CPython `3.13.18`; linked SQLite library `3.45.1`; metadata-only minimum-version check **PASS** (no SQLite connection/database operation).
+- Existing parser, exact-header and provenance tests: **46/46 PASS**.
+- B4 RED: suite load fails exactly at import of intentionally absent `market_data.archive_resource_policy` with `ModuleNotFoundError`. Total: 47 tests discovered, 1 expected import error. No implementation behavior was executed. This is the intended RED signal; not a GREEN or overall CI PASS.
+- Artifact: ID `14742195259`; name `t0-g1-synthetic-only-44990722096`; 3,177 bytes; 8 files; created `2026-11-22T05:45:03Z`; expires `2026-12-22T05:45:02Z`. GitHub SHA-256 and independently recomputed ZIP SHA-256 match: `fbc3947a9e68c6a9a3a8cf4e34452e868169e294c0bf6ed9737a424a8433d4ae`.
+- Artifact ZIP inspected. It contains only source/workflow/test blob SHA manifests, runtime metadata, source SHA, sanitized summary and test log; no archive/sidecar, raw market data, credentials, private host path or database content.
+- Blob manifest values: parser `10fe2313103c45d5455f17ff71f3fd0af2e6f038`; provenance validator `b94bac0f82ae141984552409f99a5cff70435b3b`; B4 test `d9a4e8975cdba58eee5546818114442abf7dcab8`; workflow `a3067442ca30b2579e8c70c507f1a94ce29392e7`.
+- Evidence assessment: **B4 RED VERIFIED; artifact integrity/sanitization PASS; G1 PARTIAL / NOT COMPLETE**. Do not mark overall workflow PASS because the expected RED import failure makes the run conclusion FAILURE.
+- Next: implement only the approved pure-Python B4 resource-policy helpers against this test contract, preserve all existing contracts, then dispatch the exact implementation SHA for GREEN. Do not start importer-core tests until B4 GREEN is observed.
