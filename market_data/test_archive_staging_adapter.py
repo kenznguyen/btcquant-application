@@ -195,3 +195,37 @@ class ProjectionCompatibilityTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CompleteDTOInventoryREDTests(unittest.TestCase):
+    """F2 contract: all eleven physical relations have immutable DTOs."""
+
+    def test_all_eleven_canonical_dto_types_exist_and_are_frozen_slotted(self):
+        from dataclasses import is_dataclass
+        import market_data.archive_staging_adapter as adapter
+
+        names = (
+            "RunEnvelope", "ObjectEvidence", "AttemptEvidence",
+            "SuccessfulAttempt", "PairEvidence", "MemberCandidateEvidence",
+            "SourceRowEvidence", "CandleEvidence", "CandleLinkEvidence",
+            "FailureObservation", "RunEvent",
+        )
+        for name in names:
+            with self.subTest(dto=name):
+                dto = getattr(adapter, name, None)
+                self.assertIsNotNone(dto, f"missing canonical DTO: {name}")
+                self.assertTrue(is_dataclass(dto), f"{name} must be a dataclass")
+                self.assertTrue(dto.__dataclass_params__.frozen, f"{name} must be frozen")
+                self.assertTrue(hasattr(dto, "__slots__"), f"{name} must be slotted")
+
+
+class ReadOnlyProjectionAPIRedTests(unittest.TestCase):
+    def test_projection_entrypoint_accepts_only_caller_owned_connection(self):
+        import inspect
+        import market_data.archive_staging_adapter as adapter
+
+        project = getattr(adapter, "project_staging_database", None)
+        self.assertTrue(callable(project), "missing project_staging_database(connection)")
+        parameters = tuple(inspect.signature(project).parameters.values())
+        self.assertEqual(tuple(item.name for item in parameters), ("connection",))
+        self.assertEqual(parameters[0].kind, inspect.Parameter.POSITIONAL_OR_KEYWORD)
