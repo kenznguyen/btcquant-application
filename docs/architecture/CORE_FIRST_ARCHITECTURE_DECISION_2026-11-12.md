@@ -1,3 +1,7 @@
+> **Superseded architecture notice (2026-11-22):** This 2026-11-12 Core-First / AI-deferred decision is retained as historical decision evidence, but it is no longer the controlling project architecture. The current direction is Dual-Strategy Intelligence (Strategy Core RSI + ADX + Smart DCA plus an independent AI Strategy), with all trade intents governed by the shared risk authority. The controlling data architecture is the owner-approved Independent Multi-Source Data Foundation in [the 2026-11-22 decision](../decisions/INDEPENDENT_MULTI_SOURCE_DATA_FOUNDATION_OWNER_DECISION_2026-11-22.md). No live trading or real orders are authorized by this supersession notice.
+
+---
+
 # Core-First Quant Architecture Decision
 
 - Decision ID: CORE_FIRST_ARCHITECTURE_DECISION
