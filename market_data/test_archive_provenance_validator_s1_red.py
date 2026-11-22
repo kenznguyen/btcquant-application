@@ -686,5 +686,21 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.assertEqual(validate_provenance(reordered), baseline)
 
 
+    def test_malformed_unhashable_nested_references_fail_closed_without_raising(self) -> None:
+        payload = copy.deepcopy(self.payload)
+        payload["members"][0]["pair_id"] = []
+        result = validate_provenance(payload)
+        self.assertFalse(result.valid)
+        self.assertIn("CSV_MEMBER_EVIDENCE_INVALID", result.error_codes)
+        self.assertIn("RUN_ACCEPTANCE_INVARIANT_INVALID", result.error_codes)
+
+        payload = copy.deepcopy(self.payload)
+        payload["source_rows"][0]["member_id"] = []
+        result = validate_provenance(payload)
+        self.assertFalse(result.valid)
+        self.assertIn("SOURCE_ROW_PROVENANCE_INVALID", result.error_codes)
+        self.assertIn("RUN_ACCEPTANCE_INVARIANT_INVALID", result.error_codes)
+
+
 if __name__ == "__main__":
     unittest.main()
