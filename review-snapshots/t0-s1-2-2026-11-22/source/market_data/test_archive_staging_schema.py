@@ -612,6 +612,14 @@ class StagingSafetyAndAtomicityTests(unittest.TestCase):
                 connect_staging_database(path)
             self.assertFalse(path.exists())
 
+    def test_disposable_path_policy_requires_exact_boolean_opt_in(self):
+        with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
+            path = Path(directory) / "synthetic-staging-test.sqlite3"
+            for opt_in in ("yes", 1):
+                with self.subTest(opt_in=opt_in), self.assertRaises(TypeError):
+                    connect_staging_database(path, allow_disposable_path=opt_in)
+                self.assertFalse(path.exists())
+
     def test_disposable_path_policy_rejects_existing_file(self):
         with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
             path = Path(directory) / "synthetic-staging-test.sqlite3"
