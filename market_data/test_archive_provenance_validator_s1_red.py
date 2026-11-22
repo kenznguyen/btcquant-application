@@ -1,9 +1,8 @@
-"""Deterministic synthetic S1 fixture and RED contract tests.
+"""Deterministic synthetic S1 fixture and validator contract tests.
 
 No archive files, filesystem, SQLite, network, Canonical T0, or runtime access.
-The positive fixture check validates fixture construction independently of the
-not-yet-implemented S1 validator extension. The eleven negative tests each
-introduce one S1 defect and require its dedicated stable error code.
+The valid fixture proves positive S1 acceptance; negative cases isolate each
+stable S3 error code and selected contract boundaries.
 """
 from __future__ import annotations
 
