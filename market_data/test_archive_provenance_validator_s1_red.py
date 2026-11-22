@@ -18,7 +18,7 @@ from market_data.archive_provenance_validator import (
     validate_provenance,
 )
 
-_INVENTORY_ID = "synthetic-s1-inventory-v1"
+_INVENTORY_ID = "inv1:" + "f" * 64
 _RUN_ID = "synthetic-s1-run-v1"
 _PARSER_SHA = "a" * 40
 _IMPORTER_SHA = "d" * 40
