@@ -207,8 +207,8 @@ class StagingSchemaV2Tests(unittest.TestCase):
     def test_creates_and_verifies_a_disposable_temporary_database(self):
         self.assertGreaterEqual(sqlite3.sqlite_version_info, (3, 37, 0))
         with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
-            path = Path(directory) / "synthetic-staging.sqlite3"
-            temporary_db = connect_staging_database(path)
+            path = Path(directory) / "synthetic-staging-test.sqlite3"
+            temporary_db = connect_staging_database(path, allow_disposable_path=True)
             try:
                 self.assertTrue(path.is_file())
                 self.assertEqual(temporary_db.execute("PRAGMA user_version").fetchone()[0], 2)
@@ -432,14 +432,14 @@ class StagingSchemaV2Tests(unittest.TestCase):
 class StagingSafetyAndAtomicityTests(unittest.TestCase):
     def test_file_database_requires_explicit_disposable_path_policy(self):
         with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
-            path = Path(directory) / "synthetic-staging.sqlite3"
+            path = Path(directory) / "synthetic-staging-test.sqlite3"
             with self.assertRaises((TypeError, ValueError)):
                 connect_staging_database(path)
             self.assertFalse(path.exists())
 
     def test_disposable_path_policy_rejects_existing_file(self):
         with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
-            path = Path(directory) / "synthetic-staging.sqlite3"
+            path = Path(directory) / "synthetic-staging-test.sqlite3"
             path.write_bytes(b"do-not-open")
             with self.assertRaises((TypeError, ValueError)):
                 connect_staging_database(path, allow_disposable_path=True)
