@@ -1,4 +1,20 @@
-# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 16 review requested
+# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 16 review quota blocked
+
+- Owner-approved autonomous remediation/review loop remains active: new immutable successor per correction; static self-review; Codex review on exact final PR head; repeat while P1/P2 findings remain. Once the exact design passes review, proceed only with the owner-approved isolated 101 synthetic cases.
+- PR #13 Codex review: COMPLETED WITH 3 P2 findings on exact head `6554529d9d8bd136c85643fdc43a68256b7e1989`; PR #13 OPEN / NOT MERGED / DO NOT MERGE.
+- R15 immutable design source: `5bbbd6ac253b4f8c8d9aeccb28d77170b1897919` / blob `2b1cb4a8d0a7d40f9ebfb29ccaf9d9d14930cfc0`; unchanged.
+- R16 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_16_2026-11-23.md`; exact final source commit `12f2e1db923c264660ab93b6139cb512d96a78a8`; exact document blob `c2be5412668b0945c5f6f51e1aeaf787383a6676`.
+- R16 corrections: (1) all operative gates require review of exact R16 SHA/blob; (2) existing SD-07 case 10 tests `source_object.sha256 != raw_object_sha256` and fail-before identity/completion/ACK without increasing the 101-case count; (3) filesystem/object-store publication requires atomic no-clobber/create-if-absent, exact digest verification, distinct immutable evidence keys, race-safe publication and fail-closed behavior.
+- R16 static self-review: **PASS** for all three findings, unchanged matrix count, and source-identity metadata consistency. Documentation/static checks only; no runtime/fault-injection tests or formal proofs were run.
+- Findings/resolution report: `docs/reviews/T0_PHASE_B_REVISION_15_CODEX_FINDINGS_AND_R16_RESOLUTION_2026-11-23.md`; exact report commit `9fdce74eebbb1698fef9d024b350ba4f83b07b43`; blob `30687d6572fd460277dc2dee3700066b5aaa05d0`.
+- Review-only PR #14: https://github.com/kenznguyen/btcquant-application/pull/14 — OPEN / NOT MERGED / DO NOT MERGE; mergeable true at last metadata check. Codex review could not complete: usage quota exhausted (bot comment `7084403346`); the review summary reports failed/incomplete, not a findings verdict. Retry comment `7084405298` produced no new review verdict. **Independent review gate remains NOT PASSED / BLOCKED**.
+- Owner-approved synthetic scope remains exactly 101 cases (SD-05 14, SD-06 31, SD-07 46, cross-domain 10). Fixtures/tests NOT CREATED / NOT RUN pending satisfactory independent review of exact R16 SHA/blob.
+- Workflow runs/jobs/artifacts for R16: NONE VERIFIED. Formal proofs: NOT RUN. Contract Freeze: NOT APPROVED.
+- No production implementation, DTO/parser/validator/persistence changes, DDL/database mutation, data movement, T0/T1 runtime, T2 integration, VPS/autostart, deployment, exchange connectivity, automatic execution or trading is authorized.
+
+---
+
+## Historical status snapshot — Revision 16 review requested before final source identity refresh
 
 - Owner-approved autonomous remediation/review loop is active: new immutable successor per correction; static self-review; Codex review on exact final PR head; repeat while P1/P2 findings remain. Once the exact design passes review, proceed only with the owner-approved isolated 101 synthetic cases.
 - PR #13 Codex review: COMPLETED WITH 3 P2 findings on exact head `6554529d9d8bd136c85643fdc43a68256b7e1989`; PR #13 OPEN / NOT MERGED / DO NOT MERGE.
