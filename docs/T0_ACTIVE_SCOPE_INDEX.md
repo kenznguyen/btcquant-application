@@ -6,7 +6,9 @@
 - Revision 11 merges Revision 10's Phase B domain design with the full DTO/digest/checkpoint/atomic-persistence proposal v1 as Annex A. Revision 9 and Revision 10 remain immutable.
 - R11 blocker status: B-01 PARTIAL; B-02 OPEN; B-03 PARTIAL; B-04..B-10 OPEN; B-11/B-12 DESIGN SPECIFIED — NOT VERIFIED; B-13 CLOSED (owner-accepted bounded exclusion); B-14/B-15 OPEN; B-16 CLOSED (owner-accepted bounded exclusion); B-17 OPEN (source mapping PASS, deployed/imported build provenance NOT VERIFIED); B-18 OPEN; B-19 DESIGN SPECIFIED — NOT VERIFIED; B-20 OPEN.
 - Sequencing: request independent second-person review of the exact Revision 11 SHA/blob first. The approved 101-case fixture creation/execution is sequenced after that review. Fixtures/tests currently NOT CREATED / NOT RUN.
-- Independent review: NOT YET REQUESTED. Workflow run/job/artifact: NONE. No test result is claimed.
+- Independent review request: review-only [PR #9](https://github.com/kenznguyen/btcquant-application/pull/9), OPEN / NOT MERGED / DO NOT MERGE. PR head snapshot `8a084c3f02de6d4f462b0f5731ed8f8569fb5fbf`; review target remains the exact Revision 11 document commit/blob `0ac119c7cd31ba63d5aead6796c7b5560abf2a18` / `9d9639b4d26b42a90929f50a32b801e359b23197`.
+- Graphify review status at request time: **QUEUED**; workspace review cap is 10/10 used until 2026-12-01 UTC. Review may not start. Independent verdict: **NOT VERIFIED / NOT COMPLETED**. Do not treat queue status as a review result.
+- Workflow run/job/artifact: NONE. No test result is claimed.
 - Contract Freeze: NOT APPROVED. Production implementation, DDL/database changes, data movement, T0/T1 runtime, T2 integration, VPS/autostart, strategy changes and trading remain NOT AUTHORIZED.
 - Next step: request independent review on exact Revision 11 commit/blob above; preserve failures/findings and resolve review issues before starting the approved isolated test work.
 
