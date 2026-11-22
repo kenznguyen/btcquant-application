@@ -501,3 +501,19 @@
 - Codex review was manually requested on the current review PR head `72be6af7a87c9c6fe0d76bcc6e486a699b39dfbb`; latest status is RUNNING. Do not accept older Codex/Graphify review heads.
 - Review PR #5 remains DO NOT MERGE. After Codex completes, triage findings, fix only approved test/scope issues, rerun exact-SHA CI, refresh review snapshot and request follow-up independent review.
 
+
+
+---
+
+## Phase B Revision 6 — submitted for independent design review (2026-11-22)
+
+- Exact design target: source commit `9b69c18ea16731bf28efba7a92077e96a74107ce`; design document blob SHA-1 `7012a228561620f4447a0e363a2c5f27d734912a`.
+- Review-only PR: [#6 — DO NOT MERGE: Independent design review, T0 Phase B Revision 6](https://github.com/kenznguyen/btcquant-application/pull/6).
+- Review branch: `review/t0-phase-b-design-r6-20261122`; PR head SHA `e46758f47038d5ba143d3790b1e3e2a4e94833d4`; base main SHA at PR creation `bcee54137e158baf4b5e963d9dac50f016ad766d`.
+- Snapshot path: `review-snapshots/t0-phase-b-design-r6-2026-11-22/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`; source and mirror were fetched and compared byte-for-byte before PR creation.
+- Scope manifest: `review-snapshots/t0-phase-b-design-r6-2026-11-22/REVIEW_SCOPE.md`.
+- Requested review: R-17 T1 ownership/producer registration; T0 identity preservation; fail-closed source-kind/domain/symbol scope; SD-07 cases 33–39; R-15/R-16 identity domains; 91 proposed synthetic cases; B-01..B-20.
+- Status: **SUBMITTED / REVIEW PENDING**. PR is open and explicitly DO NOT MERGE. No reviewer has yet been assigned; independent review result NOT VERIFIED.
+- Evidence: byte-for-byte source/mirror comparison PASS. Synthetic matrix 91 cases DESIGN ONLY / NOT EXECUTED. Tests/workflows/artifacts NOT RUN / NONE. Contract freeze NOT APPROVED.
+- Restrictions unchanged: review only; no implementation, fixture/test execution, database/data movement, T1/T2 runtime, deployment, Phase C or trading.
+- Next step: obtain the independent design review on PR #6; triage findings and preserve B-01..B-20 OPEN until explicitly resolved/accepted. Do not merge or implement without separate owner approval.
