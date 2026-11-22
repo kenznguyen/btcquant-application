@@ -1,14 +1,14 @@
-# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.1 documentation reconciled; awaiting owner design acceptance
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.1 design owner-accepted and frozen; implementation not authorized
 
-- S1.1 design: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`, blob `505c23a00772667d0da3f5cc4a48f2d724b84c2a`.
+- S1.1 design: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`, blob `209c9d10cc0e54dc90148efa9ef6884f74aa143d`.
 - S1.1 self-review: `docs/reviews/T0_S1_1_SCHEMA_RECONCILIATION_SELF_REVIEW_2026-11-22.md`, blob `a46dd4ce9b64bad09a6ccec078476fa10dc67a65`; verdict **SELF-REVIEW PASS WITH LIMITATIONS**, not independent review.
-- Latest dated handoff addendum update commit: `70dfe572359228c37581c135a40996d684386590`.
+- Owner acceptance recorded in addendum commit `f591b137272d445ea450f5d3748d15bc56b48fcb`.
 - Latest authoritative `docs/PROJECT_SESSION_HANDOFF.md` T0 status update commit: `0c190a312747e205ca6068d54f509c5bf9756836`.
 - B1 resolved at design level: failed/incomplete evidence nullable; attempts append-only; successful attempt separate relation; pair/member failure semantics; coverage manifest persistence; cross-table invariants.
 - B2 resolved at policy level: SQLite STRICT minimum 3.37.0; exact Python/SQLite pin and per-connection FK checks required later. Exact versions deferred to separately approved implementation.
 - Original S1 DDL is marked historical/superseded where inconsistent with S1.1.
-- Detailed S1.1 design acceptance: **PENDING OWNER REVIEW**.
-- No DDL, SQLite, importer, tests, workflow, archive/data operation, runtime or deployment.
+- Detailed S1.1 design acceptance: **OWNER ACCEPTED / DESIGN FROZEN** on 2026-11-22.
+- Acceptance remains documentation-only: no DDL, SQLite, importer, tests, workflow, archive/data operation, runtime or deployment.
 - B3 archive format NOT VERIFIED; B4 resource limits OPEN; B5 actual coverage values NOT VERIFIED; B6 retention OPEN; B7 destination OPEN; B8 importer/build NOT AUTHORIZED; B9 separate review track unchanged.
 - No workflow run/job/artifact. All existing exclusions remain in force.
 
