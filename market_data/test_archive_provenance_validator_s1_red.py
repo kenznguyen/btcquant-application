@@ -673,6 +673,13 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         ]
         self.assert_s1_error("RUN_ACCEPTANCE_INVARIANT_INVALID")
 
+    def test_approved_gap_cannot_be_present_in_actual_candles(self) -> None:
+        self.payload["coverage_manifest"]["approved_gaps"] = [{
+            "timeframe": "15m", "open_time_ms": 1767225600000,
+            "reason": "declared gap", "evidence_ref": "synthetic-proof",
+        }]
+        self.assert_s1_error("RUN_ACCEPTANCE_INVARIANT_INVALID")
+
     def test_unlisted_candle_outside_coverage_range_is_rejected(self) -> None:
         self.payload["coverage_manifest"]["coverage_ranges"][0]["end_open_time_ms"] -= 900000
         self.assert_s1_error("RUN_ACCEPTANCE_INVARIANT_INVALID")
