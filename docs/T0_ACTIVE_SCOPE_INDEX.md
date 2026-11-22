@@ -905,3 +905,18 @@
 - Graphify AI review skipped for docs-only PR; static health gate PASS, but tests/formal proofs NOT RUN.
 - No fixes yet. B-01..B-20 OPEN; 91 synthetic cases NOT EXECUTED; contract freeze NOT APPROVED.
 - Next: prepare docs-only Revision 7 to address findings, then re-review. No implementation/runtime authorization.
+
+## Phase B Revision 7 — P2 findings corrected in documentation
+
+- Immutable Revision 6 baseline: design commit `9b69c18ea16731bf28efba7a92077e96a74107ce`, blob `7012a228561620f4447a0e363a2c5f27d734912a`; preserved unchanged.
+- Revision 7 design commit: `8bc519dc1d4d14144306e58978b8423ee2799336`; blob `7fad5fa69698770c8fe02efd692cf4056b7ac7db`.
+- Self-check commit: `2772f0d227b73a0d2fbf08e927a5e623fad0489f`; blob `ecc45f544bf76fa7c7292c9f5fd1d9c44e0fcd3f`; SELF-CHECK PASS / READY FOR NEXT DESIGN REVIEW, not owner approval or independent review.
+- P2-1: producer pair is the sole capture identity key; all other capture fields are immutable attributes; changed attributes under a reused pair conflict/quarantine.
+- P2-2: origin requires verifiable T1 attestation or trusted authenticated handoff bound to identity/scope/version/digest; trust root and lifecycle remain unresolved; no proof = quarantine.
+- P2-3: verified unique namespace, single-writer fencing, durable non-reuse and rollback protection are mandatory acceptance prerequisites; no proof = quarantine.
+- Proposed matrix: 98 cases (14/28/46/10), NOT EXECUTED.
+- B-01..B-20 OPEN / unchanged; blocker section byte-identical to Revision 6. B-07 remains OPEN.
+- Static checks PASS; tests/workflows/artifacts NOT RUN / NONE; independent second-person review NOT VERIFIED; contract freeze NOT APPROVED.
+- Documentation-only. No code/database/runtime/T1 source/runtime/deployment/Phase C/trading action.
+- Next: design review of exact Revision 7 commit/blob. No implementation authorization.
+
