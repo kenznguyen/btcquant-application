@@ -1,21 +1,29 @@
 # Session Handoff Addendum — 2026-11-22
-## Importer-Core synthetic in-memory TDD scope approval
+## Importer-Core synthetic in-memory TDD and dedicated workflow
 
-Controlling decision: `docs/decisions/T0_IMPORTER_CORE_SYNTHETIC_TDD_SCOPE_APPROVAL_2026-11-22.md`.
+Controlling TDD decision: `docs/decisions/T0_IMPORTER_CORE_SYNTHETIC_TDD_SCOPE_APPROVAL_2026-11-22.md`, commit `89b9e41e3608f75839e7c5fae7a3a0691ee716b9`.
 
-- Decision commit: `89b9e41e3608f75839e7c5fae7a3a0691ee716b9`.
-- Status: **OWNER-APPROVED — BOUNDED TDD IMPLEMENTATION ONLY**.
-- Approved work: synthetic-only pure-Python importer-core normalization, row accounting, identical-duplicate/conflict reconciliation and explicit-grid coverage calculation, entirely in memory; focused unit tests; RED before GREEN; existing `ArchiveKlineRow` parser contract as input.
-- Target branch: existing `main`; do not create a feature branch.
-- The scope approval does not freeze stable provenance IDs, canonical serialization/digests, schema/DDL, database behavior or full persisted provenance contracts. Do not guess these; they remain under S1 contract/schema freeze.
-- CI workflow edits/dispatch/artifact upload are not included. The approval permits source and unit-test TDD only. Record exact RED/GREEN source SHA and test evidence; if the current environment cannot execute exact-source tests, stop before claiming RED/GREEN or committing unverified behavior.
-- No archive/sidecar access, network, filesystem/host preflight, SQLite, real-data importer, staging, Canonical T0/MAY-10, T1/T2, VPS/runtime/deployment, credentials, exchange connectivity, trading, deletion or cleanup.
-- B3 real archive format and B5 source-derived coverage remain NOT VERIFIED. B8 SQLite/importer build remains NOT AUTHORIZED.
+### Approved TDD scope
+- Synthetic-only pure-Python in-memory normalization, row accounting, duplicate/conflict reconciliation and coverage calculation using existing `ArchiveKlineRow`.
+- Tests first, exact-SHA RED, minimum implementation, exact-SHA GREEN and full `market_data` regression.
+- Existing branch `main`; do not create a feature branch.
+- No stable provenance IDs/digest framing/schema/DDL/database behavior; those remain S1 contract/schema freeze.
 
-### Execution checkpoint — BLOCKED BEFORE RED
+### Dedicated workflow approval and implementation
+- Owner explicitly approved creation of a dedicated GitHub Actions workflow for synthetic importer-core tests.
+- Workflow: `.github/workflows/t0-importer-core-synthetic.yml`.
+- Workflow commit: `84bcfc91ba08b21b96d699101548415d1f19821d`.
+- Workflow blob: `97941bc97cc8f9ac5d447218145232db0daf776e`.
+- Scope/evidence: `docs/evidence/T0_IMPORTER_CORE_SYNTHETIC_WORKFLOW_2026-11-22.md`, commit `9ef7d719f1a0fb3868fbb4b07d6cb83bd5bff13b`.
+- Push trigger is limited to changes in importer-core source or its focused test module on `main`; manual dispatch accepts optional exact SHA. Workflow verifies checkout SHA, uses Python 3.13, runs focused tests then all `market_data` tests, read-only contents permission, no artifact upload.
+- Existing G1 workflow unchanged.
 
-- Read-only inventory and capability checkpoint: `docs/evidence/T0_IMPORTER_CORE_TDD_EXECUTION_CHECKPOINT_2026-11-22.md`, commit `8368122a8b7f9daaee368e9323b0684c9bf49371`.
-- Inspected `main` HEAD before the checkpoint: `e64a5526db0f1aaaf51cf634fb43092ddec3526f`. The checkpoint itself is the latest documentation-only commit; verify live HEAD before any subsequent work.
-- Existing parser and B4 modules/tests were inspected. Importer-core source and focused tests are absent.
-- No local checkout is mounted, and the available GitHub connection has no workflow dispatch or code-execution action. Consequently no exact-SHA RED could be run. No importer tests or implementation were committed; no tests/workflow were run.
-- **Next:** obtain an exact-repository Python execution path. If a dedicated GitHub Actions workflow is needed, request separate approval before editing/dispatching it. Then run test-first RED at an exact source SHA, implement the minimum approved in-memory core, run GREEN and the complete `market_data` suite, and record exact evidence.
+### Execution state
+- Current main HEAD before this handoff update: `6799c624729f2db1a57cc4e218b71020b00868a2`.
+- Workflow file and evidence record verified on `main`.
+- Importer-core source and test module have not yet been added.
+- No workflow run dispatched/observed. RED: NOT VERIFIED. GREEN/full regression: NOT RUN.
+- Next: add focused synthetic tests only; push to `main`; verify the workflow run checked out the exact test commit and produced RED. Then implement only the approved in-memory core and verify GREEN plus full `market_data` suite.
+
+### Exclusions
+No real archive/sidecar access, retrieval, extraction or parsing; no network acquisition; no filesystem/host preflight; no SQLite open/create/write/DDL; no staging or real-data importer; no S1 schema/provenance freeze; no Canonical T0/MAY-10, T1/T2, VPS/runtime/deployment, credentials, exchange connectivity, trading, deletion or cleanup. No artifacts or retention changes.
