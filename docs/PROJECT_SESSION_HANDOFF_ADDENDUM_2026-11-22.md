@@ -306,3 +306,15 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - Scope remains documentation/design only. No archive/sidecar access, host access, SSH, filesystem/mount inspection, preflight, workflow dispatch, artifact upload/setting change, DDL, SQLite, importer, staging build, cleanup/deletion, T1/T2 runtime, deployment or trading.
 - B3 archive format remains NOT VERIFIED; B5 source-derived coverage remains NOT VERIFIED; B8 importer/build remains NOT AUTHORIZED. Former Canonical SQLite remains LOST; any future reconstructed output must be labelled `RECONSTRUCTED — PARTIAL COVERAGE`. MAY-10 excluded; REST tail closed.
 - Next: any future host preflight requires a separate explicit owner authorization and exact host/path. No acquisition or build authorization is implied by this acceptance.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — GitHub-first destination reassessment proposal
+
+- Proposal: `docs/design/T0_GITHUB_FIRST_BLOCKER_RESOLUTION_DESTINATION_REASSESSMENT_2026-11-22.md`, commit `b9028dd533c9e6845af6de84e90a8a950c139567`.
+- Status: **PROPOSAL ONLY — NOT OWNER-ACCEPTED**. Recommends using GitHub as governance/source-control/CI/evidence control plane and deferring a concrete host/path decision until real archive acquisition and SQLite staging are actually authorized.
+- This proposal does not reverse the accepted B7 Option A strategy. B7 remains: encrypted owner-controlled personal workstation selected as preferred destination model; exact device/path and preflight remain pending. No machine is selected or verified.
+- GitHub Actions hosted runners are suitable candidates for bounded synthetic/source-code CI only after separate approval. GitHub's published standard Linux runner has 14 GB SSD total; this does not prove the accepted B4 minimum of 13 GiB free disk plus inode thresholds. Standard runner suitability for full acquisition/staging is **NOT VERIFIED** and must fail closed if preflight thresholds are not met. Larger runners are only a future candidate subject to plan availability, cost approval and exact preflight.
+- GitHub repository/artifacts are not approved durable storage for raw ZIPs, CHECKSUM sidecars, full SQLite/raw candle data or private acquisition evidence. B6 remains unchanged: preserve source/staging/private evidence until explicit deletion approval; sanitized CI artifacts max 30 days.
+- GitHub can host design, source, synthetic tests, exact-SHA workflow evidence and blocker tracking. B3 real archive format and B5 source-derived coverage remain NOT VERIFIED until real source evidence exists. B8 importer/build remains NOT AUTHORIZED.
+- No workflow YAML, test, workflow dispatch, artifact upload, archive access, host/SSH/preflight, DDL/SQLite, importer, staging build, deletion, runtime or deployment was performed or authorized by this proposal.
+- Next decision: owner acceptance/rejection of the GitHub-first, destination-deferred model. If accepted, request a separate bounded approval for G1 synthetic-only CI; keep real-data acquisition/build separately gated.
