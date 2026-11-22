@@ -64,7 +64,7 @@ class ProvenanceValidationResult:
         if len(set(self.error_codes)) != len(self.error_codes):
             raise ValueError("error_codes must be unique")
         if any(code not in _ERROR_CODE_ORDER for code in self.error_codes):
-            raise ValueError("error_codes must use stable V1 codes")
+            raise ValueError("error_codes must use stable catalogue codes")
         if tuple(code for code in _ERROR_CODE_ORDER if code in self.error_codes) != self.error_codes:
             raise ValueError("error_codes must follow the V1 catalogue order")
         if self.valid is not (self.error_codes == ()):
@@ -584,7 +584,9 @@ def _s1_validate(payload, errors):
             pair_bad = True
             continue
         pair_by_id[pid] = pair
-        zo, so = object_by_id.get(pair.get("zip_object_id")), object_by_id.get(pair.get("sidecar_object_id"))
+        zip_ref, sidecar_ref = pair.get("zip_object_id"), pair.get("sidecar_object_id")
+        zo = object_by_id.get(zip_ref) if isinstance(zip_ref, str) else None
+        so = object_by_id.get(sidecar_ref) if isinstance(sidecar_ref, str) else None
         if zo is None or so is None:
             pair_bad = True
             continue
@@ -606,14 +608,18 @@ def _s1_validate(payload, errors):
     members_by_pair, member_by_id, member_bad = {}, {}, False
     for member in members:
         pid, mid = member.get("pair_id"), member.get("member_id")
-        members_by_pair.setdefault(pid, []).append(member)
+        if not _is_text(pid):
+            member_bad = True
+        else:
+            members_by_pair.setdefault(pid, []).append(member)
         if not _is_text(mid) or mid in member_by_id:
             member_bad = True
         else:
             member_by_id[mid] = member
         msha = member.get("member_sha256")
-        expected_mid = _s1_id("mem1:", "T0-CSV-MEMBER-V1", pid, member.get("member_path"),
-                              bytes.fromhex(msha) if _is_sha256(msha) else b"")
+        expected_mid = None
+        if _is_text(pid) and _is_text(member.get("member_path")) and _is_sha256(msha):
+            expected_mid = _s1_id("mem1:", "T0-CSV-MEMBER-V1", pid, member.get("member_path"), bytes.fromhex(msha))
         if (mid != expected_mid or not _is_text(member.get("member_path"))
                 or not _is_nonnegative_int(member.get("member_size_bytes")) or not _is_sha256(msha)
                 or member.get("encoding") != "UTF-8" or type(member.get("bom_present")) is not int or member.get("bom_present") != 0
@@ -641,7 +647,10 @@ def _s1_validate(payload, errors):
     rows_by_member, row_by_id, row_bad = {}, {}, False
     for row in rows:
         mid, rid = row.get("member_id"), row.get("source_row_id")
-        rows_by_member.setdefault(mid, []).append(row)
+        if not _is_text(mid):
+            row_bad = True
+        else:
+            rows_by_member.setdefault(mid, []).append(row)
         if not _is_text(rid) or rid in row_by_id:
             row_bad = True
         else:
@@ -670,9 +679,8 @@ def _s1_validate(payload, errors):
                 or not isinstance(row.get("importer_source_sha"), str)
                 or _SHA1_RE.fullmatch(row.get("importer_source_sha", "")) is None):
             row_bad = True
-        if member is not None:
-            expected_rid = _s1_id("row1:", "T0-SOURCE-ROW-V1", mid,
-                                 physical if type(physical) is int else -1, bytes.fromhex(digest))
+        if member is not None and _is_text(mid) and type(physical) is int and _is_sha256(digest):
+            expected_rid = _s1_id("row1:", "T0-SOURCE-ROW-V1", mid, physical, bytes.fromhex(digest))
             if rid != expected_rid:
                 row_bad = True
     if len(rows) != 202 or len(row_by_id) != 202:
@@ -699,7 +707,11 @@ def _s1_validate(payload, errors):
             "exchange", "market_type", "symbol", "timeframe", "open_time_ms",
             "open", "high", "low", "close", "volume", "available_at_ms", "availability_kind"))
         value_id = candle.get("candle_value_id")
-        if value_id != _s1_id("cv1:", "T0-CANDLE-VALUE-V1", *fields):
+        fields_valid = (all(type(value) is str for value in fields[:4])
+                        and type(fields[4]) is int
+                        and all(type(value) is str for value in fields[5:10])
+                        and type(fields[10]) is int and type(fields[11]) is str)
+        if not fields_valid or value_id != _s1_id("cv1:", "T0-CANDLE-VALUE-V1", *fields):
             digest_bad = True
         if isinstance(value_id, str):
             candle_by_value[value_id] = candle
@@ -748,10 +760,14 @@ def _s1_validate(payload, errors):
             link_bad = True
             continue
         links_by_natural.setdefault(identity, []).append(link)
-        expected_lid = _s1_id("lnk1:", "T0-CANDLE-PROVENANCE-LINK-V1",
-            link.get("exchange"), link.get("market_type"), link.get("symbol"),
-            link.get("timeframe"), link.get("open_time_ms"), source_id,
-            link.get("duplicate_disposition"))
+        link_fields = (link.get("exchange"), link.get("market_type"), link.get("symbol"),
+                       link.get("timeframe"), link.get("open_time_ms"), source_id,
+                       link.get("duplicate_disposition"))
+        link_fields_valid = (all(type(value) is str for value in link_fields[:4])
+                             and type(link_fields[4]) is int and type(link_fields[5]) is str
+                             and type(link_fields[6]) is str)
+        expected_lid = (_s1_id("lnk1:", "T0-CANDLE-PROVENANCE-LINK-V1", *link_fields)
+                        if link_fields_valid else None)
         row = row_by_id.get(source_id)
         candle_group = candles_by_natural.get(identity, [])
         if (link.get("link_id") != expected_lid
@@ -803,10 +819,11 @@ def _s1_validate(payload, errors):
                 if (interval is None or not _is_nonnegative_int(timestamp) or timestamp % interval != 0
                         or not _is_text(entry.get("reason")) or not _is_text(entry.get("evidence_ref"))):
                     run_bad = True
-                marker = (tf, timestamp, entry.get("reason"), entry.get("evidence_ref"))
-                if marker in seen:
-                    run_bad = True
-                seen.add(marker)
+                if interval is not None and _is_nonnegative_int(timestamp) and _is_text(entry.get("reason")) and _is_text(entry.get("evidence_ref")):
+                    marker = (tf, timestamp, entry.get("reason"), entry.get("evidence_ref"))
+                    if marker in seen:
+                        run_bad = True
+                    seen.add(marker)
     if isinstance(run, Mapping):
         if (run.get("schema_contract_id") != "T0_STAGING_SCHEMA_V2"
                 or run.get("status") != "CANDIDATE" or not _is_text(run.get("run_id"))):
