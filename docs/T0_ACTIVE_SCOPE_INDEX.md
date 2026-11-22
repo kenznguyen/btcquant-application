@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase A approved; Phase B documentation-only draft complete
+
+- Owner decision record: `docs/decisions/T0_PHASE_A_OWNER_REVIEW_APPROVAL_AND_PHASE_B_DOCUMENTATION_AUTHORIZATION_2026-11-22.md`, commit `f2f5741cad47b86c70dae23dbaa9b497258cc80a`.
+- Phase A design: **OWNER APPROVED** as design baseline; contract freeze **NOT APPROVED / NOT IMPLIED**. A-01..A-10 remain open.
+- Phase B design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`, commit `efbce3477c367ddc7be3e7ccfb430ba897b3e9d8`, blob `ca57a4f8628d95471bdd575d3846b1db49a4f1f5`.
+- Phase B covers SD-05 aggregate trades, SD-06 depth diffs and SD-07 depth snapshots. Status: **DOCUMENTATION DRAFT COMPLETE / OWNER REVIEW REQUIRED**.
+- Phase B blockers B-01..B-13 remain open, including missing depth stream epoch, snapshot capture identity/completeness, exact source sequence semantics and provenance/checkpoint/digest contracts.
+- Tests/workflows/artifacts: **NOT RUN / NONE**. No implementation or runtime/data action authorized.
+- Next: owner review Phase B design; Phase C and implementation remain gated.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase A detailed design ready for owner review
 
 - Phase A design: `docs/design/T0_PHASE_A_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`
