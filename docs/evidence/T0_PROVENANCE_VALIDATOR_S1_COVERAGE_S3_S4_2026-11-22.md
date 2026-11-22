@@ -178,3 +178,13 @@ Complete and self-review a fully valid deterministic S1 synthetic fixture, ensur
 - Review type: same-session **SELF-REVIEW** only; no independent second-person review claimed.
 - No full repository regression was run. No archive/sidecar was accessed or downloaded; no importer, DDL, SQLite/staging DB, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS, deployment, retention/deletion, credentials or trading operation occurred.
 - Status: bounded S3 GREEN implementation and verification **PASS**. This does not authorize archive acquisition, importer execution, database creation, staging acceptance/promotion or runtime integration.
+
+
+### Final main-head exact-SHA confirmation
+
+- After the contract document's status was updated to record the owner approval and S3 GREEN PASS, the workflow ran again against the then-current `main` HEAD.
+- Run [44976543815](https://github.com/kenznguyen/btcquant-application/actions/runs/44976543815), job `137067027769`, attempt `1`; exact requested/checked-out source SHA `d1651196af3059e00b22f65461dbd897e5c599df`.
+- Contract blob at this final tested SHA: `da89266c7c4d1394c731b1c2304cdb73b077d4f6`. Validator, S3 test and workflow blobs remained `b94bac0f82ae141984552409f99a5cff70435b3b`, `328442917535d555d09b18f0213e1ddfd75a9416`, and `b73bf266c47dd6cdb440928e2107306f4906a5b6`.
+- Results unchanged: S3 **30/30 PASS**, V1 **24/24 PASS**, full market_data **387/387 PASS**; all three exit codes 0.
+- Artifact `t0-s3-green-verification-44976543815`, ID `14735332978`, 3,681 bytes, expiry `2026-12-22T02:32:21Z`, GitHub digest `sha256:a359d04c458a8545e386a288ef5ad6219d6f7bb9d31a6525778444eefeb40cf8`. Downloaded ZIP SHA-256 independently matched; provenance, summary, all exit-code files and three logs inspected.
+- This run is the authoritative exact-SHA verification of the final implementation + owner-approval documentation at the tested `main` HEAD. Later evidence/handoff/review-only documentation commits do not modify tested source, tests, contract or workflow blobs.
