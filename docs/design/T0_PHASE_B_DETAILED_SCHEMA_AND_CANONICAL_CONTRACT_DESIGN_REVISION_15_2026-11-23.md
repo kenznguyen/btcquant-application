@@ -677,7 +677,7 @@ B-13 and B-16 are closed as scope decisions only; excluded capabilities are not 
 
 ### 14.3 Contract Freeze readiness
 
-- Revision 9 full design review: PASS WITH CONDITIONS; it is historical and not a substitute for independent review of Revision 14.
+- Revision 9 full design review: PASS WITH CONDITIONS; it is historical and not a substitute for independent review of Revision 15.
 - Revision 10 exact-SHA review: PASS WITH CONDITIONS for continued documentation; NOT READY FOR CONTRACT FREEZE.
 - 101 synthetic cases: OWNER-APPROVED; fixtures/tests NOT CREATED and execution NOT RUN; sequence after satisfactory independent review of exact Revision 15 SHA/blob.
 - Exact T1 source mapping: PASS at inspected source level; deployed/imported binary/build provenance NOT VERIFIED.
@@ -697,7 +697,7 @@ B-13 and B-16 are closed as scope decisions only; excluded capabilities are not 
 
 > Source: `docs/design/T0_PHASE_B_CANONICAL_DTO_DIGEST_CHECKPOINT_ATOMIC_PERSISTENCE_DESIGN_V1_2026-11-22.md`, original blob `594066d98201a8cf0940b62fc36d9358033f06e0`.
 >
- > This annex incorporates the complete proposal into the Revision 15 review surface. It is a **PROPOSED DESIGN INPUT — NOT CONTRACT-FROZEN**. The independent reviewer must review it together with the inherited Phase B design. No production implementation or database operation is authorized.
+> This annex incorporates the complete proposal into the Revision 15 review surface. It is a **PROPOSED DESIGN INPUT — NOT CONTRACT-FROZEN**. The independent reviewer must review it together with the inherited Phase B design. No production implementation or database operation is authorized.
 
 ## Annex A source proposal — complete text
 
