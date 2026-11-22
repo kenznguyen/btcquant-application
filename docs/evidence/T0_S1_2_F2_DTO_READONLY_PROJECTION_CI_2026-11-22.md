@@ -112,3 +112,17 @@ No archive/sidecar listing, download, extraction, parsing or sampling; no host/w
 - Implemented APIs: `build_s3_v1_payload(projection)`, `validate_staging_graph(projection)`, and `project_staging_s3_v1_payload(connection)`. The latter rejects any snapshot that does not pass both physical graph and existing S3/V1 validation.
 - Remaining verification: the full fixture currently converts synthetic DTOs directly; populated SQLite row-to-DTO projection for every relation still needs a disposable DB integration test. Graph negative tests are not yet exhaustive for all contract invariants. Candidate snapshot digest binding and canonical coverage-manifest checks require additional explicit verification.
 - F2 remains **PARTIAL**, despite these implementation and synthetic validation passes. S1.2 remains **NOT FROZEN**; independent review **NOT RUN**; B8 **NOT APPROVED**; real-data staging **NOT AUTHORIZED**.
+
+
+## Populated SQLite → all eleven DTO relations — exact-SHA GREEN
+
+- Test commit/source SHA: `6a71fe066e0ce80f9b3d580404682e5e2c216976`.
+- Workflow run: [45007736688](https://github.com/kenznguyen/btcquant-application/actions/runs/45007736688).
+- Job: `137162999481`, conclusion SUCCESS; exact requested and checked-out SHA match.
+- Test blob: `69d708a198c201059df34e6210c699f9e533e2ac`; adapter source blob remains `78e82833fded534fc777dee2d2c7ed90dfd7ac61`.
+- Runtime: CPython 3.13.18 / SQLite 3.45.1.
+- Focused importer-core: 20/20 PASS; adapter: 22/22 PASS; staging schema: 14/14 PASS; full `market_data` regression: 457/457 PASS.
+- Disposable in-memory schema-v2 test inserted synthetic rows across all eleven physical relations: reconstruction_run, run_events, archive_objects, acquisition_attempts, object_successful_attempt, archive_pairs, csv_members, source_rows, candles, candle_provenance_links, failure_observations.
+- Verified DTO mapping values, deterministic ordering for objects/attempts/successful attempts, exact inventory BLOB bytes, exact raw_fields_json, and caller connection remains open/usable with transaction state unchanged.
+- Artifact endpoint: 0 artifacts.
+- This verifies populated DB→DTO projection for one complete synthetic graph sample. It does not prove all relation multiplicity/order edge cases, full event transition matrix, snapshot-digest binding, or all graph failure codes. F2 remains PARTIAL pending those cases and independent review.
