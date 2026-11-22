@@ -1,4 +1,20 @@
-# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 16 after PR #13 review
+# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 16 review requested
+
+- Owner-approved autonomous remediation/review loop is active: new immutable successor per correction; static self-review; Codex review on exact final PR head; repeat while P1/P2 findings remain. Once the exact design passes review, proceed only with the owner-approved isolated 101 synthetic cases.
+- PR #13 Codex review: COMPLETED WITH 3 P2 findings on exact head `6554529d9d8bd136c85643fdc43a68256b7e1989`; PR #13 OPEN / NOT MERGED / DO NOT MERGE.
+- R15 immutable design source: `5bbbd6ac253b4f8c8d9aeccb28d77170b1897919` / blob `2b1cb4a8d0a7d40f9ebfb29ccaf9d9d14930cfc0`; unchanged.
+- R16 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_16_2026-11-23.md`; exact source commit `9160617f12a1b0830b5fe5f7244e6a4dede072db`; blob `a6c727286e3c746d252fcaf07e872a92396b749a`.
+- R16 corrections: (1) all operative gates require review of exact R16 SHA/blob; (2) existing SD-07 case 10 tests `source_object.sha256 != raw_object_sha256` and fail-before identity/completion/ACK without increasing the 101-case count; (3) filesystem/object storage requires atomic no-clobber/create-if-absent, exact digest verification, distinct immutable evidence keys, race-safe publication and fail-closed behavior.
+- R16 static self-review: **PASS** for the three corrections and unchanged 101-case count. No runtime/fault-injection tests or formal proofs were run.
+- Findings/resolution report: `docs/reviews/T0_PHASE_B_REVISION_15_CODEX_FINDINGS_AND_R16_RESOLUTION_2026-11-23.md`; commit `b831b80ae4232f04369cc82268a950caabe72465`; blob `6fc9b7567b3c7bab7eab3314cf336853725df86c`.
+- Review-only PR #14: https://github.com/kenznguyen/btcquant-application/pull/14 — OPEN / NOT MERGED / DO NOT MERGE. Initial head `10c49ecc73555bdab025b0a8290a8bcb2c100770`; Codex review requested via comment `7084387227`. Final review must be checked against the final head after Handoff/Index updates.
+- Owner-approved synthetic scope remains exactly 101 cases (SD-05 14, SD-06 31, SD-07 46, cross-domain 10). Fixtures/tests NOT CREATED / NOT RUN pending satisfactory independent review of exact R16 SHA/blob.
+- Workflow runs/jobs/artifacts for R16: NONE VERIFIED. Formal proofs: NOT RUN. Contract Freeze: NOT APPROVED.
+- No production implementation, DTO/parser/validator/persistence changes, DDL/database mutation, data movement, T0/T1 runtime, T2 integration, VPS/autostart, deployment, exchange connectivity, automatic execution or trading is authorized.
+
+---
+
+## Historical status snapshot — Revision 16 before PR #14
 
 - Owner approved autonomous remediation and iterative review: correct findings only in new immutable successor revisions; perform static self-review; request Codex review on each exact final PR head; repeat until the exact current revision passes the review gate. Once the design gate passes, proceed only with the already-approved isolated 101 synthetic cases.
 - PR #13 Codex review completed on exact head `6554529d9d8bd136c85643fdc43a68256b7e1989` with three unresolved P2 findings (review ID `PRR_kwDOVzv83s8AAAABZnV1sw`; comments `4659555256`, `4659555264`, `4659555270`). PR #13 remains OPEN / NOT MERGED / DO NOT MERGE.
