@@ -167,3 +167,30 @@ No archive/sidecar listing, download, extraction, parsing or sampling; no host/w
 - SQLite rows are deliberately inserted in reverse order for objects, attempts, successful-attempt relations, run events and failure observations. Projection output remains deterministic by the specified order keys; failure observations are ordered by subject and failure ordinal.
 - Artifact endpoint: 0 artifacts.
 - Remaining ordering coverage: multi-row permutations for pairs, members, source_rows, candles and links are not yet individually exercised. The SQL has explicit ORDER BY keys for each relation, but those specific multi-row permutations remain NOT VERIFIED.
+
+
+## F1–F7 synthetic closure pass and final exact-source CI — 2026-11-22
+
+- Tested implementation source SHA: `d91c92a813ffe44c4ee786861e5e710654423c26`.
+- Exact-SHA workflow run: [45010072833](https://github.com/kenznguyen/btcquant-application/actions/runs/45010072833).
+- Job: `137170245583`, SUCCESS; workflow validated the requested SHA, checked out that exact SHA, and verified the checked-out SHA before running tests.
+- Runtime: CPython 3.13.18 / SQLite 3.45.1 for focused suites; CPython 3.12.16 for full `market_data` regression.
+- Results: importer-core 20/20 PASS; S1.2 adapter 43/43 PASS; SQLite staging schema 30/30 PASS; full `market_data` regression 494/494 PASS.
+- Artifact endpoint: 0 artifacts.
+- Source blob identities at tested SHA (verified equal to current main source blobs after documentation-only commits):
+  - `market_data/archive_staging_schema.py`: `80393e2be87eafd0a2418dfbe48b91391712b8a2`
+  - `market_data/test_archive_staging_schema.py`: `46eaf32514c5622b6f9fa7dacbdf4f1bc1a0a356`
+  - `market_data/archive_staging_adapter.py`: `70bcf83c37936593e394c8476134046a7da70f4c`
+  - `market_data/test_archive_staging_adapter.py`: `19cd18b40cb61252094b5805eb9d3cc35a7ff39b`
+  - unchanged S3/V1 authority `market_data/archive_provenance_validator.py`: `b94bac0f82ae141984552409f99a5cff70435b3b`
+  - shared synthetic S1 fixture `market_data/test_archive_provenance_validator_s1_red.py`: `41f5b21eaa418bb32f4f40e00de7e920ca39c4bf`
+  - workflow `.github/workflows/t0-importer-core-synthetic.yml`: `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
+- F1: exact two append-only triggers are in the fingerprint and schema verification; tests reject missing, altered and extra triggers.
+- F2/F3: all eleven DTO relation projections, populated SQLite→DTO integration, S3/V1 parity, reverse-insert ordering and additional graph negative invariants are synthetic GREEN.
+- F4: singleton run envelope, initial BUILDING event and run lifecycle acceptance are synthetic GREEN.
+- F5: lower-case hexadecimal digest/identity grammar is enforced at schema and DTO boundaries; malformed IDs/digests are rejected in tests.
+- F6: file-backed test DB requires explicit opt-in, a new synthetic filename under a constrained temporary directory, exclusive creation, and rejects existing files/symlinks/alternate directories.
+- F7: schema initialization is one BEGIN IMMEDIATE transaction; injected failures at table/index/trigger DDL and commit roll back all schema objects and user_version.
+- Physical schema specification synchronized with Amendment A and B in documentation commit `f09136c563b026aa718629f6c774505f1b8362f3`; F2 implementation contract status updated in documentation commit `645d576be79533f187131207415e9b6b75b6cca7`. Current main HEAD at this evidence update is documentation-only beyond the tested source SHA; the seven code/workflow blobs above are identical at `d91c92a` and main.
+- Remaining blocker: candidate snapshot digest preimage/serialization is not defined by the approved design. Current validator checks shape/presence and CANDIDATE↔VALIDATED equality; it does not recompute the digest. This requires a separate owner-approved design decision.
+- Independent review has not yet run. S1.2 remains NOT FROZEN; B8 remains NOT APPROVED; real-data staging remains NOT AUTHORIZED.
