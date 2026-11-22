@@ -1,13 +1,16 @@
-# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 13; PR #10 completed with 4 P2 findings
+# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 14 after PR #11 review
 
-- PR #10: OPEN / NOT MERGED / DO NOT MERGE. Codex review completed on exact R12 head `29c47fcf9a761af00f72c043142ac2cca7b708ab` / design blob `0c726fc05e76c41986130f8ee165d3dc67ce7044`, with 4 unresolved P2 findings. Review summary comment `7082411398`.
-- R13 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_13_2026-11-23.md`; exact source commit `0476b76a96f5a1f9a1a5afd3b6843a15194f2f06`; exact design blob `2c3e81c52ca10083e0d1c78ca3ef31858a47520d`.
-- R13 fixes: (1) handoff and active index now point to R13; (2) SD-05 case #4 asserts inspected-source `q → quantity` mapping while preserving deployed-build and decimal-fidelity uncertainty; (3) source cursor is a per-partition contiguous terminal frontier backed by durable per-delivery completion state, so out-of-order records cannot be skipped; (4) cross-domain case #9 tests changed bytes/digest at the same stable delivery locator as an integrity conflict.
-- Findings/resolution report: `docs/reviews/T0_PHASE_B_REVISION_12_CODEX_FINDINGS_AND_R13_RESOLUTION_2026-11-23.md`; report commit `566e49772927ccafe08f96087df5893dd237a565`.
-- R13 review-only branch: `review/t0-phase-b-r13-codex-findings-20261123`. PR #11 [Revision 13 independent re-review](https://github.com/kenznguyen/btcquant-application/pull/11) is OPEN / NOT MERGED / DO NOT MERGE. Independent review of exact R13 SHA/blob: PENDING; PR #11 requests review of that exact document source commit/blob.
-- 101 isolated synthetic cases remain owner-approved (SD-05 14, SD-06 31, SD-07 46, cross-domain 10), but fixture creation/execution remains gated on satisfactory independent review of exact R13 SHA/blob. Fixtures/tests NOT CREATED / NOT RUN.
-- Workflow runs/jobs/artifacts: NONE verified for R13. Tests/formal proofs: NOT RUN. Contract Freeze: NOT APPROVED.
+- PR #11: OPEN / NOT MERGED / DO NOT MERGE. Codex review completed on exact R13 PR head `982ea9e250bfca19bdd6ecb973956143dfe27df6`; three unresolved P2 findings. Review comments: `4659122865`, `4659122867`, `4659122869`.
+- Reviewed R13 design: source commit `0476b76a96f5a1f9a1a5afd3b6843a15194f2f06`, blob `2c3e81c52ca10083e0d1c78ca3ef31858a47520d`.
+- R14 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_14_2026-11-23.md`; exact source commit `e91706168ce8731711951546deea9399872fa368`; exact design blob `fdfe77d2bd162f2cb9ff9b2e7a6427dd8c3eacaf`.
+- R14 resolves PR #11 P2s: (1) the operative matrix and §14.3 gate fixture work on satisfactory review of exact R14 SHA/blob; R12/R13 references are historical only; (2) changed-content retries at an already-claimed stable locator preserve the conflicting bytes in immutable evidence and append `SourceDeliveryIntegrityConflictV1`, without overwriting the original completion or creating a second completion; (3) step 7 persists evidence/outcome/gap state only, while step 9 is the sole source-frontier update after a contiguous-terminal check. Cross-domain case 9 now asserts durable conflict evidence and unchanged original completion.
+- Findings/resolution report: `docs/reviews/T0_PHASE_B_REVISION_13_CODEX_FINDINGS_AND_R14_RESOLUTION_2026-11-23.md`.
+- R14 review-only branch: `review/t0-phase-b-r14-three-p2-20261123`. PR #12 will request review of the exact R14 design commit/blob above; DO NOT MERGE. Final PR head SHA will be recorded after the handoff/index commit that names the PR.
+- 101 isolated synthetic cases remain owner-approved (SD-05 14, SD-06 31, SD-07 46, cross-domain 10). Fixtures/tests NOT CREATED / NOT RUN; execution remains gated on satisfactory independent review of exact R14 SHA/blob.
+- Workflow runs/jobs/artifacts: NONE verified for R14. Tests/formal proofs: NOT RUN. Contract Freeze: NOT APPROVED.
 - No production implementation, DTO/parser/validator/persistence changes, DDL/database mutation, data movement, T0/T1 runtime, T2 integration, VPS/autostart, deployment or trading is authorized.
+
+---
 
 ---
 
