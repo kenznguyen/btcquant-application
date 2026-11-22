@@ -1,3 +1,28 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.2 F1–F7 synthetic matrix GREEN; independent review is next
+
+- Current `main` HEAD: `9a8c15b37322d9f2b29c5ed0ad6173824830b1f9` (evidence/handoff documentation commits after tested code).
+- Latest tested implementation source SHA: `d91c92a813ffe44c4ee786861e5e710654423c26`. All seven code/workflow blobs below were re-fetched at this SHA and at current main; each blob SHA is identical.
+- Exact-SHA CI run [45010072833](https://github.com/kenznguyen/btcquant-application/actions/runs/45010072833), job `137170245583`, SUCCESS; requested SHA = checkout SHA = `d91c92a`.
+- Runtime CPython 3.13.18 / SQLite 3.45.1 for focused suites; CPython 3.12.16 for full regression.
+- Results: importer-core 20/20 PASS; S1.2 adapter 43/43 PASS; staging schema 30/30 PASS; full `market_data` regression 494/494 PASS. Artifact count 0.
+- Verified source blobs:
+  - schema `80393e2be87eafd0a2418dfbe48b91391712b8a2`
+  - schema tests `46eaf32514c5622b6f9fa7dacbdf4f1bc1a0a356`
+  - adapter `70bcf83c37936593e394c8476134046a7da70f4c`
+  - adapter tests `19cd18b40cb61252094b5805eb9d3cc35a7ff39b`
+  - unchanged S3/V1 validator `b94bac0f82ae141984552409f99a5cff70435b3b`
+  - synthetic S1 test fixture `41f5b21eaa418bb32f4f40e00de7e920ca39c4bf`
+  - CI workflow `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
+- F1–F7 synthetic test status: PASS at tested source SHA. F1 physical spec has been synchronized with owner-approved Amendments A/B; exact two append-only triggers included in schema fingerprint. F6 uses explicit disposable temp-path policy only; F7 schema init is atomic with rollback tests.
+- Physical spec synchronization commit: `f09136c563b026aa718629f6c774505f1b8362f3`. F2 implementation contract status commit: `645d576be79533f187131207415e9b6b75b6cca7`. Evidence commit: `9a8c15b37322d9f2b29c5ed0ad6173824830b1f9`.
+- Remaining design blocker: exact candidate snapshot digest preimage/serialization is undefined. Do not invent it or implement recomputation. Current graph validator validates presence/shape and CANDIDATE↔VALIDATED equality only.
+- F2: **PARTIAL / SYNTHETIC CI PASS** pending candidate digest design decision and independent review. S1.2: **NOT FROZEN**. Independent review: **NOT RUN**. B8: **NOT APPROVED**. Real-data staging: **NOT AUTHORIZED**.
+- Evidence: `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md`.
+- Next: create a byte-for-byte review-only source snapshot from current main and request Graphify/Codex independent review. Do not merge the review-only PR. Address only review findings within current approved synthetic scope, rerun exact-SHA CI, and obtain separate owner approval for the candidate digest contract.
+- Exclusions remain unchanged: no real archive/sidecar access or acquisition; no host/workstation/SSH/filesystem/runner preflight; no B8 workflow/dispatch/runner; no real-data staging, upload, retention/deletion/cleanup; no Canonical T0 operation; no MAY-10/REST tail/T1/T2 runtime/VPS/deployment/credentials/exchange/trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — reverse-insert multi-row ordering GREEN; candidate digest formula unresolved
 
 - Latest test SHA: `912ed3208851837302d979c4b4fa29f90e0effdf`; test blob `e5019a825bb262f8f7f4173eb7568234dc836dfc`; adapter blob `0ddd724c7e69d681333fa845c91a83852dd3420c`.
