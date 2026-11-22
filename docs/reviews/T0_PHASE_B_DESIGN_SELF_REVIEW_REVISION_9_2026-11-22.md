@@ -2,8 +2,8 @@
 
 - Date: 2026-11-22
 - Design file: docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_9_2026-11-22.md
-- Design commit: a8bd3e30f45f89dca33e8f9c810ea0a4d74316fe
-- Design blob: 2f65e299e1c41d80e6e236d6ad98acdfa38cad5a
+- Design commit: 5405928cf1ec61cf979453812d158caa8db18d4a
+- Design blob: 86c490be08961b02d03ba0a7986befe3e142b9df
 - Immutable source: Revision 8 commit 9a5c65f3bc00876d98a070eee46072c5d8be368e, blob 8f40248f2781cdf4111ef022b77843acea8279b2.
 - Scope: documentation-only self-review of R8-01..R8-04 remediation, full-contract consistency, SD-06 overlap matrix, B-13/B-16/B-17 bounded-exclusion proposals and preservation of B-01..B-20.
 - No implementation, test/fixture execution, DB, runtime, network, T1 source edit or trading action.
