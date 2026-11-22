@@ -1,3 +1,14 @@
+# CURRENT DECISION OVERRIDE — 2026-11-22 — New SQLite Canonical target approved (architecture only)
+
+- Owner decision: `docs/decisions/T0_NEW_SQLITE_CANONICAL_TARGET_OWNER_DECISION_2026-11-22.md`, commit `0498e68b0a3e967f27c7265759477a6e7ca05c6d`.
+- Owner approved the goal of building a **new SQLite dataset** from the accepted archive-only reconstruction design. It must initially be labeled `RECONSTRUCTED — PARTIAL COVERAGE`; it is not recovery/restoration of the former database.
+- Former Canonical SQLite remains **LOST**. New reconstructed SQLite remains **NOT CREATED**. Canonical recognition/promotion requires all required acceptance evidence and a separate explicit owner decision.
+- This is architecture direction only. It does NOT authorize archive/network access, materialization, host/path preflight, SQLite/DDL, importer/build, tests/workflows, data validation, deletion/upload, promotion, runtime/Feeder/VPS, T1/T2 connection, deployment, credentials or trading.
+- S1.1 design remains OWNER ACCEPTED / DESIGN FROZEN. B4/B6/B7 accepted constraints remain in force. Archive-format coverage beyond M15 monthly 2022-08 and actual source-derived coverage remain NOT VERIFIED; exact host/path and preflight remain pending; importer/build remains NOT AUTHORIZED.
+- No tests, workflows, jobs, artifacts, archive requests, data operations or runtime actions were performed. Next: prepare an implementation-readiness proposal only, with each later phase separately gated.
+
+---
+
 # HANDOFF AUTHORITY — READ THIS FIRST — 2026-11-22
 
 > This section is the controlling session-start index. Do not infer current permission or status from the age, heading, or position of historical entries below. The detailed dated log is an audit trail, not a flat list of simultaneously active instructions.
