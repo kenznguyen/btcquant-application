@@ -796,3 +796,41 @@ class PopulatedSQLiteProjectionIntegrationTests(unittest.TestCase):
             self.assertEqual(connection.execute("SELECT 1").fetchone()[0], 1)
         finally:
             connection.close()
+
+
+class CoverageManifestAndRunLifecycleTests(unittest.TestCase):
+    def test_s3_projection_rejects_noncanonical_coverage_manifest_json(self):
+        import hashlib
+        from dataclasses import replace
+        from market_data.archive_staging_adapter import (
+            AdapterValidationError, build_s3_v1_payload,
+        )
+
+        projection = S3V1ProjectionAndGraphREDTests._minimal_projection()
+        noncanonical = '{"z":1,"a":2}'
+        changed_run = replace(
+            projection.run,
+            coverage_manifest_json=noncanonical,
+            coverage_manifest_sha256=hashlib.sha256(noncanonical.encode()).hexdigest(),
+        )
+        changed = replace(projection, run=changed_run)
+        with self.assertRaises(AdapterValidationError) as caught:
+            build_s3_v1_payload(changed)
+        self.assertEqual(caught.exception.code, "COVERAGE_MANIFEST_NONCANONICAL")
+
+    def test_validated_event_requires_validator_payload_digest(self):
+        from dataclasses import replace
+        from market_data.archive_staging_adapter import (
+            RunEvent, validate_staging_graph,
+        )
+
+        projection = S3V1ProjectionAndGraphREDTests._minimal_projection()
+        validated = RunEvent(
+            run_id=projection.run.run_id, event_seq=3, event_type="VALIDATED",
+            occurred_at_utc="2026-11-22T00:00:02.000Z", reason_code=None,
+            candidate_snapshot_sha256="d" * 64, validator_payload_sha256=None,
+        )
+        changed = replace(projection, run_events=projection.run_events + (validated,))
+        result = validate_staging_graph(changed)
+        self.assertFalse(result.valid)
+        self.assertIn("RUN_EVENT_TRANSITION_INVALID", result.error_codes)
