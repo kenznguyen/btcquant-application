@@ -1,3 +1,24 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 9 full design review PASS WITH CONDITIONS
+
+- Revision 9 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_9_2026-11-22.md`, exact commit `5405928cf1ec61cf979453812d158caa8db18d4a`, blob `86c490be08961b02d03ba0a7986befe3e142b9df`.
+- Immutable Revision 8 baseline: commit `9a5c65f3bc00876d98a070eee46072c5d8be368e`, blob `8f40248f2781cdf4111ef022b77843acea8279b2`.
+- Revision 9 self-review: `docs/reviews/T0_PHASE_B_DESIGN_SELF_REVIEW_REVISION_9_2026-11-22.md`, commit `d29d0d636a90cb22be5e23fcf15ebf408e1907db`, blob `f5f4acb4e198e5ec8ce95550eb0014993aa4128b`; SELF-CHECK PASS, not independent review or owner approval.
+- Full design review: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_REVISION_9_2026-11-22.md`, commit `9f0d166cd5f12fa0609c3bb688c4eb7dd5498d2a`, blob `8822786f64c829b0b29f57da0aa441016f1ce871`.
+- Verdict: **PASS WITH CONDITIONS — READY FOR OWNER REVIEW; NOT READY FOR CONTRACT FREEZE**. No new material document-level findings. R8-01..R8-04 addressed at documentation level.
+- R8-01: Source Domain Inventory is explicitly non-binding proposal/reference; Phase B SD-06 identity excludes `stream_epoch`; SD-07 capture identity is exactly `(capture_producer_id, capture_sequence)`. Owner must approve supersession or aligned Inventory amendment before freeze.
+- R8-02: Revision 9 header/status/next-review metadata corrected.
+- R8-03: SD-06 overlap adjudication and cases 29–31 added. Conditional on pinned Binance USD-M protocol and T1 evidence; NOT EXECUTED.
+- R8-04: T0 producer-ID registry allocation authority, T1 sequence issuance, uniqueness scope, single-writer/lifecycle/revocation/restore policy specified as candidate policy. Trust root/allocator/fencing/proof remain unfrozen; B-07 OPEN.
+- Proposed matrix: 101 cases (14/31/46/10), DESIGN ONLY / NOT EXECUTED. Static counts verified.
+- B-01..B-20: all 20 unique blockers retained and OPEN. B-13/B-16/B-17 have bounded-exclusion proposals only; no owner acceptance and no blocker closure.
+- T1 docs/SCHEMA.md fetched from main; blob matches pinned `895f87a8281a3f9b6d37d96b5f68568e4285bee6`. T1 parser/source behavior itself NOT VERIFIED.
+- GitHub Actions runs for exact Revision 9 design SHA: NONE returned. Tests/fixtures/formal proofs NOT RUN / NOT CREATED. Independent human review NOT VERIFIED.
+- No code, DTO, parser, validator, tests, fixtures, DDL, DB, API, data movement, T1/T0 runtime, deployment, T2 or trading action.
+- Contract Freeze **NOT APPROVED**; implementation **NOT AUTHORIZED**. PR #7/#8 remain historical review-only / DO NOT MERGE.
+- Next: owner review the Inventory supersession and B-13/B-16/B-17 proposals; gather T1/protocol/provenance/persistence evidence; then independent second-person review on the exact owner-approved SHA.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Full Phase B Revision 8 design review completed; REQUEST CHANGES
 
 - Full review report: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_9_2026-11-22.md`, commit `c808e2f28c25648c6461815ee6b09ce16a4c8850`, blob `e5d74023a67cc1542325ac6772fe5a959459394a`.
