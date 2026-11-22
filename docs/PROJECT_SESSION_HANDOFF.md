@@ -12,8 +12,6 @@
 
 ---
 
----
-
 ## Historical status snapshot — Revision 12 (superseded by Revision 13)
 
 - Owner approval decision: `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_2026-11-22.md`, commit `ae90cf57da7f076bd57eccf4774890c4197ae81c`, blob `c0be1b2bf548993bb79be79739c85e447678b652`.
