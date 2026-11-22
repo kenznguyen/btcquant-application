@@ -6,6 +6,7 @@ clock, environment or exchange I/O. It does not assign FIRST_OBSERVED.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 from enum import Enum
 from typing import Iterable
 
@@ -37,16 +38,16 @@ class ImportCandidate:
 
     identity: tuple[str, str, str, str, int]
     open_time_ms: int
-    open: object
-    high: object
-    low: object
-    close: object
-    volume: object
+    open: Decimal
+    high: Decimal
+    low: Decimal
+    close: Decimal
+    volume: Decimal
     source_close_time_ms: int
-    quote_asset_volume: object
+    quote_asset_volume: Decimal
     number_of_trades: int
-    taker_buy_base_asset_volume: object
-    taker_buy_quote_asset_volume: object
+    taker_buy_base_asset_volume: Decimal
+    taker_buy_quote_asset_volume: Decimal
     ignore: str
     bar_close_boundary_ms: int
     raw_fields: tuple[str, ...]
@@ -119,6 +120,24 @@ def _timestamp(value: object, field: str, interval_ms: int) -> int:
     return value
 
 
+def _normalized_payload(row: ArchiveKlineRow) -> tuple[object, ...]:
+    """Return semantic payload fields; Decimal equality ignores lexical scale."""
+    return (
+        row.open,
+        row.high,
+        row.low,
+        row.close,
+        row.volume,
+        row.source_close_time_ms,
+        row.quote_asset_volume,
+        row.number_of_trades,
+        row.taker_buy_base_asset_volume,
+        row.taker_buy_quote_asset_volume,
+        row.ignore,
+        row.bar_close_boundary_ms,
+    )
+
+
 def _candidate(
     row: ArchiveKlineRow,
     identity: tuple[str, str, str, str, int],
@@ -181,7 +200,10 @@ def normalize_archive_rows(
     ] = {}
     row_identities: list[tuple[str, str, str, str, int]] = []
     for ordinal, row in enumerate(source_rows, start=1):
-        identity = (exchange, market_type, symbol, timeframe, row.open_time_ms)
+        open_time_ms = _timestamp(
+            row.open_time_ms, "row.open_time_ms", INTERVALS_MS[timeframe]
+        )
+        identity = (exchange, market_type, symbol, timeframe, open_time_ms)
         ref = SourceRowReference(source_ref=source_ref, row_ordinal=ordinal)
         grouped.setdefault(identity, []).append((ordinal - 1, row, ref))
         row_identities.append(identity)
@@ -191,7 +213,7 @@ def normalize_archive_rows(
     quarantined = False
 
     for identity, occurrences in grouped.items():
-        payloads = {row.raw_fields for _, row, _ in occurrences}
+        payloads = {_normalized_payload(row) for _, row, _ in occurrences}
         if len(payloads) > 1:
             quarantined = True
             for index, _, _ in occurrences:
@@ -205,6 +227,8 @@ def normalize_archive_rows(
 
         refs = tuple(ref for _, _, ref in occurrences)
         candidates.append(_candidate(first_row, identity, refs))
+
+    candidates.sort(key=lambda candidate: candidate.identity)
 
     row_results = tuple(
         ImportRowResult(
@@ -256,8 +280,8 @@ def calculate_coverage(
     interval_ms = _interval(timeframe)
     start = _timestamp(start_open_time_ms, "start_open_time_ms", interval_ms)
     end = _timestamp(end_open_time_ms, "end_open_time_ms", interval_ms)
-    if end < start:
-        raise ImportBatchError("end_open_time_ms must be >= start_open_time_ms")
+    if end <= start:
+        raise ImportBatchError("coverage bounds must define a non-empty half-open range")
 
     try:
         supplied = tuple(observed_open_times)
