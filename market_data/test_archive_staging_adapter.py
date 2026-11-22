@@ -193,6 +193,24 @@ class ProjectionCompatibilityTests(unittest.TestCase):
             )
 
 
+class PhysicalIdentityGrammarTests(unittest.TestCase):
+    def test_run_envelope_rejects_malformed_run_identity_suffix(self):
+        from dataclasses import replace
+        from market_data.archive_staging_adapter import AdapterValidationError
+
+        run = S3V1ProjectionAndGraphREDTests._minimal_projection().run
+        with self.assertRaises(AdapterValidationError):
+            replace(run, run_id="run1:" + "g" * 64)
+
+    def test_candle_dto_rejects_malformed_candle_value_identity_suffix(self):
+        from dataclasses import replace
+        from market_data.archive_staging_adapter import AdapterValidationError
+
+        candle = S3V1ProjectionAndGraphREDTests._minimal_projection().candles[0]
+        with self.assertRaises(AdapterValidationError):
+            replace(candle, candle_value_id="cv1:" + "g" * 64)
+
+
 if __name__ == "__main__":
     unittest.main()
 
