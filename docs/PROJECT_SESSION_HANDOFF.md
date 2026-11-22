@@ -1,3 +1,17 @@
+# DESIGN CHECKPOINT — 2026-11-22 — Source Domain Inventory & Canonical Ingestion Contract v1
+
+- Design document: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_AND_CANONICAL_INGESTION_CONTRACT_V1_2026-11-22.md`
+- Design commit: `95f78306eaf793862c5e0c6f1f5c1bc24c38ef60`
+- Status: **DESIGN PROPOSAL — OWNER REVIEW REQUIRED**; no implementation authorization.
+- Initial inventory covers 13 domain families: trade OHLCV candles; mark/index/premium candles; aggregate trades; order-book diffs and snapshots; liquidations; funding; open interest; three long/short ratio variants; taker buy/sell ratio; source health/gaps/checkpoints.
+- Contract defines source ownership, canonical envelope/provenance, domain identities, at-least-once/idempotent ingestion, replay-vs-conflict behavior, quarantine, checkpoint acknowledgement, T0 single-writer boundary and staged rollout.
+- T1 README inventory used; exact native CSV column mapping remains PARTIAL until `docs/SCHEMA.md` and relevant T1 source schemas are inspected.
+- Open decisions remain: liquidation collision-safe identity, kline finality/revisions, source overlap/conflict policy, non-candle canonical digest encoding, physical multi-domain SQLite schema/capacity, transport, per-stream checkpoint and raw evidence retention.
+- No tests/workflows/artifacts. No code/schema/database/data/network/runtime/VPS/deployment changes. T1→T0 runtime ingestion remains NOT AUTHORIZED.
+- Next: owner confirms/amends inventory and BTCUSDT-first source priority; then native schema mapping and contract freeze, documentation-only.
+
+---
+
 # ARCHITECTURE STATUS OVERRIDE — 2026-11-22 — Independent Multi-Source Data Foundation OWNER-APPROVED
 
 - Controlling decision: `docs/decisions/INDEPENDENT_MULTI_SOURCE_DATA_FOUNDATION_OWNER_DECISION_2026-11-22.md`, recorded in commit `f8d2dacc8d33b05114403a8ba5ceb286be44d6f3`.
