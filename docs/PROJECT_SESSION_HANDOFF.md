@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase A owner-approved; Phase B documentation-only design in progress
+
+- Owner review decision: **PHASE A DESIGN APPROVED; PHASE B DOCUMENTATION-ONLY AUTHORIZED**. Owner note: none.
+- Decision record: `docs/decisions/T0_PHASE_A_OWNER_REVIEW_APPROVAL_AND_PHASE_B_DOCUMENTATION_AUTHORIZATION_2026-11-22.md`, commit `f2f5741cad47b86c70dae23dbaa9b497258cc80a`.
+- Approved Phase A baseline: `docs/design/T0_PHASE_A_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`, design commit `4fdf1412539e784ab6a72338b8198f3c72c76349`, reviewed blob `9aeec4b04d838b5bf70a1ce5041eb34cb6d3f1fd`.
+- Phase A approval does **not** freeze its contracts. A-01..A-10 remain open until evidence-backed resolution or explicit bounded owner acceptance.
+- Phase B design draft: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`, commit `efbce3477c367ddc7be3e7ccfb430ba897b3e9d8`, blob `ca57a4f8628d95471bdd575d3846b1db49a4f1f5`.
+- Phase B scope: SD-05 aggregate trades; SD-06 order-book depth diffs; SD-07 order-book snapshots. T1 source schema inspected read-only: `kenznguyen/binance-futures-collector/docs/SCHEMA.md`, blob `895f87a8281a3f9b6d37d96b5f68568e4285bee6`.
+- Key Phase B blockers: aggTrade field semantics/build mapping; depth stream epoch absent from documented CSV; snapshot capture ID and group completeness absent; sequence bridge rules require exact exchange/source verification; digest/provenance/checkpoint/API versioning remain unfrozen.
+- Phase B status: **DOCUMENTATION DRAFT COMPLETE / OWNER REVIEW REQUIRED**. Design acceptance/freeze is not implied.
+- Tests/workflows/artifacts: **NOT RUN / NONE** for this documentation work.
+- No code/DTO/parser/validator/test/fixture/workflow changes; no DDL/database/data movement/import; no T1 source change/activation/T1→T0/T2 runtime; no network/credentials/VPS/deployment; no order submission or trading.
+- Next: owner review Phase B design draft and B-01..B-13. Do not proceed to Phase C or implementation without a separate explicit decision.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase A detailed design ready for owner review
 
 - Phase A design: `docs/design/T0_PHASE_A_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`
