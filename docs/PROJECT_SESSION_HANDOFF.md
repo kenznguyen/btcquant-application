@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — B4 synthetic RED verified on exact source SHA
+
+- Verified run: [44990722096](https://github.com/kenznguyen/btcquant-application/actions/runs/44990722096), run #3 attempt 1, `workflow_dispatch`; job `137110968023`. Overall conclusion FAILURE is expected for the TDD RED phase.
+- Dispatch branch HEAD: `42ae329460c964550124d4812b75556084ca2d2f`; requested source SHA and checked-out HEAD match exactly: `d5db3e8af76c44d75c00bd457b3dccabba762f50`. Exact-SHA validation and checkout verification PASS.
+- CPython 3.13.18; SQLite library 3.45.1; metadata-only minimum-version check PASS. No SQLite connection/database operation.
+- Existing parser/header/provenance tests: 46/46 PASS. B4 test suite produces the intended import RED: `ModuleNotFoundError: No module named 'market_data.archive_resource_policy'`. 47 tests discovered, one expected import error. Do not report this as GREEN or overall CI PASS.
+- Sanitized artifact verified: ID `14742195259`, name `t0-g1-synthetic-only-44990722096`, 3,177 bytes, 8 files, expiry `2026-12-22T05:45:02Z`; GitHub and independent SHA-256 both `fbc3947a9e68c6a9a3a8cf4e34452e868169e294c0bf6ed9737a424a8433d4ae`. ZIP inspected; only approved manifests, runtime metadata, source SHA, summary and test log.
+- Evidence record updated: `docs/evidence/T0_G1_B4_RESOURCE_POLICY_RED_DISPATCH_2026-11-22.md`, commit `8638aa5ab144273cef3aef18676433592b812b74`, blob `ef30cddaf9a482424f2724211b3dba5c9d9065fe`.
+- Status: **B4 RED VERIFIED; exact-SHA checkout PASS; baseline tests PASS; artifact integrity/sanitization PASS; G1 PARTIAL / NOT COMPLETE**.
+- Next: implement only approved pure-Python B4 resource-policy helpers; then run exact-SHA GREEN. Do not begin importer-core TDD until B4 GREEN is verified. Preserve all prior exclusions: no real archives/sidecars, filesystem or host preflight, SQLite open/create/write/DDL, real-data importer/build, Canonical T0 mutation/promotion, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — B4 synthetic RED suite prepared for manual exact-SHA dispatch
 
 - Latest checkpoint evidence: `docs/evidence/T0_G1_B4_RESOURCE_POLICY_RED_DISPATCH_2026-11-22.md`, commit `edd046ee9f1df58b1560bed8acbfe052e64ee8b0`.
