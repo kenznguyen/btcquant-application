@@ -154,3 +154,16 @@ No archive/sidecar listing, download, extraction, parsing or sampling; no host/w
 - New graph-negative tests cover nonmonotonic event timestamps, orphan failure observation, noncontiguous failure ordinals, missing successful-attempt relation, pair with missing object, member with missing pair, source row with missing member, and link/candle value mismatch.
 - Artifact endpoint: 0 artifacts.
 - Remaining: full multiplicity/ordering permutations, every failure branch and event transition combination; candidate snapshot digest formula still not defined by approved design and therefore not recomputed; F1–F7 complete regression after final source changes and independent review remain pending.
+
+
+## Multi-row SQLite ordering — exact-SHA GREEN
+
+- Test source SHA: `912ed3208851837302d979c4b4fa29f90e0effdf`.
+- Workflow run: [45008220039](https://github.com/kenznguyen/btcquant-application/actions/runs/45008220039).
+- Job: `137164470095`, SUCCESS; exact requested/checkout SHA match.
+- Test blob: `e5019a825bb262f8f7f4173eb7568234dc836dfc`; adapter source blob remains `0ddd724c7e69d681333fa845c91a83852dd3420c`.
+- Runtime CPython 3.13.18 / SQLite 3.45.1.
+- Focused importer-core 20/20 PASS; adapter 33/33 PASS; schema 14/14 PASS; full `market_data` regression 468/468 PASS.
+- SQLite rows are deliberately inserted in reverse order for objects, attempts, successful-attempt relations, run events and failure observations. Projection output remains deterministic by the specified order keys; failure observations are ordered by subject and failure ordinal.
+- Artifact endpoint: 0 artifacts.
+- Remaining ordering coverage: multi-row permutations for pairs, members, source_rows, candles and links are not yet individually exercised. The SQL has explicit ORDER BY keys for each relation, but those specific multi-row permutations remain NOT VERIFIED.
