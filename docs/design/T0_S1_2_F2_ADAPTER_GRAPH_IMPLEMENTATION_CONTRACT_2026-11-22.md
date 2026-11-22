@@ -3,7 +3,7 @@
 Date: 2026-11-22  
 Repository: kenznguyen/btcquant-application  
 Branch: main  
-Status: **IMPLEMENTATION PLAN — NOT IMPLEMENTED / NOT VERIFIED**
+Status: **IMPLEMENTED IN PART — SYNTHETIC CI PASS; F2 PARTIAL; INDEPENDENT REVIEW / FREEZE PENDING**
 
 ## 1. Authority and boundaries
 
@@ -14,10 +14,10 @@ Allowed:
 - read-only projection from a caller-supplied SQLite connection containing synthetic disposable schema-v2 fixtures;
 - deterministic S3/V1 payload assembly using the existing public validator contract;
 - pure in-memory graph validation;
-- tests using synthetic values, in-memory SQLite, or disposable temporary SQLite only.
+- tests using synthetic values, in-memory SQLite, or explicitly opted-in disposable temporary SQLite only; file-backed tests require a new file under a `t0-staging-v2-*` directory in the system temp root and a `synthetic-staging-*` filename.
 
 Not allowed:
-- opening or discovering an existing DB path from the adapter;
+- opening or discovering an existing DB path from the projection adapter; the low-level schema test helper may create a file only under the explicit disposable-path policy, using exclusive creation and rejecting existing files/symlinks;
 - archive/sidecar access, parsing, downloads, host/workstation/runner preflight;
 - B8 workflow changes/dispatch or runner installation;
 - real-data staging build/persistence, uploads, retention/deletion;
@@ -79,6 +79,21 @@ contract_version=T0_PROVENANCE_VALIDATOR_S1_V1, inventory_raw_bytes, inventory_e
 
 failure_observations and run_events remain physical audit relations and are not added to the S3/V1 public payload.
 
+
+### 4.1 Disposable test database policy (F6)
+
+- The projection API accepts only an already-open caller-owned connection; it has no path parameter and never calls `sqlite3.connect`.
+- `connect_staging_database` defaults to `:memory:`. File-backed use requires explicit `allow_disposable_path=True`.
+- The explicit file policy accepts only a new, non-symlink file named `synthetic-staging-*` directly under a `t0-staging-v2-*` directory in the system temporary root. It uses exclusive file creation; existing files, symlinks, alternate directories and implicit file paths are rejected.
+- This is a synthetic test policy, not a real-data staging builder or permission to access an existing database.
+
+### 4.2 Atomic schema initialization (F7)
+
+- Refuse caller-owned active transactions and non-empty/nonzero-version databases.
+- Enable and verify foreign keys before starting the schema transaction.
+- Use `BEGIN IMMEDIATE`; create all tables, indexes and the two approved triggers; set `user_version=2`; commit once.
+- Any DDL or commit failure rolls back the entire schema and leaves `user_version=0` with no partial schema objects.
+
 ## 5. Graph validator responsibilities
 
 The pure graph validator must reject, with deterministic stable error codes:
@@ -94,7 +109,7 @@ The pure graph validator must reject, with deterministic stable error codes:
 10. accepted source-row identity/value mismatch, malformed canonical OHLCV, timeframe alignment/availability boundary error, or candle value ID mismatch;
 11. accepted row without exactly one link, link to wrong natural key/value, candle without any link, or wrong duplicate role; exactly one UNIQUE link per candle selected by smallest source_row_id UTF-8 byte sequence;
 12. failure observation whose subject is absent, whose ordinal is not contiguous per subject, or whose stable codes/order are invalid;
-13. coverage manifest canonical bytes/hash, inclusive range, exact expected/gap/extra set, or six collection count mismatch;
+13. coverage manifest canonical bytes/hash, inclusive range, exact expected/gap/extra set, or six collection count mismatch; candidate snapshot digest must be present and CANDIDATE/VALIDATED events must bind the same value. The exact candidate snapshot digest preimage/serialization is not defined in the approved design, so recomputation is explicitly NOT implemented and requires a separate owner-approved design decision;
 14. unsupported row, orphan, omitted evidence, or extra projection data.
 
 The existing S3/V1 validator remains authoritative for its unchanged public contract and error-code ordering. The graph validator supplements it; it must not silently rewrite payloads to make them pass.
@@ -110,27 +125,30 @@ Before implementation:
 
 All tests must use synthetic fixtures only. No tests may read the canonical T0 database or actual archive files.
 
-## 7. Current baseline and gate status
+## 7. Current implementation and exact-SHA verification
 
-- F1 design contradiction: RESOLVED by owner-approved Amendment B commit 37e54c419ea41064aa9c1d2eb68ec50b3489be52.
-- F2 complete DTO/projection/graph validator: NOT IMPLEMENTED.
-- F3 cross-record acceptance: BLOCKED pending graph validator.
-- F4 run acceptance: BLOCKED pending projection/run-event validator.
-- F5 identity/digest boundary: OPEN.
-- F6 guarded disposable path boundary: OPEN; projection must not open paths.
-- F7 atomic schema initialization: OPEN.
-- Current reviewed implementation baseline: d7cdea3a467aa0ee2a8b177aaec23fdfea3201ce.
-- No new test, CI workflow, or artifact is claimed by this planning document.
-- S1.2 remains NOT FROZEN; independent review NOT RUN.
+- F1 trigger/design contradiction: **DESIGN SYNCHRONIZED**. Owner-approved Amendment B is applied to the physical schema spec; exactly two triggers are fingerprinted and verified.
+- F2 DTO/projection/graph implementation: **IMPLEMENTED / SYNTHETIC TESTED**, with candidate snapshot digest recomputation explicitly unresolved.
+- F3 cross-record graph checks: **SYNTHETIC TEST MATRIX PASS** for object/attempt/success relation, ZIP/sidecar reciprocity, pair/member/source-row/candle/link edges, failure observations and lifecycle cases.
+- F4 run acceptance: **SYNTHETIC TEST PASS** for singleton envelope, initial BUILDING event, event order and canonical coverage manifest.
+- F5 identity/digest boundary: **SYNTHETIC TEST PASS** for lower-case hexadecimal identity suffixes and digest grammar at SQL and DTO boundaries.
+- F6 guarded disposable path: **SYNTHETIC TEST PASS** for default in-memory use, explicit opt-in, temporary-root/name policy, exclusive creation, existing-file and symlink rejection.
+- F7 atomic schema initialization: **SYNTHETIC TEST PASS** for rollback on table/index/trigger DDL failure and commit failure after user_version assignment.
+- Latest tested source SHA: `d91c92a813ffe44c4ee786861e5e710654423c26`.
+- Exact-SHA CI: run [45010072833](https://github.com/kenznguyen/btcquant-application/actions/runs/45010072833), job `137170245583`, SUCCESS; requested SHA and checked-out SHA match.
+- Runtime: CPython 3.13.18 / SQLite 3.45.1 for focused tests; CPython 3.12.16 for full regression.
+- Results: importer-core 20/20; S1.2 adapter 43/43; SQLite staging schema 30/30; full `market_data` regression 494/494 PASS.
+- No CI artifact was produced.
+- Remaining design gap: candidate snapshot digest preimage/serialization is not defined by approved design. Current code checks digest shape/presence and equality between CANDIDATE and VALIDATED events; it does not recompute the snapshot digest.
+- Independent review: **NOT RUN**. S1.2: **NOT FROZEN**. B8: **NOT APPROVED**. Real-data staging: **NOT AUTHORIZED**.
 
-## 8. Next implementation steps
 
-1. Add tests first for DTO coverage and projection API shape, without modifying existing public S3/V1 behavior.
-2. Implement canonical DTO set and deterministic read-only row mapping.
-3. Implement graph validator and stable issue reporting.
-4. Integrate graph validation before returning the S3/V1 payload.
-5. Add F1–F7 synthetic regression tests, including atomic initialization and guarded disposable-path policy in their respective later steps.
-6. Run exact-SHA CI and full market_data regression; capture exact source SHA, run/job, artifact metadata and logs.
-7. Obtain independent review before any separate request for B8, real archive validation, host/path preflight or real-data staging.
+## 8. Next steps and gates
 
-No database, archive, host, workflow, runner, or trading action is performed by this plan.
+1. Freeze the current implementation source SHA only after the final exact-SHA regression.
+2. Request an independent review of a byte-for-byte source snapshot. Do not merge the review-only PR; it exists solely to expose the exact source and design to the reviewer.
+3. Resolve any Critical/Required review findings on `main`, then rerun exact-SHA CI and request follow-up review.
+4. Obtain separate owner approval for the candidate snapshot digest preimage/serialization before implementing recomputation.
+5. Only after independent review and owner decisions, prepare a separate approval request for B8, real archive validation, host/path preflight and real-data staging.
+
+All tests remain synthetic. No database, archive, host, workflow, runner, or trading action is performed by this contract.
