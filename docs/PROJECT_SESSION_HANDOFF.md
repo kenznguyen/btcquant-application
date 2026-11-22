@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — G1 implementation inventory checkpoint
+
+- G1 full bounded scope is owner-approved: `docs/decisions/T0_G1_SYNTHETIC_ONLY_CI_OWNER_APPROVAL_2026-11-22.md`, commit `119f0328f19293435c93575b203577f5026e0f06`.
+- Read-only source inventory: `docs/evidence/T0_G1_SYNTHETIC_ONLY_CI_IMPLEMENTATION_INVENTORY_2026-11-22.md`, commit `ceb26ff568f09e1e0f4852b3194d77202a38e520`.
+- Existing parser, parser tests, exact-header tests and provenance validator were identified; no duplicate module should be created. Resource policy and importer core modules plus the G1 manual exact-SHA workflow are absent on inspected `main`.
+- Current G1 implementation state: **BLOCKED BEFORE SOURCE EDITS**. No TDD RED/GREEN, regression, workflow run/job, dispatch or artifact exists.
+- Blocker: no local checkout is mounted and available GitHub connector tools do not expose `workflow_dispatch`; exact-source TDD/regression and authorized dispatch cannot be executed from this session. Do not commit unexecuted behavior or claim PASS.
+- Scope exclusions remain unchanged: no archive/sidecar access, host/filesystem preflight, SQLite/DDL, real-data importer/build, Canonical T0, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity or trading.
+- Addendum updated: `docs/PROJECT_SESSION_HANDOFF_ADDENDUM_2026-11-22.md`, commit `b691929d1023b8796040400c09b8f1b24d5b25e3`, blob `c20fb2716eb2c2def645f70583b2ec3220e92c16`.
+- Next: continue only when exact-source test execution and manual dispatch are available; preserve the existing `main` branch and the source inventory as the implementation baseline.
+
+---
+
 # CURRENT DECISION OVERRIDE — 2026-11-22 — New SQLite Canonical target approved (architecture only)
 
 - Owner decision: `docs/decisions/T0_NEW_SQLITE_CANONICAL_TARGET_OWNER_DECISION_2026-11-22.md`, commit `0498e68b0a3e967f27c7265759477a6e7ca05c6d`.
