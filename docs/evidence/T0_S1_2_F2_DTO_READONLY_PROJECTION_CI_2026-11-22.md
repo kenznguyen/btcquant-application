@@ -141,3 +141,16 @@ No archive/sidecar listing, download, extraction, parsing or sampling; no host/w
 - Artifact endpoint: 0 artifacts.
 - Important unresolved contract gap: the design does not define the exact candidate snapshot digest preimage/serialization. The graph validator checks digest shape/presence and equality between CANDIDATE and VALIDATED events, but does **not** recompute the candidate snapshot SHA. Do not invent this formula. It needs an explicit owner-approved design amendment before digest recomputation can be implemented.
 - F2 remains **PARTIAL** pending the digest formula decision, exhaustive graph negative tests, all F1–F7 re-verification and independent review.
+
+
+## Expanded graph negative-invariant matrix — exact-SHA GREEN
+
+- Test source SHA: `3e08ba4f9e326a9978d119cba54138cff0281f5e`.
+- Workflow run: [45008115272](https://github.com/kenznguyen/btcquant-application/actions/runs/45008115272).
+- Job: `137164142899`, SUCCESS; exact requested/checkout SHA match.
+- Test blob: `d78c20e561fe921d73e9636a61fa7ca75f7b85cc`; adapter source blob remains `0ddd724c7e69d681333fa845c91a83852dd3420c`.
+- Runtime CPython 3.13.18 / SQLite 3.45.1.
+- Focused importer-core 20/20 PASS; adapter 33/33 PASS; schema 14/14 PASS; full `market_data` regression 468/468 PASS.
+- New graph-negative tests cover nonmonotonic event timestamps, orphan failure observation, noncontiguous failure ordinals, missing successful-attempt relation, pair with missing object, member with missing pair, source row with missing member, and link/candle value mismatch.
+- Artifact endpoint: 0 artifacts.
+- Remaining: full multiplicity/ordering permutations, every failure branch and event transition combination; candidate snapshot digest formula still not defined by approved design and therefore not recomputed; F1–F7 complete regression after final source changes and independent review remain pending.
