@@ -603,3 +603,196 @@ class CompleteS3V1ProjectionFixtureTests(unittest.TestCase):
         self.assertTrue(validate_provenance(payload).valid)
         graph_result = validate_staging_graph(projection)
         self.assertTrue(graph_result.valid, graph_result.error_codes)
+
+
+class PopulatedSQLiteProjectionIntegrationTests(unittest.TestCase):
+    def test_projects_populated_rows_from_all_eleven_relations_in_stable_order(self):
+        import hashlib
+        import json
+        from market_data.archive_staging_adapter import project_staging_database
+        from market_data.archive_staging_schema import (
+            compute_schema_fingerprint, connect_staging_database,
+        )
+
+        connection = connect_staging_database(":memory:")
+        run_id = "run1:" + "1" * 64
+        inventory_id = "inv1:" + "2" * 64
+        zip_key, sidecar_key = "synthetic/000.zip", "synthetic/000.zip.CHECKSUM"
+        inventory_entries = [
+            {"object_key": zip_key, "object_kind": "ZIP",
+             "paired_object_key": sidecar_key, "timeframe": "15m",
+             "partition": "synthetic", "period": "000"},
+            {"object_key": sidecar_key, "object_kind": "CHECKSUM_SIDECAR",
+             "paired_object_key": zip_key, "timeframe": "15m",
+             "partition": "synthetic", "period": "000"},
+        ]
+        inventory_raw = json.dumps(
+            {"inventory_id": inventory_id, "objects": inventory_entries},
+            ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+        ).encode("utf-8")
+        inventory_sha = hashlib.sha256(inventory_raw).hexdigest()
+        manifest_json = "{}"
+        manifest_sha = hashlib.sha256(manifest_json.encode()).hexdigest()
+        zip_id, sidecar_id = "obj1:" + "a" * 64, "obj1:" + "b" * 64
+        zip_sha, sidecar_sha = "3" * 64, "4" * 64
+        zip_attempt, sidecar_attempt = "att1:" + "5" * 64, "att1:" + "6" * 64
+        pair_id = "pair1:" + "7" * 64
+        candidate_id, member_id = "cand1:" + "8" * 64, "mem1:" + "9" * 64
+        source_row_id, candle_value_id = "row1:" + "c" * 64, "cv1:" + "d" * 64
+        link_id = "lnk1:" + "e" * 64
+        raw_fields = ["0", "1", "2", "1", "2", "1", "899999", "0", "0", "0", "0", "0"]
+        raw_fields_json = json.dumps(raw_fields, ensure_ascii=False, separators=(",", ":"))
+        try:
+            connection.execute(
+                """INSERT INTO reconstruction_run (
+                    singleton_key,run_id,inventory_id,inventory_blob_sha256,
+                    inventory_raw_bytes,label,parser_contract_id,parser_source_sha,
+                    importer_source_sha,schema_contract_id,schema_fingerprint_sha256,
+                    created_at_utc,coverage_manifest_json,coverage_manifest_sha256
+                ) VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    run_id, inventory_id, inventory_sha, inventory_raw,
+                    "RECONSTRUCTED — PARTIAL COVERAGE", "T0_ARCHIVE_CSV_HEADER_V1",
+                    "a" * 40, "b" * 40, "T0_STAGING_SCHEMA_V2",
+                    compute_schema_fingerprint(), "2026-11-22T00:00:00.000Z",
+                    manifest_json, manifest_sha,
+                ),
+            )
+            connection.executemany(
+                """INSERT INTO run_events (
+                    run_id,event_seq,event_type,occurred_at_utc,reason_code,
+                    candidate_snapshot_sha256,validator_payload_sha256
+                ) VALUES (?,?,?,?,NULL,?,NULL)""",
+                (
+                    (run_id, 1, "BUILDING", "2026-11-22T00:00:00.000Z", None),
+                    (run_id, 2, "CANDIDATE", "2026-11-22T00:00:01.000Z", "f" * 64),
+                ),
+            )
+            object_rows = []
+            for oid, key, kind, paired_key, digest, attempt_id in (
+                (zip_id, zip_key, "ZIP", sidecar_key, zip_sha, zip_attempt),
+                (sidecar_id, sidecar_key, "CHECKSUM_SIDECAR", zip_key, sidecar_sha, sidecar_attempt),
+            ):
+                object_rows.append((
+                    oid, inventory_id, inventory_sha, "synthetic-entry-" + kind,
+                    key, kind, "15m", "synthetic", "000", paired_key,
+                    key, 10, digest, 10, digest, 10, 200,
+                    "synthetic/" + kind.lower(), 1, "SYNTHETIC_FIXTURE",
+                    "workflow-run-1", "workflow-job-1", "workflow_dispatch",
+                    "a" * 40, "b" * 40, "2026-11-22T00:00:01.000Z",
+                    "VERIFIED", None,
+                ))
+            connection.executemany(
+                """INSERT INTO archive_objects (
+                    object_id,inventory_id,inventory_blob_sha256,inventory_entry_identity,
+                    object_key,object_kind,timeframe,partition,period,paired_object_key,
+                    requested_key,expected_size_bytes,expected_sha256,measured_size_bytes,
+                    measured_sha256,response_bytes_total,response_status,local_relative_path,
+                    exclusive_create,retrieval_source,workflow_run_id,workflow_job_id,
+                    workflow_event,trigger_sha,checkout_sha,retrieved_at_utc,
+                    verification_status,failure_code
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                object_rows,
+            )
+            attempt_rows = []
+            for aid, oid, key, digest in (
+                (zip_attempt, zip_id, zip_key, zip_sha),
+                (sidecar_attempt, sidecar_id, sidecar_key, sidecar_sha),
+            ):
+                attempt_rows.append((
+                    aid, oid, 1, "workflow-run-1", "workflow-job-1",
+                    "workflow_dispatch", "a" * 40, "b" * 40, key,
+                    10, digest, "2026-11-22T00:00:00.000Z",
+                    "2026-11-22T00:00:01.000Z", "TRANSFERRED", None,
+                    200, 10, 1, None, digest, None,
+                ))
+            connection.executemany(
+                """INSERT INTO acquisition_attempts (
+                    attempt_id,object_id,attempt_number,workflow_run_id,workflow_job_id,
+                    workflow_event,trigger_sha,checkout_sha,requested_key,expected_size_bytes,
+                    expected_sha256,started_at_utc,finished_at_utc,outcome,failure_subtype,
+                    response_status,response_bytes_received,is_complete_object,
+                    partial_body_sha256,complete_object_sha256,failure_code
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                attempt_rows,
+            )
+            connection.executemany(
+                "INSERT INTO object_successful_attempt (object_id,attempt_id) VALUES (?,?)",
+                ((zip_id, zip_attempt), (sidecar_id, sidecar_attempt)),
+            )
+            connection.execute(
+                """INSERT INTO archive_pairs (
+                    pair_id,zip_object_id,sidecar_object_id,zip_size_bytes,zip_sha256,
+                    sidecar_size_bytes,sidecar_sha256,sidecar_asserted_zip_sha256,
+                    assertion_matches,zip_crc_ok,candidate_member_count,structural_ok,
+                    disposition,failure_code
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)""",
+                (pair_id, zip_id, sidecar_id, 10, zip_sha, 10, sidecar_sha,
+                 zip_sha, 1, 1, 1, 1, "VERIFIED"),
+            )
+            connection.execute(
+                """INSERT INTO csv_members (
+                    candidate_id,member_id,pair_id,central_directory_ordinal,member_path,
+                    member_size_bytes,member_sha256,encoding,bom_present,newline,delimiter,
+                    header_present,header_contract_id,parser_contract_id,parser_source_sha,
+                    data_row_count,first_open_time_ms,last_open_time_ms,disposition,failure_code
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)""",
+                (candidate_id, member_id, pair_id, 1, "data/BTCUSDT-15m.csv",
+                 100, "8" * 64, "UTF-8", 0, "LF", ",", 1,
+                 "T0_ARCHIVE_CSV_HEADER_V1", "T0_ARCHIVE_CSV_HEADER_V1",
+                 "a" * 40, 1, 0, 0, "VERIFIED"),
+            )
+            connection.execute(
+                """INSERT INTO source_rows (
+                    source_row_id,member_id,physical_record_ordinal,data_row_ordinal,
+                    raw_fields_json,raw_row_digest,parser_contract_id,parser_source_sha,
+                    importer_contract_id,importer_source_sha,exchange,market_type,symbol,
+                    timeframe,open_time_ms,candle_value_id,disposition,rejection_code
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)""",
+                (source_row_id, member_id, 2, 1, raw_fields_json, "f" * 64,
+                 "T0_ARCHIVE_CSV_HEADER_V1", "a" * 40,
+                 "T0_ARCHIVE_IMPORTER_V1", "b" * 40,
+                 "binance", "usdm", "BTCUSDT", "15m", 0, candle_value_id, "ACCEPTED"),
+            )
+            connection.execute(
+                """INSERT INTO candles (
+                    exchange,market_type,symbol,timeframe,open_time_ms,open,high,low,
+                    close,volume,available_at_ms,availability_kind,candle_value_id
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                ("binance", "usdm", "BTCUSDT", "15m", 0, "1", "2", "1",
+                 "2", "1", 900000, "BAR_CLOSE_BOUNDARY", candle_value_id),
+            )
+            connection.execute(
+                """INSERT INTO candle_provenance_links (
+                    link_id,exchange,market_type,symbol,timeframe,open_time_ms,
+                    source_row_id,candle_value_id,duplicate_disposition
+                ) VALUES (?,?,?,?,?,?,?,?,?)""",
+                (link_id, "binance", "usdm", "BTCUSDT", "15m", 0,
+                 source_row_id, candle_value_id, "UNIQUE"),
+            )
+            connection.execute(
+                """INSERT INTO failure_observations (
+                    subject_kind,subject_id,failure_ordinal,failure_code,
+                    failure_detail_code,observed_at_utc,evidence_sha256
+                ) VALUES (?,?,?,?,?,?,?)""",
+                ("RUN", run_id, 1, "SYNTHETIC_TEST_NOTE", "TEST_ONLY",
+                 "2026-11-22T00:00:01.000Z", "1" * 64),
+            )
+            connection.commit()
+
+            projection = project_staging_database(connection)
+            self.assertEqual(projection.run.inventory_raw_bytes, inventory_raw)
+            self.assertEqual([item.object_id for item in projection.objects], [zip_id, sidecar_id])
+            self.assertEqual([item.attempt_id for item in projection.attempts], [zip_attempt, sidecar_attempt])
+            self.assertEqual([item.object_id for item in projection.successful_attempts], [zip_id, sidecar_id])
+            self.assertEqual(projection.pairs[0].zip_size_bytes, 10)
+            self.assertEqual(projection.members[0].candidate_id, candidate_id)
+            self.assertEqual(projection.source_rows[0].raw_fields_json, raw_fields_json)
+            self.assertEqual(projection.candles[0].available_at_ms, 900000)
+            self.assertEqual(projection.links[0].link_id, link_id)
+            self.assertEqual(projection.failure_observations[0].failure_code, "SYNTHETIC_TEST_NOTE")
+            self.assertEqual([item.event_seq for item in projection.run_events], [1, 2])
+            self.assertFalse(connection.in_transaction)
+            self.assertEqual(connection.execute("SELECT 1").fetchone()[0], 1)
+        finally:
+            connection.close()
