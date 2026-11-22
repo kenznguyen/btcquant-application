@@ -1,3 +1,74 @@
+# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 14 after PR #11 review
+
+- PR #11: OPEN / NOT MERGED / DO NOT MERGE. Codex review completed on exact R13 PR head `982ea9e250bfca19bdd6ecb973956143dfe27df6`; three unresolved P2 findings. Review comments: `4659122865`, `4659122867`, `4659122869`.
+- Reviewed R13 design: source commit `0476b76a96f5a1f9a1a5afd3b6843a15194f2f06`, blob `2c3e81c52ca10083e0d1c78ca3ef31858a47520d`.
+- R14 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_14_2026-11-23.md`; exact source commit `e91706168ce8731711951546deea9399872fa368`; exact design blob `fdfe77d2bd162f2cb9ff9b2e7a6427dd8c3eacaf`.
+- R14 resolves PR #11 P2s: (1) the operative matrix and §14.3 gate fixture work on satisfactory review of exact R14 SHA/blob; R12/R13 references are historical only; (2) changed-content retries at an already-claimed stable locator preserve the conflicting bytes in immutable evidence and append `SourceDeliveryIntegrityConflictV1`, without overwriting the original completion or creating a second completion; (3) step 7 persists evidence/outcome/gap state only, while step 9 is the sole source-frontier update after a contiguous-terminal check. Cross-domain case 9 now asserts durable conflict evidence and unchanged original completion.
+- Findings/resolution report: `docs/reviews/T0_PHASE_B_REVISION_13_CODEX_FINDINGS_AND_R14_RESOLUTION_2026-11-23.md`.
+- R14 review-only branch: `review/t0-phase-b-r14-three-p2-20261123`. [PR #12 — Revision 14 independent re-review](https://github.com/kenznguyen/btcquant-application/pull/12) is OPEN / NOT MERGED / DO NOT MERGE. The review target is the exact immutable R14 design source commit/blob above; the final PR head is the current branch tip shown in GitHub PR metadata.
+- 101 isolated synthetic cases remain owner-approved (SD-05 14, SD-06 31, SD-07 46, cross-domain 10). Fixtures/tests NOT CREATED / NOT RUN; execution remains gated on satisfactory independent review of exact R14 SHA/blob.
+- Workflow runs/jobs/artifacts: NONE verified for R14. Tests/formal proofs: NOT RUN. Contract Freeze: NOT APPROVED.
+- No production implementation, DTO/parser/validator/persistence changes, DDL/database mutation, data movement, T0/T1 runtime, T2 integration, VPS/autostart, deployment or trading is authorized.
+
+---
+
+## Historical status snapshot — Revision 12 (superseded by Revision 13)
+
+- Owner approval decision: `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_2026-11-22.md`, commit `ae90cf57da7f076bd57eccf4774890c4197ae81c`, blob `c0be1b2bf548993bb79be79739c85e447678b652`.
+- Approved exact bounded scope: 101 isolated synthetic cases — SD-05 14, SD-06 31, SD-07 46, cross-domain 10. Approval includes test-only fixtures/DTO-validator-persistence harness and execution, no production code/runtime.
+- Consolidated Revision 11: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_11_2026-11-22.md`; exact source commit `0ac119c7cd31ba63d5aead6796c7b5560abf2a18`, blob `9d9639b4d26b42a90929f50a32b801e359b23197`.
+- Revision 11 merges Revision 10's Phase B domain design with the full DTO/digest/checkpoint/atomic-persistence proposal v1 as Annex A. Revision 9 and Revision 10 remain immutable.
+- R11 blocker status: B-01 PARTIAL; B-02 OPEN; B-03 PARTIAL; B-04..B-10 OPEN; B-11/B-12 DESIGN SPECIFIED — NOT VERIFIED; B-13 CLOSED (owner-accepted bounded exclusion); B-14/B-15 OPEN; B-16 CLOSED (owner-accepted bounded exclusion); B-17 OPEN (source mapping PASS, deployed/imported build provenance NOT VERIFIED); B-18 OPEN; B-19 DESIGN SPECIFIED — NOT VERIFIED; B-20 OPEN.
+- Sequencing: request independent second-person review of the exact Revision 11 SHA/blob first. The approved 101-case fixture creation/execution is sequenced after that review. Fixtures/tests currently NOT CREATED / NOT RUN.
+- Independent review request: review-only [PR #9](https://github.com/kenznguyen/btcquant-application/pull/9), OPEN / NOT MERGED / DO NOT MERGE. PR head snapshot `8a084c3f02de6d4f462b0f5731ed8f8569fb5fbf`; review target remains the exact Revision 11 document commit/blob `0ac119c7cd31ba63d5aead6796c7b5560abf2a18` / `9d9639b4d26b42a90929f50a32b801e359b23197`.
+- Graphify review status at request time: **QUEUED**; workspace review cap is 10/10 used until 2026-12-01 UTC. Review may not start. Independent verdict: **NOT VERIFIED / NOT COMPLETED**. Do not treat queue status as a review result.
+- Workflow run/job/artifact: NONE. No test result is claimed.
+- Contract Freeze: NOT APPROVED. Production implementation, DDL/database changes, data movement, T0/T1 runtime, T2 integration, VPS/autostart, strategy changes and trading remain NOT AUTHORIZED.
+- Next step: request independent review on exact Revision 11 commit/blob above; preserve failures/findings and resolve review issues before starting the approved isolated test work.
+
+---
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B source audit, R10 review and contract proposal
+
+- R10 exact reviewed source: commit `b32d9af088099f92b09d113ecfa27056cfd9b83d`, blob `a8934cb862c330f1d1fa72aa1f3fdb2b22f9ac96`.
+- Exact-SHA review: `docs/reviews/T0_PHASE_B_REVISION_10_EXACT_SHA_REVIEW_2026-11-22.md`; verdict PASS WITH CONDITIONS for continued documentation, NOT READY FOR CONTRACT FREEZE. This is not independent second-person review.
+- T1 read-only source audit: `docs/evidence/T1_AGGTRADE_TIMESTAMP_SOURCE_MAPPING_AUDIT_2026-11-22.md`; source mapping `native T → trade_time → timestamp_ms` PASS. T1 deployed binary/build provenance NOT VERIFIED; B-17 remains OPEN.
+- T1 source commit inspected: `c91a8c22d3b6236c98ab9a4d4d69b25d47f7f738`; source blobs: models `993419725268d1308645e3a37c15e9779a9e92cc`, message handler `7d7f221fbf4b31470049baea55584645352f61b7`, CSV writer `2c4538dcef7dfa758a854292031239c15f7c282b`, constants `0bf50b5fe02f4f196b38481cde6ecab9e2adb941`, schema `895f87a8281a3f9b6d37d96b5f68568e4285bee6`.
+- New contract proposal: `docs/design/T0_PHASE_B_CANONICAL_DTO_DIGEST_CHECKPOINT_ATOMIC_PERSISTENCE_DESIGN_V1_2026-11-22.md`; logical DTOs, raw/canonical digest distinction, deterministic digest framing, separate source cursor/book watermark and atomic transaction/crash recovery specified. **PROPOSED — NOT FROZEN; no implementation authorization.**
+- Current blocker status in proposal: B-01 PARTIAL; B-02 OPEN; B-03 source mapping resolved only; B-04..B-10 OPEN; B-11/B-12 design specified but unverified; B-13 CLOSED bounded exclusion; B-14 OPEN; B-15 OPEN (T1 nq omission and depth T drop confirmed); B-16 CLOSED bounded exclusion; B-17 OPEN pending build provenance; B-18 OPEN; B-19 design specified but unverified; B-20 OPEN.
+- Approval request: `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_REQUEST_2026-11-22.md`; status PENDING. **Do not create fixtures, implement tests, execute the 101 cases or dispatch workflow until explicit owner approval.**
+- R10 findings: inherited Revision 9 status text remains in the R10 overlay; create a consolidated successor before freeze. R10 remains immutable.
+- Tests/fixtures: NOT CREATED/RUN. Workflow run/artifacts: NONE for this documentation-only work. Independent second-person review: NOT VERIFIED.
+- Contract Freeze: **NOT APPROVED**. Implementation, DDL, database, data movement, T0/T1 runtime, T2 integration, VPS deployment, autostart and trading: **NOT AUTHORIZED**.
+- No source implementation, parser, DTO, validator, database, fixture, test, runtime or data was changed.
+
+---
+
+## Revision 10 exact GitHub evidence — 2026-11-22
+
+- Decision record commit/blob: `a38613c927305c37d6842c02a47b79abe3899c8b` / `3dbf040517675e614173bd768a9399c3a02f198a`.
+- Inventory identity amendment commit/blob: `c2a8cf85ca5c203164b5731ff36c166aa1312217` / `3a774fc1a657a5a66dc85289664e5555215b43ac`.
+- Revision 10 design commit/blob: `b32d9af088099f92b09d113ecfa27056cfd9b83d` / `a8934cb862c330f1d1fa72aa1f3fdb2b22f9ac96`.
+- Contract Freeze readiness dossier commit/blob: `cdab4e5ac02d5b163bf45d77e3fc7320a4519833` / `8ac260d609a2c814000592f0a6e16dcaccb60ee4`.
+- Static document checks: PASS — all B-01..B-20 present (20 unique IDs); B-13/B-16 CLOSED as bounded exclusions; B-17 OPEN pending parser proof; SD-06/SD-07 identity amendment present; 101-case matrix still NOT EXECUTED; dossier says NOT READY FOR CONTRACT FREEZE.
+- Workflow run/job/artifact: NONE verified or produced for this documentation-only update.
+- Tests/formal proofs: NOT RUN. Independent second-person review of exact Revision 10 SHA: NOT VERIFIED.
+- Handoff/index progress commits from this update are recorded in Git history; no PR opened and no PR merged.
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 10 owner decisions recorded
+
+- Owner decision: `docs/decisions/T0_PHASE_B_BOUNDED_EXCLUSIONS_AND_IDENTITY_SUPERSESSION_OWNER_DECISION_2026-11-22.md`.
+- Inventory identity amendment: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_PHASE_B_IDENTITY_AMENDMENT_V2_2026-11-22.md`.
+- Revision 9 reviewed baseline: commit `5405928cf1ec61cf979453812d158caa8db18d4a`, blob `86c490be08961b02d03ba0a7986befe3e142b9df`.
+- B-13: **CLOSED — owner-accepted bounded exclusion** (read API/dataset-version compatibility deferred to a separate contract).
+- B-16: **CLOSED — owner-accepted bounded exclusion** (ordinary non-RPI depth only; no all-liquidity claim).
+- B-17: **OPEN — conditionally accepted T-only/E-excluded scope; exact pinned T1 parser proof required** before closure.
+- Inventory identity supersession accepted for Phase B SD-06/SD-07 only; the amendment record above supersedes conflicting Inventory v1 identity examples for those domains.
+- Revision 10 is documentation-only. Contract Freeze **NOT APPROVED**; implementation/runtime/data operations **NOT AUTHORIZED**.
+- 101-case matrix remains NOT EXECUTED; independent second-person review and all remaining technical evidence gates remain outstanding.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 9 full design review PASS WITH CONDITIONS
 
 - Revision 9 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_9_2026-11-22.md`, exact commit `5405928cf1ec61cf979453812d158caa8db18d4a`, blob `86c490be08961b02d03ba0a7986befe3e142b9df`.
