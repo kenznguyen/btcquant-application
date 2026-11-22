@@ -1,6 +1,8 @@
 """Synthetic-only SQLite staging schema v2 tests; disposable DBs only."""
 import sqlite3
+import tempfile
 import unittest
+from pathlib import Path
 
 from market_data.archive_staging_schema import (
     SCHEMA_CONTRACT_ID,
@@ -201,6 +203,19 @@ class StagingSchemaV2Tests(unittest.TestCase):
         self.assertEqual(self.db.execute("PRAGMA integrity_check").fetchone()[0], "ok")
         self.assertEqual(self.db.execute("PRAGMA foreign_key_check").fetchall(), [])
         self.assertTrue(verify_staging_database(self.db))
+
+    def test_creates_and_verifies_a_disposable_temporary_database(self):
+        self.assertGreaterEqual(sqlite3.sqlite_version_info, (3, 37, 0))
+        with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
+            path = Path(directory) / "synthetic-staging.sqlite3"
+            temporary_db = connect_staging_database(path)
+            try:
+                self.assertTrue(path.is_file())
+                self.assertEqual(temporary_db.execute("PRAGMA user_version").fetchone()[0], 2)
+                self.assertEqual(temporary_db.execute("PRAGMA integrity_check").fetchone()[0], "ok")
+                self.assertTrue(verify_staging_database(temporary_db))
+            finally:
+                temporary_db.close()
 
 
 if __name__ == "__main__":
