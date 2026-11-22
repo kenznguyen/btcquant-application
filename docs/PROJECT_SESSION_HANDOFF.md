@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — B4 resource policy implemented; exact-SHA GREEN pending
+
+- Implementation source SHA: `9c47817bfaea9e4bf830aa812508ae1ef4796e20`; parent `d7932f826b16ba0abad4d14f8aac0822c09cc525`; final module blob `87743432ec273bf5bd737d26bf2d489cc9fb34cf`.
+- Source scope: only `market_data/archive_resource_policy.py` was changed in the implementation commits. Helpers implement frozen resource ceilings, fail-closed metadata validation, ZIP member path/type/symlink/encryption/compression classification, bounded transient retry delays, and concurrency=1 checks.
+- Evidence: `docs/evidence/T0_G1_B4_RESOURCE_POLICY_IMPLEMENTATION_2026-11-22.md`, commit `84bb5f2d3999c8b3360169d7cd51abe18bd6b8ca`.
+- Prior RED remains verified: run `44990722096`, job `137110968023`, exact tested source SHA `d5db3e8af76c44d75c00bd457b3dccabba762f50`; baseline 46/46 PASS and expected B4 import RED; sanitized artifact `14742195259`, SHA-256 `fbc3947a9e68c6a9a3a8cf4e34452e868169e294c0bf6ed9737a424a8433d4ae`.
+- **GREEN is BLOCKED / NOT VERIFIED.** This session's GitHub integration has no `workflow_dispatch` action. No tests, workflow run, job, or artifact have been verified for implementation SHA `9c47817bfaea9e4bf830aa812508ae1ef4796e20`. Empty commit statuses are not a test result.
+- Owner action: GitHub Actions → `T0 G1 synthetic-only exact-SHA CI` → Run workflow with `source_sha=9c47817bfaea9e4bf830aa812508ae1ef4796e20`. Inspect exact checkout, baseline and B4 test results (expected total 60), job conclusion and sanitized artifact/digest; then update this section with exact run/job/artifact evidence.
+- G1 remains **PARTIAL / NOT COMPLETE**. Do not begin importer-core TDD until B4 GREEN is verified.
+- All prior exclusions remain in force: no archive/sidecar reads, host/filesystem preflight, network acquisition, SQLite open/create/write/DDL, real-data importer/build, Canonical T0 mutation/promotion, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — B4 synthetic RED verified on exact source SHA
 
 - Verified run: [44990722096](https://github.com/kenznguyen/btcquant-application/actions/runs/44990722096), run #3 attempt 1, `workflow_dispatch`; job `137110968023`. Overall conclusion FAILURE is expected for the TDD RED phase.
