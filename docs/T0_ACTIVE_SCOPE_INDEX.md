@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.1 design reconciliation committed; owner acceptance pending
+
+- S1.1 document: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`, final blob `30093c2bce7f62b97612a2db863dcb17853b306d`.
+- S1.1 initial commit `255e505149d1739a18549baab6d81ba458f124d7`; clarification commit `2971efa75a5f8f9f75277adba2ced72514797bab`.
+- Original S1 DDL is explicitly marked as historical and superseded where it conflicts with S1.1; authority-notice commit `5ef5641da3d881c5c07a3704289c396834331a66`.
+- B1 schema/failure-evidence/attempt-history/successful-attempt/coverage-manifest conflicts: **RESOLVED AT DESIGN LEVEL**.
+- B2 SQLite STRICT minimum and runtime/FK verification contract: **RESOLVED AT POLICY/CONTRACT LEVEL**; minimum SQLite 3.37.0. Exact Python/SQLite pins deferred to separately approved implementation.
+- S3 R3–R6, V1 interface, T0ENC1, identity prefixes, `T0_STAGING_SCHEMA_V2` and `user_version=2` unchanged.
+- S1.1 is documentation-only. **No DDL, SQLite, importer, tests, workflow, archive access, data operation or runtime change.**
+- S1.1 detailed design: **OWNER ACCEPTANCE PENDING**. Scope approval is not treated as acceptance of every detailed design choice.
+- B3 archive format coverage NOT VERIFIED; B4 resource budgets OPEN; B5 actual coverage manifest NOT VERIFIED; B6 retention/artifact policy OPEN; B7 destination/preflight OPEN; B8 importer/build NOT AUTHORIZED. Existing independent review track unchanged.
+- Latest handoff addendum update commit: `e8f91a3dadb01d680dadd29b428643594487987f`.
+- Next: owner review of S1.1 document only. No later phase is authorized.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Post-S3 T0 blocker audit
 
 - Latest exact-SHA S3 GREEN: source `d1651196af3059e00b22f65461dbd897e5c599df`, run [44976543815](https://github.com/kenznguyen/btcquant-application/actions/runs/44976543815), job `137067027769`. S3 30/30, V1 24/24, full `market_data` 387/387 PASS. Validator/test/contract/workflow blobs are recorded in the S3 evidence and session handoff.
