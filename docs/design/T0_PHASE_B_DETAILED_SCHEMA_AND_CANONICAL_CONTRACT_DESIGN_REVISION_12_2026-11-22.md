@@ -1,7 +1,7 @@
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 12 after Codex review findings
 
-- Revision 12 is the documentation-only successor to immutable Revision 12. It incorporates the consolidated Phase B design and Annex A, correcting three P2 findings from Codex review PR #9.
-- Revision 12 exact reviewed source commit/blob: `0ac119c7cd31ba63d5aead6796c7b5560abf2a18` / `9d9639b4d26b42a90929f50a32b801e359b23197`.
+- Revision 12 is the documentation-only successor to immutable Revision 11. It incorporates the consolidated Phase B design and Annex A, correcting three P2 findings from Codex review PR #9.
+- Revision 11 exact reviewed source commit/blob: `0ac119c7cd31ba63d5aead6796c7b5560abf2a18` / `9d9639b4d26b42a90929f50a32b801e359b23197`.
 - PR #9 Codex review: **COMPLETED WITH FINDINGS** on head `8a084c3f02de6d4f462b0f5731ed8f8569fb5fbf`; three P2 findings. Graphify skipped AI review because the PR was documentation-only; its static/advisory checks are not a substitute for the Codex review. No tests or formal proofs were run.
 - R12 corrections: (1) distinguish source-verified aggTrade semantic mappings from unresolved deployed-build provenance and decimal fidelity; (2) require SD-07 envelope capture producer/sequence to be non-null and exactly equal the snapshot identity pair; (3) key delivery idempotency by stable source object/version identity and retain raw SHA-256 as an integrity attribute, not part of the identity key.
 - Owner-approved synthetic scope remains 101 cases: SD-05 14, SD-06 31, SD-07 46, cross-domain 10. Fixtures and execution remain sequenced after independent review of the exact R12 SHA/blob.
@@ -10,17 +10,9 @@
 
 ---
 
-# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 12 consolidated candidate
+## Revision 11 status snapshot — superseded by Revision 12
 
-- Revision 12 consolidates the immutable Revision 10 design with the DTO/digest/checkpoint/atomic-persistence proposal v1. Revision 9 and Revision 10 remain unchanged historical baselines.
-- Revision 10 source commit/blob: `b32d9af088099f92b09d113ecfa27056cfd9b83d` / `a8934cb862c330f1d1fa72aa1f3fdb2b22f9ac96`.
-- DTO/digest/checkpoint proposal source blob: `594066d98201a8cf0940b62fc36d9358033f06e0`.
-- Owner approval for the bounded 101 synthetic cases is recorded in `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_2026-11-22.md`. Approved matrix: SD-05 14, SD-06 31, SD-07 46, cross-domain 10.
-- Test fixtures and execution are APPROVED within that decision's isolated synthetic-only boundary, but are sequenced after independent review of this exact Revision 12 SHA/blob. At this point fixtures/tests remain NOT CREATED / NOT RUN.
-- B-13 and B-16 remain CLOSED as owner-accepted bounded exclusions. B-17 remains OPEN pending deployed/imported T1 build provenance. B-01 PARTIAL; B-03 source mapping resolved only; B-02, B-04..B-12, B-14..B-15, B-18..B-20 remain open or unverified as detailed below.
-- Revision 12 is a consolidated design candidate, NOT a Contract Freeze. The DTO/digest/checkpoint/persistence annex is reviewable but NOT FROZEN.
-- Independent review of the exact new Revision 12 SHA/blob: NOT YET REQUESTED / NOT VERIFIED. Request it only after this document and project handoff/index are committed and the exact SHA/blob is verified.
-- No production DTO/parser/validator/persistence implementation, DDL, canonical database mutation, data movement, T0/T1 runtime, T2 integration, VPS deployment/autostart, or trading is authorized.
+Revision 11 was the consolidated review candidate submitted to PR #9. Its exact source SHA/blob and review findings are recorded above. This snapshot is retained for history only; Revision 12 is the current design authority.
 
 - Owner decision: `docs/decisions/T0_PHASE_B_BOUNDED_EXCLUSIONS_AND_IDENTITY_SUPERSESSION_OWNER_DECISION_2026-11-22.md`.
 - Inventory identity amendment: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_PHASE_B_IDENTITY_AMENDMENT_V2_2026-11-22.md`.
@@ -34,8 +26,8 @@ The prior Revision 10 status is retained only as historical context. Current aut
 
 - Date: 2026-11-22 (revision 12)
 - Status: **POST-REVIEW CONSOLIDATED CANDIDATE — THREE CODEX P2 FINDINGS ADDRESSED IN DOCUMENTATION; NOT CONTRACT-FROZEN**
-- Immutable history: Revisions 6–11 remain unchanged. Revision 12 is the documentation-only successor to Revision 12.
-- Revision 12 exact reviewed source: commit `0ac119c7cd31ba63d5aead6796c7b5560abf2a18`, blob `9d9639b4d26b42a90929f50a32b801e359b23197`.
+- Immutable history: Revisions 6–11 remain unchanged. Revision 12 is the documentation-only successor to Revision 11.
+- Revision 11 exact reviewed source: commit `0ac119c7cd31ba63d5aead6796c7b5560abf2a18`, blob `9d9639b4d26b42a90929f50a32b801e359b23197`.
 - Revision 10 immutable source: commit `b32d9af088099f92b09d113ecfa27056cfd9b83d`, blob `a8934cb862c330f1d1fa72aa1f3fdb2b22f9ac96`.
 - Codex review PR #9: completed with three P2 findings; correction record: `docs/reviews/T0_PHASE_B_REVISION_11_CODEX_REVIEW_FINDINGS_2026-11-22.md`.
 - DTO/digest/checkpoint/atomic persistence proposal incorporated as Annex A from blob `594066d98201a8cf0940b62fc36d9358033f06e0`.
@@ -45,7 +37,7 @@ The prior Revision 10 status is retained only as historical context. Current aut
 - Phase A baseline: `docs/design/T0_PHASE_A_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
 - T1 source schema: `kenznguyen/binance-futures-collector/docs/SCHEMA.md`, blob SHA `895f87a8281a3f9b6d37d96b5f68568e4285bee6`.
 - Implementation: **NOT AUTHORIZED / NOT STARTED**.
-- Synthetic matrix: **101 CASES OWNER-APPROVED; FIXTURES NOT CREATED / EXECUTION NOT RUN; SEQUENCED AFTER REVISION 11 INDEPENDENT REVIEW**.
+- Synthetic matrix: **101 CASES OWNER-APPROVED; FIXTURES NOT CREATED / EXECUTION NOT RUN; SEQUENCED AFTER REVISION 12 INDEPENDENT REVIEW**.
 - Tests/workflows/artifacts: **NOT RUN / NONE**.
 
 ## 1. Purpose, authority and invariants
