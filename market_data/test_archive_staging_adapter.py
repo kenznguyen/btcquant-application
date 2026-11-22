@@ -229,3 +229,98 @@ class ReadOnlyProjectionAPIRedTests(unittest.TestCase):
         parameters = tuple(inspect.signature(project).parameters.values())
         self.assertEqual(tuple(item.name for item in parameters), ("connection",))
         self.assertEqual(parameters[0].kind, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+
+
+class ReadOnlyStagingProjectionBehaviorTests(unittest.TestCase):
+    @staticmethod
+    def _connection_with_run(*, include_building_event=True):
+        from hashlib import sha256
+        from market_data.archive_staging_schema import (
+            compute_schema_fingerprint, connect_staging_database,
+        )
+
+        connection = connect_staging_database(":memory:")
+        inventory_bytes = b'{"synthetic":true}\\x00'
+        manifest_json = "{}"
+        connection.execute(
+            """INSERT INTO reconstruction_run (
+                singleton_key,run_id,inventory_id,inventory_blob_sha256,
+                inventory_raw_bytes,label,parser_contract_id,parser_source_sha,
+                importer_source_sha,schema_contract_id,schema_fingerprint_sha256,
+                created_at_utc,coverage_manifest_json,coverage_manifest_sha256
+            ) VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                "run1:" + "1" * 64,
+                "inv1:" + "2" * 64,
+                sha256(inventory_bytes).hexdigest(),
+                inventory_bytes,
+                "RECONSTRUCTED — PARTIAL COVERAGE",
+                "T0_ARCHIVE_CSV_HEADER_V1",
+                "3" * 40,
+                "4" * 40,
+                "T0_STAGING_SCHEMA_V2",
+                compute_schema_fingerprint(),
+                "2026-11-22T00:00:00.000Z",
+                manifest_json,
+                sha256(manifest_json.encode("utf-8")).hexdigest(),
+            ),
+        )
+        if include_building_event:
+            connection.execute(
+                """INSERT INTO run_events (
+                    run_id,event_seq,event_type,occurred_at_utc,reason_code,
+                    candidate_snapshot_sha256,validator_payload_sha256
+                ) VALUES (?,?,?, ?,NULL,NULL,NULL)""",
+                (
+                    "run1:" + "1" * 64, 1, "BUILDING",
+                    "2026-11-22T00:00:00.000Z",
+                ),
+            )
+        connection.commit()
+        return connection, inventory_bytes
+
+    def test_projects_run_and_empty_relations_without_opening_or_closing_connection(self):
+        from unittest.mock import patch
+        from market_data.archive_staging_adapter import project_staging_database
+
+        connection, raw_bytes = self._connection_with_run()
+        try:
+            self.assertFalse(connection.in_transaction)
+            with patch("sqlite3.connect", side_effect=AssertionError("implicit connect forbidden")):
+                projection = project_staging_database(connection)
+            self.assertEqual(projection.run.inventory_raw_bytes, raw_bytes)
+            self.assertEqual(projection.run.run_id, "run1:" + "1" * 64)
+            self.assertEqual(projection.run_events[0].event_type, "BUILDING")
+            self.assertEqual(projection.objects, ())
+            self.assertEqual(projection.attempts, ())
+            self.assertFalse(connection.in_transaction)
+            self.assertEqual(connection.execute("SELECT 1").fetchone()[0], 1)
+        finally:
+            connection.close()
+
+    def test_rejects_initialized_schema_without_singleton_run_envelope(self):
+        from market_data.archive_staging_adapter import (
+            AdapterValidationError, project_staging_database,
+        )
+        from market_data.archive_staging_schema import connect_staging_database
+
+        connection = connect_staging_database(":memory:")
+        try:
+            with self.assertRaises(AdapterValidationError) as caught:
+                project_staging_database(connection)
+            self.assertEqual(caught.exception.code, "RUN_ENVELOPE_CARDINALITY_INVALID")
+        finally:
+            connection.close()
+
+    def test_rejects_run_without_initial_building_event(self):
+        from market_data.archive_staging_adapter import (
+            AdapterValidationError, project_staging_database,
+        )
+
+        connection, _ = self._connection_with_run(include_building_event=False)
+        try:
+            with self.assertRaises(AdapterValidationError) as caught:
+                project_staging_database(connection)
+            self.assertEqual(caught.exception.code, "INITIAL_BUILDING_EVENT_INVALID")
+        finally:
+            connection.close()
