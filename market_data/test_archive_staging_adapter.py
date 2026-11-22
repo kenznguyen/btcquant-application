@@ -206,7 +206,14 @@ class PhysicalIdentityGrammarTests(unittest.TestCase):
         from dataclasses import replace
         from market_data.archive_staging_adapter import AdapterValidationError
 
-        candle = S3V1ProjectionAndGraphREDTests._minimal_projection().candles[0]
+        from market_data.archive_staging_adapter import CandleEvidence
+
+        candle = CandleEvidence(
+            exchange="binance", market_type="usdm", symbol="BTCUSDT",
+            timeframe="15m", open_time_ms=0, open="1", high="2", low="1",
+            close="2", volume="1", available_at_ms=900000,
+            availability_kind="BAR_CLOSE_BOUNDARY", candle_value_id="cv1:" + "a" * 64,
+        )
         with self.assertRaises(AdapterValidationError):
             replace(candle, candle_value_id="cv1:" + "g" * 64)
 
