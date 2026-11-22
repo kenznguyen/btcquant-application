@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — reverse-insert multi-row ordering GREEN; candidate digest formula unresolved
+
+- Latest test SHA: `912ed3208851837302d979c4b4fa29f90e0effdf`; test blob `e5019a825bb262f8f7f4173eb7568234dc836dfc`; adapter blob `0ddd724c7e69d681333fa845c91a83852dd3420c`.
+- Exact-SHA CI run [45008220039](https://github.com/kenznguyen/btcquant-application/actions/runs/45008220039), job `137164470095`, SUCCESS; checkout SHA matches.
+- Runtime CPython 3.13.18 / SQLite 3.45.1; importer-core 20/20, adapter 33/33, schema 14/14, full regression 468/468 PASS; artifacts 0.
+- Multi-row test inserts objects, attempts, successful-attempt relations, run events and failure observations in reverse order; projection returns deterministic order.
+- Multi-row permutation coverage for pairs, members, source_rows, candles and links still NOT VERIFIED (explicit SQL ordering exists, but no multi-row fixtures yet).
+- Graph negative tests include lifecycle timestamps/snapshot consistency, orphan and noncontiguous failure observations, missing successful attempt, pair/member/source-row reference breaks, and candle-link mismatch.
+- Candidate snapshot hash preimage/serialization remains undefined in approved design; only shape/presence and equality between CANDIDATE and VALIDATED events are checked. Do not invent digest formula.
+- F2 **PARTIAL / SYNTHETIC CI PASS**; S1.2 **NOT FROZEN**; independent review **NOT RUN**; B8 **NOT APPROVED**; real-data build **NOT AUTHORIZED**.
+- Evidence: `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md`.
+- Next: multi-row permutations for remaining relations, full F1–F7 remediation tests, exact-SHA full regression, independent review. Candidate snapshot formula needs owner-approved amendment before recomputation.
+- All exclusions remain unchanged: no real archive/sidecar access/acquisition, host/workstation/SSH/filesystem/runner preflight, B8 workflow/dispatch/runner, real-data staging, uploads/deletion/cleanup, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS/deployment, credentials, exchange or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — graph negative-invariant matrix GREEN; candidate snapshot formula remains unresolved
 
 - Latest graph-test source SHA: `3e08ba4f9e326a9978d119cba54138cff0281f5e`; test blob `d78c20e561fe921d73e9636a61fa7ca75f7b85cc`; adapter source blob `0ddd724c7e69d681333fa845c91a83852dd3420c`.
