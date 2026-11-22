@@ -1,7 +1,7 @@
 # T0 Phase B — Detailed Schema & Canonical Contract Design
 
-- Date: 2026-11-22 (revision 3)
-- Status: **PHASE B DESIGN REVISION 3 — NEXT REVIEW REQUESTED**
+- Date: 2026-11-22 (revision 4)
+- Status: **PHASE B DESIGN REVISION 4 — NEXT REVIEW REQUESTED**
 - Scope: SD-05 aggregate trades; SD-06 order-book depth diffs; SD-07 order-book snapshots.
 - Authorization: owner-approved Phase A review and Phase B documentation-only authorization, decision commit `f2f5741cad47b86c70dae23dbaa9b497258cc80a`.
 - Governing design: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_AND_CANONICAL_INGESTION_CONTRACT_V1_2026-11-22.md`.
@@ -237,33 +237,43 @@ Canonical diff history and a reconstructed in-memory/current book are different 
 | `last_update_id` | book version | `last_update_id` | Snapshot sequence anchor |
 | Common fields | exchange/market/symbol | instrument envelope | Explicit source namespace |
 
-### 5.2 Grouping, bounded-depth scope and candidate identity
+### 5.2 Grouping, source-kind allowlist and bounded-depth scope
 
-The native CSV is one row per price level, not one row per snapshot. T0 must group all rows belonging to one capture before canonical acceptance. A single level row is never a complete capture.
+The native CSV is one row per price level, not one row per snapshot. T0 must group all rows belonging to one capture before canonical acceptance. A single level row is never a complete capture. The CSV `event_type` values (`depth_snapshot_initial`, `depth_snapshot`, `depth_snapshot_bridge`) describe lifecycle intent only; they do **not** prove how the snapshot was obtained. Do not infer source kind from `event_type`.
 
-For the ordinary Binance USD-M REST order-book endpoint, the response is bounded top-N depth (documented limits include 5, 10, 20, 50, 100, 500 and 1000; maximum 1000). It is not an unlimited representation of the entire order book. A complete capture therefore means **all levels returned by that exact bounded response were captured and verified**, not that the exchange's entire book was captured.
+The design allowlist has two supported candidate source kinds, each with a distinct completeness contract, plus an explicit reject bucket:
+
+| Candidate `source_kind` | Meaning | Required source evidence and acceptance contract |
+|---|---|---|
+| `BINANCE_USDM_REST_DEPTH_RESPONSE_V1` | Direct response from the ordinary Binance USD-M REST depth endpoint | Preserve the exact raw response or an equivalently verifiable immutable source object; bind `GET /fapi/v1/depth`, symbol, requested limit, response `lastUpdateId`, response `E`/`T` when supplied, actual bid/ask counts, total rows, capture ID, digest and explicit completion. Completeness means every level in that exact bounded response is present, not the entire exchange book. |
+| `T1_RECONSTRUCTED_LOCAL_BOOK_V1` | Snapshot serialized from T1's locally reconstructed book | Bind the upstream REST snapshot anchor and its source identity; stream/session epoch; last contiguous diff update applied; continuity state at capture; configured depth boundary/retention policy; source-book generation; exact capture ID, level counts, digest and completion. Acceptance requires proof that no unresolved gap, overflow, conflict or resource rejection preceded the capture and that all declared retained levels were emitted. A local snapshot is not a REST response and must not claim REST response metadata it did not receive. |
+| `UNSUPPORTED_OR_UNKNOWN` | Any source variant not explicitly covered by a reviewed contract | Reject/quarantine; no canonical acceptance. |
+
+The current T1 CSV schema does not identify which of these source kinds produced any given `event_type`. Until additive source provenance makes the distinction verifiable, every current-schema snapshot remains `NOT_CANONICAL_ACCEPTABLE`. A future source-kind value is not implicitly accepted; it requires a separately reviewed contract.
+
+For direct ordinary Binance USD-M REST depth responses, the response is bounded top-N depth (documented limits include 5, 10, 20, 50, 100, 500 and 1000; maximum 1000). It is not an unlimited representation of the entire order book. A complete capture means **all levels returned by that exact bounded response were captured and verified**, not that the exchange's entire book was captured. For collector-reconstructed snapshots, completeness is limited to the explicitly declared local retained-depth boundary and proven source-book continuity; it is not proof of unseen exchange levels.
 
 Candidate snapshot identity proposal:
-`(exchange, market_type, symbol, source_kind, requested_limit, last_update_id, snapshot_captured_at_ms, snapshot_capture_id)`.
+`(exchange, market_type, symbol, source_kind, requested_limit_or_depth_policy, last_update_id, snapshot_captured_at_ms, snapshot_capture_id)`.
 
 The tuple is not frozen. `snapshot_capture_id` must be source-generated and immutable. Do not invent an ID from row order, timestamp, file path, file rotation or a locally assigned import sequence.
 
-Within one capture, level identity is `(side, price)`. The full returned level set must be deterministic and duplicate-free. Preserve bid and ask counts separately; an absent side is not an empty side unless the source manifest explicitly declares zero returned levels.
+Within one capture, level identity is `(side, price)`. The full declared level set must be deterministic and duplicate-free. Preserve bid and ask counts separately; an absent side is not an empty side unless the source manifest explicitly declares zero returned levels.
 
 ### 5.3 Completeness, boundedness and consistency
 
-- Validate one consistent `event_type`, `last_update_id`, timestamp, exchange, market, symbol, source kind, endpoint and requested limit across every row in a group.
+- Validate one consistent `event_type`, `last_update_id`, timestamp, exchange, market, symbol, source kind and capture manifest across every row in a group. Validate REST endpoint/request limit only for the REST source kind; validate upstream anchor/epoch/contiguous-applied-update/depth policy only for the reconstructed-local-book source kind.
 - Require only the versioned snapshot event types permitted by the source contract.
 - Reject duplicate `(side, price)` levels, invalid sides, nonpositive price/quantity, malformed decimals and mixed group metadata.
 - The current CSV row schema has no explicit group header, expected level count, checksum, end marker or empty-book marker. A file/row batch alone does not prove capture completeness.
 - Minimum future acceptance evidence is: (a) source-generated immutable `snapshot_capture_id`; (b) explicit group framing/boundary; (c) expected total row count or equivalent source completeness declaration; (d) finalized immutable source-object digest; and (e) a completion manifest binding capture ID, symbol/market, source kind/endpoint, requested depth limit, actual bid count, actual ask count, total row count, snapshot kind, update ID, capture time, object digest, non-RPI visibility and completion status.
-- The manifest must identify the exact endpoint/source variant and request parameters. A limit of 1000 means at most the response's bounded levels; it does not mean full-book completeness.
+- The manifest must identify the exact source variant and its variant-specific proof. A REST manifest binds endpoint and request parameters; a reconstructed-book manifest binds the upstream anchor, epoch, contiguous applied update and retained-depth policy. Never require REST-only fields from a local snapshot or treat missing REST fields as evidence of a local snapshot.
 - Empty-side/empty-book captures require explicit source/manifest declarations with zero counts. Absence of rows is not evidence of an empty side or book.
 - File EOF, file rotation, elapsed time, stable-looking file size or observed row count alone is never proof of completion.
 - Partial write, process restart, collector crash, object mutation, missing end marker, row-count mismatch or digest mismatch quarantines the entire capture; no partial prefix is accepted.
-- Snapshot `last_update_id` anchors only the returned bounded depth state. It is not a trade ID and must not be mixed with SD-05 identifiers.
+- Snapshot `last_update_id` anchors only the returned bounded/declared retained-depth state. It is not a trade ID and must not be mixed with SD-05 identifiers. For a reconstructed local snapshot, the manifest must additionally identify the last contiguous diff applied; the snapshot's declared anchor cannot conceal an earlier unresolved gap.
 - Same proven snapshot identity + identical complete bounded level set is replay. Same identity + differing level set is conflict; never merge levels or overwrite.
-- A snapshot is a bounded reconstruction anchor, not proof of the full exchange book.
+- A snapshot is a bounded reconstruction anchor for its declared source and depth scope, not proof of the full exchange book.
 - A later diff that inserts a level outside the initial returned price boundary may be applied as an update to the known bounded state only under verified sequence rules; it does not prove that omitted deeper levels are known or that the local top-N ranking remains complete. If the derived view cannot establish its visible depth/rank semantics, mark that view bounded/incomplete or unavailable rather than asserting a complete book.
 - The ordinary endpoint's non-RPI visibility is an independent limitation: even a fully captured bounded response excludes RPI liquidity. Do not conflate bounded-depth completeness with all-liquidity completeness.
 
@@ -280,7 +290,7 @@ Within one capture, level identity is `(side, price)`. The full returned level s
 | Relationship | Rule |
 |---|---|
 | SD-05 trade IDs vs SD-06 update IDs | Separate namespaces and identity schemes; never compare or join as one sequence |
-| SD-06 diff vs SD-07 snapshot | Diff continuity is evaluated relative to a snapshot anchor and stream epoch; snapshot is a full-state anchor |
+| SD-06 diff vs SD-07 snapshot | Diff continuity is evaluated relative to a source-proven bounded snapshot anchor and stream epoch; snapshot anchors only its declared returned/retained depth scope, never the unseen full exchange book |
 | SD-05 event time vs SD-06 event time | Both are UTC milliseconds but are not a common deduplication key |
 | Raw source rows vs derived order book | Preserve raw rows/messages; reconstructed book is a versioned derived view |
 | T1 files vs T0 canonical records | T1 files remain source evidence/capture output, not a competing canonical dataset |
@@ -312,10 +322,11 @@ Raw object digest and canonical semantic digest are different. CSV row serializa
 | New valid identity | Candidate accept | Candidate accept only if sequence continuity is valid | Candidate accept only if complete group is proven |
 | Same identity, same semantic payload | Replay | Replay; do not apply twice | Replay; do not merge duplicate levels |
 | Same identity, changed payload | Conflict; preserve both | Conflict; continuity becomes untrusted | Conflict; preserve both level-set references |
-| Missing native identity | Quarantine | Quarantine; stream epoch missing in current CSV | Quarantine; capture identity/completeness missing |
+| Missing native identity | Quarantine | Quarantine when native update-range identity is absent/unverifiable | Quarantine when source-generated capture identity/completeness is missing |
+| Missing stream epoch/continuity provenance | Not applicable to aggregate-trade identity | Quarantine from book-continuity acceptance; retain source observation and candidate native identity separately; epoch absence does not redefine canonical event identity | For reconstructed-local-book captures, quarantine because upstream epoch/continuity proof is required; for direct REST captures, apply only the REST source contract and do not invent an epoch requirement |
 | Malformed numeric/JSON | Quarantine/reject | Quarantine/reject | Quarantine/reject |
 | Out-of-order delivery | Retain by native trade ID/time; no timestamp-only rejection | Sequence-aware handling; do not advance cursor across missing update | Do not infer order solely from capture timestamp |
-| Lost acknowledgement | Retry same aggregate ID | Retry same epoch/update range | Retry same proven capture identity |
+| Lost acknowledgement | Retry the same source observation using its immutable source-delivery locator; deduplicate canonical event by verified aggregate-trade identity | Retry the same source observation using its immutable source-delivery locator; deduplicate canonical event by verified exchange namespace + native update range. Epoch is continuity provenance only, never part of retry or canonical identity | Retry the same source observation using its immutable source-delivery locator and proven capture ID; source-kind-specific completeness evidence must remain unchanged |
 | Source evidence unavailable | No canonical acceptance | No canonical acceptance | No canonical acceptance |
 
 No source deletion follows acknowledgement. Partial acceptance must retain per-record outcomes and safe resume position. Source-delivery acknowledgement and book-sequence progress are separate as defined in §4.8; acknowledgement/checkpoint atomicity and quarantine progression remain design blockers, not implemented behavior.
@@ -341,7 +352,7 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 13. Timestamp/ISO UTC mismatch is rejected; trade time is not relabeled as receive time.
 14. Candidate cross-field side/maker consistency is not enforced until source semantics are verified.
 
-### SD-06 — Depth diffs (25 cases)
+### SD-06 — Depth diffs (28 cases)
 
 1. Valid diff preserves U/u/pu and distinct E/T when both are present.
 2. Current T1 CSV maps timestamp only to candidate E as documented for depth; T remains explicitly unavailable.
@@ -368,8 +379,11 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 23. Same timestamp with different update IDs remains distinct.
 24. Malformed JSON, wrong tuple arity, duplicate prices, invalid decimal and negative quantity fail closed.
 25. Buffer overflow never silently evicts an event; derived book becomes unavailable.
+26. Missing stream epoch with otherwise present candidate update range is classified as missing continuity provenance; it is not reported as missing native event identity and cannot advance book continuity.
+27. Lost acknowledgement replayed from a different stream epoch but same verified native update range and same payload is canonical replay; epoch difference is retained only as provenance.
+28. Retry of the same source-delivery locator after restart is idempotent even when the process/session epoch changed; source cursor and book watermark remain independently fenced.
 
-### SD-07 — Bounded order-book snapshots (19 cases)
+### SD-07 — Bounded order-book snapshots (24 cases)
 
 1. Multi-level bid/ask rows group only with source capture ID and completion manifest.
 2. Manifest binds exact source kind/endpoint and request parameters.
@@ -390,6 +404,11 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 17. Later update outside initial price boundary does not establish unseen deeper levels or full top-N ranking.
 18. Snapshot REST E/T are preserved separately if source supplies them; otherwise each is explicitly unavailable, never replaced by CSV capture time.
 19. Snapshot group row/byte/level/token ceiling rejects the whole capture with bounded evidence and no partial acceptance.
+20. Direct REST source kind requires the exact REST endpoint, request limit, response anchor and raw/immutable response evidence; missing REST-specific evidence quarantines it.
+21. Reconstructed-local-book source kind requires upstream snapshot anchor, epoch, last contiguous applied update, healthy continuity state and declared retained-depth policy; any unresolved gap/overflow/conflict rejects the capture.
+22. REST-only metadata presented on a reconstructed-local-book capture, or local-book continuity metadata presented as proof of a direct REST response, is a source-kind mismatch and is rejected.
+23. Unknown/future source kind is rejected by default and cannot inherit either allowlisted completeness contract.
+24. A reconstructed-local-book snapshot whose source history contains a prior unresolved gap cannot be accepted merely because its emitted rows and digest are internally complete.
 
 ### Cross-domain cursor, checkpoint and recovery (8 cases)
 
@@ -402,7 +421,7 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 7. Buffered but unapplied events do not advance book watermark.
 8. Conflict/resource rejection leaves book unavailable until reviewed recovery with a new bounded snapshot and verified bridge.
 
-**Proposed matrix total: 66 cases** (SD-05 14, SD-06 25, SD-07 19, cross-domain 8). Designed only; NOT EXECUTED.
+**Proposed matrix total: 74 cases** (SD-05 14, SD-06 28, SD-07 24, cross-domain 8). Designed only; NOT EXECUTED.
 
 ## 10. Open design blockers before contract freeze
 
@@ -436,13 +455,13 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 - [x] Candidate identity and domain-specific sequence/grouping semantics described.
 - [x] Timestamp/provenance limitations called out without fabricated receive times.
 - [x] Replay/conflict/quarantine/acknowledgement behavior drafted.
-- [x] Synthetic test matrix expanded to 66 proposed cases, including E/T separation, unverified q mapping, bounded top-N snapshots, independent cursors and byte/level/token/group resource ceilings; explicitly marked NOT EXECUTED.
+- [x] Synthetic test matrix expanded to 74 proposed cases, including E/T separation, unverified q mapping, source-kind-specific REST/local-book completeness, bounded-depth anchor semantics, epoch-independent retry identity, independent cursors and byte/level/token/group resource ceilings; explicitly marked NOT EXECUTED.
 - [x] Contract-freeze blockers recorded.
 - [ ] B-01 through B-20 resolved or explicitly accepted as bounded exclusions by owner.
 - [ ] Canonical DTO/envelope, digest encoding, snapshot capture/group identity and diff stream epoch contract reviewed/frozen.
 - [ ] Independent design review completed and findings resolved.
 
-**Next review requested (revision 3):** review the corrections to R-01..R-11, the 66-case synthetic matrix and blockers B-01..B-20. The design now closes the conceptual gaps in E/T mapping, bounded snapshot semantics, cursor separation and resource-bound categories; it does not claim source-dependent mappings, identity scope, numeric values, source completeness fields or protocol bridge are verified/frozen. Any unresolved evidence dependency remains a contract-freeze blocker. Approval of this draft would accept the design baseline only if explicitly stated; it would not authorize implementation unless a separate implementation decision names its exact scope.
+**Next review requested (revision 4):** review the corrections to R-01..R-11, the 74-case synthetic matrix and blockers B-01..B-20. The design now specifies distinct candidate completeness contracts for direct REST and T1-reconstructed snapshots, bounded-depth anchor terminology, epoch-independent retry identity, E/T mapping, cursor separation and resource-bound categories; it does not claim source-dependent mappings, identity scope, numeric values, source completeness fields or protocol bridge are verified/frozen. Any unresolved evidence dependency remains a contract-freeze blocker. Approval of this draft would accept the design baseline only if explicitly stated; it would not authorize implementation unless a separate implementation decision names its exact scope.
 
 ## 12. Explicit exclusions
 
