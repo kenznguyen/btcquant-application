@@ -158,7 +158,7 @@ def retry_delay_seconds(
         type(status_code) is int
         and (status_code in _TRANSIENT_HTTP_STATUSES or 500 <= status_code <= 599)
     )
-    if not transient_error and not transient_status:
+    if transient_error is not True and not transient_status:
         return None
 
     if retry_after_seconds is not None:
