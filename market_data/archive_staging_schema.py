@@ -266,6 +266,13 @@ TABLE_DDL = (
     ) STRICT""",
 )
 
+TRIGGER_DDL = (
+    "CREATE TRIGGER trg_run_events_no_update BEFORE UPDATE ON run_events "
+    "BEGIN SELECT RAISE(ABORT,'run_events are append-only'); END",
+    "CREATE TRIGGER trg_run_events_no_delete BEFORE DELETE ON run_events "
+    "BEGIN SELECT RAISE(ABORT,'run_events are append-only'); END",
+)
+
 INDEX_DDL = (
     "CREATE INDEX idx_archive_objects_pair_key ON archive_objects(paired_object_key,object_kind)",
     "CREATE INDEX idx_acquisition_attempts_object_number ON acquisition_attempts(object_id,attempt_number)",
@@ -282,6 +289,7 @@ _SCHEMA_NAMES = (
     "object_successful_attempt", "archive_pairs", "csv_members", "source_rows",
     "candles", "candle_provenance_links", "failure_observations",
 )
+_TRIGGER_NAMES = ("trg_run_events_no_update", "trg_run_events_no_delete")
 _INDEX_NAMES = (
     "idx_archive_objects_pair_key", "idx_acquisition_attempts_object_number",
     "idx_archive_pairs_zip_sidecar", "idx_csv_members_pair_disposition",
@@ -304,6 +312,7 @@ def _canonical_manifest_bytes() -> bytes:
         "sqlite_minimum_version": "3.37.0",
         "tables": list(TABLE_DDL),
         "indexes": list(INDEX_DDL),
+        "triggers": list(TRIGGER_DDL),
         "pragmas": ["PRAGMA user_version=2;"],
     }
     # Manifest values are strings/integers/arrays only; this is the JCS-compatible
@@ -345,6 +354,8 @@ def initialize_staging_schema(connection: sqlite3.Connection) -> None:
         connection.execute(statement)
     for statement in INDEX_DDL:
         connection.execute(statement)
+    for statement in TRIGGER_DDL:
+        connection.execute(statement)
     connection.execute("PRAGMA user_version=2")
     connection.set_authorizer(_append_only_authorizer)
 
@@ -372,30 +383,49 @@ def verify_staging_database(connection: sqlite3.Connection) -> bool:
     if connection.execute("PRAGMA foreign_keys").fetchone()[0] != 1:
         return False
     objects = connection.execute(
-        "SELECT type,name FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name"
+        "SELECT type,name,sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name"
     ).fetchall()
-    actual_tables = tuple(name for kind, name in objects if kind == "table")
-    actual_indexes = tuple(name for kind, name in objects if kind == "index")
-    if set(actual_tables) != set(_SCHEMA_NAMES) or set(actual_indexes) != set(_INDEX_NAMES):
+    actual = {(kind, name): sql for kind, name, sql in objects}
+    expected_tables = dict(zip(_SCHEMA_NAMES, TABLE_DDL))
+    expected_indexes = {statement.split("CREATE INDEX ", 1)[1].split(" ", 1)[0]: statement
+                        for statement in INDEX_DDL}
+    expected_triggers = {statement.split("CREATE TRIGGER ", 1)[1].split(" ", 1)[0]: statement
+                         for statement in TRIGGER_DDL}
+    if {name for kind, name, _ in objects if kind == "table"} != set(_SCHEMA_NAMES):
         return False
-    if any(kind not in ("table", "index") for kind, _ in objects):
+    if {name for kind, name, _ in objects if kind == "index"} != set(_INDEX_NAMES):
         return False
-    for name in _SCHEMA_NAMES:
-        row = connection.execute(
-            "SELECT sql FROM sqlite_schema WHERE type='table' AND name=?", (name,)
-        ).fetchone()
-        if row is None or "STRICT" not in row[0].upper():
+    if {name for kind, name, _ in objects if kind == "trigger"} != set(_TRIGGER_NAMES):
+        return False
+    if any(kind not in ("table", "index", "trigger") for kind, _, _ in objects):
+        return False
+    for name, ddl in expected_tables.items():
+        row = actual.get(("table", name))
+        if row is None or row.strip() != ddl.strip() or "STRICT" not in row.upper():
+            return False
+    for name, ddl in expected_indexes.items():
+        if actual.get(("index", name), "").strip() != ddl.strip():
+            return False
+    for name, ddl in expected_triggers.items():
+        if actual.get(("trigger", name), "").strip() != ddl.strip():
             return False
     if connection.execute("PRAGMA integrity_check").fetchall() != [("ok",)]:
         return False
     if connection.execute("PRAGMA foreign_key_check").fetchall():
         return False
-    return len(compute_schema_fingerprint()) == 64
+    run_rows = connection.execute(
+        "SELECT schema_contract_id,schema_fingerprint_sha256 FROM reconstruction_run"
+    ).fetchall()
+    expected_fingerprint = compute_schema_fingerprint()
+    if any(contract_id != SCHEMA_CONTRACT_ID or fingerprint != expected_fingerprint
+           for contract_id, fingerprint in run_rows):
+        return False
+    return len(expected_fingerprint) == 64
 
 
 __all__ = (
     "SCHEMA_CONTRACT_ID", "SCHEMA_VERSION", "SQLITE_MINIMUM_VERSION",
-    "TABLE_DDL", "INDEX_DDL", "compute_schema_fingerprint",
+    "TABLE_DDL", "INDEX_DDL", "TRIGGER_DDL", "compute_schema_fingerprint",
     "initialize_staging_schema", "connect_staging_database",
     "verify_staging_database",
 )
