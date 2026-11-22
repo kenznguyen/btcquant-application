@@ -488,6 +488,66 @@ class StagingSchemaV2Tests(unittest.TestCase):
                  "row1:" + "1" * 64, "cv1:" + "g" * 64, "UNIQUE"),
             )
 
+
+    def test_run_attempt_pair_and_member_ids_require_lowercase_hex(self):
+        self.db.execute("PRAGMA foreign_keys=OFF")
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                """INSERT INTO reconstruction_run (
+                    singleton_key,run_id,inventory_id,inventory_blob_sha256,
+                    inventory_raw_bytes,label,parser_contract_id,parser_source_sha,
+                    importer_source_sha,schema_contract_id,schema_fingerprint_sha256,
+                    created_at_utc,coverage_manifest_json,coverage_manifest_sha256
+                ) VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                ("run1:" + "g" * 64, "inv1:" + "1" * 64, "2" * 64, b"{}",
+                 "RECONSTRUCTED — PARTIAL COVERAGE", "T0_ARCHIVE_CSV_HEADER_V1",
+                 "3" * 40, "4" * 40, "T0_STAGING_SCHEMA_V2", "5" * 64,
+                 "2026-11-22T00:00:00.000Z", "{}", "6" * 64),
+            )
+
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                """INSERT INTO acquisition_attempts (
+                    attempt_id,object_id,attempt_number,workflow_run_id,workflow_job_id,
+                    workflow_event,trigger_sha,checkout_sha,requested_key,
+                    expected_size_bytes,expected_sha256,started_at_utc,finished_at_utc,
+                    outcome,failure_subtype,response_bytes_received,is_complete_object,failure_code
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                ("att1:" + "g" * 64, "obj1:" + "1" * 64, 1, "run", "job",
+                 "workflow_dispatch", "2" * 40, "3" * 40, "synthetic.zip", 0,
+                 "4" * 64, "2026-11-22T00:00:00.000Z", "2026-11-22T00:00:01.000Z",
+                 "FAILED", "HTTP_FAILED", 0, 0, "SYNTHETIC_FAILURE"),
+            )
+
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                """INSERT INTO archive_pairs (
+                    pair_id,zip_object_id,sidecar_object_id,disposition,failure_code
+                ) VALUES (?,?,?,?,?)""",
+                ("pair1:" + "g" * 64, "obj1:" + "1" * 64,
+                 "obj1:" + "2" * 64, "QUARANTINED", "SYNTHETIC_FAILURE"),
+            )
+
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                """INSERT INTO csv_members (
+                    candidate_id,member_id,pair_id,central_directory_ordinal,
+                    member_path,member_size_bytes,member_sha256,disposition,failure_code
+                ) VALUES (?,?,?,?,?,?,?,?,?)""",
+                ("cand1:" + "g" * 64, "mem1:" + "1" * 64, "pair1:" + "2" * 64,
+                 1, "synthetic.csv", 1, "3" * 64, "QUARANTINED", "SYNTHETIC_FAILURE"),
+            )
+
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                """INSERT INTO csv_members (
+                    candidate_id,member_id,pair_id,central_directory_ordinal,
+                    member_path,member_size_bytes,member_sha256,disposition,failure_code
+                ) VALUES (?,?,?,?,?,?,?,?,?)""",
+                ("cand1:" + "4" * 64, "mem1:" + "g" * 64, "pair1:" + "2" * 64,
+                 1, "synthetic.csv", 1, "3" * 64, "QUARANTINED", "SYNTHETIC_FAILURE"),
+            )
+
     def test_object_inventory_digest_and_identity_require_lowercase_hex(self):
         sql = """INSERT INTO archive_objects (
             object_id,inventory_id,inventory_blob_sha256,inventory_entry_identity,
