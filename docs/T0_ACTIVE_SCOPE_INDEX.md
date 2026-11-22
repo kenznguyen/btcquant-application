@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B design revision 2 submitted for second review
+
+- Revised design: docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md
+- Design commit: 6bf8f03c4270abbfe29eff624571e3a13c24b21d
+- Design blob SHA: a14c0030fbddad97d28675fa70ab9138cf22bf73
+- Second-round review request: docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_2_REQUEST_2026-11-22.md
+- Review-request commit: 8c358bdb3da2447e11e28c026d43e278150eb672
+- Prior first-round review: docs/reviews/T0_PHASE_B_DESIGN_REVIEW_2026-11-22.md, commit 347dbcec6f7ddedac4ac1c8e90ee57c549ae49ef; verdict REQUEST CHANGES.
+- R-01..R-06: addressed in design revision 2; second-round independent review **REQUESTED / PENDING**. Do not record as independently cleared until review is completed.
+- Synthetic matrix: 45 proposed cases (SD-05 10, SD-06 20, SD-07 15); **NOT EXECUTED**.
+- Remaining design blockers: B-01..B-16. In particular, update-ID uniqueness scope, T1 capture ID/completeness, q/nq and E/T raw fidelity, RPI scope verification, numeric reorder/gap limits, exact Binance bridge, provenance/digest/checkpoint/API freeze remain open.
+- Phase B status: **DOCUMENTATION REVISION COMPLETE / SECOND REVIEW PENDING**. Contract freeze NOT APPROVED.
+- Tests/workflows/artifacts: **NOT RUN / NONE**.
+- Scope remains documentation-only. No code/DTO/parser/validator/tests/fixtures/DDL/database/data movement/network/credentials/T1 source/runtime/T1→T0/T2/VPS/deployment/trading actions.
+- Next: complete second-round design review and triage any new findings. Phase C and implementation remain gated.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B design review REQUEST CHANGES
 
 - Review: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_2026-11-22.md`, commit `347dbcec6f7ddedac4ac1c8e90ee57c549ae49ef`.
