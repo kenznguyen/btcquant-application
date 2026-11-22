@@ -3,7 +3,7 @@
 Date: 2026-11-22  
 Repository: `kenznguyen/btcquant-application`  
 Branch: `main`  
-Status: **S1.1 DESIGN RECONCILIATION — DOCUMENTATION ONLY; AWAITING OWNER ACCEPTANCE**
+Status: **OWNER ACCEPTED — DESIGN FROZEN; DOCUMENTATION ONLY**
 
 ## 1. Authority, scope and precedence
 
