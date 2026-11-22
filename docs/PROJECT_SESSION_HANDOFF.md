@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — B4 synthetic RED suite prepared for manual exact-SHA dispatch
+
+- Latest checkpoint evidence: `docs/evidence/T0_G1_B4_RESOURCE_POLICY_RED_DISPATCH_2026-11-22.md`, commit `edd046ee9f1df58b1560bed8acbfe052e64ee8b0`.
+- Test-only commit: `b436b29761ad10f6435a2bb4d0062fdedd69c972`; new test `market_data/test_archive_resource_policy.py`. Resource implementation `market_data/archive_resource_policy.py` intentionally absent.
+- Workflow-wired exact source SHA to manually dispatch: `d5db3e8af76c44d75c00bd457b3dccabba762f50`; workflow blob `a3067442ca30b2579e8c70c507f1a94ce29392e7`. Workflow now includes B4 tests with existing parser/provenance tests; workflow remains manual exact-SHA, hosted runner, minimal permissions and sanitized 30-day artifact.
+- **Status: READY FOR MANUAL RED DISPATCH — NOT YET RUN.** This session has no GitHub Actions workflow_dispatch action. Do not claim RED until the Actions run at the exact source SHA confirms the absent-module import failure while baseline tests pass. Overall workflow failure is expected for this RED phase.
+- Owner action: GitHub → Actions → “T0 G1 synthetic-only exact-SHA CI” → Run workflow; enter `d5db3e8af76c44d75c00bd457b3dccabba762f50` in `source_sha`. Share the resulting run URL/ID for inspection of exact checkout, job logs, failure reason and artifact digest.
+- After verified RED, implement only B4 pure-Python helpers and run GREEN. Then add importer-core tests in a separate test-first commit and repeat RED/GREEN. G1 remains PARTIAL / NOT COMPLETE.
+- All existing exclusions remain unchanged: no archive/sidecar access, filesystem/host preflight, SQLite open/create/write/DDL, real-data importer/build, Canonical T0 mutation/promotion, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — G1 TDD execution blocked before RED
 
 - Current main HEAD at checkpoint: `f4485ab0e0888c10ccd21a58897010b27067cf91` (evidence checkpoint commit; verify live HEAD before next change).
