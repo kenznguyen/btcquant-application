@@ -20,11 +20,15 @@ Implemented only `market_data/archive_resource_policy.py` on `main`, following t
 - RED artifact: `14742195259`; SHA-256 `fbc3947a9e68c6a9a3a8cf4e34452e868169e294c0bf6ed9737a424a8433d4ae`.
 
 ## GREEN verification
-**BLOCKED / NOT VERIFIED.**
-- The current session's GitHub integration supports reading workflow runs/logs/artifacts but does not expose the `workflow_dispatch` action.
-- No GREEN workflow run, job, or artifact exists for exact source SHA `9c47817bfaea9e4bf830aa812508ae1ef4796e20`.
-- No test result is claimed. An empty commit-status response is not evidence of GREEN.
-- Required owner action: GitHub Actions → `T0 G1 synthetic-only exact-SHA CI` → Run workflow; set `source_sha=9c47817bfaea9e4bf830aa812508ae1ef4796e20`. Then inspect exact checkout, all 60 expected tests (46 baseline + 14 B4), job conclusion, and sanitized artifact/digest. Treat this count as an expectation until the actual log confirms it.
+**PASS — exact implementation SHA verified.**
+- Workflow run: [44991196748](https://github.com/kenznguyen/btcquant-application/actions/runs/44991196748), run #4, attempt 1, `workflow_dispatch`; overall conclusion `success`.
+- Job: `Synthetic-only tests`, job ID `137112408904`, conclusion `success`. All checkout, exact-SHA verification, test, summary and artifact-upload steps completed successfully.
+- Requested source SHA: `9c47817bfaea9e4bf830aa812508ae1ef4796e20`; checked-out HEAD independently printed by runner: same exact SHA. The workflow run's dispatch branch HEAD is `b3dbda87c8cbb78d43906d040120823b05062af5`; this is not the tested source identity. The explicit source_sha input and checkout log establish the exact tested commit.
+- Runtime: CPython 3.13.18; SQLite library 3.45.1; metadata-only SQLite minimum-version policy check PASS (3.45.1 >= 3.37.0; no database opened).
+- Test result: **60/60 PASS** in 0.023s: parser 19, header contract 15, provenance validator 12, B4 resource policy 14. Log ends `Ran 60 tests`, `OK`.
+- Artifact: ID `14741792967`, name `t0-g1-synthetic-only-44991196748`, 3,250 bytes, 8 files, expires `2026-12-22T05:51:50Z`; SHA-256 `97f2864bebe506b045dc3ab4224d5ca747eae94a421f19adc124eed65c0977e0`. ZIP downloaded and inspected. It contains only source/blob SHA manifests, runtime metadata, summary and test log.
+- Artifact source identity manifest records requested and checked-out SHA both `9c47817bfaea9e4bf830aa812508ae1ef4796e20`. Source blob: `87743432ec273bf5bd737d26bf2d489cc9fb34cf`; parser blob `10fe2313103c45d5455f17ff71f3fd0af2e6f038`; provenance blob `b94bac0f82ae141984552409f99a5cff70435b3b`; B4 test blob `d9a4e8975cdba58eee5546818114442abf7dcab8`; workflow blob `a3067442ca30b2579e8c70c507f1a94ce29392e7`.
+- Note: the workflow's historical step and summary labels still say `RED`, but they do not match this run's actual evidence: the checked-out B4 implementation exists, all 60 tests passed, and the workflow/run/job conclusions are success. Treat the actual checked-out SHA, test log, job and artifact as authoritative; clean up the stale labels in a separately scoped workflow/evidence change later.
 
 ## Guardrails preserved
 No archive/sidecar reads, host or filesystem preflight, network acquisition, SQLite open/create/write/DDL, real-data importer/build, Canonical T0 mutation/promotion, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity, or trading.
@@ -32,6 +36,7 @@ No archive/sidecar reads, host or filesystem preflight, network acquisition, SQL
 ## Status
 - B4 source implementation: **COMMITTED**
 - RED provenance: **PASS**
-- GREEN on exact implementation SHA: **NOT VERIFIED / BLOCKED**
-- G1: **PARTIAL / NOT COMPLETE**
-- Next: manually dispatch the exact-SHA workflow above, verify logs and artifact, then update this record and the session handoff with the run/job/artifact IDs and final status.
+- GREEN on exact implementation SHA: **PASS — 60/60**
+- G1 B4 resource-policy test gate: **PASS**
+- This closes the B4 implementation and exact-SHA GREEN gate only; it does not authorize archive access, preflight, importer-core, real-data import, Canonical T0 mutation/promotion, runtime, deployment, or trading.
+- Next: preserve evidence and request the next separately approved scope before implementation.
