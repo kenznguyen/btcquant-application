@@ -59,7 +59,7 @@ The Binance USD-M aggregate-trade event includes native fields beyond the curren
 | `m` | buyer-is-maker flag | Yes, `is_buyer_maker` | strict boolean-domain mapping |
 | `M` | ignore/auxiliary flag | No | raw-source-only/unavailable in CSV |
 
-For the current T1 CSV contract, canonical `quantity` means the documented all-trades aggregate quantity `q`; `nq` is not silently substituted. Whether `nq` should become a first-class canonical field is unresolved and requires a source-contract/consumer decision. Preserve raw native messages where available. If only CSV is available, explicitly record `nq` as unavailable for that source version; do not fabricate it.
+For the current T1 CSV documentation, `quantity` is a **candidate mapping** to the all-trades aggregate quantity `q`, subject to read-only verification of the pinned T1 parser/source implementation; the published schema alone does not prove the runtime mapping. Do not freeze this mapping until verified. `nq` is not silently substituted. Whether `nq` should become a first-class canonical field is unresolved and requires a source-contract/consumer decision. Preserve raw native messages where available. If only CSV is available, explicitly record `nq` as unavailable for that source version; do not fabricate it.
 
 ### 3.2 Native-to-candidate mapping
 
