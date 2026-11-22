@@ -1,3 +1,7 @@
+> **Architecture boundary update (2026-11-22):** T1's repository/code ownership decision remains valid: the collector stays in this repository and is not copied into the application repository. The later owner-approved Independent Multi-Source Data Foundation decision supersedes any interpretation that T0 and T1 should maintain competing canonical data stores: T0 owns accepted canonical multi-source data; T1 remains a specialized collector/source and is intended to feed T0 through separately approved ingestion contracts. This notice does not authorize T1→T0 runtime connectivity, provider activation, storage migration, data copy, or T1→T2 runtime connectivity. See [controlling decision](INDEPENDENT_MULTI_SOURCE_DATA_FOUNDATION_OWNER_DECISION_2026-11-22.md).
+
+---
+
 # T1 Repository Ownership and Consumer Boundary Decision — 2026-11-20
 
 ## Decision
