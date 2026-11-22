@@ -471,31 +471,43 @@ class StagingSchemaV2Tests(unittest.TestCase):
                 candle_values,
             )
         self.db.execute("PRAGMA foreign_keys=OFF")
+        link_sql = """INSERT INTO candle_provenance_links (
+            link_id,exchange,market_type,symbol,timeframe,open_time_ms,
+            source_row_id,candle_value_id,duplicate_disposition
+        ) VALUES (?,?,?,?,?,?,?,?,?)"""
         with self.assertRaises(sqlite3.IntegrityError):
             self.db.execute(
-                """INSERT INTO candle_provenance_links (
-                    link_id,exchange,market_type,symbol,timeframe,open_time_ms,
-                    source_row_id,candle_value_id,duplicate_disposition
-                ) VALUES (?,?,?,?,?,?,?,?,?)""",
+                link_sql,
                 ("lnk1:" + "g" * 64, "binance", "usdm", "BTCUSDT", "15m", 0,
                  "row1:" + "1" * 64, "cv1:" + "2" * 64, "UNIQUE"),
             )
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                link_sql,
+                ("lnk1:" + "3" * 64, "binance", "usdm", "BTCUSDT", "15m", 0,
+                 "row1:" + "1" * 64, "cv1:" + "g" * 64, "UNIQUE"),
+            )
 
     def test_object_inventory_digest_and_identity_require_lowercase_hex(self):
-        values = (
-            "obj1:" + "g" * 64, "inv1:" + "1" * 64, "g" * 64, "entry",
+        sql = """INSERT INTO archive_objects (
+            object_id,inventory_id,inventory_blob_sha256,inventory_entry_identity,
+            object_key,object_kind,timeframe,partition,period,paired_object_key,
+            response_bytes_total,verification_status,failure_code
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"""
+        valid = (
+            "obj1:" + "a" * 64, "inv1:" + "1" * 64, "2" * 64, "entry",
             "synthetic.zip", "ZIP", "15m", "synthetic", "000", "synthetic.CHECKSUM",
             0, "QUARANTINED", "SYNTHETIC_FAILURE",
         )
-        with self.assertRaises(sqlite3.IntegrityError):
-            self.db.execute(
-                """INSERT INTO archive_objects (
-                    object_id,inventory_id,inventory_blob_sha256,inventory_entry_identity,
-                    object_key,object_kind,timeframe,partition,period,paired_object_key,
-                    response_bytes_total,verification_status,failure_code
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                values,
-            )
+        for index, (field, value) in enumerate((
+            ("object_id", "obj1:" + "g" * 64),
+            ("inventory_id", "inv1:" + "g" * 64),
+            ("inventory_blob_sha256", "g" * 64),
+        )):
+            values = list(valid)
+            values[index] = value
+            with self.subTest(field=field), self.assertRaises(sqlite3.IntegrityError):
+                self.db.execute(sql, tuple(values))
 
 
     def test_schema_verifier_rejects_missing_append_only_trigger(self):
