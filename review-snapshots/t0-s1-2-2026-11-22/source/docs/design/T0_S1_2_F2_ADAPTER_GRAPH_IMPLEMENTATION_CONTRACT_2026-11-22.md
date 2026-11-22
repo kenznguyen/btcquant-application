@@ -92,7 +92,7 @@ failure_observations and run_events remain physical audit relations and are not 
 - Refuse caller-owned active transactions and non-empty/nonzero-version databases.
 - Enable and verify foreign keys before starting the schema transaction.
 - Use `BEGIN IMMEDIATE`; create all tables, indexes and the two approved triggers; set `user_version=2`; commit once.
-- Any DDL or commit failure rolls back the entire schema and leaves `user_version=0` with no partial schema objects.
+- Install the append-only authorizer before commit. Any DDL, authorizer-installation or commit failure rolls back the entire schema, clears the authorizer when possible, and leaves `user_version=0` with no partial schema objects.
 
 ## 5. Graph validator responsibilities
 
@@ -134,10 +134,10 @@ All tests must use synthetic fixtures only. No tests may read the canonical T0 d
 - F5 identity/digest boundary: **SYNTHETIC TEST PASS** for lower-case hexadecimal identity suffixes and digest grammar at SQL and DTO boundaries.
 - F6 guarded disposable path: **SYNTHETIC TEST PASS** for default in-memory use, explicit opt-in, temporary-root/name policy, exclusive creation, existing-file and symlink rejection.
 - F7 atomic schema initialization: **SYNTHETIC TEST PASS** for rollback on table/index/trigger DDL failure and commit failure after user_version assignment.
-- Latest tested source SHA: `5074bf35f94f94a5b8905548b9628794274bc825`.
-- Exact-SHA CI: run [45010626565](https://github.com/kenznguyen/btcquant-application/actions/runs/45010626565), job `137171941617`, SUCCESS; requested SHA and checked-out SHA match.
+- Latest tested source SHA: `284d9d243d529b84de4318e65266993fad71a757`.
+- Exact-SHA CI: run [45011049882](https://github.com/kenznguyen/btcquant-application/actions/runs/45011049882), job `137173247655`, SUCCESS; requested SHA and checked-out SHA match.
 - Runtime: CPython 3.13.18 / SQLite 3.45.1 for focused tests; CPython 3.12.16 for full regression.
-- Results: importer-core 20/20; S1.2 adapter 43/43; SQLite staging schema 31/31; full `market_data` regression 495/495 PASS.
+- Results: importer-core 20/20; S1.2 adapter 43/43; SQLite staging schema 32/32; full `market_data` regression 496/496 PASS.
 - No CI artifact was produced.
 - Remaining design gap: candidate snapshot digest preimage/serialization is not defined by approved design. Current code checks digest shape/presence and equality between CANDIDATE and VALIDATED events; it does not recompute the snapshot digest.
 - Independent review: **NOT RUN**. S1.2: **NOT FROZEN**. B8: **NOT APPROVED**. Real-data staging: **NOT AUTHORIZED**.
