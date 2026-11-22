@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — PR #7 reviewed; P2-4 corrected in Revision 8
+
+- PR #7: OPEN / NOT MERGED / DO NOT MERGE — https://github.com/kenznguyen/btcquant-application/pull/7
+- PR #7 reviewed head: `f623bc8dd878bf4f897f727f07afbed968f581c4`; base main at submission: `470b220b95936cb9db408f268e4ebcf8af8cd02c`.
+- Codex automated review was explicitly retriggered on the exact PR #7 head; latest observed state at this record: RUNNING / PENDING. Earlier Codex no-findings result was for an earlier commit and is not treated as a verdict for this head.
+- Graphify on PR #7 head: AI review SKIPPED (docs-only); static health gate PASS; tests and formal proofs NOT RUN.
+- Manual document review found P2-4: B-07 still said source-generated capture ID was “bound to symbol/market/kind/update ID,” ambiguous with P2-1's pair-only identity key. Recorded in PR #7 discussion comment ID `7080789205`. Cannot submit REQUEST_CHANGES review on own PR; this is a manual review finding, not independent reviewer approval.
+- Revision 8 corrects B-07. Exact design commit/blob: `9a5c65f3bc00876d98a070eee46072c5d8be368e` / `8f40248f2781cdf4111ef022b77843acea8279b2`.
+- Revision 8 self-review commit/blob: `1c55ef8772fb33cc51d64182217de925d1d1a45d` / `6e1c382e4949103b200d6c0dd6f88383c88eb464`; SELF-CHECK PASS / READY FOR DESIGN REVIEW, not owner-approved or independent review.
+- PR #8: OPEN / NOT MERGED / DO NOT MERGE — https://github.com/kenznguyen/btcquant-application/pull/8. It is stacked on PR #7 for a focused review of the B-07 correction; head `1c55ef8772fb33cc51d64182217de925d1d1a45d`, base PR #7 head `f623bc8dd878bf4f897f727f07afbed968f581c4`. Codex review requested; result PENDING.
+- Revision 7 remains immutable: `f61fe365f2558569744cbc2a2ca555021a931f48` / `86825e77f69c6943096d8e9f4ecae75b413b2013`. Revision 6 remains immutable: `9b69c18ea16731bf28efba7a92077e96a74107ce` / `7012a228561620f4447a0e363a2c5f27d734912a`.
+- P2-1..P2-3 retained; P2-4 clarified. B-01..B-20 remain OPEN, including B-07 pending actual producer origin and namespace/fencing proof. 98 synthetic cases remain DESIGN ONLY / NOT EXECUTED.
+- Static document checks PASS. Tests/workflows/artifacts NOT RUN / NONE; no workflow runs verified for these documentation commits. Independent second-person review NOT VERIFIED. Contract freeze NOT APPROVED.
+- Scope documentation-only. No code, DTO, parser, validator, tests, fixtures, DDL, database, data movement, T1 source/runtime, network, credentials, collector activation, T1→T0/T2 runtime, VPS/deployment, Phase C or trading action.
+- Next: await Codex review results for exact PR #7 and PR #8 heads; record all findings, correct via a further docs-only revision if needed. Keep both review PRs DO NOT MERGE. No implementation authorization.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 7 submitted for design review
 
 - Review PR: [PR #7](https://github.com/kenznguyen/btcquant-application/pull/7), OPEN / NOT MERGED / DO NOT MERGE.
