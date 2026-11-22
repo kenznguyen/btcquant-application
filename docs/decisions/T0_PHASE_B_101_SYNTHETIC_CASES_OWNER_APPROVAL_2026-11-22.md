@@ -53,3 +53,18 @@ Expected outcomes must remain unchanged unless a defect is documented and brough
 ## Next step
 
 Request independent review of the exact Revision 11 source commit/blob above. After review findings are resolved and recorded, proceed with the approved isolated 101-case test scope under these restrictions.
+
+
+---
+
+## Sequencing amendment after Revision 11 review — 2026-11-22
+
+The original 101-case owner approval remains in force and the approved case counts/scope are unchanged. PR #9 completed Codex review with three P2 findings. Revision 12 addresses those findings and is now the current review candidate.
+
+- Revision 11 reviewed target: `0ac119c7cd31ba63d5aead6796c7b5560abf2a18` / `9d9639b4d26b42a90929f50a32b801e359b23197`.
+- Revision 11 review findings record: `docs/reviews/T0_PHASE_B_REVISION_11_CODEX_REVIEW_FINDINGS_2026-11-22.md`.
+- Current candidate Revision 12: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_12_2026-11-22.md`, source commit `29c47fcf9a761af00f72c043142ac2cca7b708ab`, blob `0c726fc05e76c41986130f8ee165d3dc67ce7044`.
+- Follow-up independent re-review: [PR #10](https://github.com/kenznguyen/btcquant-application/pull/10), OPEN / NOT MERGED; Codex review status RUNNING at amendment time.
+- Fixture creation and execution are now sequenced after a satisfactory independent review of exact Revision 12 SHA/blob, not the superseded Revision 11 SHA/blob.
+- The 101-case approval remains valid. No additional owner approval is required merely to proceed with the same bounded synthetic-only test scope after the review gate is satisfied. Any scope expansion still requires separate approval.
+- Tests/fixtures remain NOT CREATED / NOT RUN. Contract Freeze remains NOT APPROVED; production implementation/runtime remains NOT AUTHORIZED.
