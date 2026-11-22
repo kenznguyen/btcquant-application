@@ -920,3 +920,17 @@
 - Documentation-only. No code/database/runtime/T1 source/runtime/deployment/Phase C/trading action.
 - Next: design review of exact Revision 7 commit/blob. No implementation authorization.
 
+
+## Phase B Revision 7 — submitted for design review
+
+- Review PR #7: OPEN / NOT MERGED / DO NOT MERGE — https://github.com/kenznguyen/btcquant-application/pull/7
+- Review head: `5442557a5419cd20625dd5207b45b5f85546ac7f`; base main: `470b220b95936cb9db408f268e4ebcf8af8cd02c`.
+- Exact Revision 7 design commit/blob: `a7a661137bc33cedfed61eab2d37bf42168b3caf` / `7fad5fa69698770c8fe02efd692cf4056b7ac7db`.
+- Self-check: `5442557a5419cd20625dd5207b45b5f85546ac7f` / `ecc45f544bf76fa7c7292c9f5fd1d9c44e0fcd3f`; SELF-CHECK PASS, not independent review or owner approval.
+- Revision 6 source baseline remains unchanged: `9b69c18ea16731bf28efba7a92077e96a74107ce` / `7012a228561620f4447a0e363a2c5f27d734912a`.
+- PR review PENDING; independent verdict NOT VERIFIED.
+- 98 proposed synthetic cases NOT EXECUTED; B-01..B-20 OPEN / unchanged; B-07 OPEN.
+- Static checks PASS; tests/workflows/artifacts NOT RUN / NONE; contract freeze NOT APPROVED.
+- Documentation-only. No code/database/runtime/deployment/Phase C/trading authorization.
+- Next: await review; keep PR #7 DO NOT MERGE until explicit owner decision.
+
