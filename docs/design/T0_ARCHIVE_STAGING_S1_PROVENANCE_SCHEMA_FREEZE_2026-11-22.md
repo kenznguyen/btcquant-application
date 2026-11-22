@@ -1,3 +1,12 @@
+# S1.1 AUTHORITY NOTICE — 2026-11-22
+
+The logical persistence model and failure semantics in this original S1 proposal are reconciled by the later document:
+`docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`.
+
+Where the original design DDL or prose conflicts with S1.1, **S1.1 takes precedence**. In particular, do not implement the success-only constraints shown below as written: S1.1 defines nullable failed evidence, append-only attempts, the separate successful-attempt relation, non-unique member candidates, and run-level coverage manifest persistence. This original DDL remains historical design material, not executable SQL. S1.1 is documentation-only and does not authorize DDL, SQLite, importer, archive access or data operations.
+
+---
+
 # T0 Archive Staging S1 — Provenance Contracts & SQLite Schema Freeze
 
 Date: 2026-11-22
