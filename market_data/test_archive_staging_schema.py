@@ -560,6 +560,23 @@ class StagingSafetyAndAtomicityTests(unittest.TestCase):
                 connect_staging_database(path, allow_disposable_path=True)
             self.assertEqual(path.read_bytes(), b"do-not-open")
 
+    def test_disposable_path_policy_rejects_unapproved_temp_directory(self):
+        with tempfile.TemporaryDirectory(prefix="t0-unapproved-") as directory:
+            path = Path(directory) / "synthetic-staging-test.sqlite3"
+            with self.assertRaises(ValueError):
+                connect_staging_database(path, allow_disposable_path=True)
+            self.assertFalse(path.exists())
+
+    def test_disposable_path_policy_rejects_symlink(self):
+        with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
+            target = Path(directory) / "target.sqlite3"
+            target.write_bytes(b"do-not-open")
+            link = Path(directory) / "synthetic-staging-link.sqlite3"
+            link.symlink_to(target)
+            with self.assertRaises(ValueError):
+                connect_staging_database(link, allow_disposable_path=True)
+            self.assertEqual(target.read_bytes(), b"do-not-open")
+
     def test_schema_initialization_rolls_back_table_phase_failure(self):
         from unittest.mock import patch
         import market_data.archive_staging_schema as schema
@@ -615,6 +632,28 @@ class StagingSafetyAndAtomicityTests(unittest.TestCase):
                 ).fetchall(),
                 [],
             )
+        finally:
+            connection.close()
+
+    def test_schema_initialization_rolls_back_if_commit_fails_after_user_version(self):
+        import market_data.archive_staging_schema as schema
+
+        class CommitFailConnection(sqlite3.Connection):
+            def commit(self):
+                raise sqlite3.OperationalError("synthetic commit failure")
+
+        connection = sqlite3.connect(":memory:", factory=CommitFailConnection)
+        try:
+            with self.assertRaisesRegex(sqlite3.OperationalError, "synthetic commit failure"):
+                schema.initialize_staging_schema(connection)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 0)
+            self.assertEqual(
+                connection.execute(
+                    "SELECT name FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%'"
+                ).fetchall(),
+                [],
+            )
+            self.assertFalse(connection.in_transaction)
         finally:
             connection.close()
 
