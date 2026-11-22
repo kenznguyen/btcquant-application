@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sqlite3
+import tempfile
 from pathlib import Path
 from typing import Union
 
@@ -339,8 +341,10 @@ def _append_only_authorizer(action, arg1, arg2, database_name, trigger_name):
 
 
 def initialize_staging_schema(connection: sqlite3.Connection) -> None:
-    """Initialize only a truly empty SQLite database; never migrate existing files."""
+    """Atomically initialize only a truly empty SQLite database; never migrate files."""
     _require_sqlite_version()
+    if connection.in_transaction:
+        raise RuntimeError("refusing schema initialization inside a caller transaction")
     if connection.execute("PRAGMA user_version").fetchone()[0] != 0:
         raise RuntimeError("refusing to initialize a database with nonzero user_version")
     existing = connection.execute(
@@ -350,20 +354,59 @@ def initialize_staging_schema(connection: sqlite3.Connection) -> None:
     if existing:
         raise RuntimeError("refusing to initialize a non-empty database")
     connection.execute("PRAGMA foreign_keys=ON")
-    for statement in TABLE_DDL:
-        connection.execute(statement)
-    for statement in INDEX_DDL:
-        connection.execute(statement)
-    for statement in TRIGGER_DDL:
-        connection.execute(statement)
-    connection.execute("PRAGMA user_version=2")
+    connection.execute("BEGIN IMMEDIATE")
+    try:
+        for statement in TABLE_DDL:
+            connection.execute(statement)
+        for statement in INDEX_DDL:
+            connection.execute(statement)
+        for statement in TRIGGER_DDL:
+            connection.execute(statement)
+        connection.execute("PRAGMA user_version=2")
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
     connection.set_authorizer(_append_only_authorizer)
 
 
-def connect_staging_database(database: Union[str, Path] = ":memory:") -> sqlite3.Connection:
-    """Open an explicitly supplied disposable database and initialize schema v2."""
+def _validate_disposable_test_path(database: Union[str, Path]) -> Path:
+    path = Path(database)
+    if path.is_symlink() or path.exists():
+        raise ValueError("disposable staging path must be a new, non-symlink file")
+    temporary_root = Path(tempfile.gettempdir()).resolve()
+    parent = path.parent.resolve()
+    if parent != path.parent or parent.parent != temporary_root:
+        raise ValueError("disposable staging path must be directly inside the system temporary directory")
+    if not parent.name.startswith("t0-staging-v2-"):
+        raise ValueError("temporary directory must use the t0-staging-v2- prefix")
+    if not path.name.startswith("synthetic-staging-"):
+        raise ValueError("temporary database filename must use the synthetic-staging- prefix")
+    return path
+
+
+def connect_staging_database(
+    database: Union[str, Path] = ":memory:", *,
+    allow_disposable_path: bool = False,
+) -> sqlite3.Connection:
+    """Open in-memory by default; file DBs require explicit disposable-test path policy."""
     _require_sqlite_version()
-    connection = sqlite3.connect(str(database))
+    created_path = None
+    if str(database) == ":memory:":
+        connection = sqlite3.connect(":memory:")
+    else:
+        if not allow_disposable_path:
+            raise ValueError("file-backed staging requires allow_disposable_path=True")
+        path = _validate_disposable_test_path(database)
+        flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(path, flags, 0o600)
+        os.close(descriptor)
+        created_path = path
+        try:
+            connection = sqlite3.connect(str(path))
+        except Exception:
+            path.unlink(missing_ok=True)
+            raise
     try:
         connection.execute("PRAGMA foreign_keys=ON")
         initialize_staging_schema(connection)
@@ -372,6 +415,8 @@ def connect_staging_database(database: Union[str, Path] = ":memory:") -> sqlite3
         return connection
     except Exception:
         connection.close()
+        if created_path is not None:
+            created_path.unlink(missing_ok=True)
         raise
 
 
