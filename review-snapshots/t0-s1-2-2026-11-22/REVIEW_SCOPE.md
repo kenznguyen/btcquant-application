@@ -1,10 +1,10 @@
 # T0 S1.2 independent review snapshot
 
 - Review purpose: source-only independent review of the S1.2 SQLite staging schema, DTO adapter, S3/V1 projection, graph validator, synthetic tests and CI.
-- Tested implementation source SHA: `d91c92a813ffe44c4ee786861e5e710654423c26`.
+- Tested implementation source SHA: `5074bf35f94f94a5b8905548b9628794274bc825`.
 - Review snapshot base: `564fda608153c668b217ef4a205228d3947ce35a`.
 - All executable source/test/workflow blobs in this snapshot are byte-for-byte identical to their original files on main and to the tested implementation SHA. Design/evidence docs are copied from current main at the review snapshot base.
-- Exact-SHA CI: [run 45010072833](https://github.com/kenznguyen/btcquant-application/actions/runs/45010072833), job `137170245583`, SUCCESS; importer-core 20/20, adapter 43/43, staging schema 30/30, full market_data 494/494; artifact count 0.
+- Exact-SHA CI: [run 45010626565](https://github.com/kenznguyen/btcquant-application/actions/runs/45010072833), job `137171941617`, SUCCESS; importer-core 20/20, adapter 43/43, staging schema 31/31, full market_data 495/495; artifact count 0.
 - The physical schema spec includes owner-approved Amendments A/B, exact 11 tables, 8 indexes, and exactly two append-only triggers.
 - Review request: assess correctness, test adequacy, design/source parity, deterministic projection, graph completeness, transaction atomicity, disposable-path security, identity/digest grammar, schema fingerprinting and fail-closed behavior. Report severity, exact snapshot path/line, reproduction, impact and remediation. Return APPROVE / REQUEST CHANGES / NOT VERIFIED. State reviewer independence.
 - Known unresolved design decision: candidate snapshot digest preimage/serialization is not specified by the approved design. Current implementation checks digest shape/presence and CANDIDATE↔VALIDATED equality; it intentionally does not recompute the digest.
@@ -15,8 +15,8 @@
 
 | Original path | Original Git blob SHA | Snapshot blob SHA | Identical |
 |---|---|---|---|
-| `market_data/archive_staging_schema.py` | `80393e2be87eafd0a2418dfbe48b91391712b8a2` | `80393e2be87eafd0a2418dfbe48b91391712b8a2` | YES |
-| `market_data/test_archive_staging_schema.py` | `46eaf32514c5622b6f9fa7dacbdf4f1bc1a0a356` | `46eaf32514c5622b6f9fa7dacbdf4f1bc1a0a356` | YES |
+| `market_data/archive_staging_schema.py` | `01720183179211a10aa90c38ba8474bbfe37b561` | `80393e2be87eafd0a2418dfbe48b91391712b8a2` | YES |
+| `market_data/test_archive_staging_schema.py` | `d915bf4a45be979fc5a4a4bde21426050243f1c1` | `46eaf32514c5622b6f9fa7dacbdf4f1bc1a0a356` | YES |
 | `market_data/archive_staging_adapter.py` | `70bcf83c37936593e394c8476134046a7da70f4c` | `70bcf83c37936593e394c8476134046a7da70f4c` | YES |
 | `market_data/test_archive_staging_adapter.py` | `19cd18b40cb61252094b5805eb9d3cc35a7ff39b` | `19cd18b40cb61252094b5805eb9d3cc35a7ff39b` | YES |
 | `market_data/archive_provenance_validator.py` | `b94bac0f82ae141984552409f99a5cff70435b3b` | `b94bac0f82ae141984552409f99a5cff70435b3b` | YES |
