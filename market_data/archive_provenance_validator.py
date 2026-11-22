@@ -500,12 +500,13 @@ def _s1_validate(payload, errors):
         object_by_key[key] = obj
         oid = _s1_id("obj1:", "T0-ARCHIVE-OBJECT-V1", inventory_sha, key, kind if isinstance(kind, str) else "")
         entry = keys.get(key)
-        if (obj.get("object_id") != oid or obj.get("inventory_id") != expected_id
-                or obj.get("inventory_blob_sha256") != inventory_sha or entry is None
-                or entry.get("object_kind") != kind):
+        if raw_ok and (obj.get("object_id") != oid or obj.get("inventory_id") != expected_id
+                       or obj.get("inventory_blob_sha256") != inventory_sha):
             object_bad = True
-        if entry is not None and any(obj.get(field) != entry.get(field)
-                                     for field in ("paired_object_key", "timeframe", "partition", "period")):
+        if inv_ok and (entry is None or entry.get("object_kind") != kind):
+            object_bad = True
+        if inv_ok and entry is not None and any(obj.get(field) != entry.get(field)
+                                                 for field in ("paired_object_key", "timeframe", "partition", "period")):
             object_bad = True
         if (not _is_nonnegative_int(obj.get("expected_size_bytes"))
                 or not _is_nonnegative_int(obj.get("measured_size_bytes"))
@@ -521,7 +522,7 @@ def _s1_validate(payload, errors):
                 or obj.get("failure_code") is not None):
             object_bad = True
         object_by_id[str(obj.get("object_id"))] = obj
-    if len(objects) != 404 or len(object_by_key) != 404 or set(object_by_key) != set(keys):
+    if len(objects) != 404 or len(object_by_key) != 404 or (inv_ok and set(object_by_key) != set(keys)):
         object_bad = True
 
     attempts_by_object, attempt_ids, attempt_bad = {}, set(), False
