@@ -450,9 +450,8 @@ def _s1_validate(payload, errors):
     inventory = payload.get("inventory")
     supplied = inventory.get("objects") if isinstance(inventory, Mapping) else None
     raw_entries = parsed.get("objects") if isinstance(parsed, Mapping) else None
-    inv_ok = raw_ok and isinstance(raw_entries, list) and isinstance(supplied, (list, tuple))
-    if inv_ok:
-        inv_ok = list(raw_entries) == list(supplied)
+    inventory_comparable = isinstance(parsed, dict) and isinstance(raw_entries, list) and isinstance(supplied, (list, tuple))
+    inv_ok = inventory_comparable and list(raw_entries) == list(supplied) if inventory_comparable else False
     keys, zips, sidecars = {}, {}, {}
     if inv_ok:
         for entry in raw_entries:
@@ -477,7 +476,7 @@ def _s1_validate(payload, errors):
             paired.add(sidecar_key)
         if len(paired) != 202:
             inv_ok = False
-    if not inv_ok:
+    if inventory_comparable and not inv_ok:
         errors.add("INVENTORY_OBJECT_SET_MISMATCH")
 
     names = ("objects", "attempts", "pairs", "members", "source_rows", "candles", "links")
