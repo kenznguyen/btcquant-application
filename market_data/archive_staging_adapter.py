@@ -1047,9 +1047,15 @@ def validate_staging_graph(projection: StagingProjection) -> GraphValidationResu
         if attempt.attempt_id in attempts_by_id:
             errors.add("ATTEMPT_GRAPH_INVALID")
         attempts_by_id[attempt.attempt_id] = attempt
+        if attempt.object_id not in object_by_id:
+            errors.add("ATTEMPT_GRAPH_INVALID")
     success_by_object: dict[str, list[SuccessfulAttempt]] = {}
     for relation in projection.successful_attempts:
         success_by_object.setdefault(relation.object_id, []).append(relation)
+        referenced_attempt = attempts_by_id.get(relation.attempt_id)
+        if (relation.object_id not in object_by_id or referenced_attempt is None
+                or referenced_attempt.object_id != relation.object_id):
+            errors.add("SUCCESSFUL_ATTEMPT_GRAPH_INVALID")
     for obj in projection.objects:
         history = sorted(attempts_by_object.get(obj.object_id, ()), key=lambda item: item.attempt_number)
         if not history or [item.attempt_number for item in history] != list(range(1, len(history) + 1)):
