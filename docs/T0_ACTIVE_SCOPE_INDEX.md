@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Post-S3 T0 blocker audit
+
+- Latest exact-SHA S3 GREEN: source `d1651196af3059e00b22f65461dbd897e5c599df`, run [44976543815](https://github.com/kenznguyen/btcquant-application/actions/runs/44976543815), job `137067027769`. S3 30/30, V1 24/24, full `market_data` 387/387 PASS. Validator/test/contract/workflow blobs are recorded in the S3 evidence and session handoff.
+- S3 GREEN closes only the pure in-memory provenance validator and synthetic verification. It does NOT authorize DDL, SQLite, importer, archive acquisition, staging, runtime, VPS or deployment.
+- Current blocker audit: `docs/reviews/T0_POST_S3_BLOCKER_AUDIT_2026-11-22.md`, commit `a66234d0ee10fbcd22f67f978a3ced73570cca22`.
+- **S1 schema freeze BLOCKED**: original DDL is not reconciled with the failed/incomplete evidence amendment; acquisition-attempt table and successful-attempt relationship are unresolved; S3 R4–R6 and run coverage-manifest persistence need alignment.
+- **STRICT SQLite runtime BLOCKED FOR DDL**: minimum version policy and exact Python/SQLite runtime verification contract are not frozen. No SQLite runtime test/database creation authorized.
+- **Archive format coverage NOT VERIFIED**: exact header evidence covers only M15 monthly 2022-08. Do not infer the other 201 ZIPs.
+- **Acquisition BLOCKED**: decompression/ratio/disk/concurrency/retry/timeout limits, source/evidence retention and exact owner-controlled destination require separate decisions. Former VPS is deleted; prior staging path is not an active approved destination.
+- **Coverage acceptance NOT VERIFIED**: S3 R6 manifest schema is frozen, but no freshly measured archive-derived coverage manifest exists. Historical totals are not fresh proof.
+- **Importer / SQLite staging NOT IMPLEMENTED / NOT AUTHORIZED**. Require separate approvals for synthetic importer, database creation, acquisition, build and read-only acceptance.
+- T0 Application Foundation independent reviews PR #3/#4 remain separate review gates; S3 GREEN does not close them.
+- REST tail remains **NOT VERIFIED — CLOSED BY OWNER DECISION / NO FURTHER RETRIEVAL**; MAY-10 excluded. Former Canonical SQLite remains LOST. Any future reconstruction may only be `RECONSTRUCTED — PARTIAL COVERAGE`.
+- Recommended next task: **S1.1 documentation-only schema reconciliation**. No archive/DB/runtime operation is implied.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-21 — T0 transfer continuation / reconstruction gates
 
 - Target ownership: `kenznguyen/btcquant-application`. Former Canonical SQLite is **LOST** and not needed; no recovery/migration/deletion is in scope. New reconstructed dataset is **NOT CREATED**.
