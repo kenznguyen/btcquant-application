@@ -279,3 +279,17 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - B3 archive-format coverage remains NOT VERIFIED; B4 resource limits OPEN; B5 actual source-derived coverage NOT VERIFIED; B6 retention/artifact policy OPEN; B7 destination/preflight OPEN; B8 importer/build NOT AUTHORIZED. Independent application-foundation review track unchanged.
 - Same-session review remains **SELF-REVIEW PASS WITH LIMITATIONS**, not an independent review. No tests or workflow were run for this acceptance update; no workflow run/job/artifact.
 - Next possible design-only work package: prepare a bounded decision package for B4/B6/B7 (resource budgets, retention/artifact policy, execution destination) for owner review. No acquisition or implementation is implied; each later phase requires separate approval.
+
+
+## T0 B4 / B6 / B7 decision package — proposal only (2026-11-22)
+
+- Owner requested a design decision package for resource limits (B4), evidence retention (B6), and execution destination (B7).
+- Proposal: `docs/design/T0_B4_B6_B7_RESOURCE_RETENTION_DESTINATION_DECISION_PACKAGE_2026-11-22.md`, blob `9119b5789825951e66a061e4b9d989256934adec`.
+- Same-session review: `docs/reviews/T0_B4_B6_B7_DECISION_PACKAGE_SELF_REVIEW_2026-11-22.md`, blob `6c6eb22d8643206aba517b3ea8625b70a64735c5`; verdict **SELF-REVIEW PASS WITH LIMITATIONS**, not independent review.
+- B4 proposal preserves the 100 MiB cumulative received-response cap and proposes explicit per-object, decompression, ZIP structure, concurrency, retry, timeout, workspace, disk and inode ceilings. It is deliberately conservative and not validated against the real archive set.
+- B6 proposal preserves source archives, staging and private provenance evidence until a separate explicit deletion approval; proposes sanitized CI artifacts with 30-day maximum retention. No artifact setting was changed and no deletion is authorized.
+- B7 recommends an owner-controlled encrypted personal workstation (Option A), manual/on-demand only. No host/device or exact path has been selected or approved; no preflight was run. New VPS (B) and private object storage (C) remain alternatives.
+- Status: **B4 PROPOSED / OWNER DECISION PENDING; B6 PROPOSED / OWNER DECISION PENDING; B7 OPTION A RECOMMENDED / OWNER SELECTION AND LATER PREFLIGHT PENDING**.
+- No archive/sidecar access, download, decompression, source-format verification, host/SSH/mount/filesystem inspection, workflow dispatch/artifact upload, retention-setting change, DDL, SQLite, importer, staging build, cleanup/deletion, T1/T2 runtime, deployment or trading.
+- B3 remains NOT VERIFIED; B5 remains NOT VERIFIED; B8 remains NOT AUTHORIZED. S1.1 stays owner-accepted and frozen. This proposal does not authorize any later phase.
+- Next: owner decides B4, B6 and B7 independently. Any deferred/rejected item remains open; no limit or destination is inferred.
