@@ -3,8 +3,8 @@
 - Date: 2026-11-22
 - Review type requested: independent documentation/design review
 - Revised design: docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md
-- Revised design commit: 6bf8f03c4270abbfe29eff624571e3a13c24b21d
-- Revised design blob SHA: a14c0030fbddad97d28675fa70ab9138cf22bf73
+- Revised design commit: 75e593517ec31d2e2a75ed0050e80ab5dd52edf2
+- Revised design blob SHA: 56f2012d6625e5af328d7d5881d892a38a2121e9
 - Prior review: docs/reviews/T0_PHASE_B_DESIGN_REVIEW_2026-11-22.md, commit 347dbcec6f7ddedac4ac1c8e90ee57c549ae49ef
 - Prior verdict: **REQUEST CHANGES**
 - Current second-round review status: **REQUESTED / PENDING — NO SECOND-ROUND VERDICT YET**
@@ -22,7 +22,7 @@ The revised design covers SD-05 aggregate trades, SD-06 ordinary (non-RPI) depth
 |---|---|---|
 | R-01 | Canonical SD-06 identity candidate is now (exchange, market_type, symbol, first_update_id, final_update_id). stream_epoch is capture/continuity provenance only. Same range/same payload across epochs is replay; changed payload is conflict. | Exchange update-ID uniqueness scope across reconnects/restarts is not yet proven. SD-06 canonical acceptance remains blocked until verified. |
 | R-02 | Snapshot acceptance requires source-generated immutable capture ID, explicit group framing, expected count/equivalent completeness declaration, finalized object digest and a bound completion manifest. EOF/rotation/elapsed time/row count alone are explicitly insufficient. Partial groups are quarantined. | Current T1 CSV has no capture ID or completeness manifest; all snapshots in that schema version remain not canonically acceptable. |
-| R-03 | Added Binance native-field completeness table. Distinguishes q (all-trades quantity) from nq (excluding RPI-involved trades). Current CSV quantity maps to q; absent nq is marked unavailable, never derived. | Inspect pinned T1 source/raw retention and decide whether nq becomes a canonical field or remains raw-only/unavailable for this source version. |
+| R-03 | Added Binance native-field completeness table. Distinguishes q (all-trades quantity) from nq (excluding RPI-involved trades). Current CSV quantity is a candidate mapping to q pending pinned T1 parser/source verification; absent nq is marked unavailable, never derived. | Inspect pinned T1 source/raw retention and decide whether nq becomes a canonical field or remains raw-only/unavailable for this source version. |
 | R-04 | Explicitly scopes ordinary SD-06/SD-07 depth as non-RPI; states that it is not a complete view of all displayed liquidity. RPI-inclusive depth is out of Phase B and requires a separate reviewed contract. | Verify actual snapshot source behavior and any future RPI stream/merge contract separately. |
 | R-05 | Added separate E event time and T transaction time treatment; current CSV lacks T and records it unavailable. Collector receive and T0 receipt/commit clocks remain distinct. | Inspect T1 source/raw retention; do not infer T from E or import time. |
 | R-06 | Defined arrival-order preservation, count+age bounded reorder buffer, GAP_PENDING, durable GAP_UNRESOLVED, overflow fail-closed behavior, checkpoint fence and recovery via complete new snapshot/new epoch/verified bridge or remain unavailable. | Numeric buffer/age/wait bounds and exact Binance bridge rules remain unfrozen pending measurement and owner review. |
