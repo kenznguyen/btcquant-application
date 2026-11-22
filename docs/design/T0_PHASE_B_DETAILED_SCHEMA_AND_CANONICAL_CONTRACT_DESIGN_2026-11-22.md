@@ -177,7 +177,7 @@ Candidate sequence rules, subject to exact Binance USD-M stream-contract verific
 - A file offset is not sufficient as a semantic checkpoint for a live order-book stream.
 - A future checkpoint must bind source identity, stream epoch, last durably accepted sequence, snapshot anchor/version, and immutable source evidence position.
 - T0 acknowledgement may advance only after the accepted diff (or durable quarantine/gap outcome) and associated checkpoint state are committed atomically or through a reviewed recovery protocol.
-- Lost acknowledgement retries the same immutable message identity; it must resolve as replay, not a second book update.
+- Lost-acknowledgement retry reuses the **same immutable source-delivery locator** (for example, immutable source-object digest plus stable row/group locator). Intake deduplicates that delivery position and returns its previously committed outcome; it must not create a new capture or apply a second book update. Canonical exchange-event deduplication remains a separate operation using the verified native exchange namespace/update range. Snapshot capture deduplication uses the producer-issued capture identity and immutable capture evidence defined in §5.2–§5.3. A stream/process epoch is continuity provenance only, not a retry key.
 
 ### 4.6 Depth visibility scope — non-RPI by default
 
@@ -204,13 +204,13 @@ Numeric count/age/byte/level/token/group limits, gap wait values and exact excha
 
 These are distinct progress markers and must never be represented by one checkpoint value:
 
-- **Source-delivery/import cursor:** identifies the last source object/row or delivered message whose immutable raw observation and terminal intake outcome (`ACCEPTED`, `DUPLICATE_REPLAY`, `CONFLICT`, `QUARANTINED`, or durable gap/resource outcome) have been durably recorded. It may advance after durable quarantine of a gap or malformed observation because source intake is complete for that position.
+- **Source-delivery/import cursor:** identifies the last immutable source-delivery locator (for example, source-object SHA-256 plus stable row/group locator, or an equivalently immutable delivered-message locator) whose raw observation and terminal intake outcome (`ACCEPTED`, `DUPLICATE_REPLAY`, `CONFLICT`, `QUARANTINED`, or durable gap/resource outcome) have been durably recorded. It may advance after durable quarantine of a gap or malformed observation because source intake is complete for that position. This locator is not the exchange-native event identity, snapshot capture identity or a per-attempt T0 import ID.
 - **Book-sequence watermark:** identifies the highest contiguous update sequence actually applied to the derived book from its active snapshot anchor. It advances only after the corresponding canonical diff and derived application state are durable, and never across a missing sequence, conflict, quarantine, resource rejection or unapplied buffered event.
 
 A source cursor advancing past a durably quarantined gap means only that the source observation has been safely ingested and its outcome recorded. It does **not** mean the book is continuous, does not acknowledge missing exchange updates, and must not move the book-sequence watermark.
 
 Restart/replay rules:
-1. Resume source intake after the last durable source cursor. If acknowledgement was lost, replay the same source position; identity/outcome dedupe must return the prior durable result without duplicating raw evidence or canonical effects.
+1. Resume source intake after the last durable source cursor. If acknowledgement was lost, retry the **same immutable source-delivery locator**; delivery-locator/outcome dedupe must return the prior durable result without duplicating raw evidence or canonical effects. Resolve exchange-event deduplication by verified native identity and snapshot-capture deduplication by producer-issued capture identity independently; never substitute one identity domain for another.
 2. Restore book state only from the last durable book-sequence watermark, its exact snapshot anchor/epoch and persisted gap state. Never infer the watermark from the source cursor.
 3. If source intake has advanced while the book watermark is behind, replay or reprocess only the stored observations required by the sequence state machine; do not re-acknowledge them as new book progress.
 4. If atomic persistence of source observation, provenance, intake outcome and source cursor cannot be guaranteed, do not advance the source cursor. If atomic persistence of diff application and book watermark cannot be guaranteed, do not advance the book watermark.
@@ -253,10 +253,20 @@ The current T1 CSV schema does not identify which of these source kinds produced
 
 For direct ordinary Binance USD-M REST depth responses, the response is bounded top-N depth (documented limits include 5, 10, 20, 50, 100, 500 and 1000; maximum 1000). It is not an unlimited representation of the entire order book. A complete capture means **all levels returned by that exact bounded response were captured and verified**, not that the exchange's entire book was captured. For collector-reconstructed snapshots, completeness is limited to the explicitly declared local retained-depth boundary and proven source-book continuity; it is not proof of unseen exchange levels.
 
-Candidate snapshot identity proposal:
-`(exchange, market_type, symbol, source_kind, requested_limit_or_depth_policy, last_update_id, snapshot_captured_at_ms, snapshot_capture_id)`.
+Three identity domains must remain distinct:
 
-The tuple is not frozen. `snapshot_capture_id` must be source-generated and immutable. Do not invent an ID from row order, timestamp, file path, file rotation or a locally assigned import sequence.
+1. **Exchange-native snapshot anchor/response fields:** Binance USD-M REST depth supplies the response's native `lastUpdateId` and bounded bid/ask payload; the REST response contract described here does not identify a Binance-issued unique capture ID. `lastUpdateId` is a book-version anchor, not a unique acquisition/capture identity. Do not claim Binance issued `snapshot_capture_id` unless a source field is independently evidenced.
+2. **Producer-issued capture identity:** the component that actually acquires/serializes the capture issues an immutable ID. For `BINANCE_USDM_REST_DEPTH_RESPONSE_V1`, this is the direct REST capture producer (the component issuing the request and preserving its response), not Binance. For `T1_RECONSTRUCTED_LOCAL_BOOK_V1`, this is the T1 component that serializes the reconstructed local book. Candidate form: `(capture_producer_id, capture_sequence)`, where `capture_producer_id` is a stable, uniquely provisioned producer namespace and `capture_sequence` is monotonically allocated from durable producer state, never reset/reused across process restarts. Sequence gaps are permitted. A producer clone or restored stale state must not reuse the same namespace/sequence pair; if uniqueness/fencing cannot be proven, reject/quarantine rather than inventing identity. This is a candidate contract, not a frozen ID format.
+3. **T0 source-delivery/import locator:** identifies where the immutable capture was delivered from, independently of capture identity. Candidate locator: immutable source-object SHA-256 plus a stable capture-group byte range/ordinal (or another source-native immutable locator); a mutable path, file name, file offset without object digest, or per-attempt import sequence alone is insufficient. T0 must preserve the capture ID and evidence when importing; it must not relabel a T0-generated import ID as the producer's capture ID. A retry reuses the same locator.
+
+For direct REST, bind the producer-issued capture ID to the exact request method/endpoint, symbol, requested limit and parameters, request/capture time, response `lastUpdateId`, raw response bytes (or an equivalently immutable object) and its digest, plus producer identity/sequence evidence. Allocate the capture identity once for that acquisition and persist it with the immutable response before acknowledging delivery. Retrying delivery of that stored capture reuses the same ID and locator; making a new REST request is a new acquisition and receives a new capture ID, even if Binance returns the same `lastUpdateId`, timestamp or identical payload.
+
+For a T1 reconstructed local book, bind the T1-issued capture ID to the upstream REST snapshot anchor/identity, stream epoch, last contiguous diff update applied, continuity state, local-book generation, retained-depth policy, emitted level counts and immutable serialized payload digest. An unresolved gap, missing epoch, generation ambiguity or inability to bind the capture ID to this evidence prevents canonical acceptance.
+
+Candidate snapshot identity proposal:
+`(exchange, market_type, symbol, source_kind, requested_limit_or_depth_policy, last_update_id, snapshot_captured_at_ms, capture_producer_id, capture_sequence)`.
+
+This tuple and the producer-ID allocation/fencing contract are NOT FROZEN. Do not invent an ID from row order, timestamp, file path, file rotation or a locally assigned T0 import sequence. Same capture identity plus same immutable evidence is a replay; same capture identity with different request/anchor/payload evidence is a conflict and must be quarantined. Two separately acquired captures have different producer-issued identities even if their `lastUpdateId`, timestamp and payload happen to match; retain them as distinct capture observations and do not collapse them into a retry replay. A T0 delivery locator may differ only when the same immutable capture is legitimately mirrored/repackaged under a separately evidenced delivery; preserve both delivery provenance records while deduplicating the capture itself.
 
 Within one capture, level identity is `(side, price)`. The full declared level set must be deterministic and duplicate-free. Preserve bid and ask counts separately; an absent side is not an empty side unless the source manifest explicitly declares zero returned levels.
 
@@ -266,7 +276,7 @@ Within one capture, level identity is `(side, price)`. The full declared level s
 - Require only the versioned snapshot event types permitted by the source contract.
 - Reject duplicate `(side, price)` levels, invalid sides, nonpositive price/quantity, malformed decimals and mixed group metadata.
 - The current CSV row schema has no explicit group header, expected level count, checksum, end marker or empty-book marker. A file/row batch alone does not prove capture completeness.
-- Minimum future acceptance evidence is: (a) source-generated immutable `snapshot_capture_id`; (b) explicit group framing/boundary; (c) expected total row count or equivalent source completeness declaration; (d) finalized immutable source-object digest; and (e) a completion manifest binding capture ID, symbol/market, source kind/endpoint, requested depth limit, actual bid count, actual ask count, total row count, snapshot kind, update ID, capture time, object digest, non-RPI visibility and completion status.
+- Minimum future acceptance evidence is: (a) immutable producer-issued capture identity `(capture_producer_id, capture_sequence)` with proof of producer namespace and durable non-reuse; (b) explicit group framing/boundary; (c) expected total row count or equivalent source completeness declaration; (d) finalized immutable source-object/raw-response digest; and (e) a completion manifest binding capture identity, producer, symbol/market, source kind/endpoint, requested depth limit or retained-depth policy, actual bid count, actual ask count, total row count, snapshot kind, native update anchor, capture time, immutable object digest, non-RPI visibility and completion status. For direct REST, the capture producer is the request/response acquisition component; Binance's `lastUpdateId` remains the native book anchor and is not misrepresented as a Binance capture ID. For reconstructed local books, the capture producer is T1 and the manifest additionally binds upstream anchor, epoch, last contiguous applied update, continuity state and local-book generation.
 - The manifest must identify the exact source variant and its variant-specific proof. A REST manifest binds endpoint and request parameters; a reconstructed-book manifest binds the upstream anchor, epoch, contiguous applied update and retained-depth policy. Never require REST-only fields from a local snapshot or treat missing REST fields as evidence of a local snapshot.
 - Empty-side/empty-book captures require explicit source/manifest declarations with zero counts. Absence of rows is not evidence of an empty side or book.
 - File EOF, file rotation, elapsed time, stable-looking file size or observed row count alone is never proof of completion.
@@ -383,7 +393,7 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 27. Lost acknowledgement replayed from a different stream epoch but same verified native update range and same payload is canonical replay; epoch difference is retained only as provenance.
 28. Retry of the same source-delivery locator after restart is idempotent even when the process/session epoch changed; source cursor and book watermark remain independently fenced.
 
-### SD-07 — Bounded order-book snapshots (24 cases)
+### SD-07 — Bounded order-book snapshots (32 cases)
 
 1. Multi-level bid/ask rows group only with source capture ID and completion manifest.
 2. Manifest binds exact source kind/endpoint and request parameters.
@@ -409,8 +419,16 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 22. REST-only metadata presented on a reconstructed-local-book capture, or local-book continuity metadata presented as proof of a direct REST response, is a source-kind mismatch and is rejected.
 23. Unknown/future source kind is rejected by default and cannot inherit either allowlisted completeness contract.
 24. A reconstructed-local-book snapshot whose source history contains a prior unresolved gap cannot be accepted merely because its emitted rows and digest are internally complete.
+25. Direct REST response with no producer-issued capture identity (producer namespace or durable sequence missing) is quarantined; do not substitute `lastUpdateId`, timestamp or T0 import sequence.
+26. Capture identity reused after process restart because producer sequence was reset is a collision; reject/quarantine and preserve both source evidence records.
+27. Retry of the same already-captured REST response under the same capture identity and identical request/anchor/raw-response digest is replay, not a new snapshot acquisition.
+28. Two separate REST acquisitions with different capture identities but identical `lastUpdateId`, capture timestamp and payload remain distinct capture observations; they are not collapsed as a retry replay.
+29. Two distinct REST response payloads sharing the same `lastUpdateId`/timestamp but carrying different capture identities remain distinct observations; neither overwrites the other and their differing payloads are not hidden by anchor-based deduplication.
+30. Same producer namespace/sequence reused with different request parameters, response anchor or raw-response digest is a capture-identity conflict; quarantine without overwrite.
+31. Capture identity not verifiably bound to exact REST endpoint, symbol, requested limit/parameters, native response anchor and immutable response digest fails canonical acceptance.
+32. T1 reconstructed-book capture identity must bind upstream snapshot anchor, stream epoch, last contiguous applied diff, continuity state, local-book generation, retained-depth policy and serialized payload digest; missing/mismatched evidence or unresolved gap rejects the capture.
 
-### Cross-domain cursor, checkpoint and recovery (8 cases)
+### Cross-domain cursor, checkpoint and recovery (10 cases)
 
 1. Durable source intake outcome advances source-delivery cursor only after evidence/outcome commit.
 2. Durable GAP_UNRESOLVED quarantine may advance source cursor while book watermark remains unchanged.
@@ -420,8 +438,10 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 6. Restart resumes source intake and book application from their separate durable markers.
 7. Buffered but unapplied events do not advance book watermark.
 8. Conflict/resource rejection leaves book unavailable until reviewed recovery with a new bounded snapshot and verified bridge.
+9. Lost acknowledgement retried with the same immutable source-delivery locator returns the prior durable intake outcome; it does not allocate a new capture identity or apply a second book update.
+10. The same immutable capture delivered through two separately evidenced source-delivery locators deduplicates by capture identity while retaining both delivery-provenance references; changing only the delivery locator does not create a new capture.
 
-**Proposed matrix total: 74 cases** (SD-05 14, SD-06 28, SD-07 24, cross-domain 8). Designed only; NOT EXECUTED.
+**Proposed matrix total: 84 cases** (SD-05 14, SD-06 28, SD-07 32, cross-domain 10). Designed only; NOT EXECUTED.
 
 ## 10. Open design blockers before contract freeze
 
@@ -455,13 +475,13 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 - [x] Candidate identity and domain-specific sequence/grouping semantics described.
 - [x] Timestamp/provenance limitations called out without fabricated receive times.
 - [x] Replay/conflict/quarantine/acknowledgement behavior drafted.
-- [x] Synthetic test matrix expanded to 74 proposed cases, including E/T separation, unverified q mapping, source-kind-specific REST/local-book completeness, bounded-depth anchor semantics, epoch-independent retry identity, independent cursors and byte/level/token/group resource ceilings; explicitly marked NOT EXECUTED.
+- [x] Synthetic test matrix expanded to 84 proposed cases, including E/T separation, unverified q mapping, source-kind-specific REST/local-book completeness, producer-issued capture identity and replay/collision/restart semantics, bounded-depth anchor semantics, source-delivery-locator retry identity, epoch-independent retry, independent cursors and byte/level/token/group resource ceilings; explicitly marked NOT EXECUTED.
 - [x] Contract-freeze blockers recorded.
 - [ ] B-01 through B-20 resolved or explicitly accepted as bounded exclusions by owner.
 - [ ] Canonical DTO/envelope, digest encoding, snapshot capture/group identity and diff stream epoch contract reviewed/frozen.
 - [ ] Independent design review completed and findings resolved.
 
-**Next review requested (revision 4):** review the corrections to R-01..R-14, the 74-case synthetic matrix and blockers B-01..B-20. The design now specifies distinct candidate completeness contracts for direct REST and T1-reconstructed snapshots, bounded-depth anchor terminology, epoch-independent retry identity, E/T mapping, cursor separation and resource-bound categories; it does not claim source-dependent mappings, identity scope, numeric values, source completeness fields or protocol bridge are verified/frozen. Any unresolved evidence dependency remains a contract-freeze blocker. Approval of this draft would accept the design baseline only if explicitly stated; it would not authorize implementation unless a separate implementation decision names its exact scope.
+**Next review requested (revision 5):** review the R-15/R-16 corrections, the 84-case proposed synthetic matrix and blockers B-01..B-20. The design distinguishes exchange-native snapshot anchor fields, producer-issued capture identity and T0 source-delivery locator; defines candidate producer/sequence allocation and immutable evidence binding for direct REST and T1-reconstructed captures; and makes retry reuse the same immutable source-delivery locator while keeping native-event and capture deduplication separate. These are candidate design rules only: producer uniqueness/fencing, source evidence, source mappings, numeric values, completeness fields and protocol bridge remain unverified/unfrozen where their blockers require proof. Any unresolved evidence dependency remains a contract-freeze blocker. Approval of this draft would accept the design baseline only if explicitly stated; it would not authorize implementation unless a separate implementation decision names its exact scope.
 
 ## 12. Explicit exclusions
 
