@@ -1,0 +1,114 @@
+name: T0 G1 synthetic-only exact-SHA CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Full 40-character lowercase commit SHA to test
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-tests:
+    name: Synthetic-only tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Validate requested source SHA
+        shell: bash
+        env:
+          REQUESTED_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "source_sha must be exactly 40 lowercase hexadecimal characters" >&2
+            exit 2
+          fi
+          echo "REQUESTED_SHA=$REQUESTED_SHA" >> "$GITHUB_ENV"
+
+      - name: Checkout exact requested source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+
+      - name: Verify checked-out SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          printf 'requested=%s\nactual=%s\n' "$REQUESTED_SHA" "$actual"
+          test "$actual" = "$REQUESTED_SHA"
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.13"
+
+      - name: Record runtime metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .g1-evidence
+          python - <<'PY'
+          import json
+          import platform
+          import sqlite3
+          from pathlib import Path
+          data = {
+              "python_version": platform.python_version(),
+              "python_implementation": platform.python_implementation(),
+              "sqlite_library_version": sqlite3.sqlite_version,
+              "sqlite_minimum_required": "3.37.0",
+              "sqlite_version_policy_pass": tuple(map(int, sqlite3.sqlite_version.split("."))) >= (3, 37, 0),
+          }
+          Path(".g1-evidence/runtime.json").write_text(
+              json.dumps(data, sort_keys=True, indent=2) + "\\n", encoding="utf-8"
+          )
+          print(json.dumps(data, sort_keys=True))
+          if not data["sqlite_version_policy_pass"]:
+              raise SystemExit("linked SQLite library is below 3.37.0")
+          PY
+          printf '%s\n' "$REQUESTED_SHA" > .g1-evidence/source-sha.txt
+          git rev-parse HEAD >> .g1-evidence/source-sha.txt
+          git hash-object market_data/archive_csv_parser.py > .g1-evidence/archive_csv_parser.blob-sha
+          git hash-object market_data/archive_provenance_validator.py > .g1-evidence/archive_provenance_validator.blob-sha
+          git hash-object .github/workflows/t0-g1-synthetic-only.yml > .g1-evidence/workflow.blob-sha
+
+      - name: Run existing synthetic archive parser and provenance contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -B -m unittest -v \
+            market_data.test_archive_csv_parser \
+            market_data.test_archive_csv_header_contract \
+            market_data.test_archive_provenance_validator_green \
+            2>&1 | tee .g1-evidence/tests.log
+
+      - name: Create sanitized test summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "G1 synthetic-only baseline"
+            echo "Requested source SHA: $REQUESTED_SHA"
+            echo "Checked-out source SHA: $(git rev-parse HEAD)"
+            echo "Workflow run ID: $GITHUB_RUN_ID"
+            echo "Workflow run attempt: $GITHUB_RUN_ATTEMPT"
+            echo "Job: synthetic-tests"
+            if [[ -f .g1-evidence/tests.log ]]; then
+              grep -E 'Ran [0-9]+ tests|^OK$|^FAILED ' .g1-evidence/tests.log || true
+            fi
+          } > .g1-evidence/summary.txt
+
+      - name: Upload sanitized evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: t0-g1-synthetic-only-${{ github.run_id }}
+          path: .g1-evidence/
+          if-no-files-found: error
+          retention-days: 30
