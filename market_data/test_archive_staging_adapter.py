@@ -852,3 +852,107 @@ class CoverageManifestAndRunLifecycleTests(unittest.TestCase):
         result = validate_staging_graph(changed)
         self.assertFalse(result.valid)
         self.assertIn("RUN_EVENT_TRANSITION_INVALID", result.error_codes)
+
+
+class StagingGraphNegativeInvariantMatrixTests(unittest.TestCase):
+    def setUp(self):
+        self.projection = CompleteS3V1ProjectionFixtureTests._projection_from_valid_s1_fixture()
+
+    def _assert_graph_error(self, projection, code):
+        from market_data.archive_staging_adapter import validate_staging_graph
+
+        result = validate_staging_graph(projection)
+        self.assertFalse(result.valid)
+        self.assertIn(code, result.error_codes)
+
+    def test_rejects_nonmonotonic_event_timestamps(self):
+        from dataclasses import replace
+
+        events = list(self.projection.run_events)
+        events[1] = replace(events[1], occurred_at_utc="2026-11-21T23:59:59.000Z")
+        self._assert_graph_error(
+            replace(self.projection, run_events=tuple(events)),
+            "RUN_EVENT_TIME_INVALID",
+        )
+
+    def test_rejects_orphan_failure_observation(self):
+        from dataclasses import replace
+        from market_data.archive_staging_adapter import FailureObservation
+
+        orphan = FailureObservation(
+            subject_kind="OBJECT", subject_id="obj1:" + "f" * 64,
+            failure_ordinal=1, failure_code="SYNTHETIC_FAILURE",
+            failure_detail_code=None, observed_at_utc="2026-11-22T00:00:03.000Z",
+            evidence_sha256=None,
+        )
+        self._assert_graph_error(
+            replace(self.projection, failure_observations=(orphan,)),
+            "FAILURE_OBSERVATION_ORPHAN",
+        )
+
+    def test_rejects_noncontiguous_failure_observation_ordinals(self):
+        from dataclasses import replace
+        from market_data.archive_staging_adapter import FailureObservation
+
+        subject = self.projection.objects[0].object_id
+        observations = tuple(
+            FailureObservation(
+                subject_kind="OBJECT", subject_id=subject,
+                failure_ordinal=ordinal, failure_code="SYNTHETIC_FAILURE",
+                failure_detail_code=None, observed_at_utc="2026-11-22T00:00:03.000Z",
+                evidence_sha256=None,
+            )
+            for ordinal in (1, 3)
+        )
+        self._assert_graph_error(
+            replace(self.projection, failure_observations=observations),
+            "FAILURE_OBSERVATION_SEQUENCE_INVALID",
+        )
+
+    def test_rejects_missing_successful_attempt_relation(self):
+        from dataclasses import replace
+
+        self._assert_graph_error(
+            replace(self.projection, successful_attempts=self.projection.successful_attempts[1:]),
+            "SUCCESSFUL_ATTEMPT_GRAPH_INVALID",
+        )
+
+    def test_rejects_pair_with_missing_object_reference(self):
+        from dataclasses import replace
+
+        pairs = list(self.projection.pairs)
+        pairs[0] = replace(pairs[0], zip_object_id="obj1:" + "f" * 64)
+        self._assert_graph_error(
+            replace(self.projection, pairs=tuple(pairs)),
+            "PAIR_OBJECT_GRAPH_INVALID",
+        )
+
+    def test_rejects_member_with_missing_pair_reference(self):
+        from dataclasses import replace
+
+        members = list(self.projection.members)
+        members[0] = replace(members[0], pair_id="pair1:" + "f" * 64)
+        self._assert_graph_error(
+            replace(self.projection, members=tuple(members)),
+            "MEMBER_PAIR_GRAPH_INVALID",
+        )
+
+    def test_rejects_source_row_with_missing_member_reference(self):
+        from dataclasses import replace
+
+        rows = list(self.projection.source_rows)
+        rows[0] = replace(rows[0], member_id="mem1:" + "f" * 64)
+        self._assert_graph_error(
+            replace(self.projection, source_rows=tuple(rows)),
+            "SOURCE_ROW_MEMBER_GRAPH_INVALID",
+        )
+
+    def test_rejects_link_with_candle_value_mismatch(self):
+        from dataclasses import replace
+
+        links = list(self.projection.links)
+        links[0] = replace(links[0], candle_value_id="cv1:" + "f" * 64)
+        self._assert_graph_error(
+            replace(self.projection, links=tuple(links)),
+            "CANDLE_LINK_GRAPH_INVALID",
+        )
