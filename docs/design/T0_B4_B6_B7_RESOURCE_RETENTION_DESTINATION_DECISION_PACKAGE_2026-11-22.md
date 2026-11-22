@@ -1,7 +1,9 @@
 # T0 B4 / B6 / B7 — Resource, Retention and Execution Destination Decision Package
 
 Date: 2026-11-22  
-Status: **PROPOSAL FOR OWNER DECISION — DESIGN ONLY**  
+Status: **OWNER ACCEPTED — DESIGN/POLICY FROZEN; NO IMPLEMENTATION OR OPERATIONAL AUTHORIZATION**
+
+Owner acceptance recorded 2026-11-22: `docs/decisions/T0_B4_B6_B7_OWNER_ACCEPTANCE_2026-11-22.md`.  
 Repository: kenznguyen/btcquant-application, branch main
 
 ## 1. Purpose and significance
@@ -195,9 +197,9 @@ Option A is recommended, but B7 remains OPEN until the owner identifies the exac
 
 | Decision | Recommendation | Current status |
 |---|---|---|
-| B4 resource ceilings | Adopt §3 as initial hard caps; fail closed, no implicit expansion | **PROPOSED — OWNER DECISION REQUIRED** |
-| B6 retention | Preserve source/staging/private evidence until explicit deletion approval; CI artifact 30 days, sanitized only | **PROPOSED — OWNER DECISION REQUIRED** |
-| B7 destination | Option A: owner-controlled encrypted personal workstation; dedicated root/run layout; manual-only | **PROPOSED — OWNER IDENTIFICATION AND LATER PREFLIGHT REQUIRED** |
+| B4 resource ceilings | Adopt §3 as initial hard caps; fail closed, no implicit expansion | **OWNER ACCEPTED — DESIGN FROZEN** |
+| B6 retention | Preserve source/staging/private evidence until explicit deletion approval; CI artifact 30 days, sanitized only | **OWNER ACCEPTED — POLICY FROZEN** |
+| B7 destination | Option A: owner-controlled encrypted personal workstation; dedicated root/run layout; manual-only | **OPTION A OWNER-SELECTED — EXACT HOST/PATH AND PREFLIGHT PENDING** |
 
 ## 7. Scope and non-authorization
 
@@ -212,12 +214,8 @@ This document authorizes no operational activity. It does not authorize:
 
 B3 archive format coverage and B5 source-derived coverage remain NOT VERIFIED. B8 importer/build remains NOT AUTHORIZED. Every later implementation, preflight, acquisition, build and acceptance phase requires its own explicit approval.
 
-## 8. Decision requested from owner
+## 8. Owner decision — ACCEPTED 2026-11-22
 
-Please decide each item independently:
+The owner accepted B4 and B6 as proposed and selected B7 Option A. See `docs/decisions/T0_B4_B6_B7_OWNER_ACCEPTANCE_2026-11-22.md`.
 
-1. **B4:** Accept, modify or reject the numeric hard ceilings in §3.1–3.3. Acceptance means design policy only; it does not authorize acquisition.
-2. **B6:** Accept, modify or reject the retention proposal in §4. Acceptance does not authorize deletion or artifact upload.
-3. **B7:** Select Option A, B or C. If Option A, provide the owner-controlled host/device and exact encrypted-volume root path in a later secure operational planning step. This selection alone does not authorize host access or preflight.
-
-If any proposal is deferred, the corresponding blocker remains OPEN and acquisition remains blocked. No limits will be relaxed and no alternate destination will be substituted by inference.
+Acceptance freezes design/policy only. It does not authorize archive access, host access or preflight, workflow/artifact operations, DDL, SQLite, importer, staging build, cleanup/deletion, runtime or trading. Exact host/device and encrypted-volume root path remain unspecified; no preflight may begin until separately authorized. Resource ceilings are not validated against real source objects or a destination. If a cap is reached, stop and report; do not increase it or substitute another destination.
