@@ -247,7 +247,7 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - S1.1 resolves B2 at policy/contract level: SQLite minimum 3.37.0 for STRICT, exact Python/SQLite runtime pins required in a later approved implementation scope, version check at process/connection, per-connection FK enable/readback, later integrity/FK checks. Exact runtime versions deliberately remain unselected pending separate implementation approval.
 - S3 R3–R6, V1 API/error catalogue, T0ENC1, identity prefixes, `T0_STAGING_SCHEMA_V2` and `user_version=2` are retained. No validator source/test/workflow was changed.
 - Review state: **documentation content committed; awaiting owner acceptance of the detailed S1.1 design**. Scope approval is not treated as blanket acceptance of every schema detail.
-- Exact main source HEAD after documentation updates: `5ef5641da3d881c5c07a3704289c396834331a66`. S1.1 final document blob: `30093c2bce7f62b97612a2db863dcb17853b306d`.
+- Historical checkpoint immediately after the original-S1 authority notice: `5ef5641da3d881c5c07a3704289c396834331a66` (not the current HEAD). S1.1 final document blob: `505c23a00772667d0da3f5cc4a48f2d724b84c2a`.
 - Verification: GitHub readback of S1.1 document and original S1 authority notice; content-level same-session self-review only. No executable tests, SQL parsing/execution, SQLite, workflow run/job/artifact.
 - Status: **B1 RESOLVED AT DESIGN LEVEL; B2 RESOLVED AT POLICY/CONTRACT LEVEL; S1.1 DOCUMENTATION COMMITTED / OWNER ACCEPTANCE PENDING**.
 - Remaining blockers: B3 archive format coverage NOT VERIFIED; B4 resource budgets OPEN; B5 actual coverage manifest NOT VERIFIED; B6 retention/artifact policy OPEN; B7 destination/preflight OPEN; B8 importer/build NOT AUTHORIZED; B9 application-foundation review remains separate and unchanged.
@@ -264,3 +264,5 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - Owner acceptance of the detailed design remains **PENDING**. B1/B2 resolved at design/policy level only; B3–B8 remain as recorded above; B9 separate and unchanged.
 - The original S1 DDL authority notice remains in place; do not implement its superseded success-only constraints.
 - No workflow run/job/artifact; no test, DDL, SQLite, archive, data or runtime operation.
+
+- Latest verified `main` HEAD for this documentation increment: `482d631b69a4abd21db42e2a08d8dad9e790f9c8`. The authoritative main handoff T0 section was updated in commit `0c190a312747e205ca6068d54f509c5bf9756836`; active-scope index link update commit `482d631b69a4abd21db42e2a08d8dad9e790f9c8`.
