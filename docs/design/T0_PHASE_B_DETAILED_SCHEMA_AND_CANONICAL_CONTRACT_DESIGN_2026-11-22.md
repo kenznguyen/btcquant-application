@@ -1,13 +1,14 @@
 # T0 Phase B — Detailed Schema & Canonical Contract Design
 
-- Date: 2026-11-22 (revision 2)
-- Status: **PHASE B DESIGN REVISION 2 — SECOND REVIEW REQUESTED**
+- Date: 2026-11-22 (revision 3)
+- Status: **PHASE B DESIGN REVISION 3 — READY FOR NEXT REVIEW**
 - Scope: SD-05 aggregate trades; SD-06 order-book depth diffs; SD-07 order-book snapshots.
 - Authorization: owner-approved Phase A review and Phase B documentation-only authorization, decision commit `f2f5741cad47b86c70dae23dbaa9b497258cc80a`.
 - Governing design: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_AND_CANONICAL_INGESTION_CONTRACT_V1_2026-11-22.md`.
 - Phase A baseline: `docs/design/T0_PHASE_A_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
 - T1 source schema: `kenznguyen/binance-futures-collector/docs/SCHEMA.md`, blob SHA `895f87a8281a3f9b6d37d96b5f68568e4285bee6`.
 - Implementation: **NOT AUTHORIZED / NOT STARTED**.
+- Synthetic matrix: **DESIGNED ONLY / NOT EXECUTED**.
 - Tests/workflows/artifacts: **NOT RUN / NONE**.
 
 ## 1. Purpose and invariants
@@ -43,39 +44,41 @@ The CSV schema is a documentation snapshot, not proof that every live collector 
 
 ### 3.1 Native source-field completeness and mapping
 
-The Binance USD-M aggregate-trade event includes native fields beyond the currently documented T1 CSV. In particular, `q` and `nq` are distinct quantities: `q` is aggregate quantity including all market trades, while `nq` excludes trades involving RPI orders. They are not interchangeable.
+Binance USD-M aggTrade defines `E` as event time and `T` as trade time. These clocks are distinct. The pinned T1 CSV schema explicitly documents `timestamp_ms` as trade time. Therefore the CSV timestamp is only a candidate mapping to native `T`; it is not `E`. Exact T1 parser/source verification has not been performed.
 
 | Binance native field | Meaning | Present in documented T1 CSV? | Phase B treatment |
 |---|---|---:|---|
-| `e` | event type | No | raw-source-only/unavailable in CSV |
-| `E` | event time | represented by `timestamp_ms` | candidate `trade_time_ms` only after exact mapping verified |
-| `s` | symbol | Yes, `symbol` | canonical instrument envelope |
-| `a` | aggregate trade ID | Yes, `trade_id` | native identity |
-| `p` | price | Yes, `price` | exact decimal |
-| `q` | quantity including RPI-involved trades | Yes, `quantity` | canonical `quantity_all` (legacy candidate name `quantity` retained only pending DTO review) |
-| `nq` | normal quantity excluding RPI-involved trades | **No** | preserve if present in raw native message; otherwise `UNAVAILABLE_IN_T1_CSV_V1`; do not derive or equate to `q` |
-| `f` / `l` | first/last underlying trade IDs | Yes, misleadingly named `first_update_id` / `last_update_id` | candidate first/last trade IDs |
-| `T` | trade transaction time | No separate field | unavailable unless captured in raw source |
-| `m` | buyer-is-maker flag | Yes, `is_buyer_maker` | strict boolean-domain mapping |
-| `M` | ignore/auxiliary flag | No | raw-source-only/unavailable in CSV |
+| `e` | event type | No | unavailable in CSV; preserve only if raw native message exists |
+| `E` | event time | No separate field | `UNAVAILABLE_IN_T1_CSV_V1`; never map from `timestamp_ms` |
+| `s` | symbol | Yes | candidate instrument envelope |
+| `a` | aggregate trade ID | Yes, `trade_id` | candidate native identity; verify source mapping |
+| `p` | price | Yes, `price` | candidate exact-decimal mapping; source verification pending |
+| `q` | aggregate quantity including RPI-involved trades | `quantity` exists, semantics not proven | candidate mapping only; **NOT VERIFIED** pending pinned T1 parser/source inspection |
+| `nq` | normal quantity excluding RPI-involved trades | No | preserve if raw native message exists; otherwise `UNAVAILABLE_IN_T1_CSV_V1`; never derive from `q` |
+| `f` / `l` | first/last underlying trade IDs | `first_update_id` / `last_update_id` | candidate mapping only; not book update IDs |
+| `T` | trade time | no separate native field label | candidate mapping from CSV `timestamp_ms` only; **NOT VERIFIED** against T1 parser |
+| `m` | buyer-is-maker flag | `is_buyer_maker` | candidate strict boolean-domain mapping; verify source |
+| `M` | ignore/auxiliary flag | No | unavailable in CSV unless raw source retained |
 
-For the current T1 CSV documentation, `quantity` is a **candidate mapping** to the all-trades aggregate quantity `q`, subject to read-only verification of the pinned T1 parser/source implementation; the published schema alone does not prove the runtime mapping. Do not freeze this mapping until verified. `nq` is not silently substituted. Whether `nq` should become a first-class canonical field is unresolved and requires a source-contract/consumer decision. Preserve raw native messages where available. If only CSV is available, explicitly record `nq` as unavailable for that source version; do not fabricate it.
+**Mapping status is uniform throughout this design:** every T1 CSV field-to-native-field association that is not directly established by the pinned schema is a candidate and NOT VERIFIED. In particular, `quantity` → `q` is not a frozen or documented native mapping. The existence of a CSV column named `quantity` or `size` does not establish whether it contains `q`, `nq`, or another transformed value. Do not use it as canonical `q` until pinned T1 source/parser evidence confirms it.
+
+If raw native aggTrade messages are retained, preserve `E`, `T`, `q`, and `nq` as separate source fields without normalization that loses original bytes. If only the current CSV is available, `E` and `nq` are explicitly unavailable; `timestamp_ms` is a candidate for `T`; `quantity` is a candidate for `q`, both NOT VERIFIED. No field may be inferred from another.
 
 ### 3.2 Native-to-candidate mapping
 
-| Native field | Documented meaning | Candidate canonical field | Notes |
+| Source field | Documented meaning | Candidate canonical field | Verification status |
 |---|---|---|---|
-| `exchange` | `binance` | `exchange` | Normalize only through a versioned enum map |
-| `market` | `futures` | `market_type` | Resolve exact USD-M/perpetual scope from source registration |
-| `symbol` | lowercase symbol | `symbol` | Canonical symbol form must be explicit |
-| `timestamp_ms` | trade time | `trade_time_ms` | UTC epoch milliseconds |
-| `trade_id` | aggregate trade ID | `aggregate_trade_id` | Primary native identity |
-| `side` | buy/sell aggressor side | `aggressor_side` | Preserve source meaning |
-| `price` | fill price | `price` | Exact decimal; no float coercion |
-| `quantity` | aggregate quantity | `quantity` | Exact decimal; no float coercion |
-| `is_buyer_maker` | 1 if buyer maker, else 0 | `is_buyer_maker` | Strict boolean-domain validation |
-| `first_update_id` | aggTrade `f`, first underlying trade ID | `first_trade_id` | Rename semantically; not a book update ID |
-| `last_update_id` | aggTrade `l`, last underlying trade ID | `last_trade_id` | Rename semantically; not a book update ID |
+| `exchange` | `binance` | `exchange` | schema-documented; exact source registration pending |
+| `market` | `futures` | `market_type` | candidate; exact USD-M/perpetual scope pending |
+| `symbol` | lowercase symbol | `symbol` | schema-documented; normalization contract unfrozen |
+| `timestamp_ms` | trade time | `trade_time_ms` / candidate native `T` | schema-documented semantics; parser fidelity NOT VERIFIED |
+| `trade_id` | aggregate trade ID | `aggregate_trade_id` | candidate native mapping; source verification pending |
+| `side` | buy/sell aggressor side | `aggressor_side` | documented label; native mapping pending |
+| `price` | fill price | `price` | candidate exact-decimal mapping |
+| `quantity` | CSV quantity/size | candidate `q` / `quantity_all` | **NOT VERIFIED**; do not treat as native q |
+| `is_buyer_maker` | buyer maker indicator | `is_buyer_maker` | candidate strict 0/1 mapping |
+| `first_update_id` | aggTrade `f` candidate | `first_trade_id` | candidate; verify pinned source |
+| `last_update_id` | aggTrade `l` candidate | `last_trade_id` | candidate; verify pinned source |
 
 ### 3.3 Candidate identity and acceptance
 
@@ -93,8 +96,10 @@ Candidate identity:
 
 ### 3.4 Time and provenance
 
-- Native `timestamp_ms` is trade time, not collector receive time.
-- Current documented CSV has no explicit collector receive timestamp or WebSocket stream epoch.
+- Binance native `E` is event time; native `T` is trade time. They must remain separate fields.
+- The pinned T1 CSV schema says `timestamp_ms` is trade time; it is a candidate mapping to `T` only. Its exact parser fidelity is NOT VERIFIED.
+- The current documented CSV has no separate `E` field. Mark event time unavailable; never relabel `timestamp_ms` as `E`.
+- Current CSV has no explicit collector receive timestamp or WebSocket stream epoch.
 - Preserve source object SHA-256, immutable object locator, row locator, source schema/parser version and T0 receipt/commit times.
 - A historical file import time must not be relabeled as original collector receive time.
 - A raw CSV row digest is not an exchange message digest unless exact byte framing and original message retention are proven.
@@ -183,17 +188,36 @@ RPI-inclusive depth is OUT OF SCOPE for Phase B. It requires a separately review
 ### 4.7 Bounded out-of-order, gap and recovery policy
 
 1. The source adapter preserves original arrival order and arrival metadata. It must not sort or rewrite raw source observations by event time.
-2. The sequence processor may hold a bounded reorder buffer keyed by native sequence range to tolerate limited transport reordering. Both a maximum buffered-event count and maximum residence age are mandatory configuration bounds. Their numeric values are NOT FROZEN and must be derived from measured source behavior and owner-reviewed resource limits; no arbitrary default is accepted.
-3. A candidate can be applied only when the verified Binance bridge/continuity rule proves it is the next applicable update relative to the active snapshot anchor and last applied sequence. A later event may be buffered only while both configured bounds remain satisfied.
-4. A gap becomes `GAP_PENDING` when the next expected sequence is absent but the bounded wait remains. It becomes durable `GAP_UNRESOLVED` when either bound is reached, the source session ends, the buffer overflows, or continuity cannot be proven. Persist the missing range/expected sequence, observed ranges, epoch, timestamps and evidence references.
-5. Buffer overflow is fail-closed: stop applying later events, persist discontinuity/quarantine evidence, and mark the derived book unavailable. Never evict the oldest event silently.
-6. A checkpoint may advance only through the highest contiguous, durably committed sequence. It must never advance across `GAP_PENDING`, `GAP_UNRESOLVED`, conflict, or uncommitted provenance.
-7. Recovery order: (a) wait for missing updates only while both bounds remain; (b) after unresolved gap/session loss, mark the current derived book unavailable and reacquire a new complete snapshot plus a new stream epoch using the exchange-verified bridge; (c) if snapshot/bridge cannot be proven, remain unavailable/quarantined. Do not silently skip the gap or resume from a later diff.
-8. Restart recovery must load the durable checkpoint and unresolved-gap state. A new local epoch does not reset canonical event identity and does not itself repair a sequence gap.
+2. The sequence processor may hold a bounded reorder buffer keyed by native sequence range. Mandatory independent hard limits are: buffered event count, buffer residence age, aggregate buffered raw/parsed bytes, raw message bytes, levels per diff, numeric token length/precision, and parser nesting/structure limits. Numeric ceilings are NOT FROZEN and must be derived from measured source behavior and owner-reviewed resource budgets.
+3. Snapshot grouping has separate hard ceilings for rows per capture, total capture bytes, per-row bytes, levels per side and numeric token length. A group exceeding any ceiling is rejected/quarantined as a whole; it is not partially accepted.
+4. Enforce raw byte ceilings before unbounded parsing/allocation where the source boundary permits. Enforce parsed-level and numeric-token ceilings during bounded parsing. Parser limits must prevent pathological nesting, token length and allocation amplification.
+5. A candidate diff can be applied only when the verified Binance bridge/continuity rule proves it is the next applicable update relative to the active snapshot anchor and last applied sequence. A later event may be buffered only while every configured count, age and byte bound remains satisfied.
+6. A gap becomes `GAP_PENDING` when the next expected sequence is absent but all bounded wait conditions remain. It becomes durable `GAP_UNRESOLVED` when any bound is reached, the source session ends, a resource ceiling is exceeded, or continuity cannot be proven. Persist expected/missing range, observed ranges, epoch, timestamps and evidence references.
+7. Buffer/resource overflow is fail-closed: stop applying later events, persist a bounded rejection/quarantine reference and discontinuity evidence, and mark the derived book unavailable. Never evict the oldest event silently. Do not copy an oversized payload into an unbounded error record; preserve a bounded immutable source locator/digest when safely available.
+8. A book-sequence watermark may advance only through the highest contiguous, durably committed sequence actually applied to the derived book. It must never advance across `GAP_PENDING`, `GAP_UNRESOLVED`, conflict, resource rejection or uncommitted provenance.
+9. Recovery order: (a) wait for missing updates only while every bound remains satisfied; (b) after unresolved gap/session loss, mark the current derived book unavailable and reacquire a new complete bounded snapshot plus a new stream epoch using the exchange-verified bridge; (c) if snapshot/bridge cannot be proven, remain unavailable/quarantined. Do not silently skip the gap or resume from a later diff.
+10. Restart recovery reloads both source-delivery cursor and book-sequence watermark, plus unresolved-gap/resource-rejection state. A new local epoch does not reset canonical event identity and does not repair a sequence gap.
 
-Numeric buffer bounds, gap wait values and exact exchange bridge behavior remain explicit freeze blockers.
+Numeric count/age/byte/level/token/group limits, gap wait values and exact exchange bridge behavior remain explicit freeze blockers.
 
-### 4.8 Book-state semantics
+### 4.8 Separate source-delivery cursor and book-sequence watermark
+
+These are distinct progress markers and must never be represented by one checkpoint value:
+
+- **Source-delivery/import cursor:** identifies the last source object/row or delivered message whose immutable raw observation and terminal intake outcome (`ACCEPTED`, `DUPLICATE_REPLAY`, `CONFLICT`, `QUARANTINED`, or durable gap/resource outcome) have been durably recorded. It may advance after durable quarantine of a gap or malformed observation because source intake is complete for that position.
+- **Book-sequence watermark:** identifies the highest contiguous update sequence actually applied to the derived book from its active snapshot anchor. It advances only after the corresponding canonical diff and derived application state are durable, and never across a missing sequence, conflict, quarantine, resource rejection or unapplied buffered event.
+
+A source cursor advancing past a durably quarantined gap means only that the source observation has been safely ingested and its outcome recorded. It does **not** mean the book is continuous, does not acknowledge missing exchange updates, and must not move the book-sequence watermark.
+
+Restart/replay rules:
+1. Resume source intake after the last durable source cursor. If acknowledgement was lost, replay the same source position; identity/outcome dedupe must return the prior durable result without duplicating raw evidence or canonical effects.
+2. Restore book state only from the last durable book-sequence watermark, its exact snapshot anchor/epoch and persisted gap state. Never infer the watermark from the source cursor.
+3. If source intake has advanced while the book watermark is behind, replay or reprocess only the stored observations required by the sequence state machine; do not re-acknowledge them as new book progress.
+4. If atomic persistence of source observation, provenance, intake outcome and source cursor cannot be guaranteed, do not advance the source cursor. If atomic persistence of diff application and book watermark cannot be guaranteed, do not advance the book watermark.
+
+This separation is required by B-12. The exact physical transaction/recovery protocol remains unfrozen.
+
+### 4.9 Book-state semantics
 
 Canonical diff history and a reconstructed in-memory/current book are different artifacts. T0 canonical history retains accepted source diffs and their provenance. Any derived book view must identify the exact snapshot anchor, stream epoch, last applied update ID, applied dataset version and continuity status. It must not be represented as a raw source event.
 
@@ -211,34 +235,39 @@ Canonical diff history and a reconstructed in-memory/current book are different 
 | `last_update_id` | book version | `last_update_id` | Snapshot sequence anchor |
 | Common fields | exchange/market/symbol | instrument envelope | Explicit source namespace |
 
-### 5.2 Grouping and candidate identity
+### 5.2 Grouping, bounded-depth scope and candidate identity
 
-The native CSV is one row per price level, not one row per snapshot. T0 must group all rows belonging to one complete snapshot before canonical acceptance. A single level row is never a complete snapshot.
+The native CSV is one row per price level, not one row per snapshot. T0 must group all rows belonging to one capture before canonical acceptance. A single level row is never a complete capture.
+
+For the ordinary Binance USD-M REST order-book endpoint, the response is bounded top-N depth (documented limits include 5, 10, 20, 50, 100, 500 and 1000; maximum 1000). It is not an unlimited representation of the entire order book. A complete capture therefore means **all levels returned by that exact bounded response were captured and verified**, not that the exchange's entire book was captured.
 
 Candidate snapshot identity proposal:
-`(exchange, market_type, symbol, snapshot_kind, last_update_id, snapshot_captured_at_ms, snapshot_capture_id)`.
+`(exchange, market_type, symbol, source_kind, requested_limit, last_update_id, snapshot_captured_at_ms, snapshot_capture_id)`.
 
-**Important:** `snapshot_capture_id` is not present in the documented CSV schema. The tuple without it is only a candidate and is not proven collision-safe: repeated captures can share an update ID and potentially the same millisecond timestamp. A source-generated immutable snapshot ID or a separately evidenced unique capture boundary is required before freeze. Do not invent an ID from row order or file path.
+The tuple is not frozen. `snapshot_capture_id` must be source-generated and immutable. Do not invent an ID from row order, timestamp, file path, file rotation or a locally assigned import sequence.
 
-Within one grouped snapshot, level identity is `(side, price)`. The complete level set must be deterministic and duplicate-free.
+Within one capture, level identity is `(side, price)`. The full returned level set must be deterministic and duplicate-free. Preserve bid and ask counts separately; an absent side is not an empty side unless the source manifest explicitly declares zero returned levels.
 
-### 5.3 Completeness and consistency
+### 5.3 Completeness, boundedness and consistency
 
-- Validate one consistent `event_type`, `last_update_id`, timestamp, exchange, market and symbol across every row in a group.
-- Require only `depth_snapshot_initial`, `depth_snapshot`, `depth_snapshot_bridge` until the source schema is versioned.
-- Reject duplicate `(side, price)` levels, invalid sides, nonpositive price/quantity, malformed decimals, and mixed group metadata.
-- The current row schema has no explicit group header, expected level count, checksum, end marker or empty-book marker. Therefore a file/row batch alone does not prove snapshot completeness.
-- Minimum future acceptance evidence is: (a) source-generated immutable `snapshot_capture_id`; (b) explicit group framing/boundary; (c) expected row/level count or an equivalent source completeness declaration; (d) finalized immutable source-object digest; and (e) a manifest binding capture ID, symbol/market, snapshot kind, update ID, capture time, row count, object digest and completion status. An exchange/source checksum may strengthen validation but must not be invented where unavailable.
-- An alternative to this manifest is acceptable only if a source-generated capture ID and equivalently strong, independently verifiable completeness proof are supplied and reviewed. File EOF, file rotation, elapsed time, a stable-looking file size or observed row count alone is never proof of completion.
-- Partial write, process restart, collector crash, object mutation, missing end marker, row-count mismatch or digest mismatch leaves the entire capture quarantined; do not accept a partial prefix.
-- Empty-side/empty-book snapshots require an explicit source representation (for example an explicit zero-level declaration in the completion manifest). Absence of rows is not evidence of an empty side or book.
-- Snapshot `last_update_id` anchors the book state. It is not a trade ID and must not be mixed with SD-05 identifiers.
-- Same proven snapshot identity + identical complete level set is replay. Same identity + differing level set is conflict; never merge levels or overwrite.
-- A snapshot is a reconstruction anchor, not a substitute for the diff history before/after it.
+- Validate one consistent `event_type`, `last_update_id`, timestamp, exchange, market, symbol, source kind, endpoint and requested limit across every row in a group.
+- Require only the versioned snapshot event types permitted by the source contract.
+- Reject duplicate `(side, price)` levels, invalid sides, nonpositive price/quantity, malformed decimals and mixed group metadata.
+- The current CSV row schema has no explicit group header, expected level count, checksum, end marker or empty-book marker. A file/row batch alone does not prove capture completeness.
+- Minimum future acceptance evidence is: (a) source-generated immutable `snapshot_capture_id`; (b) explicit group framing/boundary; (c) expected total row count or equivalent source completeness declaration; (d) finalized immutable source-object digest; and (e) a completion manifest binding capture ID, symbol/market, source kind/endpoint, requested depth limit, actual bid count, actual ask count, total row count, snapshot kind, update ID, capture time, object digest, non-RPI visibility and completion status.
+- The manifest must identify the exact endpoint/source variant and request parameters. A limit of 1000 means at most the response's bounded levels; it does not mean full-book completeness.
+- Empty-side/empty-book captures require explicit source/manifest declarations with zero counts. Absence of rows is not evidence of an empty side or book.
+- File EOF, file rotation, elapsed time, stable-looking file size or observed row count alone is never proof of completion.
+- Partial write, process restart, collector crash, object mutation, missing end marker, row-count mismatch or digest mismatch quarantines the entire capture; no partial prefix is accepted.
+- Snapshot `last_update_id` anchors only the returned bounded depth state. It is not a trade ID and must not be mixed with SD-05 identifiers.
+- Same proven snapshot identity + identical complete bounded level set is replay. Same identity + differing level set is conflict; never merge levels or overwrite.
+- A snapshot is a bounded reconstruction anchor, not proof of the full exchange book.
+- A later diff that inserts a level outside the initial returned price boundary may be applied as an update to the known bounded state only under verified sequence rules; it does not prove that omitted deeper levels are known or that the local top-N ranking remains complete. If the derived view cannot establish its visible depth/rank semantics, mark that view bounded/incomplete or unavailable rather than asserting a complete book.
+- The ordinary endpoint's non-RPI visibility is an independent limitation: even a fully captured bounded response excludes RPI liquidity. Do not conflate bounded-depth completeness with all-liquidity completeness.
 
 ### 5.4 Provenance and time
 
-- `timestamp_ms` is documented as when the snapshot was taken; do not call it an exchange event timestamp without evidence.
+- `timestamp_ms` is documented as snapshot capture time in the T1 CSV; do not call it exchange event time or REST response event time without evidence. If the REST response exposes native `E` and `T`, preserve them separately in raw evidence and map them only under a versioned source contract. If not captured, mark each unavailable; never substitute capture time.
 - SD-07 is non-RPI by default when sourced from the ordinary depth snapshot endpoint/flow. It is not a complete view of all displayed liquidity; any RPI-inclusive snapshot requires a separately reviewed contract.
 - Preserve object SHA-256, immutable source locator, row range/ordinals, source schema/parser version and T0 receipt/commit times.
 - Current CSV does not expose collector receive time, REST request ID, snapshot capture ID or completeness manifest. Consequently, all snapshot groups from this schema version remain `NOT_CANONICAL_ACCEPTABLE` until the source contract provides capture identity and independently verifiable completeness proof.
@@ -291,60 +320,87 @@ No source deletion follows acknowledgement. Partial acceptance must retain per-r
 
 ## 9. Synthetic test design (NOT EXECUTED)
 
-The matrix below is a design specification only. Each case must use isolated synthetic source fixtures and deterministic clocks; it must not connect to Binance, use production/T1 captures, mutate T0 storage or imply implementation readiness. The listed matrix is not executed.
+All cases below are proposed deterministic tests using isolated synthetic fixtures and clocks. They do not connect to Binance, use production/T1 captures, mutate T0 storage or imply implementation readiness. **No tests or fixtures were created or executed.**
 
-### SD-05
-1. Valid BTCUSDT aggregate trade with native trade ID and documented `q` mapping.
-2. Source-field completeness asserts `q` and `nq` are distinct; current CSV fixture has `quantity`/`q` but no `nq`, and reports `nq` unavailable rather than copying `q`.
-3. Raw native fixture containing `nq` preserves it byte-for-byte/in a versioned raw field; no `nq` value is fabricated when absent.
-4. Duplicate aggregate ID and identical payload resolves to replay.
-5. Duplicate aggregate ID with changed price/quantity/side/time/maker flag resolves to conflict without overwrite.
-6. Missing/negative/non-integer IDs and first ID greater than last ID are rejected/quarantined.
-7. Strict `is_buyer_maker` 0/1 parsing rejects truthy strings and values outside domain.
-8. Exact decimal parsing rejects NaN, Infinity, malformed exponent/overflow and nonpositive price/quantity.
-9. `timestamp_ms`/ISO UTC mismatch is rejected; event time remains distinct from receive time.
-10. Cross-field side/maker consistency tests run only after source semantics are frozen.
+### SD-05 — Aggregate trades (14 cases)
 
-### SD-06
-1. Valid diff fixture carries U/u/pu, `E` event time, `T` transaction time and bid/ask absolute quantities.
-2. Current T1 CSV fixture maps `E` only; `T` is explicitly unavailable, never copied from `E` or import time.
-3. Ordinary-depth fixture is labeled non-RPI; an RPI observation is not silently merged and derived-book metadata declares the RPI visibility limitation.
-4. Same canonical update range/payload observed in different local epochs resolves to replay when exchange identity scope is verified.
-5. Same canonical update range with changed payload across epochs resolves to conflict; epoch change alone never creates a new canonical identity.
-6. If update-ID uniqueness scope is unverified, cross-epoch repeated range is quarantined as identity-scope-unverified, not accepted.
-7. Arrival order is preserved in raw evidence; a bounded reorder buffer accepts only in-bound reordering and applies only contiguous sequence events.
-8. Reorder-buffer count limit and age limit are independently enforced; count overflow and age expiry persist `GAP_UNRESOLVED`, stop application and mark book unavailable.
-9. A missing sequence remains `GAP_PENDING` only within both bounds; recovery waits within bounds, then requires a new complete snapshot/new epoch and verified bridge or remains unavailable.
-10. Checkpoint stays before the gap while pending/unresolved and cannot advance over buffered-but-unapplied or uncommitted events.
-11. Zero quantity removes exactly one price level; nonzero quantity replaces the absolute level quantity rather than adding a delta.
-12. Valid sequence bridge from a snapshot and valid subsequent pu chain are accepted only under the pinned exchange rules.
-13. Missing update, regressed ID, invalid overlap, wrong pu and unexpected stream-epoch transition fail closed.
-14. Same range/same payload is replay; same range/different payload is conflict.
-15. Same timestamp with different update IDs remains distinct.
-16. Malformed JSON, wrong tuple arity, duplicate prices, invalid decimal and negative quantity are rejected/quarantined.
-17. Missing stream epoch fails closed; file offset alone cannot establish sequence continuity.
-18. Lost acknowledgement retry does not apply a diff twice.
-19. Buffer overflow never evicts an event silently; the derived book becomes unavailable and a durable gap record is required.
-20. Restart with unresolved gap reloads the checkpoint/gap state and cannot resume from a later diff without a complete new snapshot and verified bridge.
+1. Valid native event with distinct `E` and `T`; assert they remain separate.
+2. T1 CSV `timestamp_ms` maps only to candidate `T`; assert `E` remains unavailable unless independently captured.
+3. Distinct `E`/`T` values catch any reversal or timestamp substitution.
+4. CSV `quantity` is retained as unverified candidate; assert it is not treated as proven native `q`.
+5. `q` and `nq` differ; assert neither is copied into the other.
+6. Missing `nq` yields explicit unavailable status, never a fabricated value.
+7. Raw native fixture preserves `E`, `T`, `q`, `nq` independently.
+8. Same aggregate ID and same verified semantic payload is replay.
+9. Same aggregate ID and changed semantic payload is conflict without overwrite.
+10. Missing/negative/non-integer IDs or first ID greater than last ID are rejected/quarantined.
+11. Strict maker flag parsing rejects truthy strings and values outside 0/1.
+12. Exact decimal parsing rejects NaN, Infinity, malformed exponent/overflow and nonpositive price/quantity.
+13. Timestamp/ISO UTC mismatch is rejected; trade time is not relabeled as receive time.
+14. Candidate cross-field side/maker consistency is not enforced until source semantics are verified.
 
-### SD-07
-1. Multi-level bid/ask rows group into one complete snapshot only when capture ID, completion manifest, expected count and finalized object digest agree.
-2. EOF, file rotation, elapsed time, stable file size or row count without a source completion manifest does not prove completeness and remains quarantined.
-3. Partial write, restart, missing rows, count mismatch or digest mismatch quarantines the entire capture; no partial prefix is accepted.
-4. Explicit empty-side/empty-book manifest is accepted as such; absence of rows without an explicit declaration is not interpreted as empty.
-5. Ordinary snapshot source is marked non-RPI; the book is not labeled as complete all-liquidity visibility.
-6. Repeated capture with a new capture ID but identical update ID/time is a distinct capture observation only if source-generated identity/completeness evidence proves it; otherwise quarantine.
-7. Mixed timestamp/update ID/event type/symbol within one group is rejected.
-8. Duplicate side/price level is rejected.
-9. Same identity and same full level set is replay; changed level set is conflict.
-10. Missing capture ID or ambiguous repeated capture is quarantined.
-11. Truncated/partial group and missing close/completion proof cannot be accepted.
-12. Empty side/book is not inferred from absent rows.
-13. Snapshot anchor links to a diff stream epoch only when source evidence establishes the relation.
-14. Different snapshot event types at the same symbol/update ID remain distinguishable.
-15. Lost acknowledgement retry resolves to replay for the same complete capture identity.
+### SD-06 — Depth diffs (25 cases)
 
-These cases are proposed only. No tests, fixtures, parser, validator or workflow were created or run.
+1. Valid diff preserves U/u/pu and distinct E/T when both are present.
+2. Current T1 CSV maps timestamp only to candidate E as documented for depth; T remains explicitly unavailable.
+3. Arrival order and source locator are preserved; no sorting by event time.
+4. Same range/same payload across epochs is replay only after identity namespace is proven.
+5. Same range/changed payload across epochs is conflict.
+6. Epoch change alone does not create a new canonical event.
+7. Unproven update-ID uniqueness scope causes cross-epoch quarantine, not acceptance.
+8. Valid initial snapshot bridge follows the pinned exchange rule.
+9. Valid subsequent pu chain is accepted under pinned rules.
+10. Missing update creates GAP_PENDING while all bounds remain.
+11. Gap age bound expires to durable GAP_UNRESOLVED.
+12. Reorder event-count ceiling independently triggers fail-closed state.
+13. Raw message byte ceiling rejects before unbounded parse/allocation.
+14. Parsed level-count ceiling rejects a message exceeding max levels.
+15. Numeric token length/precision ceiling rejects pathological decimal tokens.
+16. Aggregate reorder-buffer byte ceiling triggers GAP_UNRESOLVED and book unavailable.
+17. Resource rejection persists bounded evidence reference; oversized payload is not copied into an unbounded error record.
+18. Resource rejection never advances book-sequence watermark.
+19. Source cursor may advance after durable quarantine while book watermark remains before the gap.
+20. Restart restores source cursor and book watermark independently.
+21. Lost acknowledgement replays the same source observation without duplicate canonical/book effects.
+22. Zero quantity removes exactly one level; nonzero quantity replaces absolute quantity.
+23. Same timestamp with different update IDs remains distinct.
+24. Malformed JSON, wrong tuple arity, duplicate prices, invalid decimal and negative quantity fail closed.
+25. Buffer overflow never silently evicts an event; derived book becomes unavailable.
+
+### SD-07 — Bounded order-book snapshots (19 cases)
+
+1. Multi-level bid/ask rows group only with source capture ID and completion manifest.
+2. Manifest binds exact source kind/endpoint and request parameters.
+3. Requested limit is recorded and constrained to the source-supported allowlist.
+4. Actual bid count, ask count and total rows match the manifest.
+5. Complete bounded response is accepted only when every returned level is captured and digest/completion evidence agrees.
+6. A response at limit 1000 is not labeled a full-depth/full-book snapshot.
+7. Endpoint/source-kind mismatch is rejected.
+8. Ordinary non-RPI visibility is explicit and cannot be labeled all-liquidity.
+9. EOF, file rotation, elapsed time, stable file size or row count alone does not prove completeness.
+10. Partial write, restart, missing rows, count mismatch or digest mismatch quarantines the entire capture.
+11. Explicit empty-side declaration is distinct from absent rows.
+12. Missing capture ID or ambiguous repeated capture is quarantined.
+13. Duplicate side/price, mixed metadata or invalid decimal is rejected.
+14. Same identity/same complete bounded level set is replay.
+15. Same identity/changed level set is conflict; no merge or overwrite.
+16. Snapshot update ID anchors only the returned bounded state.
+17. Later update outside initial price boundary does not establish unseen deeper levels or full top-N ranking.
+18. Snapshot REST E/T are preserved separately if source supplies them; otherwise each is explicitly unavailable, never replaced by CSV capture time.
+19. Snapshot group row/byte/level/token ceiling rejects the whole capture with bounded evidence and no partial acceptance.
+
+### Cross-domain cursor, checkpoint and recovery (8 cases)
+
+1. Durable source intake outcome advances source-delivery cursor only after evidence/outcome commit.
+2. Durable GAP_UNRESOLVED quarantine may advance source cursor while book watermark remains unchanged.
+3. Source acknowledgement never implies sequence continuity or book watermark advancement.
+4. Crash between observation persistence and cursor commit does not skip the source position.
+5. Crash between diff application and book watermark commit does not apply the same diff twice.
+6. Restart resumes source intake and book application from their separate durable markers.
+7. Buffered but unapplied events do not advance book watermark.
+8. Conflict/resource rejection leaves book unavailable until reviewed recovery with a new bounded snapshot and verified bridge.
+
+**Proposed matrix total: 66 cases** (SD-05 14, SD-06 25, SD-07 19, cross-domain 8). Designed only; NOT EXECUTED.
 
 ## 10. Open design blockers before contract freeze
 
@@ -366,6 +422,10 @@ These cases are proposed only. No tests, fixtures, parser, validator or workflow
 | B-14 | Bounded reorder/gap policy numeric limits | Count/age bounds and gap wait determine memory safety and recovery correctness | Measure source behavior; owner-review max buffered events, max residence age, wait policy and resource budget before freeze |
 | B-15 | Native `nq` and depth transaction-time `T` fidelity | Current T1 CSV omits aggTrade `nq` and depth `T`; `q` and `nq` differ, while `E` and `T` are separate clocks | Inspect pinned T1 source/raw retention; decide versioned canonical vs raw-only fields; current CSV must explicitly mark both unavailable where absent |
 | B-16 | RPI visibility and source-domain scope | Ordinary depth excludes RPI and is not a complete all-liquidity book | Keep Phase B non-RPI; separately approve any RPI stream and merge contract before inclusion |
+| B-17 | AggTrade E/T and CSV source fidelity | E is event time; T is trade time; current CSV timestamp_ms is documented as trade time but exact parser mapping is not verified | Inspect pinned T1 parser/source read-only; preserve E/T distinctly; never map timestamp_ms to E |
+| B-18 | Snapshot bounded-depth source manifest | A fully captured top-N response is not a full exchange book | Manifest binds endpoint/source kind, requested limit, actual bid/ask counts, total rows, capture ID, digest, completion and non-RPI scope; define bounded derived-view semantics |
+| B-19 | Independent source cursor and book watermark | Durable quarantine acknowledgement can coexist with unresolved book sequence gap | Freeze separate cursor definitions, atomicity, restart/replay and acknowledgement semantics; align with B-12 |
+| B-20 | Parser and capture resource ceilings | Count/age limits alone do not bound memory, parsing CPU or snapshot group accumulation | Measure and owner-review max raw bytes, levels, numeric token size/precision, buffer bytes and snapshot group rows/bytes; add fail-closed tests |
 
 ## 11. Phase B exit criteria and owner review
 
@@ -374,9 +434,9 @@ These cases are proposed only. No tests, fixtures, parser, validator or workflow
 - [x] Candidate identity and domain-specific sequence/grouping semantics described.
 - [x] Timestamp/provenance limitations called out without fabricated receive times.
 - [x] Replay/conflict/quarantine/acknowledgement behavior drafted.
-- [x] Synthetic test matrix expanded for cross-epoch identity, capture completeness, q/nq distinction, RPI scope, E/T time fidelity, bounded reordering, gap recovery and checkpoint fail-closed behavior; explicitly marked NOT EXECUTED.
+- [x] Synthetic test matrix expanded to 66 proposed cases, including E/T separation, unverified q mapping, bounded top-N snapshots, independent cursors and byte/level/token/group resource ceilings; explicitly marked NOT EXECUTED.
 - [x] Contract-freeze blockers recorded.
-- [ ] B-01 through B-16 resolved or explicitly accepted as bounded exclusions by owner.
+- [ ] B-01 through B-20 resolved or explicitly accepted as bounded exclusions by owner.
 - [ ] Canonical DTO/envelope, digest encoding, snapshot capture/group identity and diff stream epoch contract reviewed/frozen.
 - [ ] Independent design review completed and findings resolved.
 
