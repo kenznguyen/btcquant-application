@@ -145,4 +145,6 @@ Approval did not authorize any excluded database, archive, importer, runtime, de
 - Runtime: CPython 3.13.18, Ubuntu 26.04.1. Workflow installed pinned test dependencies FastAPI 0.116.1 and httpx 0.28.1.
 - Same-session **SELF-REVIEW COMPLETE**. No independent second-person review is claimed.
 - DDL/SQLite/archive/importer/Canonical T0/MAY-10/REST tail/T1/T2/VPS/runtime/deployment/retention/trading: **NOT AUTHORIZED / NOT TOUCHED**.
+
+- Final `main` HEAD confirmation after recording the owner approval/PASS status in the contract document: workflow run `44976543815`, job `137067027769`, exact source SHA `d1651196af3059e00b22f65461dbd897e5c599df`; contract blob `da89266c7c4d1394c731b1c2304cdb73b077d4f6`. Results remained S3 30/30, V1 24/24, market_data 387/387, all exit 0. Artifact `t0-s3-green-verification-44976543815`, ID `14735332978`, SHA-256 `a359d04c458a8545e386a288ef5ad6219d6f7bb9d31a6525778444eefeb40cf8`.
 - Disposition: bounded S3 GREEN implementation and verification **PASS**. This is not archive acquisition/validation, staging DB acceptance, or promotion authorization.
