@@ -1,3 +1,22 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B design review requests changes
+
+- Review record: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_2026-11-22.md`, commit `347dbcec6f7ddedac4ac1c8e90ee57c549ae49ef`.
+- Reviewed Phase B design baseline: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`, commit `efbce3477c367ddc7be3e7ccfb430ba897b3e9d8`, blob `ca57a4f8628d95471bdd575d3846b1db49a4f1f5`.
+- Verdict: **REQUEST CHANGES — PHASE B DESIGN NOT APPROVED**.
+- Required findings R-01..R-06:
+  1. Separate SD-06 canonical event identity from stream/session epoch.
+  2. Make snapshot capture identity and completeness proof hard acceptance gates.
+  3. Account for Binance USD-M Aggregate Trade `nq` missing from documented T1 CSV.
+  4. Explicitly define non-RPI vs RPI depth scope.
+  5. Account for depth transaction time `T` missing from documented T1 CSV.
+  6. Define bounded out-of-order handling, gap detection/recovery and checkpoint behavior.
+- Existing B-01..B-13 source/provenance/checkpoint/API blockers remain open; do not freeze contracts by assumption.
+- Phase B remains documentation-only. No code, tests, fixtures, DDL, DB, data movement, T1 source/runtime, network, credentials, T1→T0/T2, VPS/deployment or trading actions.
+- Tests/workflows/artifacts: **NOT RUN / NONE**.
+- Next: revise Phase B design for R-01..R-06, then request another owner review. Do not begin Phase C or implementation.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase A owner-approved; Phase B documentation-only design in progress
 
 - Owner review decision: **PHASE A DESIGN APPROVED; PHASE B DOCUMENTATION-ONLY AUTHORIZED**. Owner note: none.
