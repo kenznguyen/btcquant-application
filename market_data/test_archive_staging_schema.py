@@ -288,5 +288,147 @@ class StagingSchemaV2Tests(unittest.TestCase):
             """, (run_id, "g" * 64))
 
 
+    def test_every_mandatory_verified_and_accepted_field_rejects_null(self):
+        def insert_values(table, values):
+            columns = tuple(values)
+            placeholders = ",".join("?" for _ in columns)
+            self.db.execute(
+                f"INSERT INTO {table}({','.join(columns)}) VALUES({placeholders})",
+                tuple(values[column] for column in columns),
+            )
+
+        object_fields = (
+            "requested_key", "expected_size_bytes", "expected_sha256",
+            "measured_size_bytes", "measured_sha256", "response_status",
+            "local_relative_path", "exclusive_create", "workflow_run_id",
+            "workflow_job_id", "workflow_event", "trigger_sha", "checkout_sha",
+            "retrieved_at_utc",
+        )
+        for i, field in enumerate(object_fields, start=1):
+            key = f"null-object-{i}.zip"
+            values = {
+                "object_id": "obj1:" + f"{i:064x}",
+                "inventory_id": "inv1:" + "1" * 64,
+                "inventory_blob_sha256": "0" * 64,
+                "inventory_entry_identity": f"synthetic-entry-{i}",
+                "object_key": key, "object_kind": "ZIP", "timeframe": "15m",
+                "partition": "monthly", "period": "2022-08",
+                "paired_object_key": f"null-object-{i}.CHECKSUM",
+                "requested_key": key, "expected_size_bytes": 1,
+                "expected_sha256": "1" * 64, "measured_size_bytes": 1,
+                "measured_sha256": "2" * 64, "response_bytes_total": 1,
+                "response_status": 200, "local_relative_path": f"synthetic/{i}.zip",
+                "exclusive_create": 1, "workflow_run_id": "123",
+                "workflow_job_id": "456", "workflow_event": "workflow_dispatch",
+                "trigger_sha": "3" * 40, "checkout_sha": "4" * 40,
+                "retrieved_at_utc": "2026-01-01T00:00:00Z",
+                "verification_status": "VERIFIED",
+            }
+            values[field] = None
+            with self.subTest(table="archive_objects", field=field), self.assertRaises(sqlite3.IntegrityError):
+                insert_values("archive_objects", values)
+
+        pair_fields = (
+            "zip_size_bytes", "zip_sha256", "sidecar_size_bytes",
+            "sidecar_sha256", "sidecar_asserted_zip_sha256", "assertion_matches",
+            "zip_crc_ok", "candidate_member_count", "structural_ok",
+        )
+        for i, field in enumerate(pair_fields, start=1):
+            left = chr(33 + i * 2)
+            right = chr(34 + i * 2)
+            zip_id = self._insert_quarantined_object(left)
+            sidecar_id = self._insert_quarantined_object(right)
+            values = {
+                "pair_id": "pair1:" + f"{i:064x}", "zip_object_id": zip_id,
+                "sidecar_object_id": sidecar_id, "zip_size_bytes": 1,
+                "zip_sha256": "1" * 64, "sidecar_size_bytes": 1,
+                "sidecar_sha256": "2" * 64, "sidecar_asserted_zip_sha256": "1" * 64,
+                "assertion_matches": 1, "zip_crc_ok": 1,
+                "candidate_member_count": 1, "structural_ok": 1,
+                "disposition": "VERIFIED",
+            }
+            values[field] = None
+            with self.subTest(table="archive_pairs", field=field), self.assertRaises(sqlite3.IntegrityError):
+                insert_values("archive_pairs", values)
+
+        member_fields = (
+            "member_id", "member_path", "member_size_bytes", "member_sha256",
+            "encoding", "bom_present", "newline", "delimiter", "header_present",
+            "header_contract_id", "parser_contract_id", "parser_source_sha",
+            "data_row_count", "first_open_time_ms", "last_open_time_ms",
+        )
+        for i, field in enumerate(member_fields, start=1):
+            left = chr(65 + i * 2)
+            right = chr(66 + i * 2)
+            zip_id = self._insert_quarantined_object(left)
+            sidecar_id = self._insert_quarantined_object(right)
+            pair_id = "pair1:" + f"{100 + i:064x}"
+            insert_values("archive_pairs", {
+                "pair_id": pair_id, "zip_object_id": zip_id,
+                "sidecar_object_id": sidecar_id, "disposition": "QUARANTINED",
+                "failure_code": "SYNTHETIC_QUARANTINE",
+            })
+            member_key = chr(97 + i)
+            values = {
+                "candidate_id": "cand1:" + f"{i:064x}",
+                "member_id": "mem1:" + f"{i:064x}", "pair_id": pair_id,
+                "central_directory_ordinal": 1, "member_path": f"synthetic/{i}.csv",
+                "member_size_bytes": 1, "member_sha256": "5" * 64,
+                "encoding": "UTF-8", "bom_present": 0, "newline": "LF",
+                "delimiter": ",", "header_present": 1,
+                "header_contract_id": "T0_ARCHIVE_CSV_HEADER_V1",
+                "parser_contract_id": "T0_ARCHIVE_CSV_HEADER_V1",
+                "parser_source_sha": "6" * 40, "data_row_count": 1,
+                "first_open_time_ms": 0, "last_open_time_ms": 0,
+                "disposition": "VERIFIED",
+            }
+            values[field] = None
+            with self.subTest(table="csv_members", field=field), self.assertRaises(sqlite3.IntegrityError):
+                insert_values("csv_members", values)
+
+        source_fields = (
+            "member_id", "physical_record_ordinal", "data_row_ordinal",
+            "raw_fields_json", "raw_row_digest", "parser_contract_id",
+            "parser_source_sha", "importer_contract_id", "importer_source_sha",
+            "exchange", "market_type", "symbol", "timeframe", "open_time_ms",
+            "candle_value_id",
+        )
+        for i, field in enumerate(source_fields, start=1):
+            left = chr(97 + i)
+            right = chr(65 + i)
+            zip_id = self._insert_quarantined_object(left)
+            sidecar_id = self._insert_quarantined_object(right)
+            pair_id = "pair1:" + f"{200 + i:064x}"
+            insert_values("archive_pairs", {
+                "pair_id": pair_id, "zip_object_id": zip_id,
+                "sidecar_object_id": sidecar_id, "disposition": "QUARANTINED",
+                "failure_code": "SYNTHETIC_QUARANTINE",
+            })
+            member_id = "mem1:" + f"{200 + i:064x}"
+            insert_values("csv_members", {
+                "candidate_id": "cand1:" + f"{200 + i:064x}",
+                "member_id": member_id, "pair_id": pair_id,
+                "central_directory_ordinal": 1, "member_path": "synthetic.csv",
+                "member_size_bytes": 1, "member_sha256": "7" * 64,
+                "disposition": "QUARANTINED", "failure_code": "SYNTHETIC_QUARANTINE",
+            })
+            values = {
+                "source_row_id": "row1:" + f"{i:064x}", "member_id": member_id,
+                "physical_record_ordinal": 2, "data_row_ordinal": 1,
+                "raw_fields_json": '[""]', "raw_row_digest": "8" * 64,
+                "parser_contract_id": "T0_ARCHIVE_CSV_HEADER_V1",
+                "parser_source_sha": "9" * 40,
+                "importer_contract_id": "T0_ARCHIVE_IMPORTER_V1",
+                "importer_source_sha": "a" * 40, "exchange": "binance",
+                "market_type": "usdm", "symbol": "BTCUSDT", "timeframe": "15m",
+                "open_time_ms": 0, "candle_value_id": "cv1:" + "b" * 64,
+                "disposition": "ACCEPTED",
+            }
+            values[field] = None
+            with self.subTest(table="source_rows", field=field), self.assertRaises(sqlite3.IntegrityError):
+                insert_values("source_rows", values)
+
+
+
 if __name__ == "__main__":
     unittest.main()
