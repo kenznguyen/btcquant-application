@@ -690,6 +690,31 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.assertEqual(validate_provenance(reordered), baseline)
 
 
+    def test_inventory_digest_pin_mismatch_is_rejected(self) -> None:
+        self.payload["inventory_expected_sha256"] = "0" * 64
+        self.assert_s1_error("INVENTORY_RAW_BYTES_INVALID")
+
+    def test_malformed_inventory_json_is_rejected(self) -> None:
+        self.payload["inventory_raw_bytes"] = b'{"inventory_id":'
+        self.payload["inventory_expected_sha256"] = _sha(self.payload["inventory_raw_bytes"])
+        self.assert_s1_error("INVENTORY_RAW_BYTES_INVALID")
+
+    def test_missing_attempt_history_is_rejected(self) -> None:
+        self.payload["attempts"].pop(0)
+        self.assert_s1_error("OBJECT_ATTEMPT_HISTORY_INVALID")
+
+    def test_sidecar_assertion_mismatch_is_rejected(self) -> None:
+        self.payload["pairs"][0]["sidecar_asserted_zip_sha256"] = "0" * 64
+        self.assert_s1_error("ARCHIVE_PAIR_EVIDENCE_INVALID")
+
+    def test_member_header_contract_mismatch_is_rejected(self) -> None:
+        self.payload["members"][0]["header_contract_id"] = "UNSUPPORTED_HEADER"
+        self.assert_s1_error("CSV_MEMBER_EVIDENCE_INVALID")
+
+    def test_source_row_digest_mismatch_is_rejected(self) -> None:
+        self.payload["source_rows"][0]["raw_row_digest"] = "0" * 64
+        self.assert_s1_error("SOURCE_ROW_PROVENANCE_INVALID")
+
     def test_malformed_unhashable_nested_references_fail_closed_without_raising(self) -> None:
         payload = copy.deepcopy(self.payload)
         payload["members"][0]["pair_id"] = []
