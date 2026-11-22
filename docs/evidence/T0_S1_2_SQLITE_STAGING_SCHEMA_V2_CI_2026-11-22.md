@@ -81,3 +81,26 @@ The schema suite exercises STRICT tables, foreign-key enablement, NULL-safe VERI
 - A later design amendment records that the executable fingerprint manifest includes trigger DDL because triggers enforce append-only semantics.
 - No raw archives, sidecars, real historical rows, Canonical T0, MAY-10, REST tail, B8 runner, host/workstation, T1/T2, VPS, deployment, credentials, exchange or trading state was accessed or changed.
 - No staging data build, real-data import, upload, retention change, deletion or cleanup occurred.
+
+
+## 6. Final exact-SHA verification after digest/status hardening
+
+A final verification run supersedes the earlier run #16 checkpoint:
+
+- Workflow run [45001567714](https://github.com/kenznguyen/btcquant-application/actions/runs/45001567714), run #18.
+- Job: `Importer-core synthetic tests`, ID `137144031470`, conclusion **SUCCESS**.
+- Exact requested and checked-out source SHA: `2844e51dfe2a6a9ab0f02376a722cce257019faa`.
+- CPython 3.13.18 / SQLite 3.45.1; STRICT runtime gate PASS.
+- Importer-core: 20 tests PASS.
+- S1.2 adapter: 10 tests PASS.
+- SQLite staging schema: **13 tests PASS**. Added tests reject malformed lowercase-hex digests, invalid HTTP status values 99/600, invalid attempt expected SHA and invalid run-event snapshot digest.
+- Complete `market_data` regression: **444 tests PASS**, CPython 3.12.16 with hash-locked dependencies.
+- All job steps, including exact checkout, focused suites, dependency verification/install and full regression: SUCCESS.
+- Artifact endpoint: 0 artifacts.
+
+Final follow-up commits:
+- Digest/HTTP status implementation: `96b80530938b34f0c67ea2139e144835fbdc6f1b`.
+- Final digest/status tests: `2844e51dfe2a6a9ab0f02376a722cce257019faa`.
+- Executable implementation amendment update: `02c31307494ad70b83ac70170cacdc7d88925a34`.
+
+The initial schema RED evidence remains run #9 at `d78170cf084f988ef83f8fe79ee85a1d43b1f584`. The additional digest/status tests were committed before their final implementation verification, but their individual pre-fix RED run was not captured as a separate Actions run; their final GREEN behavior is confirmed by run #18.
