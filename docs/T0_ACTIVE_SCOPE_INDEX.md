@@ -1,3 +1,17 @@
+# ARCHITECTURE STATUS OVERRIDE — 2026-11-22 — Independent Multi-Source Data Foundation OWNER-APPROVED
+
+- Controlling decision: `docs/decisions/INDEPENDENT_MULTI_SOURCE_DATA_FOUNDATION_OWNER_DECISION_2026-11-22.md`, recorded in commit `f8d2dacc8d33b05114403a8ba5ceb286be44d6f3`.
+- Owner explicitly confirms that Independent Multi-Source Data Foundation was approved. Current repository history inspected in this reconciliation did not expose the original approval date/commit; do not invent one.
+- T0 is the independent multi-source Data Foundation and canonical ownership boundary for accepted market data. T1 remains a specialized collector in its own repository and supplies source data to T0 through separately approved contracts/ingestion. T1 is not a competing canonical store.
+- Preserve T1 code ownership and raw capture/replay implementation in `kenznguyen/binance-futures-collector`; do not copy/fork the full collector into `btcquant-application`.
+- This supersedes older statements that T0 and T1 are independent competing data assets or that the approved architecture has no T1→T0 data path. It does not itself authorize T1→T0 runtime connectivity.
+- SQLite remains the recorded T0 storage direction. Former Canonical SQLite remains LOST; reconstructed SQLite remains NOT CREATED per latest T0 records. No DB creation/migration/promotion/cutover is authorized by this architecture correction.
+- T2 Core and independent AI consume versioned T0 datasets; derived features/caches/training bundles are not competing canonical stores. All trade intents remain behind shared risk controls; paper-first/no-live-trading restrictions remain.
+- This is documentation/governance only. No tests/workflows, database, source ingestion, runtime, VPS, deployment, provider activation or trading actions.
+- Current implementation status: **NOT VERIFIED / NOT COMPLETE**. Next: design source-domain inventory and canonical ingestion contracts only; obtain separate approval before implementation or runtime.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — New SQLite Canonical target approved (architecture only)
 
 - Owner decision: `docs/decisions/T0_NEW_SQLITE_CANONICAL_TARGET_OWNER_DECISION_2026-11-22.md`, commit `0498e68b0a3e967f27c7265759477a6e7ca05c6d`.
