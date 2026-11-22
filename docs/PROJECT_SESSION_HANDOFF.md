@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 7 submitted for design review
+
+- Review PR: [PR #7](https://github.com/kenznguyen/btcquant-application/pull/7), OPEN / NOT MERGED / DO NOT MERGE.
+- Review branch: `review/t0-phase-b-design-r7-final-20261122`; head `5442557a5419cd20625dd5207b45b5f85546ac7f`; base main `470b220b95936cb9db408f268e4ebcf8af8cd02c`.
+- Exact source design commit: `a7a661137bc33cedfed61eab2d37bf42168b3caf`; blob `7fad5fa69698770c8fe02efd692cf4056b7ac7db`.
+- Self-check commit: `5442557a5419cd20625dd5207b45b5f85546ac7f`; blob `ecc45f544bf76fa7c7292c9f5fd1d9c44e0fcd3f`.
+- Immutable Revision 6 baseline: `9b69c18ea16731bf28efba7a92077e96a74107ce`; blob `7012a228561620f4447a0e363a2c5f27d734912a`.
+- PR #7 review status: PENDING; independent review verdict NOT VERIFIED. No workflow/artifact evidence is claimed.
+- P2-1..P2-3 documented as specified above. Proposed matrix 98 cases, NOT EXECUTED. B-01..B-20 OPEN / unchanged; B-07 OPEN.
+- Static checks PASS, tests NOT RUN / NONE; contract freeze NOT APPROVED.
+- Documentation-only; no implementation, database, runtime, T1 activation, deployment, Phase C or trading authorization.
+- Next: await review of PR #7; keep it DO NOT MERGE until explicit owner decision. No implementation work without separate approval.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 7 prepared; P2 corrections documented
 
 - Exact Revision 7 design path: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
