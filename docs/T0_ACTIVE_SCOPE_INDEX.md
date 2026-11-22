@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B source audit, R10 review and contract proposal
+
+- R10 exact reviewed source: commit `b32d9af088099f92b09d113ecfa27056cfd9b83d`, blob `a8934cb862c330f1d1fa72aa1f3fdb2b22f9ac96`.
+- Exact-SHA review: `docs/reviews/T0_PHASE_B_REVISION_10_EXACT_SHA_REVIEW_2026-11-22.md`; verdict PASS WITH CONDITIONS for continued documentation, NOT READY FOR CONTRACT FREEZE. This is not independent second-person review.
+- T1 read-only source audit: `docs/evidence/T1_AGGTRADE_TIMESTAMP_SOURCE_MAPPING_AUDIT_2026-11-22.md`; source mapping `native T → trade_time → timestamp_ms` PASS. T1 deployed binary/build provenance NOT VERIFIED; B-17 remains OPEN.
+- T1 source commit inspected: `c91a8c22d3b6236c98ab9a4d4d69b25d47f7f738`; source blobs: models `993419725268d1308645e3a37c15e9779a9e92cc`, message handler `7d7f221fbf4b31470049baea55584645352f61b7`, CSV writer `2c4538dcef7dfa758a854292031239c15f7c282b`, constants `0bf50b5fe02f4f196b38481cde6ecab9e2adb941`, schema `895f87a8281a3f9b6d37d96b5f68568e4285bee6`.
+- New contract proposal: `docs/design/T0_PHASE_B_CANONICAL_DTO_DIGEST_CHECKPOINT_ATOMIC_PERSISTENCE_DESIGN_V1_2026-11-22.md`; logical DTOs, raw/canonical digest distinction, deterministic digest framing, separate source cursor/book watermark and atomic transaction/crash recovery specified. **PROPOSED — NOT FROZEN; no implementation authorization.**
+- Current blocker status in proposal: B-01 PARTIAL; B-02 OPEN; B-03 source mapping resolved only; B-04..B-10 OPEN; B-11/B-12 design specified but unverified; B-13 CLOSED bounded exclusion; B-14 OPEN; B-15 OPEN (T1 nq omission and depth T drop confirmed); B-16 CLOSED bounded exclusion; B-17 OPEN pending build provenance; B-18 OPEN; B-19 design specified but unverified; B-20 OPEN.
+- Approval request: `docs/decisions/T0_PHASE_B_101_SYNTHETIC_CASES_OWNER_APPROVAL_REQUEST_2026-11-22.md`; status PENDING. **Do not create fixtures, implement tests, execute the 101 cases or dispatch workflow until explicit owner approval.**
+- R10 findings: inherited Revision 9 status text remains in the R10 overlay; create a consolidated successor before freeze. R10 remains immutable.
+- Tests/fixtures: NOT CREATED/RUN. Workflow run/artifacts: NONE for this documentation-only work. Independent second-person review: NOT VERIFIED.
+- Contract Freeze: **NOT APPROVED**. Implementation, DDL, database, data movement, T0/T1 runtime, T2 integration, VPS deployment, autostart and trading: **NOT AUTHORIZED**.
+- No source implementation, parser, DTO, validator, database, fixture, test, runtime or data was changed.
+
+---
+
 ## Revision 10 exact GitHub evidence — 2026-11-22
 
 - Decision record commit/blob: `a38613c927305c37d6842c02a47b79abe3899c8b` / `3dbf040517675e614173bd768a9399c3a02f198a`.
