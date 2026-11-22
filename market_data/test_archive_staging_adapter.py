@@ -370,3 +370,78 @@ class StrictPhysicalDTOFieldTests(unittest.TestCase):
             RunEnvelope(**{**values, "singleton_key": True})
         with self.assertRaises((TypeError, ValueError)):
             RunEnvelope(**{**values, "inventory_raw_bytes": "{}"})
+
+
+class S3V1ProjectionAndGraphREDTests(unittest.TestCase):
+    @staticmethod
+    def _minimal_projection(*, event_sequence=(1, 2)):
+        import hashlib
+        from market_data.archive_staging_adapter import (
+            RunEnvelope, RunEvent, StagingProjection,
+        )
+
+        inventory_id = "inv1:" + "2" * 64
+        inventory_raw = (
+            '{"inventory_id":"' + inventory_id + '","objects":[]}'
+        ).encode("utf-8")
+        manifest_json = '{"manifest_version":"T0-COVERAGE-MANIFEST-V1"}'
+        run = RunEnvelope(
+            singleton_key=1, run_id="run1:" + "1" * 64,
+            inventory_id=inventory_id,
+            inventory_blob_sha256=hashlib.sha256(inventory_raw).hexdigest(),
+            inventory_raw_bytes=inventory_raw,
+            label="RECONSTRUCTED — PARTIAL COVERAGE",
+            parser_contract_id="T0_ARCHIVE_CSV_HEADER_V1",
+            parser_source_sha="a" * 40, importer_source_sha="b" * 40,
+            schema_contract_id="T0_STAGING_SCHEMA_V2",
+            schema_fingerprint_sha256="c" * 64,
+            created_at_utc="2026-11-22T00:00:00.000Z",
+            coverage_manifest_json=manifest_json,
+            coverage_manifest_sha256=hashlib.sha256(manifest_json.encode()).hexdigest(),
+        )
+        events = (
+            RunEvent(
+                run_id=run.run_id, event_seq=event_sequence[0], event_type="BUILDING",
+                occurred_at_utc="2026-11-22T00:00:00.000Z", reason_code=None,
+                candidate_snapshot_sha256=None, validator_payload_sha256=None,
+            ),
+            RunEvent(
+                run_id=run.run_id, event_seq=event_sequence[1], event_type="CANDIDATE",
+                occurred_at_utc="2026-11-22T00:00:01.000Z", reason_code=None,
+                candidate_snapshot_sha256="d" * 64, validator_payload_sha256=None,
+            ),
+        )
+        return StagingProjection(
+            run=run, objects=(), attempts=(), successful_attempts=(), pairs=(),
+            members=(), source_rows=(), candles=(), links=(),
+            failure_observations=(), run_events=events,
+        )
+
+    def test_builds_unchanged_s3_v1_collection_keys_and_s1_envelope(self):
+        from market_data.archive_staging_adapter import build_s3_v1_payload
+
+        projection = self._minimal_projection()
+        payload = build_s3_v1_payload(projection)
+        self.assertEqual(
+            set(payload),
+            {
+                "inventory", "objects", "pairs", "members", "attempts",
+                "source_rows", "candles", "links", "contract_version",
+                "inventory_raw_bytes", "inventory_expected_sha256",
+                "inventory_expected_id", "coverage_manifest", "run",
+            },
+        )
+        self.assertEqual(payload["contract_version"], "T0_PROVENANCE_VALIDATOR_S1_V1")
+        self.assertEqual(payload["inventory_raw_bytes"], projection.run.inventory_raw_bytes)
+        self.assertEqual(payload["inventory_expected_id"], projection.run.inventory_id)
+        self.assertEqual(payload["run"]["status"], "CANDIDATE")
+        self.assertEqual(payload["run"]["schema_contract_id"], "T0_STAGING_SCHEMA_V2")
+        self.assertEqual(payload["objects"], ())
+        self.assertEqual(payload["attempts"], ())
+
+    def test_graph_validator_rejects_noncontiguous_event_sequence(self):
+        from market_data.archive_staging_adapter import validate_staging_graph
+
+        result = validate_staging_graph(self._minimal_projection(event_sequence=(1, 3)))
+        self.assertFalse(result.valid)
+        self.assertIn("RUN_EVENT_SEQUENCE_INVALID", result.error_codes)
