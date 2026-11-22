@@ -1,3 +1,14 @@
+## Revision 10 exact GitHub evidence — 2026-11-22
+
+- Decision record commit/blob: `a38613c927305c37d6842c02a47b79abe3899c8b` / `3dbf040517675e614173bd768a9399c3a02f198a`.
+- Inventory identity amendment commit/blob: `c2a8cf85ca5c203164b5731ff36c166aa1312217` / `3a774fc1a657a5a66dc85289664e5555215b43ac`.
+- Revision 10 design commit/blob: `b32d9af088099f92b09d113ecfa27056cfd9b83d` / `a8934cb862c330f1d1fa72aa1f3fdb2b22f9ac96`.
+- Contract Freeze readiness dossier commit/blob: `cdab4e5ac02d5b163bf45d77e3fc7320a4519833` / `8ac260d609a2c814000592f0a6e16dcaccb60ee4`.
+- Static document checks: PASS — all B-01..B-20 present (20 unique IDs); B-13/B-16 CLOSED as bounded exclusions; B-17 OPEN pending parser proof; SD-06/SD-07 identity amendment present; 101-case matrix still NOT EXECUTED; dossier says NOT READY FOR CONTRACT FREEZE.
+- Workflow run/job/artifact: NONE verified or produced for this documentation-only update.
+- Tests/formal proofs: NOT RUN. Independent second-person review of exact Revision 10 SHA: NOT VERIFIED.
+- Handoff/index progress commits from this update are recorded in Git history; no PR opened and no PR merged.
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B Revision 10 owner decisions recorded
 
 - Owner decision: `docs/decisions/T0_PHASE_B_BOUNDED_EXCLUSIONS_AND_IDENTITY_SUPERSESSION_OWNER_DECISION_2026-11-22.md`.
