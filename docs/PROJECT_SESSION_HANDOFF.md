@@ -6926,3 +6926,17 @@ Owner approved both the narrow workflow correction and one third dispatch. Run 2
 - No implementation, tests, workflow YAML, workflow dispatch, artifact upload or artifact-retention setting change has occurred. No archive/sidecar, host, filesystem, SQLite, importer, staging, runtime or trading action occurred.
 - B3 real archive-format coverage remains NOT VERIFIED; B5 source-derived coverage remains NOT VERIFIED; concrete destination remains DEFERRED / NOT SELECTED; B8 real importer/SQLite build remains NOT AUTHORIZED.
 - Next gate: explicit owner approval/rejection of the exact G1 request. Partial approval must name accepted items. Do not begin implementation before approval.
+
+
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1.2 independent DDL/compatibility review
+
+- Review report: `docs/reviews/T0_S1_2_INDEPENDENT_DDL_COMPATIBILITY_REVIEW_2026-11-22.md`, report commit `b2901a33220368597b332b3d1878c5937b9e9d3f`.
+- Exact review baseline `main` SHA: `3e178d5d4bd1bcb5bb652798ddadf31034b91580`; S1.2 blob: `78ec1b642e9b5b5e4e161f7e4afdbfe3bccf0d3b`.
+- Review type: fresh read-only static review; no second-human/external reviewer is claimed.
+- Verdict: **DO NOT FREEZE S1.2 YET — REQUIRED DESIGN REVISIONS**.
+- Required findings: SQLite CHECK/NULL bypasses in VERIFIED/ACCEPTED branches; incomplete S3/V1 projection (attempt outcome vocabulary and missing attempt expected fields); headerless parser/ordinal mismatch with current S3; inaccurate conflict reason for importer-core source-only-field conflicts; one-run-per-database invariant not enforced; B8 runner execution/security provenance contract incomplete; cross-table FK/application-only invariant list needs tightening.
+- Optional: define signed 64-bit upper bounds for persisted SQLite INTEGER values.
+- No SQL/DDL was executed or parsed by SQLite. SQL syntax/runtime compatibility and actual FK behavior remain **NOT VERIFIED**.
+- No source, tests, workflow, adapter, adapter tests, DDL implementation, SQLite connection/database, archive/sidecar, host/runner, Canonical T0, MAY-10, T1/T2, VPS/runtime, credentials, exchange or trading state changed or accessed. Workflow run/artifact: **NONE**.
+- Persistence remains **DEFERRED / NOT AUTHORIZED**. Adapter, adapter tests, SQLite implementation, runner provisioning and archive/build work remain separate approval gates.
+- Next: owner decision on the S1.2 revision request. Re-review the revised exact SHA before any S1.2 freeze decision.
