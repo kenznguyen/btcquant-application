@@ -37,6 +37,10 @@ The fingerprint covers exact table, index and trigger DDL plus `PRAGMA user_vers
 
 All persisted SHA-256 and SHA-1 digest fields use exact lowercase hexadecimal grammar, not length-only checks. SQL constraints require the expected length and reject any character outside `[0-9a-f]`. Optional digest fields may be NULL only where their evidence state permits it. VERIFIED object, VERIFIED pair/member and ACCEPTED source-row branches still require their mandatory evidence explicitly non-NULL.
 
+
+- HTTP `response_status`, when present, is constrained to the valid 100–599 range; the VERIFIED object branch separately requires it to be non-NULL.
+- Run-event candidate snapshot and validator payload digests use the same exact lowercase SHA-256 grammar.
+
 SQLite STRICT INTEGER storage supplies the signed 64-bit storage boundary; nonnegative field constraints reject negative sizes, ordinals, counts and timestamps where the contract requires nonnegative values.
 
 ## 4. Controlled initialization and verification
