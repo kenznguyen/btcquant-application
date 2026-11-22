@@ -934,3 +934,19 @@
 - Documentation-only. No code/database/runtime/deployment/Phase C/trading authorization.
 - Next: await review; keep PR #7 DO NOT MERGE until explicit owner decision.
 
+
+## PR #7 review and Revision 8 follow-up
+
+- PR #7: OPEN / NOT MERGED / DO NOT MERGE — https://github.com/kenznguyen/btcquant-application/pull/7
+- Reviewed head: `f623bc8dd878bf4f897f727f07afbed968f581c4`. Codex review retriggered for this exact SHA; latest observed status RUNNING / PENDING. Earlier no-findings report was tied to an older commit.
+- Graphify AI review skipped docs-only change; static health PASS; tests/formal proofs NOT RUN.
+- Manual finding P2-4: B-07's old wording (“capture ID bound to symbol/market/kind/update ID”) was ambiguous/contradictory to producer-pair-only key. Recorded in PR #7 comment `7080789205`.
+- Revision 8 design commit/blob: `9a5c65f3bc00876d98a070eee46072c5d8be368e` / `8f40248f2781cdf4111ef022b77843acea8279b2`.
+- Revision 8 self-review commit/blob: `1c55ef8772fb33cc51d64182217de925d1d1a45d` / `6e1c382e4949103b200d6c0dd6f88383c88eb464`; SELF-CHECK PASS, not independent review or owner approval.
+- PR #8: OPEN / NOT MERGED / DO NOT MERGE — https://github.com/kenznguyen/btcquant-application/pull/8. Stacked on PR #7 for focused B-07 follow-up. Codex review requested; PENDING.
+- Revision 7 and Revision 6 source baselines preserved unchanged.
+- P2-1..P2-3 retained; P2-4 clarified. B-01..B-20 remain OPEN; B-07 remains OPEN pending proof. 98 synthetic cases NOT EXECUTED.
+- Static document checks PASS; tests/workflows/artifacts NOT RUN / NONE; independent review NOT VERIFIED; contract freeze NOT APPROVED.
+- Documentation-only. No implementation, database, runtime, deployment, Phase C or trading authorization.
+- Next: await exact-head automated reviews for PR #7 and PR #8; address further findings only through docs-only revision. Keep both PRs DO NOT MERGE.
+
