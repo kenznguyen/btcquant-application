@@ -1,3 +1,15 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B design review REQUEST CHANGES
+
+- Review: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_2026-11-22.md`, commit `347dbcec6f7ddedac4ac1c8e90ee57c549ae49ef`.
+- Reviewed design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`, commit `efbce3477c367ddc7be3e7ccfb430ba897b3e9d8`.
+- Verdict: **REQUEST CHANGES — PHASE B DESIGN NOT APPROVED**.
+- Required R-01..R-06: (1) separate canonical depth event identity from stream epoch; (2) snapshot capture identity/completeness proof; (3) aggTrade `nq` source-field omission; (4) explicit RPI scope; (5) depth transaction time `T` omission; (6) bounded out-of-order/gap/recovery/checkpoint rules.
+- B-01..B-13 remain open. Phase B stays documentation-only. No implementation/runtime/data operations authorized.
+- Tests/workflows/artifacts: **NOT RUN / NONE**.
+- Next: revise Phase B design and resubmit for review. Phase C remains gated.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase A approved; Phase B documentation-only draft complete
 
 - Owner decision record: `docs/decisions/T0_PHASE_A_OWNER_REVIEW_APPROVAL_AND_PHASE_B_DOCUMENTATION_AUTHORIZATION_2026-11-22.md`, commit `f2f5741cad47b86c70dae23dbaa9b497258cc80a`.
