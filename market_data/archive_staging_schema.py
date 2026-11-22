@@ -363,11 +363,15 @@ def initialize_staging_schema(connection: sqlite3.Connection) -> None:
         for statement in TRIGGER_DDL:
             connection.execute(statement)
         connection.execute("PRAGMA user_version=2")
+        connection.set_authorizer(_append_only_authorizer)
         connection.commit()
     except Exception:
         connection.rollback()
+        try:
+            connection.set_authorizer(None)
+        except sqlite3.Error:
+            pass
         raise
-    connection.set_authorizer(_append_only_authorizer)
 
 
 def _validate_disposable_test_path(database: Union[str, Path]) -> Path:
