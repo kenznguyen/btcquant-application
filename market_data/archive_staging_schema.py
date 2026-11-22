@@ -391,6 +391,8 @@ def connect_staging_database(
 ) -> sqlite3.Connection:
     """Open in-memory by default; file DBs require explicit disposable-test path policy."""
     _require_sqlite_version()
+    if type(allow_disposable_path) is not bool:
+        raise TypeError("allow_disposable_path must be an exact bool")
     created_path = None
     if str(database) == ":memory:":
         connection = sqlite3.connect(":memory:")
