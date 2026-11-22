@@ -721,7 +721,8 @@ class CompleteS3V1ProjectionFixtureTests(unittest.TestCase):
         self.assertEqual(len(payload["source_rows"]), 202)
         self.assertEqual(len(payload["candles"]), 202)
         self.assertEqual(len(payload["links"]), 202)
-        self.assertTrue(validate_provenance(payload).valid)
+        validation = validate_provenance(payload)
+        self.assertTrue(validation.valid, validation.error_codes)
         graph_result = validate_staging_graph(projection)
         self.assertTrue(graph_result.valid, graph_result.error_codes)
 
