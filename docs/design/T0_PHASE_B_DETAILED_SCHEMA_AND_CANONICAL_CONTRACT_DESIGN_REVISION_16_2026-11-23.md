@@ -639,7 +639,7 @@ B-13/B-16 closure is scope-only, not implementation or technical verification. B
 
 ## 13. Explicit exclusions
 
-This Phase B document authorizes no production implementation or runtime changes. The sole bounded test exception is the owner-approved isolated synthetic 101-case scope, sequenced after satisfactory independent review of exact Revision 15 SHA/blob. It authorizes no:
+This Phase B document authorizes no production implementation or runtime changes. The sole bounded test exception is the owner-approved isolated synthetic 101-case scope, sequenced after satisfactory independent review of exact Revision 16 SHA/blob. It authorizes no:
 - production code, DTO, parser, validator, adapter, dependency, API or workflow changes; test-only fixtures/harness are limited to the approved matrix and remain isolated;
 - T0 DDL/schema/database creation, open-for-write, migration, import, promotion, cutover or canonical data mutation;
 - T1 source-code change, collector activation, file copy, importer execution or T1→T0 runtime connection;
@@ -685,7 +685,7 @@ B-13 and B-16 are closed as scope decisions only; excluded capabilities are not 
 
 ### 14.2.1 PR #12 findings resolved in Revision 15
 
-1. All operative 101-case gates now reference satisfactory independent review of exact Revision 15 SHA/blob, including the consolidated matrix, this §14.3 and Annex A §10. R12–R14 references in historical snapshots are historical only.
+1. All operative 101-case gates now reference satisfactory independent review of exact Revision 16 SHA/blob, including the consolidated matrix, this §14.3 and Annex A §10. R12–R15 references in historical snapshots are historical only.
 2. `SourceDeliveryIntegrityConflictV1` is an immutable append-only evidence fact. Resolution is represented only by a separate append-only `SourceDeliveryIntegrityConflictResolutionV1`; status is derived and never written back to the conflict row.
 3. `source_object.sha256` and `raw_object_sha256` have identical semantics and MUST match the SHA-256 of the same exact immutable source-object bytes. Mismatch fails closed before canonical acceptance or acknowledgement.
 
