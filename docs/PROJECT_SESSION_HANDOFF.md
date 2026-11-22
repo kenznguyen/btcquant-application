@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — F2 read-only projection behavior tests GREEN; payload and graph remain open
+
+- Latest tested source SHA: `2b0c06cc3db6a73d5573dc75f7188306553bac13`; adapter source blob remains `3c7e0237c57f4d2dbf8beb8e38cc6582f75a2171`; latest adapter test blob `c70c6e5b11b37e11bc6ef0695aede77c9d0cd6b0`.
+- Exact-SHA workflow [45006997612](https://github.com/kenznguyen/btcquant-application/actions/runs/45006997612), job `137160698731`, SUCCESS; checkout SHA exactly matches.
+- Runtime: CPython 3.13.18 / SQLite 3.45.1.
+- Tests: importer-core 20/20 PASS; adapter 15/15 PASS; staging schema 14/14 PASS; full `market_data` regression 450/450 PASS. Artifacts: 0.
+- New behavioral tests verify raw inventory bytes preserved, initial BUILDING event projected, empty relations, missing run and missing BUILDING event rejected, no implicit `sqlite3.connect`, connection remains usable and transaction state unchanged.
+- Coverage still incomplete: populated row mapping across all eleven relations, multi-row deterministic ordering, mutation-proof read-only behavior and all failure branches need more tests.
+- F2 status **PARTIAL / SYNTHETIC CI PASS**. S3/V1 public payload assembly **NOT IMPLEMENTED**; graph validator **NOT IMPLEMENTED**; independent review **NOT RUN**; S1.2 **NOT FROZEN**. B8 **NOT APPROVED**; real-data build remains BLOCKED / NOT AUTHORIZED.
+- Evidence file: `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md`.
+- Next: test populated DTO mappings and deterministic ordering; then implement exact unchanged S3/V1 payload projection and pure graph validator with synthetic invariant-by-invariant TDD.
+- All previous exclusions remain unchanged: no real archive/sidecar access/acquisition, host/workstation/SSH/filesystem/runner preflight, B8 workflow/dispatch/runner, real-data staging, uploads/deletion/cleanup, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS/deployment, credentials, exchange or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — F2 DTO/read-only projection first slice GREEN; F2 remains PARTIAL
 
 - Latest source SHA tested: `70f9a7759be1fb5279d6b0f1d82a38cb27cce951`; implementation source blob `3c7e0237c57f4d2dbf8beb8e38cc6582f75a2171`; test blob `5bbe9bf62838eb41954153af28e47175a79c1fe4`.
