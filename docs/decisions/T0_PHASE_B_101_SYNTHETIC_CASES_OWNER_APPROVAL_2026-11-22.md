@@ -4,8 +4,8 @@
 - Decision: **APPROVED — BOUNDED SYNTHETIC TEST SCOPE**
 - Approver: project owner (explicit approval in project conversation)
 - Governing consolidated candidate: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_11_2026-11-22.md`
-- Revision 11 source commit at approval record: `b20e4b4f70a440ff05f8cd115e21bea7e76026a2`
-- Revision 11 document blob: `7567580c1dc570a18a041547256b200d013c5f44`
+- Revision 11 source commit at approval record: `0ac119c7cd31ba63d5aead6796c7b5560abf2a18`
+- Revision 11 document blob: `9d9639b4d26b42a90929f50a32b801e359b23197`
 - Immutable source baselines: Revision 10 commit/blob `b32d9af088099f92b09d113ecfa27056cfd9b83d` / `a8934cb862c330f1d1fa72aa1f3fdb2b22f9ac96`; DTO proposal blob `594066d98201a8cf0940b62fc36d9358033f06e0`.
 
 ## Approved scope
