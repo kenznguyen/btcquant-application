@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — populated SQLite → eleven DTO relations GREEN; F2 still needs exhaustive graph cases/review
+
+- Latest test source SHA: `6a71fe066e0ce80f9b3d580404682e5e2c216976`; test blob `69d708a198c201059df34e6210c699f9e533e2ac`; adapter source blob `78e82833fded534fc777dee2d2c7ed90dfd7ac61`.
+- Exact-SHA CI run [45007736688](https://github.com/kenznguyen/btcquant-application/actions/runs/45007736688), job `137162999481`, SUCCESS; checkout SHA matches.
+- Runtime CPython 3.13.18 / SQLite 3.45.1; importer-core 20/20, adapter 22/22, staging schema 14/14, full `market_data` regression 457/457 PASS; artifacts 0.
+- New disposable in-memory DB integration test inserts synthetic rows in all eleven relations and verifies populated DB→DTO mapping, deterministic ordering, raw inventory bytes, raw_fields_json, connection ownership and transaction preservation.
+- S3/V1 projection and graph validator already passed the 404/202 synthetic fixture at source SHA `1fade80a7c57348a0da605fbc292ad0ceb9d5efe`, run `45007572947`, job `137162475080`, adapter 21/21 and full regression 456/456 PASS.
+- Remaining gaps: exhaustive graph negative cases; multi-row deterministic ordering/edge cases for every relation; canonical coverage-manifest JSON verification; candidate snapshot digest binding; all F1–F7 tests after current source changes; independent review.
+- F2 **PARTIAL / SYNTHETIC CI PASS**; S1.2 **NOT FROZEN**; independent review **NOT RUN**; B8 **NOT APPROVED**; real-data build **NOT AUTHORIZED**.
+- Evidence: `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md`.
+- Next: close candidate snapshot/coverage-manifest binding and event transition matrix with synthetic TDD; expand multi-row ordering and relation edge tests; then exact-SHA full regression and independent review.
+- All exclusions remain unchanged: no real archive/sidecar access/acquisition, host/workstation/SSH/filesystem/runner preflight, B8 workflow/dispatch/runner, real-data staging, uploads/deletion/cleanup, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS/deployment, credentials, exchange or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — S3/V1 projection + graph validator synthetic GREEN; SQLite populated mapping remains open
 
 - Latest complete S3/V1 integration test SHA: `1fade80a7c57348a0da605fbc292ad0ceb9d5efe`; test blob `f1d656b5845fcf441ee0cd1aa0c3d8988877f2fd`. Adapter implementation source at preceding GREEN SHA `1fcf708216bf52ba7807532bcd799e569aa8ca01`; adapter blob `78e82833fded534fc777dee2d2c7ed90dfd7ac61`.
