@@ -1,4 +1,20 @@
-# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 15 review completed
+# CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 16 after PR #13 review
+
+- Owner approved autonomous remediation and iterative review: correct findings only in new immutable successor revisions; perform static self-review; request Codex review on each exact final PR head; repeat until the exact current revision passes the review gate. Once the design gate passes, proceed only with the already-approved isolated 101 synthetic cases.
+- PR #13 Codex review completed on exact head `6554529d9d8bd136c85643fdc43a68256b7e1989` with three unresolved P2 findings (review ID `PRR_kwDOVzv83s8AAAABZnV1sw`; comments `4659555256`, `4659555264`, `4659555270`). PR #13 remains OPEN / NOT MERGED / DO NOT MERGE.
+- R15 immutable design source remains commit `5bbbd6ac253b4f8c8d9aeccb28d77170b1897919`, blob `2b1cb4a8d0a7d40f9ebfb29ccaf9d9d14930cfc0`. Do not edit R15.
+- R16 design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_16_2026-11-23.md`; exact source commit `9160617f12a1b0830b5fe5f7244e6a4dede072db`; exact document blob `a6c727286e3c746d252fcaf07e872a92396b749a`.
+- R16 resolves all three PR #13 P2s: (1) all operative fixture gates now require review of exact R16 SHA/blob; (2) existing SD-07 case 10 explicitly tests `source_object.sha256 != raw_object_sha256` and fail-before-identity/completion/ACK without increasing the 101-case matrix; (3) filesystem/object-store publication requires no-clobber/create-if-absent, exact digest verification, distinct immutable evidence keys for changed observations, concurrent race handling, and fail-closed behavior.
+- R16 static self-review: **PASS** for operative gate references, explicit digest-alias mismatch case/order, unchanged 101 count, no-clobber/no-overwrite, existing-target verification, distinct evidence key, concurrent publication and fail-closed rules. Documentation/static checks only; no runtime or fault-injection tests/formal proofs run.
+- Findings/resolution report: `docs/reviews/T0_PHASE_B_REVISION_15_CODEX_FINDINGS_AND_R16_RESOLUTION_2026-11-23.md`; commit `b831b80ae4232f04369cc82268a950caabe72465`, blob `6fc9b7567b3c7bab7eab3314cf336853725df86c`.
+- Review-only PR #14: not yet created at this status snapshot. PR #13 remains historical review-only; do not merge.
+- Owner-approved synthetic scope remains 101 cases (SD-05 14, SD-06 31, SD-07 46, cross-domain 10). Fixtures/tests NOT CREATED / NOT RUN; execution remains gated on satisfactory independent review of exact R16 SHA/blob.
+- Workflow runs/jobs/artifacts for R16: NONE VERIFIED. Formal proofs: NOT RUN. Contract Freeze: NOT APPROVED.
+- No production implementation, DTO/parser/validator/persistence changes, DDL/database mutation, data movement, T0/T1 runtime, T2 integration, VPS/autostart, deployment, exchange connectivity, automatic execution or trading is authorized.
+
+---
+
+## Historical status snapshot — Revision 15 review completed
 
 - Codex reviewed exact PR #13 head `6554529d9d8bd136c85643fdc43a68256b7e1989`; review ID `PRR_kwDOVzv83s8AAAABZnV1sw`; submitted `2026-11-22T19:13:33Z`. Result: **COMPLETED WITH 3 UNRESOLVED P2 FINDINGS**.
 - R15 immutable design source remains commit `5bbbd6ac253b4f8c8d9aeccb28d77170b1897919`, blob `2b1cb4a8d0a7d40f9ebfb29ccaf9d9d14930cfc0`. Do not edit R15.
