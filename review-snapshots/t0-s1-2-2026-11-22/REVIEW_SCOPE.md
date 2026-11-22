@@ -15,8 +15,8 @@
 
 | Original path | Original Git blob SHA | Snapshot blob SHA | Identical |
 |---|---|---|---|
-| `market_data/archive_staging_schema.py` | `01720183179211a10aa90c38ba8474bbfe37b561` | `80393e2be87eafd0a2418dfbe48b91391712b8a2` | YES |
-| `market_data/test_archive_staging_schema.py` | `d915bf4a45be979fc5a4a4bde21426050243f1c1` | `46eaf32514c5622b6f9fa7dacbdf4f1bc1a0a356` | YES |
+| `market_data/archive_staging_schema.py` | `01720183179211a10aa90c38ba8474bbfe37b561` | `01720183179211a10aa90c38ba8474bbfe37b561` | YES |
+| `market_data/test_archive_staging_schema.py` | `d915bf4a45be979fc5a4a4bde21426050243f1c1` | `d915bf4a45be979fc5a4a4bde21426050243f1c1` | YES |
 | `market_data/archive_staging_adapter.py` | `70bcf83c37936593e394c8476134046a7da70f4c` | `70bcf83c37936593e394c8476134046a7da70f4c` | YES |
 | `market_data/test_archive_staging_adapter.py` | `19cd18b40cb61252094b5805eb9d3cc35a7ff39b` | `19cd18b40cb61252094b5805eb9d3cc35a7ff39b` | YES |
 | `market_data/archive_provenance_validator.py` | `b94bac0f82ae141984552409f99a5cff70435b3b` | `b94bac0f82ae141984552409f99a5cff70435b3b` | YES |
@@ -25,7 +25,7 @@
 | `docs/design/T0_ARCHIVE_STAGING_S1_2_PROVENANCE_IMPORTER_PHYSICAL_SCHEMA_SPEC_2026-11-22.md` | `2cff982c7503d47a3d13e102ac8e76f64e3f794f` | `2cff982c7503d47a3d13e102ac8e76f64e3f794f` | YES |
 | `docs/design/T0_ARCHIVE_STAGING_S1_2_COMPATIBILITY_AMENDMENT_A_2026-11-22.md` | `6f9476f696962c88f27421cdf83fb42a6b4f794f` | `6f9476f696962c88f27421cdf83fb42a6b4f794f` | YES |
 | `docs/design/T0_ARCHIVE_STAGING_S1_2_APPEND_ONLY_TRIGGER_COMPATIBILITY_AMENDMENT_B_2026-11-22.md` | `6d633e5f0e72ab47255076b09125570279d779d3` | `6d633e5f0e72ab47255076b09125570279d779d3` | YES |
-| `docs/design/T0_S1_2_F2_ADAPTER_GRAPH_IMPLEMENTATION_CONTRACT_2026-11-22.md` | `52f831aa249d1ef8380ff801002a4d83405a8c4a` | `52f831aa249d1ef8380ff801002a4d83405a8c4a` | YES |
+| `docs/design/T0_S1_2_F2_ADAPTER_GRAPH_IMPLEMENTATION_CONTRACT_2026-11-22.md` | `1238c5e6514cf6f36073e1dcae502fe3110b69c0` | `1238c5e6514cf6f36073e1dcae502fe3110b69c0` | YES |
 | `docs/decisions/T0_S1_2_ADAPTER_SQLITE_STAGING_OWNER_AUTHORIZATION_2026-11-22.md` | `afb1059e2f4b1307e878ac6a7b6592cf40fd1ebe` | `afb1059e2f4b1307e878ac6a7b6592cf40fd1ebe` | YES |
 | `docs/reviews/T0_S1_2_SQLITE_STAGING_SCHEMA_SELF_REVIEW_D7CDEA3_2026-11-22.md` | `0dddc314446465f384b7122f933ef0e807f85177` | `0dddc314446465f384b7122f933ef0e807f85177` | YES |
-| `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md` | `0ea309365feaa1ed6fcdeefa1a2d5ed1e835faf7` | `0ea309365feaa1ed6fcdeefa1a2d5ed1e835faf7` | YES |
+| `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md` | `b7c08fe4ea56a80a82f92fc18694cb10b6d6f4c3` | `b7c08fe4ea56a80a82f92fc18694cb10b6d6f4c3` | YES |
