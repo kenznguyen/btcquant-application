@@ -429,5 +429,80 @@ class StagingSchemaV2Tests(unittest.TestCase):
 
 
 
+class StagingSafetyAndAtomicityTests(unittest.TestCase):
+    def test_file_database_requires_explicit_disposable_path_policy(self):
+        with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
+            path = Path(directory) / "synthetic-staging.sqlite3"
+            with self.assertRaises((TypeError, ValueError)):
+                connect_staging_database(path)
+            self.assertFalse(path.exists())
+
+    def test_disposable_path_policy_rejects_existing_file(self):
+        with tempfile.TemporaryDirectory(prefix="t0-staging-v2-") as directory:
+            path = Path(directory) / "synthetic-staging.sqlite3"
+            path.write_bytes(b"do-not-open")
+            with self.assertRaises((TypeError, ValueError)):
+                connect_staging_database(path, allow_disposable_path=True)
+            self.assertEqual(path.read_bytes(), b"do-not-open")
+
+    def test_schema_initialization_rolls_back_table_phase_failure(self):
+        from unittest.mock import patch
+        import market_data.archive_staging_schema as schema
+
+        connection = sqlite3.connect(":memory:")
+        try:
+            with patch.object(schema, "TABLE_DDL", schema.TABLE_DDL + ("CREATE TABLE broken (",)):
+                with self.assertRaises(sqlite3.DatabaseError):
+                    schema.initialize_staging_schema(connection)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 0)
+            self.assertEqual(
+                connection.execute(
+                    "SELECT name FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%'"
+                ).fetchall(),
+                [],
+            )
+            self.assertFalse(connection.in_transaction)
+        finally:
+            connection.close()
+
+    def test_schema_initialization_rolls_back_index_phase_failure(self):
+        from unittest.mock import patch
+        import market_data.archive_staging_schema as schema
+
+        connection = sqlite3.connect(":memory:")
+        try:
+            with patch.object(schema, "INDEX_DDL", schema.INDEX_DDL + ("CREATE INDEX broken ON missing_table(x)",)):
+                with self.assertRaises(sqlite3.DatabaseError):
+                    schema.initialize_staging_schema(connection)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 0)
+            self.assertEqual(
+                connection.execute(
+                    "SELECT name FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%'"
+                ).fetchall(),
+                [],
+            )
+        finally:
+            connection.close()
+
+    def test_schema_initialization_rolls_back_trigger_phase_failure(self):
+        from unittest.mock import patch
+        import market_data.archive_staging_schema as schema
+
+        connection = sqlite3.connect(":memory:")
+        try:
+            with patch.object(schema, "TRIGGER_DDL", schema.TRIGGER_DDL + ("CREATE TRIGGER broken BEFORE INSERT ON missing_table BEGIN SELECT 1; END",)):
+                with self.assertRaises(sqlite3.DatabaseError):
+                    schema.initialize_staging_schema(connection)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 0)
+            self.assertEqual(
+                connection.execute(
+                    "SELECT name FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%'"
+                ).fetchall(),
+                [],
+            )
+        finally:
+            connection.close()
+
+
 if __name__ == "__main__":
     unittest.main()
