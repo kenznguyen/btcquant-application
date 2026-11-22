@@ -700,13 +700,16 @@ def _s1_validate(payload, errors):
         row_times = []
         for item in group:
             raw = item.get("raw_fields")
-            if isinstance(raw, list) and raw and raw[0].isdigit():
+            if isinstance(raw, list) and raw and isinstance(raw[0], str) and re.fullmatch(r"[0-9]+", raw[0]):
                 row_times.append(int(raw[0]))
         if (len(group) != member.get("data_row_count") or ordinals != list(range(1, len(group) + 1))
-                or physicals != list(range(2, len(group) + 2)) or not row_times
-                or min(row_times) != member.get("first_open_time_ms")
-                or max(row_times) != member.get("last_open_time_ms")):
+                or physicals != list(range(2, len(group) + 2))):
             row_bad = True
+        if (not row_times or min(row_times) != member.get("first_open_time_ms")
+                or max(row_times) != member.get("last_open_time_ms")):
+            member_bad = True
+    if member_bad:
+        errors.add("CSV_MEMBER_EVIDENCE_INVALID")
     if row_bad:
         errors.add("SOURCE_ROW_PROVENANCE_INVALID")
 
