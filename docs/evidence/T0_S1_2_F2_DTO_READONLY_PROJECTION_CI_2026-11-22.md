@@ -126,3 +126,18 @@ No archive/sidecar listing, download, extraction, parsing or sampling; no host/w
 - Verified DTO mapping values, deterministic ordering for objects/attempts/successful attempts, exact inventory BLOB bytes, exact raw_fields_json, and caller connection remains open/usable with transaction state unchanged.
 - Artifact endpoint: 0 artifacts.
 - This verifies populated DB→DTO projection for one complete synthetic graph sample. It does not prove all relation multiplicity/order edge cases, full event transition matrix, snapshot-digest binding, or all graph failure codes. F2 remains PARTIAL pending those cases and independent review.
+
+
+## Coverage-manifest canonicalization and lifecycle binding — exact-SHA GREEN
+
+- Canonical-manifest / VALIDATED-digest test RED: commit/source SHA `4752235995044868b5d059f5f9bd9661c5ce4f28`; run [45007845805](https://github.com/kenznguyen/btcquant-application/actions/runs/45007845805), job `137163340224`; two assertions failed as expected.
+- Candidate/VALIDATED snapshot consistency RED: commit/source SHA `218790587755ad17ea318394c6a3335037596d70`; run [45007966306](https://github.com/kenznguyen/btcquant-application/actions/runs/45007966306), job `137163690155`; mismatch assertion failed as expected.
+- GREEN source SHA: `589adf4124eb186df6f072069fdb5193a9953c3a`.
+- Workflow run: [45008004977](https://github.com/kenznguyen/btcquant-application/actions/runs/45008004977), job `137163809455`, SUCCESS; exact requested and checked-out SHA match.
+- Adapter source blob: `0ddd724c7e69d681333fa845c91a83852dd3420c`; adapter test blob: `0bcac7250f493e3a81cb57540f573bdee18bee1f`.
+- Runtime: CPython 3.13.18 / SQLite 3.45.1.
+- Focused importer-core: 20/20 PASS; adapter: 25/25 PASS; schema: 14/14 PASS; full `market_data` regression: 460/460 PASS.
+- Added checks: coverage_manifest_json must equal deterministic compact UTF-8 JSON with sorted keys; VALIDATED event must include validator_payload_sha256; CANDIDATE and VALIDATED events must reference the same candidate_snapshot_sha256; no duplicate VALIDATED event.
+- Artifact endpoint: 0 artifacts.
+- Important unresolved contract gap: the design does not define the exact candidate snapshot digest preimage/serialization. The graph validator checks digest shape/presence and equality between CANDIDATE and VALIDATED events, but does **not** recompute the candidate snapshot SHA. Do not invent this formula. It needs an explicit owner-approved design amendment before digest recomputation can be implemented.
+- F2 remains **PARTIAL** pending the digest formula decision, exhaustive graph negative tests, all F1–F7 re-verification and independent review.
