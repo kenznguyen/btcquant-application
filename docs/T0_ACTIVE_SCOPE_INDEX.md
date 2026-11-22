@@ -909,8 +909,8 @@
 ## Phase B Revision 7 — P2 findings corrected in documentation
 
 - Immutable Revision 6 baseline: design commit `9b69c18ea16731bf28efba7a92077e96a74107ce`, blob `7012a228561620f4447a0e363a2c5f27d734912a`; preserved unchanged.
-- Revision 7 design commit: `8bc519dc1d4d14144306e58978b8423ee2799336`; blob `7fad5fa69698770c8fe02efd692cf4056b7ac7db`.
-- Self-check commit: `2772f0d227b73a0d2fbf08e927a5e623fad0489f`; blob `ecc45f544bf76fa7c7292c9f5fd1d9c44e0fcd3f`; SELF-CHECK PASS / READY FOR NEXT DESIGN REVIEW, not owner approval or independent review.
+- Revision 7 design commit: `f61fe365f2558569744cbc2a2ca555021a931f48`; blob `86825e77f69c6943096d8e9f4ecae75b413b2013`.
+- Self-check commit: `f623bc8dd878bf4f897f727f07afbed968f581c4`; blob `e7b464ee28aeaea36fbc3345d23ed0025d6c5cbf`; SELF-CHECK PASS / READY FOR NEXT DESIGN REVIEW, not owner approval or independent review.
 - P2-1: producer pair is the sole capture identity key; all other capture fields are immutable attributes; changed attributes under a reused pair conflict/quarantine.
 - P2-2: origin requires verifiable T1 attestation or trusted authenticated handoff bound to identity/scope/version/digest; trust root and lifecycle remain unresolved; no proof = quarantine.
 - P2-3: verified unique namespace, single-writer fencing, durable non-reuse and rollback protection are mandatory acceptance prerequisites; no proof = quarantine.
@@ -924,9 +924,9 @@
 ## Phase B Revision 7 — submitted for design review
 
 - Review PR #7: OPEN / NOT MERGED / DO NOT MERGE — https://github.com/kenznguyen/btcquant-application/pull/7
-- Review head: `5442557a5419cd20625dd5207b45b5f85546ac7f`; base main: `470b220b95936cb9db408f268e4ebcf8af8cd02c`.
-- Exact Revision 7 design commit/blob: `a7a661137bc33cedfed61eab2d37bf42168b3caf` / `7fad5fa69698770c8fe02efd692cf4056b7ac7db`.
-- Self-check: `5442557a5419cd20625dd5207b45b5f85546ac7f` / `ecc45f544bf76fa7c7292c9f5fd1d9c44e0fcd3f`; SELF-CHECK PASS, not independent review or owner approval.
+- Review head: `f623bc8dd878bf4f897f727f07afbed968f581c4`; base main: `470b220b95936cb9db408f268e4ebcf8af8cd02c`.
+- Exact Revision 7 design commit/blob: `f61fe365f2558569744cbc2a2ca555021a931f48` / `86825e77f69c6943096d8e9f4ecae75b413b2013`.
+- Self-check: `f623bc8dd878bf4f897f727f07afbed968f581c4` / `e7b464ee28aeaea36fbc3345d23ed0025d6c5cbf`; SELF-CHECK PASS, not independent review or owner approval.
 - Revision 6 source baseline remains unchanged: `9b69c18ea16731bf28efba7a92077e96a74107ce` / `7012a228561620f4447a0e363a2c5f27d734912a`.
 - PR review PENDING; independent verdict NOT VERIFIED.
 - 98 proposed synthetic cases NOT EXECUTED; B-01..B-20 OPEN / unchanged; B-07 OPEN.
