@@ -67,6 +67,12 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Verify SQLite runtime supports STRICT tables
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -c "import sqlite3; print('SQLite runtime:', sqlite3.sqlite_version); assert sqlite3.sqlite_version_info >= (3, 37, 0)"
+
       - name: Run focused synthetic importer-core tests
         shell: bash
         run: |
