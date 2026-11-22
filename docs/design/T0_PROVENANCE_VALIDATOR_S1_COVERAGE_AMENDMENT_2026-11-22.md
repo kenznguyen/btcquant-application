@@ -1,7 +1,7 @@
 # T0 Provenance Validator S1 Coverage Amendment — S3
 
 Date: 2026-11-22  
-Status: **DESIGN CONTRACT — SYNTHETIC RED AUTHORIZED; GREEN NOT AUTHORIZED**
+Status: **DESIGN CONTRACT — S3 GREEN APPROVED 2026-11-22; IMPLEMENTATION IN PROGRESS**
 
 ## 1. Purpose and compatibility
 
@@ -159,3 +159,51 @@ This is a contract amendment and synthetic RED-test authorization only. It does 
 - S4 synthetic RED tests: **AUTHORIZED** by owner, but test execution status must be recorded separately.
 - GREEN implementation: **NOT AUTHORIZED**.
 - SQLite/DDL and archive acquisition: **NOT AUTHORIZED**.
+
+
+## 10. S3 GREEN clarifications — R3–R6 (owner-approved)
+
+These rules close the executable-contract ambiguities identified in the S3 GREEN review. They are normative and take precedence over ambiguous wording in §§2–7.
+
+### 10.1 R3 — Explicit V1/S1 dispatch
+
+- If `contract_version` is absent **and no S1-only envelope key is present**, validate as legacy V1 only.
+- The S1-only key set is: `inventory_raw_bytes`, `inventory_expected_sha256`, `inventory_expected_id`, `coverage_manifest`, and `run`.
+- If the exact discriminator `T0_PROVENANCE_VALIDATOR_S1_V1` is present, run the complete V1 and S1 validation path; every S1 envelope key is mandatory and must have its specified type.
+- If the discriminator is unknown, or one or more S1-only keys are present without the exact discriminator, do not downgrade to V1. Emit `RUN_ACCEPTANCE_INVARIANT_INVALID` (in addition to any independently applicable V1 diagnostics).
+- A malformed/partial S1 envelope is always fail-closed. A caller cannot obtain V1-only acceptance by removing or misspelling the discriminator while retaining S1 claims.
+
+### 10.2 R4 — Expected versus measured object values
+
+The frozen archive inventory is an identity/pairing catalogue; it does not contain authoritative byte-size or content-digest expectations. Do not add synthetic size/SHA fields to the raw inventory or pretend that it pins them.
+
+For each VERIFIED object:
+- `expected_size_bytes` and `expected_sha256` are acquisition-request expectations captured in the object evidence before the transfer attempt. They are caller-supplied evidence, not cryptographic facts authenticated by the inventory.
+- `measured_size_bytes` and `measured_sha256` are post-transfer measurements.
+- The referenced successful TRANSFERRED attempt must carry `response_bytes_received`, `complete_object_sha256`, and `is_complete_object=1`.
+- All three evidence layers must agree: expected size = measured size = successful attempt byte count; expected SHA = measured SHA = successful attempt complete SHA.
+- Expected and measured values are required for VERIFIED objects; absent, malformed, bool/negative size, partial digest substitution, or any disagreement emits `OBJECT_MEASUREMENT_INVALID` (attempt-specific defects may additionally emit `OBJECT_ATTEMPT_HISTORY_INVALID`).
+- The validator verifies internal consistency only. It does not claim that a caller's pre-transfer expectation is independently authenticated or that the inventory contains size/SHA truth.
+
+### 10.3 R5 — Canonical raw CSV fields representation
+
+Each source-row record MUST contain both:
+- `raw_fields`: a list of exactly twelve strings, in source-column order;
+- `raw_fields_json`: the exact UTF-8 text of a compact JSON array of those twelve strings, serialized with `ensure_ascii=False`, `separators=(",", ":")`, no insignificant whitespace, and no Unicode normalization.
+
+The validator parses `raw_fields_json` as strict JSON (reject duplicate/non-standard constructs where applicable), requires an array of twelve strings, and requires its parsed value to equal `raw_fields`. The exact UTF-8 bytes of `raw_fields_json` must equal the canonical serialization of `raw_fields`. The existing `raw_row_digest` remains SHA-256 of T0ENC1(`T0-RAW-CSV-ROW-V1`, *the twelve raw_fields in order). No CSV parsing or file access is performed by the validator.
+
+### 10.4 R6 — Coverage manifest and duplicate dispositions
+
+The S1 `coverage_manifest` has exactly these required fields:
+- `manifest_version`: exact `T0-COVERAGE-MANIFEST-V1`;
+- non-negative integer counts (bool is invalid): `expected_object_count`, `expected_pair_count`, `expected_member_count`, `expected_row_count`, `expected_candle_count`, `expected_link_count`;
+- `approved_gaps` and `approved_extras`: lists of unique records, each exactly `{timeframe, open_time_ms, reason, evidence_ref}`; timeframe is `15m` or `1h`, open_time_ms is a non-negative aligned integer, and reason/evidence_ref are non-empty strings.
+
+Manifest counts must equal actual collection cardinalities. The fixed S1 archive acceptance counts remain 404 objects, 202 pairs, and 202 verified members. Every approved gap/extra is explicit and unique; an absent/malformed manifest, unlisted discrepancy, duplicate record, or count mismatch emits `RUN_ACCEPTANCE_INVARIANT_INVALID`. Empty gap/extra lists are valid and do not imply an unbounded allowance.
+
+The only link `duplicate_disposition` values are `UNIQUE` and `IDENTICAL_DUPLICATE`. For each candle natural key, normalized candle tuple and value ID must be identical across all linked rows. Sort linked `source_row_id` values by UTF-8 byte sequence: the first is the sole `UNIQUE` representative; every subsequent row is `IDENTICAL_DUPLICATE`. A singleton is `UNIQUE`. Any other value, multiple/missing UNIQUE representatives, or order mismatch emits `CANDLE_PROVENANCE_LINK_INVALID`.
+
+### 10.5 GREEN implementation boundary
+
+The GREEN validator remains a pure in-memory function. It may parse the supplied raw inventory bytes and raw_fields_json strings, compute hashes and validate supplied records. It MUST NOT open any path, inspect archive/member bytes, perform network access, read environment variables, consult wall-clock/randomness, import SQLite, connect to a database, create files, launch processes, or mutate input objects.
