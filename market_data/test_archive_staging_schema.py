@@ -1,4 +1,5 @@
 """Synthetic-only SQLite staging schema v2 tests; disposable DBs only."""
+import hashlib
 import sqlite3
 import tempfile
 import unittest
@@ -95,7 +96,7 @@ class StagingSchemaV2Tests(unittest.TestCase):
         self.assertTrue(verify_staging_database(self.db))
 
     def _insert_quarantined_object(self, suffix):
-        object_id = "obj1:" + suffix * 64
+        object_id = "obj1:" + hashlib.sha256(suffix.encode("utf-8")).hexdigest()
         self.db.execute("""
             INSERT INTO archive_objects(
                 object_id, inventory_id, inventory_blob_sha256, inventory_entry_identity,
