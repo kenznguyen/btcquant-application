@@ -368,7 +368,6 @@ class StagingSchemaV2Tests(unittest.TestCase):
                 "sidecar_object_id": sidecar_id, "disposition": "QUARANTINED",
                 "failure_code": "SYNTHETIC_QUARANTINE",
             })
-            member_key = chr(97 + i)
             values = {
                 "candidate_id": "cand1:" + f"{i:064x}",
                 "member_id": "mem1:" + f"{i:064x}", "pair_id": pair_id,
