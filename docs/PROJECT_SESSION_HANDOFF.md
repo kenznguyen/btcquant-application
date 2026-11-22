@@ -1,3 +1,24 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 3 design review: REQUEST CHANGES
+
+- Exact reviewed design commit: `98cde283e9b2dc2d0201e4359e3f1195016ff0ea`.
+- Exact design blob SHA: `2e61e13ec8dc42a37ea03130edc1491b73a903bc`.
+- Review report: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_3_2026-11-22.md`.
+- Review report commit: `01b8e3aa32bb71cb48ef2f2d501eab7aa2869ea1`.
+- Verdict: **REQUEST CHANGES — PHASE B DESIGN REVISION 3 NOT APPROVED**.
+- New findings:
+  - R-12 HIGH: snapshot source variants (direct REST response vs collector-generated/local reconstructed snapshot) are not modeled as separate completeness/acceptance contracts.
+  - R-13 HIGH: §6 calls the snapshot a "full-state anchor", contradicting the bounded top-N contract in §5.
+  - R-14 MEDIUM: §8 lost-acknowledgement matrix still says retry same epoch/update range although §4.3 excludes epoch from canonical identity; missing epoch is also conflated with missing native identity.
+- R-01..R-11: materially addressed at design level, with source-dependent evidence and existing blockers still open. See review report for per-finding disposition.
+- Evidence cross-check: exact Phase B design blob; T1 schema blob `895f87a8281a3f9b6d37d96b5f68568e4285bee6`; official Binance USDⓈ-M aggTrade and depth documentation. T1 implementation/parser was not inspected.
+- Synthetic matrix: 66 proposed cases, NOT EXECUTED. No tests/workflows/artifacts run or produced.
+- Independent second-person reviewer identity: NOT VERIFIED; this review must not be represented as external second-person approval.
+- Contract freeze: NOT APPROVED. Implementation, database, runtime and Phase C: NOT AUTHORIZED.
+- Scope remained documentation-only; no source design, code, database, runtime, T1, network, VPS or trading changes.
+- Next: revise R-12..R-14 in the design and matrix, preserve all unresolved B-01..B-20 blockers, then submit a new exact SHA for review.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 3 submitted for independent design review
 
 - Revised design: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
