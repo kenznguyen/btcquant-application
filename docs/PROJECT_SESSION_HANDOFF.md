@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 2 submitted for second design review
+
+- Revised Phase B design: docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md
+- Design commit: 6bf8f03c4270abbfe29eff624571e3a13c24b21d
+- Design blob SHA: a14c0030fbddad97d28675fa70ab9138cf22bf73
+- Second-round review request: docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_2_REQUEST_2026-11-22.md
+- Review-request commit: 8c358bdb3da2447e11e28c026d43e278150eb672
+- First-round review: docs/reviews/T0_PHASE_B_DESIGN_REVIEW_2026-11-22.md, commit 347dbcec6f7ddedac4ac1c8e90ee57c549ae49ef; verdict REQUEST CHANGES.
+- R-01..R-06 revised in the design: canonical event identity is separated from stream epoch; snapshot capture identity/completeness is a hard gate; aggTrade q/nq are distinguished; ordinary depth is explicitly non-RPI; depth E/T and receive/commit clocks are distinct; bounded reorder/gap/checkpoint/recovery rules are specified.
+- Synthetic matrix expanded to 45 proposed cases: SD-05 10, SD-06 20, SD-07 15. NOT EXECUTED.
+- B-01..B-16 remain open. The design revision does not prove source implementation behavior or freeze contracts.
+- Second-round independent review: REQUESTED / PENDING; no second-round verdict yet.
+- Tests/workflows/artifacts: NOT RUN / NONE.
+- Phase B remains documentation-only. No code/DTO/parser/validator/tests/fixtures/DDL/database/data movement/network/credentials/T1 source/runtime/T1→T0/T2/VPS/deployment/trading actions.
+- Next: complete second-round review, address any new findings, then seek explicit owner decision. Phase C and implementation remain blocked.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B design review requests changes
 
 - Review record: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_2026-11-22.md`, commit `347dbcec6f7ddedac4ac1c8e90ee57c549ae49ef`.
