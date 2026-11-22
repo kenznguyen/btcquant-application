@@ -195,3 +195,17 @@
 
 ---
 
+
+
+## Independent review preliminary checkpoint — 2026-11-22
+
+- Graphify automated review completed on superseded PR head `eb5121521d2abe3c37c2b01eac08c3e1c13b7147`, not the latest source snapshot. Gate: PASS, 0 blocking, 1 advisory, 4 graph findings; investigation `complete=false`, with 2 bug candidates, 1 cleanup candidate, 6 possible issues and 5 unconfirmed. This is preliminary only and is NOT accepted as final independent review.
+- Graphify reported:
+  1. possible TypeError on malformed candle `open_time_ms` in unchanged public S3/V1 validator around line 755; strict DTO/SQLite projection rejects non-int values, so this path is outside current S1.2 adapter input. Keep validator unchanged under current contract; record for separate owner decision.
+  2. `unittest.main()` appears before later test classes in `test_archive_staging_adapter.py`, so direct script execution skips those later classes. CI's module-based unittest invocation still discovers them. Test-file quality issue to correct after current Codex review.
+  3. synthetic inventory bytes use literal backslash-x00 text rather than an actual NUL byte; test fixture should be corrected and explicitly assert NUL preservation.
+  4. unchanged S3/V1 validator accepts list-style natural keys in identity parsing but later compares list to tuple; adapter-generated payload uses tuple, so not exercised by this adapter. This is a pre-existing public-validator issue and outside current approved no-change boundary.
+- Graphify also noted high/medium fan-out in test fixture, S1 validator and graph validator; advisory maintainability observations, not a correctness gate.
+- Codex review was manually requested on the current review PR head `72be6af7a87c9c6fe0d76bcc6e486a699b39dfbb`; latest status is RUNNING. Do not accept older Codex/Graphify review heads.
+- Review PR #5 remains DO NOT MERGE. After Codex completes, triage findings, fix only approved test/scope issues, rerun exact-SHA CI, refresh review snapshot and request follow-up independent review.
+
