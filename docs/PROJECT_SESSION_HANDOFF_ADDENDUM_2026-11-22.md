@@ -266,3 +266,16 @@ This section supersedes the earlier S2 statements in this addendum that said RED
 - No workflow run/job/artifact; no test, DDL, SQLite, archive, data or runtime operation.
 
 - Latest verified `main` HEAD for this documentation increment: `482d631b69a4abd21db42e2a08d8dad9e790f9c8`. The authoritative main handoff T0 section was updated in commit `0c190a312747e205ca6068d54f509c5bf9756836`; active-scope index link update commit `482d631b69a4abd21db42e2a08d8dad9e790f9c8`.
+
+
+## Owner acceptance — T0 S1.1 design freeze (2026-11-22)
+
+- Owner decision: **ACCEPTED** the detailed S1.1 provenance/schema design.
+- Accepted document: `docs/design/T0_ARCHIVE_STAGING_S1_1_PROVENANCE_SCHEMA_RECONCILIATION_2026-11-22.md`.
+- Accepted design blob before this status-only update: `505c23a00772667d0da3f5cc4a48f2d724b84c2a`; post-acceptance status blob: `209c9d10cc0e54dc90148efa9ef6884f74aa143d`.
+- Acceptance commit: `9235aeecf81c29a93be2b7aea84e83c0283a270d`.
+- Status: **S1.1 DESIGN FROZEN / OWNER ACCEPTED**. B1 resolved at design level; B2 resolved at policy/contract level.
+- Scope remains documentation-only. This decision does not authorize DDL, SQL migration, SQLite, importer, synthetic tests, workflow changes/dispatch, archive/sidecar inspection/acquisition, staging build, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS/deployment, retention/deletion, credentials or trading.
+- B3 archive-format coverage remains NOT VERIFIED; B4 resource limits OPEN; B5 actual source-derived coverage NOT VERIFIED; B6 retention/artifact policy OPEN; B7 destination/preflight OPEN; B8 importer/build NOT AUTHORIZED. Independent application-foundation review track unchanged.
+- Same-session review remains **SELF-REVIEW PASS WITH LIMITATIONS**, not an independent review. No tests or workflow were run for this acceptance update; no workflow run/job/artifact.
+- Next possible design-only work package: prepare a bounded decision package for B4/B6/B7 (resource budgets, retention/artifact policy, execution destination) for owner review. No acquisition or implementation is implied; each later phase requires separate approval.
