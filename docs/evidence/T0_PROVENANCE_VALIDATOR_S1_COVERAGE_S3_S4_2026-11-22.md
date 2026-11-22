@@ -132,3 +132,49 @@ Complete and self-review a fully valid deterministic S1 synthetic fixture, ensur
 - Proposed bounded approval package: clarify S3 contract R3–R6; complete S4 test specification including R1/R2 and S3 §7 boundaries; implement pure validator S3 extension; run focused/V1/market_data tests and the existing isolated exact-SHA workflow; record artifact/evidence. No DDL/SQLite, archive/sidecar, importer, Canonical T0, MAY-10/REST tail, T1/T2 runtime, VPS/deployment, cleanup/retention or trading.
 - No source, validator, RED/ GREEN test, workflow, schema, database, archive, importer or runtime files were changed during this review. Only review/evidence/handoff documentation was added.
 - Approval status: **S3 GREEN NOT AUTHORIZED — AWAITING OWNER DECISION**.
+
+
+## S3 GREEN implementation and exact-SHA verification — 2026-11-22
+
+### Approved scope and frozen clarifications
+
+- Owner approval: S3 GREEN = R3–R6 contract completion + S4 test-spec completion + pure validator + synthetic tests + isolated exact-SHA CI/evidence. Approval excludes all database, archive acquisition, importer, Canonical T0, T1/T2 runtime, VPS/deployment, retention/deletion and trading operations.
+- Contract amendment updated at blob `84f881ad3e81cf42f1ec674a5b36ae5547478e33`: R3 exact V1/S1 dispatch and no downgrade; R4 pre-transfer expected size/SHA provenance distinguished from measured evidence; R5 canonical compact `raw_fields_json`; R6 exact manifest shape, inclusive coverage ranges, explicit approved gaps/extras and duplicate disposition order.
+- R6 coverage semantics are exact-set based: actual candle natural keys must equal inclusive coverage-range points minus approved gaps plus approved extras. Overlapping ranges, unlisted holes/extras, contradictory gap/extra declarations and malformed records fail closed.
+
+### Implementation source
+
+- Tested source SHA: `10e99c68e7acbd8a25e192075dede214f3fccad5` (main).
+- Validator blob: `b94bac0f82ae141984552409f99a5cff70435b3b`.
+- S3 synthetic test blob: `328442917535d555d09b18f0213e1ddfd75a9416`.
+- Contract blob: `84f881ad3e81cf42f1ec674a5b36ae5547478e33`.
+- Workflow blob: `b73bf266c47dd6cdb440928e2107306f4906a5b6`.
+- V1 RED and GREEN blobs remain unchanged: `abbaeab16f026757923c679330f124a3d99e0774` and `da854052564a34c49c1e2f40da1c80315da04182`.
+- Public API and immutable result DTO preserved. Eleven S3 error codes appended after the V1 catalogue. S1 validation is in-memory, deterministic, fail-closed and does not perform I/O or mutate the input.
+- S4 synthetic suite now proves positive valid-fixture acceptance and immutability; eleven individual S3 diagnostic families; raw inventory UTF-8/JSON/pin/duplicate-key cases; attempt/pair/member/row boundaries; OHLCV provenance-chain isolation; candle/link digest checks; exact coverage ranges/gaps/extras; aggregate order/dedup; permutation determinism; malformed nested values.
+
+### Exact-SHA GitHub Actions result
+
+- Workflow: [T0 S3 GREEN isolated provenance and V1 regression](https://github.com/kenznguyen/btcquant-application/actions/runs/44976345735).
+- Run ID `44976345735`; job ID `137067027769`; attempt `1`; branch `main`; conclusion `success`.
+- Requested source SHA and checked-out HEAD both equal `10e99c68e7acbd8a25e192075dede214f3fccad5`.
+- Runtime: CPython `3.13.18`, GitHub-hosted Ubuntu `26.04.1`; workflow installed pinned test dependencies FastAPI `0.116.1` and httpx `0.28.1` for the full market_data suite.
+- S3 command `python -B -m unittest -v market_data.test_archive_provenance_validator_s1_red`: **30 tests, 30 PASS, exit 0**.
+- V1 command `python -B -m unittest -v market_data.test_archive_provenance_validator_red market_data.test_archive_provenance_validator_green`: **24/24 PASS, exit 0**.
+- Full command `python -B -m unittest discover -s market_data -p 'test*.py'`: **387/387 PASS, exit 0**. Two SQLite `ResourceWarning` messages appeared in unrelated full-suite tests; no test failed.
+- Machine summary: `s3_green_exit_code=0`, `v1_regression_exit_code=0`, `market_data_regression_exit_code=0`; requested and checked-out SHA match.
+- Artifact: `t0-s3-green-verification-44976345735`; ID `14735512352`; size `3,678` bytes; expiry `2026-12-22T02:30:03Z`; GitHub digest `sha256:5d12d74c405e8e9bd7bd6443b3f6fe4b85681eeba1b35df5dc78a7057f11e8bf`. Downloaded and inspected ZIP contents; local SHA-256 independently matched GitHub metadata. It contains provenance, machine summary, three exit-code files and full S3/V1/market_data logs.
+- Earlier exact-SHA run `44976288732` at `d3fd1cf4656243ae8d80160d6539cc3d0c890560` exposed a `NameError` in the newly added coverage-range loop (`candle_records` reference). This was corrected in source commit `10e99c68e7acbd8a25e192075dede214f3fccad5`; final run above verifies the correction.
+
+### Final disposition and limits
+
+- R3–R6 contract: **PASS / FROZEN**.
+- S4 test-spec completion: **PASS**.
+- Pure S3 validator: **PASS**.
+- S3 synthetic suite: **PASS 30/30**.
+- V1 compatibility: **PASS 24/24**.
+- Full market_data regression: **PASS 387/387**.
+- Exact-SHA workflow/job/artifact/checksum: **PASS**.
+- Review type: same-session **SELF-REVIEW** only; no independent second-person review claimed.
+- No full repository regression was run. No archive/sidecar was accessed or downloaded; no importer, DDL, SQLite/staging DB, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS, deployment, retention/deletion, credentials or trading operation occurred.
+- Status: bounded S3 GREEN implementation and verification **PASS**. This does not authorize archive acquisition, importer execution, database creation, staging acceptance/promotion or runtime integration.
