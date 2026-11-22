@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Full Phase B Revision 8 design review completed; REQUEST CHANGES
+
+- Full review report: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_9_2026-11-22.md`, commit `c808e2f28c25648c6461815ee6b09ce16a4c8850`, blob `e5d74023a67cc1542325ac6772fe5a959459394a`.
+- Exact reviewed Revision 8 design commit/blob: `9a5c65f3bc00876d98a070eee46072c5d8be368e` / `8f40248f2781cdf4111ef022b77843acea8279b2`.
+- Verdict: **REQUEST CHANGES — NOT READY FOR CONTRACT FREEZE**.
+- New findings: R8-01 HIGH — SD-06/SD-07 canonical identity conflicts with referenced Source Domain Inventory; R8-02 MEDIUM — design header/status/next-review metadata still says Revision 7; R8-03 MEDIUM — SD-06 synthetic matrix lacks explicit non-identical overlapping update-range cases; R8-04 MEDIUM — producer namespace authority/scope/registration lifecycle is not operationally bounded.
+- Revision 8 does correctly clarify B-07: sole capture key is T1-issued `(capture_producer_id, capture_sequence)`; other attributes are immutable evidence attributes. Producer-origin, namespace uniqueness, single-writer fencing, durable non-reuse and rollback proof remain absent/unverified.
+- B-01..B-20 remain OPEN. B-16 is a candidate bounded exclusion only if owner explicitly accepts Phase B as non-RPI; B-13 (read API) and B-17 (aggTrade E) may be considered as bounded exclusions only with explicit scope/owner decisions. B-19 is logically specified but persistence proof remains open.
+- PR #8 Codex review: completed/no findings on exact head `1c55ef8772fb33cc51d64182217de925d1d1a45d`, but prior request was focused on B-07/P2 consistency. Graphify skipped AI review because docs-only; static health PASS; tests/formal proofs not run. No workflow runs verified for exact head. Independent human review NOT VERIFIED.
+- 98 proposed synthetic cases remain DESIGN ONLY / NOT EXECUTED. No tests, fixtures, workflows or artifacts were run/created in this review.
+- Scope remained documentation review only. No code, DTO, parser, validator, fixtures, tests, DDL, database, data movement, T1 source/runtime, network, credentials, VPS/deployment, T2 or trading actions.
+- PR #7 and #8 remain OPEN / NOT MERGED / DO NOT MERGE. Contract Freeze NOT APPROVED; implementation NOT AUTHORIZED.
+- Next: prepare Revision 9 docs-only to reconcile identity authority, correct Revision 8 metadata, add overlap cases, define producer namespace authority/scope/lifecycle, and propose bounded exclusions. Preserve Revision 8 unchanged.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — PR #7 reviewed; P2-4 corrected in Revision 8
 
 - PR #7: OPEN / NOT MERGED / DO NOT MERGE — https://github.com/kenznguyen/btcquant-application/pull/7
