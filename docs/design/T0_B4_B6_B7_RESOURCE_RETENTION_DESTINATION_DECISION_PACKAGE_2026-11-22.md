@@ -38,8 +38,9 @@ This document is a decision package only. Numeric values are proposals, not meas
 | Member path UTF-8 length | **1,024 bytes** | Reject member path exceeding ceiling |
 | Concurrent network requests | **1** | Sequential acquisition only |
 | Concurrent ZIP processing | **1** | One archive at a time; no parallel decompression |
-| Attempts per object | **3 total** (initial + 2 retries) | No further retries; UNKNOWN remains fail-closed |
+| Attempts per object | **3 total** (initial + 2 retries) | Retry only transient connection failures, HTTP 408, 429 or 5xx; do not retry deterministic 4xx; UNKNOWN remains fail-closed |
 | Retry backoff | **2 s then 10 s** | Fixed bounded backoff; no unbounded retry loop |
+| Retry-After | **10 s maximum** | If server asks for longer, stop retrying and record the attempt; do not exceed the approved backoff ceiling |
 | Connect timeout | **10 s** | Record failed attempt |
 | Read-idle timeout | **30 s** | Abort attempt, count received bytes |
 | Total timeout per attempt | **120 s** | Abort attempt, count received bytes |
