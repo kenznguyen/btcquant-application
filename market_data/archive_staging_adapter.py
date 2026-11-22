@@ -836,6 +836,14 @@ def build_s3_v1_payload(projection: StagingProjection) -> dict[str, object]:
         raise AdapterValidationError(
             "PROJECTION_ENVELOPE_INVALID", "inventory objects and coverage manifest must be JSON collections"
         )
+    canonical_manifest_json = json.dumps(
+        coverage_manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    if run.coverage_manifest_json != canonical_manifest_json:
+        raise AdapterValidationError(
+            "COVERAGE_MANIFEST_NONCANONICAL",
+            "coverage manifest must use deterministic sorted-key compact JSON",
+        )
 
     candidate_events = tuple(
         event for event in projection.run_events
@@ -974,6 +982,15 @@ def validate_staging_graph(projection: StagingProjection) -> GraphValidationResu
     }
     for previous, current in zip(events, events[1:]):
         if current.event_type not in allowed.get(previous.event_type, set()):
+            errors.add("RUN_EVENT_TRANSITION_INVALID")
+    for event in events:
+        if event.event_type in ("CANDIDATE", "VALIDATED") and not event.candidate_snapshot_sha256:
+            errors.add("RUN_EVENT_TRANSITION_INVALID")
+        if event.event_type == "VALIDATED" and not event.validator_payload_sha256:
+            errors.add("RUN_EVENT_TRANSITION_INVALID")
+        if event.event_type in ("BUILDING", "QUARANTINED") and (
+            event.candidate_snapshot_sha256 is not None or event.validator_payload_sha256 is not None
+        ):
             errors.add("RUN_EVENT_TRANSITION_INVALID")
     if sum(item.event_type == "BUILDING" for item in events) != 1:
         errors.add("RUN_EVENT_TRANSITION_INVALID")
