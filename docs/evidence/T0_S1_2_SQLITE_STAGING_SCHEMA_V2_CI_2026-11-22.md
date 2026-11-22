@@ -104,3 +104,26 @@ Final follow-up commits:
 - Executable implementation amendment update: `02c31307494ad70b83ac70170cacdc7d88925a34`.
 
 The initial schema RED evidence remains run #9 at `d78170cf084f988ef83f8fe79ee85a1d43b1f584`. The additional digest/status tests were committed before their final implementation verification, but their individual pre-fix RED run was not captured as a separate Actions run; their final GREEN behavior is confirmed by run #18.
+
+
+## 7. Final exhaustive NULL-matrix verification
+
+The NULL guard tests were expanded to exercise every mandatory field in the VERIFIED object, VERIFIED pair, VERIFIED member and ACCEPTED source-row branches individually.
+
+- Final workflow run [45001731289](https://github.com/kenznguyen/btcquant-application/actions/runs/45001731289), run #21.
+- Job: `Importer-core synthetic tests`, ID `137144538991`, conclusion **SUCCESS**.
+- Exact requested and checked-out SHA: `d7cdea3a467aa0ee2a8b177aaec23fdfea3201ce`.
+- CPython 3.13.18 / SQLite 3.45.1; STRICT gate PASS.
+- Importer-core: 20 tests PASS.
+- S1.2 adapter: 10 tests PASS.
+- SQLite staging schema: **14 tests PASS**, including the per-field NULL matrix.
+- Complete `market_data` regression: **445 tests PASS**, Python 3.12.16, hash-locked test dependencies.
+- All workflow steps succeeded; artifacts endpoint returned 0 artifacts.
+- Final test blob: `market_data/test_archive_staging_schema.py` = `324637a40abe1e3f387b9f16f7ba1e4aa621c317`. Schema module blob remains `56e7600fcf0d200098cfd4b875359b204956eb79`; workflow blob remains `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
+
+Test-fixture correction history:
+- Run #19 `45001675277` and run #20 `45001691290` failed only in the newly expanded NULL-matrix test because synthetic object-key suffixes collided (UNIQUE constraint). Existing importer-core and adapter suites passed; the full regression was skipped.
+- The fixture keys were made unique in commit `d7cdea3a467aa0ee2a8b177aaec23fdfea3201ce`.
+- Run #21 confirms the corrected NULL matrix and full regression PASS.
+
+The exhaustive NULL matrix now attempts NULL in each mandatory acceptance field for the four branches named above. This closes the prior representative-only test coverage caveat for those branch fields; it does not replace the application-level graph validator or S3/V1 replay.
