@@ -615,5 +615,68 @@ class ProvenanceValidatorS1RedTest(unittest.TestCase):
         self.assertFalse(result.valid)
 
 
+    def test_unknown_or_partial_s1_discriminator_never_downgrades_to_v1(self) -> None:
+        payload = copy.deepcopy(self.payload)
+        payload["contract_version"] = "T0_PROVENANCE_VALIDATOR_S1_V2"
+        self.assertEqual(validate_provenance(payload).error_codes, ("RUN_ACCEPTANCE_INVARIANT_INVALID",))
+        payload = copy.deepcopy(self.payload)
+        del payload["contract_version"]
+        self.assertEqual(validate_provenance(payload).error_codes, ("RUN_ACCEPTANCE_INVARIANT_INVALID",))
+
+    def test_raw_inventory_duplicate_json_key_is_rejected(self) -> None:
+        payload = copy.deepcopy(self.payload)
+        payload["inventory_raw_bytes"] = b'{"inventory_id":"x","inventory_id":"x","objects":[]}'
+        payload["inventory_expected_sha256"] = _sha(payload["inventory_raw_bytes"])
+        payload["inventory_expected_id"] = "x"
+        self.assert_s1_error_for_payload(payload, "INVENTORY_RAW_BYTES_INVALID")
+
+    def assert_s1_error_for_payload(self, payload: dict[str, Any], code: str) -> None:
+        result = validate_provenance(payload)
+        self.assertFalse(result.valid)
+        self.assertIn(code, result.error_codes)
+        self.assertIn("RUN_ACCEPTANCE_INVARIANT_INVALID", result.error_codes)
+
+    def test_object_expectation_must_match_measured_and_transfer_values(self) -> None:
+        self.payload["objects"][0]["expected_size_bytes"] += 1
+        self.assert_s1_error("OBJECT_MEASUREMENT_INVALID")
+
+    def test_raw_fields_json_must_be_canonical_compact_array(self) -> None:
+        self.payload["source_rows"][0]["raw_fields_json"] = json.dumps(
+            self.payload["source_rows"][0]["raw_fields"], ensure_ascii=False,
+        )
+        self.assert_s1_error("SOURCE_ROW_PROVENANCE_INVALID")
+
+    def test_coverage_manifest_counts_and_gap_records_are_strict(self) -> None:
+        self.payload["coverage_manifest"]["expected_row_count"] = 201
+        self.payload["coverage_manifest"]["approved_gaps"] = [
+            {"timeframe": "15m", "open_time_ms": 1, "reason": "gap", "evidence_ref": "fixture"}
+        ]
+        self.assert_s1_error("RUN_ACCEPTANCE_INVARIANT_INVALID")
+
+    def test_noncanonical_decimal_is_rejected_as_ohlcv(self) -> None:
+        self.payload["candles"][0]["open"] = "1e4"
+        self.payload["source_rows"][0]["raw_fields"][1] = "1e4"
+        self.payload["source_rows"][0]["raw_fields_json"] = json.dumps(
+            self.payload["source_rows"][0]["raw_fields"], ensure_ascii=False, separators=(",", ":")
+        )
+        self.payload["source_rows"][0]["raw_row_digest"] = _enc_digest(
+            "T0-RAW-CSV-ROW-V1", *self.payload["source_rows"][0]["raw_fields"]
+        )
+        _refresh_source_row_identity(self.payload, 0)
+        _refresh_candle_value_id(self.payload["candles"][0])
+        _sync_candle_value_id(self.payload, 0)
+        self.assert_s1_error("CANDLE_OHLCV_CONSTRAINT_INVALID")
+
+    def test_s1_collection_permutation_is_deterministic(self) -> None:
+        baseline = validate_provenance(self.payload)
+        self.assertTrue(baseline.valid, baseline.error_codes)
+        permuted = copy.deepcopy(self.payload)
+        for key in ("objects", "attempts", "pairs", "members", "source_rows", "candles", "links"):
+            permuted[key].reverse()
+        self.assertEqual(validate_provenance(permuted), baseline)
+        reordered = dict(reversed(list(self.payload.items())))
+        self.assertEqual(validate_provenance(reordered), baseline)
+
+
 if __name__ == "__main__":
     unittest.main()
