@@ -1087,3 +1087,32 @@ class StagingGraphNegativeInvariantMatrixTests(unittest.TestCase):
             replace(self.projection, links=tuple(links)),
             "CANDLE_LINK_GRAPH_INVALID",
         )
+
+    def test_rejects_attempt_that_references_no_archive_object(self):
+        from dataclasses import replace
+
+        orphan = replace(
+            self.projection.attempts[0],
+            object_id="obj1:" + "f" * 64,
+            attempt_id="att1:" + "e" * 64,
+        )
+        self._assert_graph_error(
+            replace(self.projection, attempts=self.projection.attempts + (orphan,)),
+            "ATTEMPT_GRAPH_INVALID",
+        )
+
+    def test_rejects_successful_attempt_relation_for_unknown_object(self):
+        from dataclasses import replace
+        from market_data.archive_staging_adapter import SuccessfulAttempt
+
+        orphan = SuccessfulAttempt(
+            object_id="obj1:" + "f" * 64,
+            attempt_id=self.projection.attempts[0].attempt_id,
+        )
+        self._assert_graph_error(
+            replace(
+                self.projection,
+                successful_attempts=self.projection.successful_attempts + (orphan,),
+            ),
+            "SUCCESSFUL_ATTEMPT_GRAPH_INVALID",
+        )
