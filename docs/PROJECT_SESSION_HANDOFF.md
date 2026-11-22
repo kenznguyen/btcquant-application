@@ -1,3 +1,18 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — graph negative-invariant matrix GREEN; candidate snapshot formula remains unresolved
+
+- Latest graph-test source SHA: `3e08ba4f9e326a9978d119cba54138cff0281f5e`; test blob `d78c20e561fe921d73e9636a61fa7ca75f7b85cc`; adapter source blob `0ddd724c7e69d681333fa845c91a83852dd3420c`.
+- Exact-SHA run [45008115272](https://github.com/kenznguyen/btcquant-application/actions/runs/45008115272), job `137164142899`, SUCCESS; checkout SHA matches.
+- Runtime CPython 3.13.18 / SQLite 3.45.1; importer-core 20/20, adapter 33/33, schema 14/14, full `market_data` regression 468/468 PASS; artifacts 0.
+- Negative graph tests now cover nonmonotonic event times, orphan failure observation, failure ordinal gaps, missing successful-attempt relation, missing pair object, missing member pair, missing source-row member and link/candle mismatch.
+- S3/V1 complete synthetic fixture and populated SQLite all-eleven-relation mapping remain GREEN at prior exact SHAs `1fade80a7c57348a0da605fbc292ad0ceb9d5efe` and `6a71fe066e0ce80f9b3d580404682e5e2c216976`.
+- Remaining gaps: exhaustive multi-row/multiplicity ordering across all relations and all graph failure branches; candidate snapshot digest preimage/serialization is not defined by approved design, so recomputation is not implemented; final F1–F7 re-run and independent review pending.
+- F2 **PARTIAL / SYNTHETIC CI PASS**; S1.2 **NOT FROZEN**; independent review **NOT RUN**; B8 **NOT APPROVED**; real-data build **NOT AUTHORIZED**.
+- Evidence: `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md`.
+- Next: add multi-row relation ordering and remaining graph negative tests; do not invent candidate snapshot hash formula. Once synthetic scope is complete, exact-SHA full regression and independent review; separately request owner approval for the digest contract.
+- All prior exclusions remain unchanged: no real archive/sidecar access/acquisition, host/workstation/SSH/filesystem/runner preflight, B8 workflow/dispatch/runner, real-data staging, uploads/deletion/cleanup, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS/deployment, credentials, exchange or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — canonical manifest + run lifecycle binding GREEN; snapshot digest formula unresolved
 
 - Latest tested source SHA: `589adf4124eb186df6f072069fdb5193a9953c3a`; adapter source blob `0ddd724c7e69d681333fa845c91a83852dd3420c`; adapter test blob `0bcac7250f493e3a81cb57540f573bdee18bee1f`.
