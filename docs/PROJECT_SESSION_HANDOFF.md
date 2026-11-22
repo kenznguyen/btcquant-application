@@ -1,3 +1,21 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B second-round self-review: REQUEST CHANGES
+
+- Exact reviewed design commit: 75e593517ec31d2e2a75ed0050e80ab5dd52edf2.
+- Exact reviewed design blob: 56f2012d6625e5af328d7d5881d892a38a2121e9.
+- Self-review report: docs/reviews/T0_PHASE_B_DESIGN_SELF_REVIEW_ROUND_2_2026-11-22.md
+- Self-review report commit: 2f6317b28502bc06202daf673f1f32c41f847c88
+- Verdict: **REQUEST CHANGES — PHASE B DESIGN NOT APPROVED**.
+- Original findings R-01..R-06 dispositions: R-01 partially resolved (identity uniqueness proof remains blocked); R-02 partially resolved (manifest must bind bounded source/endpoint/limit); R-03 partially resolved (q mapping status inconsistent); R-04 addressed with bounded-depth qualification still required; R-05 partially resolved (aggTrade E/T mapping error and SD-07 snapshot E/T omission); R-06 partially resolved (separate source-delivery cursor vs book-sequence watermark and byte/resource bounds missing).
+- New findings R-07..R-11: R-07 CRITICAL aggTrade E/T mapping reversed; R-08 snapshot completeness conflated with full-depth book despite USD-M REST depth being bounded (limit max 1000); R-09 source-delivery acknowledgement cursor and book sequence watermark not explicitly separated; R-10 event-count/age bounds do not bound bytes/levels/parser resource use; R-11 q mapping status is internally inconsistent.
+- Review evidence: Binance USD-M aggTrade docs define E=event time and T=trade time; pinned T1 schema says timestamp_ms=trade time. Binance USD-M /fapi/v1/depth returns limited market depth with valid limits up to 1000. URLs and exact observations are recorded in the review report.
+- Synthetic matrix: existing 45 cases remain NOT EXECUTED; must add coverage for R-07..R-11 and reconcile test descriptions.
+- Independent second-person review: **NOT PERFORMED**. This is a self-review, not an independent review.
+- Contract freeze: NOT APPROVED. Implementation, Phase C and runtime actions remain NOT AUTHORIZED.
+- Tests/workflows/artifacts: NOT RUN / NONE.
+- Next: revise design R-07..R-11, reconcile R-01..R-06 dispositions, update matrix and blockers, then submit a new exact SHA for review. Documentation-only.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 2 submitted for second design review
 
 - Revised Phase B design: docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md
