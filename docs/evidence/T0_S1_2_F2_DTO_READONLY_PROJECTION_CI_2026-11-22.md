@@ -99,3 +99,16 @@ No archive/sidecar listing, download, extraction, parsing or sampling; no host/w
 - Artifact endpoint: 0 artifacts.
 - DTO constructor validation now rejects nulls in required columns, non-text fields, non-bytes inventory BLOB, bool/negative/out-of-range SQLite integers, zero positive ordinals, invalid flag values, invalid singleton key, invalid HTTP status and malformed SHA-1/SHA-256 text.
 - This is still not full F2. Populated relation mapping, all digest/ID recomputation, S3/V1 payload assembly, graph validation and independent review remain open.
+
+
+## S3/V1 payload assembly and graph validator — synthetic GREEN
+
+- S3/graph test-first RED: commit/source SHA `d59ed7a0dbff8e3534e8d8419a424129c0db00aa`, run [45007382883](https://github.com/kenznguyen/btcquant-application/actions/runs/45007382883), job `137161868207`; exact checkout verified; expected missing API assertions failed.
+- Initial implementation SHA `aee259f1f4442efd76c7f68d12b5854f4569baf6` failed because the module did not import `hashlib`; corrected by `1fcf708216bf52ba7807532bcd799e569aa8ca01`.
+- First GREEN: run [45007483528](https://github.com/kenznguyen/btcquant-application/actions/runs/45007483528), job `137162183334`, SUCCESS; exact checked-out SHA matches; importer-core 20/20, adapter 20/20, schema 14/14, full regression 455/455 PASS.
+- Complete synthetic physical-to-S3 integration test: test commit/source SHA `1fade80a7c57348a0da605fbc292ad0ceb9d5efe`; run [45007572947](https://github.com/kenznguyen/btcquant-application/actions/runs/45007572947), job `137162475080`, SUCCESS; exact checkout SHA matches; importer-core 20/20, adapter 21/21, schema 14/14, full regression 456/456 PASS.
+- The complete synthetic S1 fixture contains 404 inventory objects, 404 attempts, 202 pairs, 202 members, 202 source rows, 202 candles and 202 links. Its physical DTO projection is converted to the unchanged S3/V1 collection/envelope shape; existing `validate_provenance()` accepts it; the added graph validator accepts its event/attempt/pair/member/source-row/candle/link/failure-observation graph.
+- Artifact endpoints for both GREEN runs returned 0 artifacts.
+- Implemented APIs: `build_s3_v1_payload(projection)`, `validate_staging_graph(projection)`, and `project_staging_s3_v1_payload(connection)`. The latter rejects any snapshot that does not pass both physical graph and existing S3/V1 validation.
+- Remaining verification: the full fixture currently converts synthetic DTOs directly; populated SQLite row-to-DTO projection for every relation still needs a disposable DB integration test. Graph negative tests are not yet exhaustive for all contract invariants. Candidate snapshot digest binding and canonical coverage-manifest checks require additional explicit verification.
+- F2 remains **PARTIAL**, despite these implementation and synthetic validation passes. S1.2 remains **NOT FROZEN**; independent review **NOT RUN**; B8 **NOT APPROVED**; real-data staging **NOT AUTHORIZED**.
