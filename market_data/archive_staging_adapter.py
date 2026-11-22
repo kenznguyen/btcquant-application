@@ -314,3 +314,363 @@ def derive_object_attempt_summary(
         if len(transferred) != 1 or len(matches) != 1:
             raise AdapterValidationError("SUCCESSFUL_ATTEMPT_RELATION_INVALID", "success relation must reference the unique transferred attempt")
     return {"attempt_count": len(ordered), "successful_attempt_id": successful_attempt_id}
+
+
+# Canonical S1.2 physical-row DTOs. These are deliberately distinct from the
+# legacy S3-shaped records above: they preserve every physical schema column.
+import sqlite3
+
+
+@dataclass(frozen=True, slots=True)
+class RunEnvelope:
+    singleton_key: int
+    run_id: str
+    inventory_id: str
+    inventory_blob_sha256: str
+    inventory_raw_bytes: bytes
+    label: str
+    parser_contract_id: str
+    parser_source_sha: str
+    importer_source_sha: str
+    schema_contract_id: str
+    schema_fingerprint_sha256: str
+    created_at_utc: str
+    coverage_manifest_json: str
+    coverage_manifest_sha256: str
+
+
+@dataclass(frozen=True, slots=True)
+class ObjectEvidence:
+    object_id: str
+    inventory_id: str
+    inventory_blob_sha256: str
+    inventory_entry_identity: str
+    object_key: str
+    object_kind: str
+    timeframe: str
+    partition: str
+    period: str
+    paired_object_key: str
+    requested_key: str | None
+    expected_size_bytes: int | None
+    expected_sha256: str | None
+    measured_size_bytes: int | None
+    measured_sha256: str | None
+    response_bytes_total: int
+    response_status: int | None
+    local_relative_path: str | None
+    exclusive_create: int | None
+    retrieval_source: str | None
+    workflow_run_id: str | None
+    workflow_job_id: str | None
+    workflow_event: str | None
+    trigger_sha: str | None
+    checkout_sha: str | None
+    retrieved_at_utc: str | None
+    verification_status: str
+    failure_code: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class AttemptEvidence:
+    attempt_id: str
+    object_id: str
+    attempt_number: int
+    workflow_run_id: str
+    workflow_job_id: str
+    workflow_event: str
+    trigger_sha: str
+    checkout_sha: str
+    requested_key: str
+    expected_size_bytes: int
+    expected_sha256: str
+    started_at_utc: str
+    finished_at_utc: str | None
+    outcome: str
+    failure_subtype: str | None
+    response_status: int | None
+    response_bytes_received: int | None
+    is_complete_object: int
+    partial_body_sha256: str | None
+    complete_object_sha256: str | None
+    failure_code: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class SuccessfulAttempt:
+    object_id: str
+    attempt_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class PairEvidence:
+    pair_id: str
+    zip_object_id: str
+    sidecar_object_id: str
+    zip_size_bytes: int | None
+    zip_sha256: str | None
+    sidecar_size_bytes: int | None
+    sidecar_sha256: str | None
+    sidecar_asserted_zip_sha256: str | None
+    assertion_matches: int | None
+    zip_crc_ok: int | None
+    candidate_member_count: int | None
+    structural_ok: int | None
+    disposition: str
+    failure_code: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class MemberCandidateEvidence:
+    candidate_id: str
+    member_id: str | None
+    pair_id: str
+    central_directory_ordinal: int
+    member_path: str | None
+    member_size_bytes: int | None
+    member_sha256: str | None
+    encoding: str | None
+    bom_present: int | None
+    newline: str | None
+    delimiter: str | None
+    header_present: int | None
+    header_contract_id: str | None
+    parser_contract_id: str | None
+    parser_source_sha: str | None
+    data_row_count: int | None
+    first_open_time_ms: int | None
+    last_open_time_ms: int | None
+    disposition: str
+    failure_code: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class SourceRowEvidence:
+    source_row_id: str
+    member_id: str
+    physical_record_ordinal: int
+    data_row_ordinal: int
+    raw_fields_json: str
+    raw_row_digest: str
+    parser_contract_id: str
+    parser_source_sha: str
+    importer_contract_id: str
+    importer_source_sha: str
+    exchange: str | None
+    market_type: str | None
+    symbol: str | None
+    timeframe: str | None
+    open_time_ms: int | None
+    candle_value_id: str | None
+    disposition: str
+    rejection_code: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class CandleEvidence:
+    exchange: str
+    market_type: str
+    symbol: str
+    timeframe: str
+    open_time_ms: int
+    open: str
+    high: str
+    low: str
+    close: str
+    volume: str
+    available_at_ms: int
+    availability_kind: str
+    candle_value_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class CandleLinkEvidence:
+    link_id: str
+    exchange: str
+    market_type: str
+    symbol: str
+    timeframe: str
+    open_time_ms: int
+    source_row_id: str
+    candle_value_id: str
+    duplicate_disposition: str
+
+
+@dataclass(frozen=True, slots=True)
+class FailureObservation:
+    subject_kind: str
+    subject_id: str
+    failure_ordinal: int
+    failure_code: str
+    failure_detail_code: str | None
+    observed_at_utc: str
+    evidence_sha256: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class RunEvent:
+    run_id: str
+    event_seq: int
+    event_type: str
+    occurred_at_utc: str
+    reason_code: str | None
+    candidate_snapshot_sha256: str | None
+    validator_payload_sha256: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class StagingProjection:
+    run: RunEnvelope
+    objects: tuple[ObjectEvidence, ...]
+    attempts: tuple[AttemptEvidence, ...]
+    successful_attempts: tuple[SuccessfulAttempt, ...]
+    pairs: tuple[PairEvidence, ...]
+    members: tuple[MemberCandidateEvidence, ...]
+    source_rows: tuple[SourceRowEvidence, ...]
+    candles: tuple[CandleEvidence, ...]
+    links: tuple[CandleLinkEvidence, ...]
+    failure_observations: tuple[FailureObservation, ...]
+    run_events: tuple[RunEvent, ...]
+
+
+_RELATION_SPECS = (
+    ("run_events", RunEvent,
+     ("run_id", "event_seq", "event_type", "occurred_at_utc", "reason_code",
+      "candidate_snapshot_sha256", "validator_payload_sha256"),
+     "run_id,event_seq"),
+    ("archive_objects", ObjectEvidence,
+     ("object_id", "inventory_id", "inventory_blob_sha256", "inventory_entry_identity",
+      "object_key", "object_kind", "timeframe", "partition", "period", "paired_object_key",
+      "requested_key", "expected_size_bytes", "expected_sha256", "measured_size_bytes",
+      "measured_sha256", "response_bytes_total", "response_status", "local_relative_path",
+      "exclusive_create", "retrieval_source", "workflow_run_id", "workflow_job_id",
+      "workflow_event", "trigger_sha", "checkout_sha", "retrieved_at_utc",
+      "verification_status", "failure_code"),
+     "object_id"),
+    ("acquisition_attempts", AttemptEvidence,
+     ("attempt_id", "object_id", "attempt_number", "workflow_run_id", "workflow_job_id",
+      "workflow_event", "trigger_sha", "checkout_sha", "requested_key", "expected_size_bytes",
+      "expected_sha256", "started_at_utc", "finished_at_utc", "outcome", "failure_subtype",
+      "response_status", "response_bytes_received", "is_complete_object",
+      "partial_body_sha256", "complete_object_sha256", "failure_code"),
+     "object_id,attempt_number,attempt_id"),
+    ("object_successful_attempt", SuccessfulAttempt,
+     ("object_id", "attempt_id"), "object_id"),
+    ("archive_pairs", PairEvidence,
+     ("pair_id", "zip_object_id", "sidecar_object_id", "zip_size_bytes", "zip_sha256",
+      "sidecar_size_bytes", "sidecar_sha256", "sidecar_asserted_zip_sha256",
+      "assertion_matches", "zip_crc_ok", "candidate_member_count", "structural_ok",
+      "disposition", "failure_code"), "pair_id"),
+    ("csv_members", MemberCandidateEvidence,
+     ("candidate_id", "member_id", "pair_id", "central_directory_ordinal", "member_path",
+      "member_size_bytes", "member_sha256", "encoding", "bom_present", "newline",
+      "delimiter", "header_present", "header_contract_id", "parser_contract_id",
+      "parser_source_sha", "data_row_count", "first_open_time_ms", "last_open_time_ms",
+      "disposition", "failure_code"),
+     "pair_id,central_directory_ordinal,candidate_id"),
+    ("source_rows", SourceRowEvidence,
+     ("source_row_id", "member_id", "physical_record_ordinal", "data_row_ordinal",
+      "raw_fields_json", "raw_row_digest", "parser_contract_id", "parser_source_sha",
+      "importer_contract_id", "importer_source_sha", "exchange", "market_type", "symbol",
+      "timeframe", "open_time_ms", "candle_value_id", "disposition", "rejection_code"),
+     "member_id,physical_record_ordinal,source_row_id"),
+    ("candles", CandleEvidence,
+     ("exchange", "market_type", "symbol", "timeframe", "open_time_ms", "open", "high",
+      "low", "close", "volume", "available_at_ms", "availability_kind", "candle_value_id"),
+     "exchange,market_type,symbol,timeframe,open_time_ms"),
+    ("candle_provenance_links", CandleLinkEvidence,
+     ("link_id", "exchange", "market_type", "symbol", "timeframe", "open_time_ms",
+      "source_row_id", "candle_value_id", "duplicate_disposition"),
+     "source_row_id,link_id"),
+    ("failure_observations", FailureObservation,
+     ("subject_kind", "subject_id", "failure_ordinal", "failure_code",
+      "failure_detail_code", "observed_at_utc", "evidence_sha256"),
+     "subject_kind,subject_id,failure_ordinal"),
+)
+
+
+def _read_relation(
+    connection: sqlite3.Connection, table: str, dto_type: type,
+    columns: tuple[str, ...], order_by: str,
+) -> tuple:
+    sql = f"SELECT {', '.join(columns)} FROM {table} ORDER BY {order_by}"
+    cursor = connection.execute(sql)
+    names = tuple(item[0] for item in cursor.description)
+    return tuple(dto_type(**dict(zip(names, row))) for row in cursor.fetchall())
+
+
+def project_staging_database(connection: sqlite3.Connection) -> StagingProjection:
+    """Read a complete immutable snapshot from a caller-owned connection only."""
+    if not isinstance(connection, sqlite3.Connection):
+        raise AdapterValidationError(
+            "STAGING_CONNECTION_INVALID", "connection must be an open sqlite3.Connection"
+        )
+    from market_data.archive_staging_schema import verify_staging_database
+
+    savepoint = "t0_adapter_projection"
+    connection.execute(f"SAVEPOINT {savepoint}")
+    try:
+        if not verify_staging_database(connection):
+            raise AdapterValidationError(
+                "STAGING_SCHEMA_INVALID", "staging schema, fingerprint or integrity check failed"
+            )
+        run_columns = (
+            "singleton_key", "run_id", "inventory_id", "inventory_blob_sha256",
+            "inventory_raw_bytes", "label", "parser_contract_id", "parser_source_sha",
+            "importer_source_sha", "schema_contract_id", "schema_fingerprint_sha256",
+            "created_at_utc", "coverage_manifest_json", "coverage_manifest_sha256",
+        )
+        rows = connection.execute(
+            f"SELECT {', '.join(run_columns)} FROM reconstruction_run ORDER BY singleton_key"
+        ).fetchall()
+        if len(rows) != 1:
+            raise AdapterValidationError(
+                "RUN_ENVELOPE_CARDINALITY_INVALID", "exactly one reconstruction run is required"
+            )
+        run = RunEnvelope(**dict(zip(run_columns, rows[0])))
+        projected = {}
+        for table, dto_type, columns, order_by in _RELATION_SPECS:
+            projected[table] = _read_relation(
+                connection, table, dto_type, columns, order_by
+            )
+        events = projected["run_events"]
+        if (not events or events[0].run_id != run.run_id
+                or events[0].event_seq != 1 or events[0].event_type != "BUILDING"
+                or sum(1 for event in events if event.event_seq == 1) != 1):
+            raise AdapterValidationError(
+                "INITIAL_BUILDING_EVENT_INVALID",
+                "exactly one initial BUILDING event at sequence 1 is required",
+            )
+        if any(event.run_id != run.run_id for event in events):
+            raise AdapterValidationError(
+                "RUN_EVENT_IDENTITY_INVALID", "run event references a different run"
+            )
+        connection.execute(f"RELEASE SAVEPOINT {savepoint}")
+        return StagingProjection(
+            run=run,
+            objects=projected["archive_objects"],
+            attempts=projected["acquisition_attempts"],
+            successful_attempts=projected["object_successful_attempt"],
+            pairs=projected["archive_pairs"],
+            members=projected["csv_members"],
+            source_rows=projected["source_rows"],
+            candles=projected["candles"],
+            links=projected["candle_provenance_links"],
+            failure_observations=projected["failure_observations"],
+            run_events=events,
+        )
+    except Exception:
+        try:
+            connection.execute(f"ROLLBACK TO SAVEPOINT {savepoint}")
+            connection.execute(f"RELEASE SAVEPOINT {savepoint}")
+        except sqlite3.Error:
+            pass
+        raise
+
+
+__all__ = __all__ + (
+    "RunEnvelope", "ObjectEvidence", "AttemptEvidence", "SuccessfulAttempt",
+    "PairEvidence", "MemberCandidateEvidence", "SourceRowEvidence",
+    "CandleEvidence", "CandleLinkEvidence", "FailureObservation", "RunEvent",
+    "StagingProjection", "project_staging_database",
+)
