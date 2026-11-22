@@ -8,7 +8,7 @@
 - R15 design source commit/blob: `5bbbd6ac253b4f8c8d9aeccb28d77170b1897919` / `2b1cb4a8d0a7d40f9ebfb29ccaf9d9d14930cfc0`
 - Codex review ID: `PRR_kwDOVzv83s8AAAABZnV1sw`
 - R15 review result: COMPLETED WITH THREE P2 FINDINGS.
-- R16 design source commit/blob: `9160617f12a1b0830b5fe5f7244e6a4dede072db` / `a6c727286e3c746d252fcaf07e872a92396b749a`
+- R16 design source commit/blob: `12f2e1db923c264660ab93b6139cb512d96a78a8` / `c2be5412668b0945c5f6f51e1aeaf787383a6676`
 - R16 design path: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_16_2026-11-23.md`
 - R16 is a new immutable successor; R15 was not modified.
 
@@ -44,13 +44,14 @@ The owner authorized an iterative remediation/review loop: correct findings only
 - Matrix count remains 101 (14/31/46/10): **PASS**.
 - No-clobber publication, existing-target digest verification, distinct immutable evidence key, concurrent race handling and fail-closed behavior are specified: **PASS**.
 - R15 immutability: **PASS** (R16 is a new file; R15 source remains unchanged).
+- Self-review additionally removed a stale self-referential source-identity placeholder; exact R16 SHA/blob are maintained in companion metadata instead of embedded in the file itself.
 - These are documentation/static consistency checks only; no runtime tests, filesystem fault-injection tests or formal proofs were run.
 
 ## Current status
 
 - R16 documentation corrections: **PASS — static self-review only**.
 - Exact R16 source SHA/blob: **VERIFIED**.
-- Independent Codex review of exact R16 source: **PENDING**; new review-only PR is the review vehicle.
+- Independent Codex review of exact R16 source: **BLOCKED — Codex review quota exhausted before a review verdict was produced**. A retry was posted; no findings/verdict were returned for R16.
 - Workflow runs/jobs/artifacts: **NONE VERIFIED**.
 - 101 synthetic fixtures/tests: **NOT CREATED / NOT RUN** pending satisfactory exact-R16 review.
 - Formal proofs: **NOT RUN**.
