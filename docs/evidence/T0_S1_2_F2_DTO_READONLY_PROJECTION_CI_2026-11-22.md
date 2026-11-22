@@ -214,3 +214,24 @@ No archive/sidecar listing, download, extraction, parsing or sampling; no host/w
   - CI workflow `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
 - The prior `d91c92a` CI record remains valid as a historical checkpoint; this `5074bf3` run supersedes it as the latest tested source.
 - Independent review PR #5 currently references the prior `d91c92a` snapshot and must be updated to this latest exact source before its review result is accepted.
+
+
+## F7 authorizer-installation rollback — exact-SHA RED/GREEN
+
+- RED test source SHA: `f97a1f61e0eeee24c42acd847f36db3969034c18`; run [45011014408](https://github.com/kenznguyen/btcquant-application/actions/runs/45011014408), job `137173138192`, failed as expected: authorizer installation happened after commit, leaving user_version=2 despite initialization reporting failure.
+- GREEN tested source SHA: `284d9d243d529b84de4318e65266993fad71a757`.
+- Exact-SHA CI run [45011049882](https://github.com/kenznguyen/btcquant-application/actions/runs/45011049882), job `137173247655`, SUCCESS; requested SHA and checked-out SHA match.
+- Results: importer-core 20/20; S1.2 adapter 43/43; SQLite staging schema 32/32; full `market_data` regression 496/496 PASS.
+- Runtime: CPython 3.13.18 / SQLite 3.45.1 focused; CPython 3.12.16 full regression. Artifact count 0.
+- F7 now installs the append-only authorizer before COMMIT; any DDL, authorizer-installation or commit failure rolls back schema objects and user_version. Rollback tests cover table/index/trigger DDL failures, authorizer failure and commit failure.
+- Latest source blobs:
+  - schema `f530f4f2f394dfb018e5bc750d04974df8b1adcd`
+  - schema tests `e1555b424aacb15b06894ddfc34a99b2989e9ad5`
+  - adapter `70bcf83c37936593e394c8476134046a7da70f4c`
+  - adapter tests `19cd18b40cb61252094b5805eb9d3cc35a7ff39b`
+  - unchanged S3/V1 validator `b94bac0f82ae141984552409f99a5cff70435b3b`
+  - S1 fixture `41f5b21eaa418bb32f4f40e00de7e920ca39c4bf`
+  - CI workflow `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
+- This run supersedes `5074bf3` as the latest tested source.
+- Independent review PR #5 must be refreshed to source SHA `284d9d2` and the latest contract/evidence documents before review acceptance.
+- Candidate snapshot digest preimage/serialization remains undefined by the approved design; no recomputation is implemented. S1.2 remains NOT FROZEN pending independent review and that separate design decision.
