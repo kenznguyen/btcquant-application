@@ -1,3 +1,16 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — S1 persistence-readiness review BLOCKED BEFORE PERSISTENCE
+
+- Read-only review: `docs/reviews/T0_S1_PERSISTENCE_READINESS_COMPATIBILITY_REVIEW_2026-11-22.md`, commit `aef46279e2d123e8067ac9438678b63259fd0e6f`.
+- Review baseline source SHA: `08ae0a8d9d0c595b188e3f158b4db7733f0de11f`.
+- Review type: same-session SELF-REVIEW, not independent. No code/tests/workflows/DDL/SQLite/archive/host/data/runtime changed or executed.
+- S1.1 remains OWNER ACCEPTED / DESIGN FROZEN at the logical-contract level; this review does not reopen the accepted principles. Persistence remains BLOCKED pending S1.2 compatibility/physical-schema closure.
+- Blocking mismatches: (B1) importer core test token `usd_m` vs S1/S3 `usdm`; (B2) core duplicate comparison includes source-only fields whereas S1 deduplicates by normalized candle tuple; (B3) core row dispositions differ from S1 source-row/link dispositions; (B4) core half-open coverage vs S3 inclusive manifest ranges; (B5) opaque source refs vs full S1 object/member/row provenance; (B6) parser's all-or-nothing exception interface cannot emit row-level rejected evidence; (B7) run lifecycle status transitions conflict with no-update append-only rule; (B8) attempt identity requires GitHub workflow IDs while B7 selects manual workstation execution; (B9) S1.1 logical model is not a complete executable DDL/schema-fingerprint specification; (B10) singular failure_code fields need a representation for multiple retained diagnostics.
+- Other gates unchanged: B3 real archive variants NOT VERIFIED beyond M15 monthly 2022-08; B5 actual coverage NOT VERIFIED; B4 budget design accepted but implementation not authorized; B6 preserve-until-explicit-delete policy accepted, no deletion/upload; B7 Option A selected but exact device/path and preflight pending; exact Python/SQLite runtime pins deferred.
+- Next permitted design step: documentation-only S1.2 compatibility amendment and exact logical-to-physical schema specification. No importer adapter implementation, tests, DDL, SQLite, archive access, preflight or staging is authorized by this review.
+- Current main after review + handoff update will be recorded in the commit returned by the handoff update.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Importer-core synthetic in-memory TDD PASS
 
 - Owner approved bounded synthetic-only in-memory importer-core TDD and separately approved the dedicated GitHub Actions workflow.
