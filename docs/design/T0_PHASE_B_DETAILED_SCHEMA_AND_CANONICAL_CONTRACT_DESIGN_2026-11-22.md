@@ -1,7 +1,7 @@
 # T0 Phase B — Detailed Schema & Canonical Contract Design
 
 - Date: 2026-11-22 (revision 3)
-- Status: **PHASE B DESIGN REVISION 3 — READY FOR NEXT REVIEW**
+- Status: **PHASE B DESIGN REVISION 3 — NEXT REVIEW REQUESTED**
 - Scope: SD-05 aggregate trades; SD-06 order-book depth diffs; SD-07 order-book snapshots.
 - Authorization: owner-approved Phase A review and Phase B documentation-only authorization, decision commit `f2f5741cad47b86c70dae23dbaa9b497258cc80a`.
 - Governing design: `docs/design/T0_SOURCE_DOMAIN_INVENTORY_AND_CANONICAL_INGESTION_CONTRACT_V1_2026-11-22.md`.
@@ -227,7 +227,9 @@ Canonical diff history and a reconstructed in-memory/current book are different 
 
 | Native field | Documented meaning | Candidate canonical field | Notes |
 |---|---|---|---|
-| `timestamp_ms` | snapshot capture time | `snapshot_captured_at_ms` | Not exchange event time unless source proves so |
+| `timestamp_ms` | snapshot capture time in current T1 CSV | `snapshot_captured_at_ms` | Not native REST event/transaction time |
+| `E` (if returned by the selected REST/source variant) | response/event time | `snapshot_event_time_ms` | Preserve separately when actually captured; otherwise unavailable |
+| `T` (if returned by the selected REST/source variant) | transaction time | `snapshot_transaction_time_ms` | Preserve separately when actually captured; otherwise unavailable |
 | `event_type` | initial/periodic/bridge snapshot type | `snapshot_kind` | Enum allowlist |
 | `side` | bid or ask | `side` | Strict enum |
 | `price` | level price | `price` | Exact positive decimal |
@@ -316,7 +318,7 @@ Raw object digest and canonical semantic digest are different. CSV row serializa
 | Lost acknowledgement | Retry same aggregate ID | Retry same epoch/update range | Retry same proven capture identity |
 | Source evidence unavailable | No canonical acceptance | No canonical acceptance | No canonical acceptance |
 
-No source deletion follows acknowledgement. Partial acceptance must retain per-record outcomes and safe resume position. Acknowledgement/checkpoint atomicity and quarantine progression are design blockers, not implemented behavior.
+No source deletion follows acknowledgement. Partial acceptance must retain per-record outcomes and safe resume position. Source-delivery acknowledgement and book-sequence progress are separate as defined in §4.8; acknowledgement/checkpoint atomicity and quarantine progression remain design blockers, not implemented behavior.
 
 ## 9. Synthetic test design (NOT EXECUTED)
 
@@ -440,7 +442,7 @@ All cases below are proposed deterministic tests using isolated synthetic fixtur
 - [ ] Canonical DTO/envelope, digest encoding, snapshot capture/group identity and diff stream epoch contract reviewed/frozen.
 - [ ] Independent design review completed and findings resolved.
 
-**Second-round review requested:** review this revised Phase B design against findings R-01..R-06, the expanded synthetic matrix, and blockers B-01..B-16. The six findings have been addressed at the design level, but source-dependent identity scope, source capture fields, numeric buffer bounds and exact protocol bridge remain unfrozen blockers. Approval of this draft would accept the design baseline only if explicitly stated; it would not authorize implementation unless a separate implementation decision names its exact scope.
+**Next review requested (revision 3):** review the corrections to R-01..R-11, the 66-case synthetic matrix and blockers B-01..B-20. The design now closes the conceptual gaps in E/T mapping, bounded snapshot semantics, cursor separation and resource-bound categories; it does not claim source-dependent mappings, identity scope, numeric values, source completeness fields or protocol bridge are verified/frozen. Any unresolved evidence dependency remains a contract-freeze blocker. Approval of this draft would accept the design baseline only if explicitly stated; it would not authorize implementation unless a separate implementation decision names its exact scope.
 
 ## 12. Explicit exclusions
 
