@@ -445,3 +445,161 @@ class S3V1ProjectionAndGraphREDTests(unittest.TestCase):
         result = validate_staging_graph(self._minimal_projection(event_sequence=(1, 3)))
         self.assertFalse(result.valid)
         self.assertIn("RUN_EVENT_SEQUENCE_INVALID", result.error_codes)
+
+
+class CompleteS3V1ProjectionFixtureTests(unittest.TestCase):
+    @staticmethod
+    def _projection_from_valid_s1_fixture():
+        import hashlib
+        import json
+        from market_data.archive_staging_adapter import (
+            AttemptEvidence, CandleEvidence, CandleLinkEvidence,
+            FailureObservation, MemberCandidateEvidence, ObjectEvidence,
+            PairEvidence, RunEnvelope, RunEvent, SourceRowEvidence,
+            StagingProjection, SuccessfulAttempt,
+        )
+        from market_data.archive_staging_schema import compute_schema_fingerprint
+        from market_data.test_archive_provenance_validator_s1_red import build_valid_s1_fixture
+
+        fixture = build_valid_s1_fixture()
+        manifest_json = json.dumps(
+            fixture["coverage_manifest"], ensure_ascii=False,
+            sort_keys=True, separators=(",", ":"),
+        )
+        run_id = "run1:" + "e" * 64
+        inventory_id = fixture["inventory_expected_id"]
+        inventory_raw = fixture["inventory_raw_bytes"]
+        run = RunEnvelope(
+            singleton_key=1, run_id=run_id, inventory_id=inventory_id,
+            inventory_blob_sha256=fixture["inventory_expected_sha256"],
+            inventory_raw_bytes=inventory_raw,
+            label="RECONSTRUCTED — PARTIAL COVERAGE",
+            parser_contract_id="T0_ARCHIVE_CSV_HEADER_V1",
+            parser_source_sha="a" * 40, importer_source_sha="d" * 40,
+            schema_contract_id="T0_STAGING_SCHEMA_V2",
+            schema_fingerprint_sha256=compute_schema_fingerprint(),
+            created_at_utc="2026-11-22T00:00:00.000Z",
+            coverage_manifest_json=manifest_json,
+            coverage_manifest_sha256=hashlib.sha256(manifest_json.encode()).hexdigest(),
+        )
+        objects = tuple(ObjectEvidence(
+            object_id=x["object_id"], inventory_id=x["inventory_id"],
+            inventory_blob_sha256=x["inventory_blob_sha256"],
+            inventory_entry_identity=x["inventory_entry_identity"],
+            object_key=x["object_key"], object_kind=x["object_kind"],
+            timeframe=x["timeframe"], partition=x["partition"], period=x["period"],
+            paired_object_key=x["paired_object_key"], requested_key=x["requested_key"],
+            expected_size_bytes=x["expected_size_bytes"], expected_sha256=x["expected_sha256"],
+            measured_size_bytes=x["measured_size_bytes"], measured_sha256=x["measured_sha256"],
+            response_bytes_total=x["response_bytes_total"], response_status=x["response_status"],
+            local_relative_path=x["local_relative_path"], exclusive_create=x["exclusive_create"],
+            retrieval_source=x["retrieval_source"], workflow_run_id=x["workflow_run_id"],
+            workflow_job_id=x["workflow_job_id"], workflow_event=x["workflow_event"],
+            trigger_sha=x["trigger_sha"], checkout_sha=x["checkout_sha"],
+            retrieved_at_utc=x["retrieved_at_utc"],
+            verification_status=x["verification_status"], failure_code=x["failure_code"],
+        ) for x in fixture["objects"])
+        attempts = tuple(AttemptEvidence(
+            attempt_id=x["attempt_id"], object_id=x["object_id"],
+            attempt_number=x["attempt_number"], workflow_run_id=x["workflow_run_id"],
+            workflow_job_id=x["workflow_job_id"], workflow_event=x["workflow_event"],
+            trigger_sha=x["trigger_sha"], checkout_sha=x["checkout_sha"],
+            requested_key=x["requested_key"], expected_size_bytes=x["expected_size_bytes"],
+            expected_sha256=x["expected_sha256"], started_at_utc=x["started_at_utc"],
+            finished_at_utc=x["finished_at_utc"], outcome=x["outcome"],
+            failure_subtype=None, response_status=x["response_status"],
+            response_bytes_received=x["response_bytes_received"],
+            is_complete_object=x["is_complete_object"],
+            partial_body_sha256=x["partial_body_sha256"],
+            complete_object_sha256=x["complete_object_sha256"], failure_code=x["failure_code"],
+        ) for x in fixture["attempts"])
+        successful = tuple(
+            SuccessfulAttempt(object_id=x["object_id"], attempt_id=x["successful_attempt_id"])
+            for x in fixture["objects"]
+        )
+        pairs = tuple(PairEvidence(
+            pair_id=x["pair_id"], zip_object_id=x["zip_object_id"],
+            sidecar_object_id=x["sidecar_object_id"],
+            zip_size_bytes=x["measured_zip_size_bytes"], zip_sha256=x["measured_zip_sha256"],
+            sidecar_size_bytes=x["measured_sidecar_size_bytes"],
+            sidecar_sha256=x["measured_sidecar_sha256"],
+            sidecar_asserted_zip_sha256=x["sidecar_asserted_zip_sha256"],
+            assertion_matches=x["sidecar_assertion_matches"], zip_crc_ok=x["zip_crc_ok"],
+            candidate_member_count=x["member_count"], structural_ok=x["structural_ok"],
+            disposition=x["disposition"], failure_code=x["failure_code"],
+        ) for x in fixture["pairs"])
+        members = tuple(MemberCandidateEvidence(
+            candidate_id="cand1:" + hashlib.sha256(x["member_id"].encode()).hexdigest(),
+            member_id=x["member_id"], pair_id=x["pair_id"],
+            central_directory_ordinal=1, member_path=x["member_path"],
+            member_size_bytes=x["member_size_bytes"], member_sha256=x["member_sha256"],
+            encoding=x["encoding"], bom_present=x["bom_present"], newline=x["newline"],
+            delimiter=x["delimiter"], header_present=x["header_present"],
+            header_contract_id=x["header_contract_id"], parser_contract_id=x["parser_contract_id"],
+            parser_source_sha=x["parser_source_sha"], data_row_count=x["data_row_count"],
+            first_open_time_ms=x["first_open_time_ms"], last_open_time_ms=x["last_open_time_ms"],
+            disposition=x["disposition"], failure_code=x["failure_code"],
+        ) for x in fixture["members"])
+        rows = tuple(SourceRowEvidence(
+            source_row_id=x["source_row_id"], member_id=x["member_id"],
+            physical_record_ordinal=x["physical_record_ordinal"],
+            data_row_ordinal=x["data_row_ordinal"], raw_fields_json=x["raw_fields_json"],
+            raw_row_digest=x["raw_row_digest"], parser_contract_id=x["parser_contract_id"],
+            parser_source_sha=x["parser_source_sha"], importer_contract_id=x["importer_contract_id"],
+            importer_source_sha=x["importer_source_sha"], exchange=x["natural_key"][0],
+            market_type=x["natural_key"][1], symbol=x["natural_key"][2],
+            timeframe=x["natural_key"][3], open_time_ms=x["natural_key"][4],
+            candle_value_id=x["candle_value_id"], disposition=x["disposition"],
+            rejection_code=x["rejection_code"],
+        ) for x in fixture["source_rows"])
+        candles = tuple(CandleEvidence(
+            exchange=x["exchange"], market_type=x["market_type"], symbol=x["symbol"],
+            timeframe=x["timeframe"], open_time_ms=x["open_time_ms"],
+            open=x["open"], high=x["high"], low=x["low"], close=x["close"],
+            volume=x["volume"], available_at_ms=x["available_at_ms"],
+            availability_kind=x["availability_kind"], candle_value_id=x["candle_value_id"],
+        ) for x in fixture["candles"])
+        links = tuple(CandleLinkEvidence(
+            link_id=x["link_id"], exchange=x["exchange"], market_type=x["market_type"],
+            symbol=x["symbol"], timeframe=x["timeframe"], open_time_ms=x["open_time_ms"],
+            source_row_id=x["source_row_id"], candle_value_id=x["candle_value_id"],
+            duplicate_disposition=x["duplicate_disposition"],
+        ) for x in fixture["links"])
+        events = (
+            RunEvent(
+                run_id=run_id, event_seq=1, event_type="BUILDING",
+                occurred_at_utc="2026-11-22T00:00:00.000Z", reason_code=None,
+                candidate_snapshot_sha256=None, validator_payload_sha256=None,
+            ),
+            RunEvent(
+                run_id=run_id, event_seq=2, event_type="CANDIDATE",
+                occurred_at_utc="2026-11-22T00:00:02.000Z", reason_code=None,
+                candidate_snapshot_sha256="f" * 64, validator_payload_sha256=None,
+            ),
+        )
+        return StagingProjection(
+            run=run, objects=objects, attempts=attempts,
+            successful_attempts=successful, pairs=pairs, members=members,
+            source_rows=rows, candles=candles, links=links,
+            failure_observations=(), run_events=events,
+        )
+
+    def test_complete_synthetic_physical_projection_passes_unchanged_s3_v1(self):
+        from market_data.archive_staging_adapter import (
+            build_s3_v1_payload, validate_staging_graph,
+        )
+        from market_data.archive_provenance_validator import validate_provenance
+
+        projection = self._projection_from_valid_s1_fixture()
+        payload = build_s3_v1_payload(projection)
+        self.assertEqual(len(payload["inventory"]["objects"]), 404)
+        self.assertEqual(len(payload["objects"]), 404)
+        self.assertEqual(len(payload["attempts"]), 404)
+        self.assertEqual(len(payload["pairs"]), 202)
+        self.assertEqual(len(payload["members"]), 202)
+        self.assertEqual(len(payload["source_rows"]), 202)
+        self.assertEqual(len(payload["candles"]), 202)
+        self.assertEqual(len(payload["links"]), 202)
+        self.assertTrue(validate_provenance(payload).valid)
+        graph_result = validate_staging_graph(projection)
+        self.assertTrue(graph_result.valid, graph_result.error_codes)
