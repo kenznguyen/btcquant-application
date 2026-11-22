@@ -1,3 +1,22 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 5 design review: REQUEST CHANGES
+
+- Exact reviewed design commit: `51a11272a7cc9204d2b42a255942614e36f40b6f`.
+- Exact reviewed design blob SHA: `9aeb036267e9dfce73e0b2405c7f4c9ef27cc5ab`.
+- Review report: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_5_2026-11-22.md`, commit `c2360834ac7642edef5a97d34f57bafdec465a6d`.
+- Verdict: **REQUEST CHANGES — PHASE B REVISION 5 NOT APPROVED**.
+- R-15: materially addressed; three identity domains are distinct. Remaining ownership/registration ambiguity recorded as R-17.
+- R-16: addressed; retry uses immutable source-delivery locator; native event deduplication and capture deduplication remain separate.
+- R-17 HIGH: direct REST capture producer is described generically, not bound to approved SD-07 source-capture owner. Governing T0 source-domain inventory assigns SD-07 REST snapshot/reconstruction to T1 and T0 canonical acceptance. Explicitly bind producer to T1 in `kenznguyen/binance-futures-collector`, unless a separate owner-approved architecture decision authorizes another collector. Define producer registration binding and fail-closed unknown/mismatched producer handling. T0 must not silently mint/replace producer capture identity.
+- Synthetic matrix: 84 proposed cases (14/28/32/10), NOT EXECUTED; add producer ownership/registration, unknown/mismatched producer, clone/concurrent namespace collision, stale restore and T0 identity-minting rejection cases for R-17.
+- B-01..B-20: all remain OPEN; none removed/resolved/owner-accepted. B-07 remains OPEN for uniqueness, durable sequence, non-reuse/fencing and source evidence.
+- Tests/workflows/artifacts: NOT RUN / NONE. No fixtures or test code created.
+- Independent second-person reviewer identity: NOT VERIFIED.
+- Scope: documentation-only review. No source/design edit, code, DTO, parser, validator, fixture, tests, DDL, database, data movement, T1 source/runtime, network, credentials, T1→T0/T2 runtime, VPS/deployment, Phase C or trading action.
+- Contract freeze: **NOT APPROVED**. Implementation/database/runtime/Phase C: **NOT AUTHORIZED**.
+- Next: documentation-only revision for R-17; preserve B-01..B-20 unchanged and OPEN; submit new exact design SHA for review.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 5: R-15/R-16 corrected, self-check PASS
 
 - Exact Phase B design path: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`.
