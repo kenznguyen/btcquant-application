@@ -1,3 +1,17 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 5 review: REQUEST CHANGES
+
+- Exact reviewed design commit: `51a11272a7cc9204d2b42a255942614e36f40b6f`; blob `9aeb036267e9dfce73e0b2405c7f4c9ef27cc5ab`.
+- Review report: `docs/reviews/T0_PHASE_B_DESIGN_REVIEW_ROUND_5_2026-11-22.md`, commit `c2360834ac7642edef5a97d34f57bafdec465a6d`.
+- Verdict: **REQUEST CHANGES — PHASE B REVISION 5 NOT APPROVED**.
+- R-15 materially addressed; R-16 addressed. New R-17 HIGH: direct REST capture producer not explicitly bound to approved T1 source-capture ownership; require producer registration/source-kind binding and fail-closed unknown/mismatch handling. T0 must not mint/replace producer capture identity.
+- Synthetic matrix: 84 proposed cases, NOT EXECUTED; add R-17 producer ownership/registration, clone/concurrent ID collision, stale restore and T0 minting rejection coverage.
+- B-01..B-20 remain OPEN, unchanged. B-07 remains OPEN for producer uniqueness/fencing evidence.
+- Tests/workflows/artifacts: NOT RUN / NONE. Independent second-person reviewer identity NOT VERIFIED.
+- Documentation-only review. Contract freeze NOT APPROVED; implementation/database/runtime/Phase C NOT AUTHORIZED.
+- Next: documentation-only R-17 correction, preserve all blockers, submit new exact design SHA.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — Phase B revision 5: R-15/R-16 corrected
 
 - Design commit: `51a11272a7cc9204d2b42a255942614e36f40b6f`; blob `9aeb036267e9dfce73e0b2405c7f4c9ef27cc5ab`.
