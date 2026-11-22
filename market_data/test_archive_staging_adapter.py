@@ -1113,3 +1113,49 @@ class StagingGraphNegativeInvariantMatrixTests(unittest.TestCase):
             ),
             "SUCCESSFUL_ATTEMPT_GRAPH_INVALID",
         )
+
+    def test_rejects_nonreciprocal_zip_sidecar_pairing(self):
+        from dataclasses import replace
+
+        objects = list(self.projection.objects)
+        sidecar_index = next(
+            index for index, item in enumerate(objects)
+            if item.object_id == self.projection.pairs[0].sidecar_object_id
+        )
+        objects[sidecar_index] = replace(
+            objects[sidecar_index], paired_object_key="synthetic/unpaired.zip"
+        )
+        self._assert_graph_error(
+            replace(self.projection, objects=tuple(objects)),
+            "PAIR_OBJECT_GRAPH_INVALID",
+        )
+
+    def test_rejects_member_id_that_does_not_match_member_evidence(self):
+        from dataclasses import replace
+
+        members = list(self.projection.members)
+        members[0] = replace(members[0], member_id="mem1:" + "f" * 64)
+        self._assert_graph_error(
+            replace(self.projection, members=tuple(members)),
+            "MEMBER_PAIR_GRAPH_INVALID",
+        )
+
+    def test_rejects_source_row_raw_digest_mismatch(self):
+        from dataclasses import replace
+
+        rows = list(self.projection.source_rows)
+        rows[0] = replace(rows[0], raw_row_digest="f" * 64)
+        self._assert_graph_error(
+            replace(self.projection, source_rows=tuple(rows)),
+            "SOURCE_ROW_MEMBER_GRAPH_INVALID",
+        )
+
+    def test_rejects_duplicate_candidate_lifecycle_event(self):
+        from dataclasses import replace
+
+        candidate = self.projection.run_events[1]
+        duplicate = replace(candidate, event_seq=3, occurred_at_utc="2026-11-22T00:00:02.000Z")
+        self._assert_graph_error(
+            replace(self.projection, run_events=self.projection.run_events + (duplicate,)),
+            "RUN_CANDIDATE_EVENT_INVALID",
+        )
