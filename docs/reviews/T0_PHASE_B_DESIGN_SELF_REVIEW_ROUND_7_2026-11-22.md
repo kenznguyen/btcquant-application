@@ -1,6 +1,8 @@
 # T0 Phase B Revision 7 — Documentation Self-Check
 
 - Date: 2026-11-22
+- Exact Revision 7 design commit: `f61fe365f2558569744cbc2a2ca555021a931f48`
+- Exact Revision 7 design blob SHA: `86825e77f69c6943096d8e9f4ecae75b413b2013`
 - Exact design path: `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_2026-11-22.md`
 - Source baseline (preserved unchanged): Revision 6 commit `9b69c18ea16731bf28efba7a92077e96a74107ce`, blob `7012a228561620f4447a0e363a2c5f27d734912a`
 - Scope: documentation-only correction of three P2 findings from PR #6 automated review. No code, database, runtime or deployment work.
