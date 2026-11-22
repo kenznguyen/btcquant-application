@@ -197,8 +197,11 @@ The validator parses `raw_fields_json` as strict JSON (reject duplicate/non-stan
 
 The S1 `coverage_manifest` has exactly these required fields:
 - `manifest_version`: exact `T0-COVERAGE-MANIFEST-V1`;
+- `coverage_ranges`: a non-empty list of unique records, each exactly `{timeframe, start_open_time_ms, end_open_time_ms}`; timeframe is `15m` or `1h`, both endpoints are non-negative aligned integers, and end is inclusive;
 - non-negative integer counts (bool is invalid): `expected_object_count`, `expected_pair_count`, `expected_member_count`, `expected_row_count`, `expected_candle_count`, `expected_link_count`;
 - `approved_gaps` and `approved_extras`: lists of unique records, each exactly `{timeframe, open_time_ms, reason, evidence_ref}`; timeframe is `15m` or `1h`, open_time_ms is a non-negative aligned integer, and reason/evidence_ref are non-empty strings.
+
+The validator expands every inclusive coverage range into aligned natural-key timestamps. Ranges may not overlap. Each approved gap must fall inside exactly one range and be absent from actual candles; each approved extra must fall outside all ranges and be present. The actual candle natural-key set must equal (all range timestamps minus approved gaps) union approved extras. This exact-set rule prevents unlisted gaps and extras; it does not infer missing periods from row counts alone.
 
 Manifest counts must equal actual collection cardinalities. The fixed S1 archive acceptance counts remain 404 objects, 202 pairs, and 202 verified members. Every approved gap/extra is explicit and unique; an absent/malformed manifest, unlisted discrepancy, duplicate record, or count mismatch emits `RUN_ACCEPTANCE_INVARIANT_INVALID`. Empty gap/extra lists are valid and do not imply an unbounded allowance.
 
