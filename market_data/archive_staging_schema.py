@@ -22,8 +22,8 @@ SQLITE_MINIMUM_VERSION = (3, 37, 0)
 TABLE_DDL = (
     """CREATE TABLE reconstruction_run (
       singleton_key INTEGER PRIMARY KEY CHECK(singleton_key=1),
-      run_id TEXT NOT NULL UNIQUE CHECK(length(run_id)=69 AND substr(run_id,1,5)='run1:'),
-      inventory_id TEXT NOT NULL CHECK(length(inventory_id)=69 AND substr(inventory_id,1,5)='inv1:'),
+      run_id TEXT NOT NULL UNIQUE CHECK(length(run_id)=69 AND substr(run_id,1,5)='run1:' AND substr(run_id,6) NOT GLOB '*[^0-9a-f]*'),
+      inventory_id TEXT NOT NULL CHECK(length(inventory_id)=69 AND substr(inventory_id,1,5)='inv1:' AND substr(inventory_id,6) NOT GLOB '*[^0-9a-f]*'),
       inventory_blob_sha256 TEXT NOT NULL CHECK(length(inventory_blob_sha256)=64 AND inventory_blob_sha256 NOT GLOB '*[^0-9a-f]*'),
       inventory_raw_bytes BLOB NOT NULL,
       label TEXT NOT NULL CHECK(label='RECONSTRUCTED — PARTIAL COVERAGE'),
@@ -49,9 +49,9 @@ TABLE_DDL = (
       CHECK(event_type<>'VALIDATED' OR validator_payload_sha256 IS NOT NULL)
     ) STRICT""",
     """CREATE TABLE archive_objects (
-      object_id TEXT PRIMARY KEY CHECK(length(object_id)=69 AND substr(object_id,1,5)='obj1:'),
+      object_id TEXT PRIMARY KEY CHECK(length(object_id)=69 AND substr(object_id,1,5)='obj1:' AND substr(object_id,6) NOT GLOB '*[^0-9a-f]*'),
       inventory_id TEXT NOT NULL,
-      inventory_blob_sha256 TEXT NOT NULL CHECK(length(inventory_blob_sha256)=64),
+      inventory_blob_sha256 TEXT NOT NULL CHECK(length(inventory_blob_sha256)=64 AND inventory_blob_sha256 NOT GLOB '*[^0-9a-f]*'),
       inventory_entry_identity TEXT NOT NULL,
       object_key TEXT NOT NULL UNIQUE,
       object_kind TEXT NOT NULL CHECK(object_kind IN ('ZIP','CHECKSUM_SIDECAR')),
@@ -93,7 +93,7 @@ TABLE_DDL = (
       )
     ) STRICT""",
     """CREATE TABLE acquisition_attempts (
-      attempt_id TEXT PRIMARY KEY CHECK(length(attempt_id)=69 AND substr(attempt_id,1,5)='att1:'),
+      attempt_id TEXT PRIMARY KEY CHECK(length(attempt_id)=69 AND substr(attempt_id,1,5)='att1:' AND substr(attempt_id,6) NOT GLOB '*[^0-9a-f]*'),
       object_id TEXT NOT NULL REFERENCES archive_objects(object_id),
       attempt_number INTEGER NOT NULL CHECK(attempt_number>0),
       workflow_run_id TEXT NOT NULL,
@@ -127,7 +127,7 @@ TABLE_DDL = (
       FOREIGN KEY(object_id,attempt_id) REFERENCES acquisition_attempts(object_id,attempt_id)
     ) STRICT""",
     """CREATE TABLE archive_pairs (
-      pair_id TEXT PRIMARY KEY CHECK(length(pair_id)=70 AND substr(pair_id,1,6)='pair1:'),
+      pair_id TEXT PRIMARY KEY CHECK(length(pair_id)=70 AND substr(pair_id,1,6)='pair1:' AND substr(pair_id,7) NOT GLOB '*[^0-9a-f]*'),
       zip_object_id TEXT NOT NULL UNIQUE REFERENCES archive_objects(object_id),
       sidecar_object_id TEXT NOT NULL UNIQUE REFERENCES archive_objects(object_id),
       zip_size_bytes INTEGER CHECK(zip_size_bytes IS NULL OR zip_size_bytes>=0),
@@ -154,8 +154,8 @@ TABLE_DDL = (
       CHECK(zip_object_id<>sidecar_object_id)
     ) STRICT""",
     """CREATE TABLE csv_members (
-      candidate_id TEXT PRIMARY KEY CHECK(length(candidate_id)=70 AND substr(candidate_id,1,6)='cand1:'),
-      member_id TEXT UNIQUE CHECK(member_id IS NULL OR (length(member_id)=69 AND substr(member_id,1,5)='mem1:')),
+      candidate_id TEXT PRIMARY KEY CHECK(length(candidate_id)=70 AND substr(candidate_id,1,6)='cand1:' AND substr(candidate_id,7) NOT GLOB '*[^0-9a-f]*'),
+      member_id TEXT UNIQUE CHECK(member_id IS NULL OR (length(member_id)=69 AND substr(member_id,1,5)='mem1:' AND substr(member_id,6) NOT GLOB '*[^0-9a-f]*')),
       pair_id TEXT NOT NULL REFERENCES archive_pairs(pair_id),
       central_directory_ordinal INTEGER NOT NULL CHECK(central_directory_ordinal>0),
       member_path TEXT,
@@ -198,22 +198,22 @@ TABLE_DDL = (
          OR (data_row_count>0 AND first_open_time_ms IS NOT NULL AND last_open_time_ms IS NOT NULL))
     ) STRICT""",
     """CREATE TABLE source_rows (
-      source_row_id TEXT PRIMARY KEY CHECK(length(source_row_id)=69 AND substr(source_row_id,1,5)='row1:'),
+      source_row_id TEXT PRIMARY KEY CHECK(length(source_row_id)=69 AND substr(source_row_id,1,5)='row1:' AND substr(source_row_id,6) NOT GLOB '*[^0-9a-f]*'),
       member_id TEXT NOT NULL REFERENCES csv_members(member_id),
       physical_record_ordinal INTEGER NOT NULL CHECK(physical_record_ordinal>0),
       data_row_ordinal INTEGER NOT NULL CHECK(data_row_ordinal>0),
       raw_fields_json TEXT NOT NULL,
       raw_row_digest TEXT NOT NULL CHECK(length(raw_row_digest)=64 AND raw_row_digest NOT GLOB '*[^0-9a-f]*'),
       parser_contract_id TEXT NOT NULL CHECK(parser_contract_id='T0_ARCHIVE_CSV_HEADER_V1'),
-      parser_source_sha TEXT NOT NULL CHECK(length(parser_source_sha)=40),
+      parser_source_sha TEXT NOT NULL CHECK(length(parser_source_sha)=40 AND parser_source_sha NOT GLOB '*[^0-9a-f]*'),
       importer_contract_id TEXT NOT NULL CHECK(importer_contract_id='T0_ARCHIVE_IMPORTER_V1'),
-      importer_source_sha TEXT NOT NULL CHECK(length(importer_source_sha)=40),
+      importer_source_sha TEXT NOT NULL CHECK(length(importer_source_sha)=40 AND importer_source_sha NOT GLOB '*[^0-9a-f]*'),
       exchange TEXT,
       market_type TEXT,
       symbol TEXT,
       timeframe TEXT,
       open_time_ms INTEGER CHECK(open_time_ms IS NULL OR open_time_ms>=0),
-      candle_value_id TEXT CHECK(candle_value_id IS NULL OR (length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:')),
+      candle_value_id TEXT CHECK(candle_value_id IS NULL OR (length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:' AND substr(candle_value_id,5) NOT GLOB '*[^0-9a-f]*')),
       disposition TEXT NOT NULL CHECK(disposition IN ('ACCEPTED','REJECTED')),
       rejection_code TEXT,
       UNIQUE(member_id,physical_record_ordinal),
@@ -240,18 +240,18 @@ TABLE_DDL = (
       volume TEXT NOT NULL,
       available_at_ms INTEGER NOT NULL CHECK(available_at_ms>open_time_ms),
       availability_kind TEXT NOT NULL CHECK(availability_kind='BAR_CLOSE_BOUNDARY'),
-      candle_value_id TEXT NOT NULL CHECK(length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:'),
+      candle_value_id TEXT NOT NULL CHECK(length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:' AND substr(candle_value_id,5) NOT GLOB '*[^0-9a-f]*'),
       PRIMARY KEY(exchange,market_type,symbol,timeframe,open_time_ms)
     ) STRICT""",
     """CREATE TABLE candle_provenance_links (
-      link_id TEXT PRIMARY KEY CHECK(length(link_id)=69 AND substr(link_id,1,5)='lnk1:'),
+      link_id TEXT PRIMARY KEY CHECK(length(link_id)=69 AND substr(link_id,1,5)='lnk1:' AND substr(link_id,6) NOT GLOB '*[^0-9a-f]*'),
       exchange TEXT NOT NULL,
       market_type TEXT NOT NULL,
       symbol TEXT NOT NULL,
       timeframe TEXT NOT NULL,
       open_time_ms INTEGER NOT NULL,
       source_row_id TEXT NOT NULL UNIQUE REFERENCES source_rows(source_row_id),
-      candle_value_id TEXT NOT NULL CHECK(length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:'),
+      candle_value_id TEXT NOT NULL CHECK(length(candle_value_id)=68 AND substr(candle_value_id,1,4)='cv1:' AND substr(candle_value_id,5) NOT GLOB '*[^0-9a-f]*'),
       duplicate_disposition TEXT NOT NULL CHECK(duplicate_disposition IN ('UNIQUE','IDENTICAL_DUPLICATE')),
       FOREIGN KEY(exchange,market_type,symbol,timeframe,open_time_ms)
         REFERENCES candles(exchange,market_type,symbol,timeframe,open_time_ms)
