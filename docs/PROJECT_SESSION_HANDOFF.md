@@ -1,14 +1,15 @@
-# CURRENT STATUS OVERRIDE — 2026-11-22 — G1 GitHub Actions harness created
+# CURRENT STATUS OVERRIDE — 2026-11-22 — G1 baseline run inspected; artifact fix committed
 
-- Owner agreed to use GitHub Actions hosted runners for G1 synthetic-only CI.
-- Manual-only exact-SHA workflow created: `.github/workflows/t0-g1-synthetic-only.yml`.
-- Workflow commit/source SHA: `88b855dc8cf1935be77edbc837274b4800b85b52`; workflow blob SHA: `78a15fceffac1845f1454e36dbae4d37ddff7cb9`.
-- Evidence: `docs/evidence/T0_G1_SYNTHETIC_ONLY_GITHUB_ACTIONS_HARNESS_2026-11-22.md`, commit `66c98988eb1f52532056a43b9d98093f4e33c0af`.
-- Workflow contract by source inspection: `workflow_dispatch` only; required 40-character lowercase SHA; exact checkout verification; hosted Ubuntu runner; `contents: read`; Python 3.13; Python/linked-SQLite version metadata only; existing synthetic parser/header/provenance GREEN tests; sanitized artifact retention 30 days.
-- Workflow has NOT been dispatched. YAML/action runtime validation, tests, run/job, artifact and SHA-256 evidence remain NOT VERIFIED / NOT AVAILABLE.
-- Important limitation: this is the initial CI harness/baseline only. B4 resource-policy and in-memory importer-core implementation/tests are not yet present; G1 is NOT COMPLETE and no B4/importer PASS may be claimed.
-- Next: owner manually dispatches workflow in GitHub Actions with `source_sha=88b855dc8cf1935be77edbc837274b4800b85b52`; inspect exact run/job/log/artifact. Continue TDD for resource policy and importer core and extend workflow to cover them.
-- No archive/sidecar access, host/filesystem preflight, SQLite open/create/write/DDL, real-data importer/build, Canonical T0, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity or trading action occurred.
+- Manual run [44989899852](https://github.com/kenznguyen/btcquant-application/actions/runs/44989899852), attempt 1, workflow_dispatch. Run conclusion **FAILURE**; job ID `137108445328`.
+- Exact requested/tested source SHA: `88b855dc8cf1935be77edbc837274b4800b85b52`; job log confirms exact checkout verification PASS.
+- CPython 3.13.18; linked SQLite 3.45.1 (minimum 3.37.0): metadata policy PASS, no SQLite connection/database operation.
+- Existing synthetic parser + header + provenance tests: **46/46 PASS**.
+- Failure cause: upload-artifact did not include hidden files by default, so `.g1-evidence/` was not uploaded. Artifact count 0; artifact ID/SHA-256 unavailable. Overall harness run remains FAIL; tests alone are not an overall workflow PASS.
+- Bounded fix: `.github/workflows/t0-g1-synthetic-only.yml` now sets `include-hidden-files: true`. Commit `caefbfabebe3dfc09eec87981bac5591d450ea6b`; workflow blob `bb9ace12c3b857a4f85c2581d6ead099aad9b254`. Fix committed but **NOT YET VERIFIED** by a new run.
+- Evidence updated: `docs/evidence/T0_G1_SYNTHETIC_ONLY_GITHUB_ACTIONS_HARNESS_2026-11-22.md`, commit `99b4ff6aae16b181fa057f9c1918e7ec5702e5e5`, blob `c43ec129886031efcc2ec6851647060963c31b14`.
+- Current G1 status: baseline parser/provenance suite PASS at exact SHA `88b855...`; artifact upload in run 44989899852 FAIL; fix committed / awaiting verification; B4 resource-policy and in-memory importer-core implementation/tests still absent; **G1 NOT COMPLETE**.
+- Next: owner manually dispatches updated workflow with `source_sha=caefbfabebe3dfc09eec87981bac5591d450ea6b`; inspect exact run/job/log/artifact, including artifact retention and checksum. Continue approved G1 scope only after this verification.
+- Exclusions unchanged: no archive/sidecar access, host/filesystem preflight, SQLite open/create/write/DDL, real-data importer/build, Canonical T0, T1/T2 runtime, VPS/deployment, credentials, exchange connectivity or trading.
 
 ---
 
