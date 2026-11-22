@@ -583,13 +583,9 @@ class CompleteS3V1ProjectionFixtureTests(unittest.TestCase):
             sort_keys=True, separators=(",", ":"),
         )
         run_id = "run1:" + "e" * 64
-        inventory = json.loads(fixture["inventory_raw_bytes"])
-        inventory_id = "inv1:" + "f" * 64
-        inventory["inventory_id"] = inventory_id
-        inventory_raw = json.dumps(
-            inventory, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-        ).encode("utf-8")
-        inventory_sha256 = hashlib.sha256(inventory_raw).hexdigest()
+        inventory_id = fixture["inventory_expected_id"]
+        inventory_raw = fixture["inventory_raw_bytes"]
+        inventory_sha256 = fixture["inventory_expected_sha256"]
         run = RunEnvelope(
             singleton_key=1, run_id=run_id, inventory_id=inventory_id,
             inventory_blob_sha256=inventory_sha256,
