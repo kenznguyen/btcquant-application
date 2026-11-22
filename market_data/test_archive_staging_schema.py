@@ -725,6 +725,30 @@ class StagingSafetyAndAtomicityTests(unittest.TestCase):
         finally:
             connection.close()
 
+    def test_schema_initialization_rolls_back_if_authorizer_installation_fails(self):
+        import market_data.archive_staging_schema as schema
+
+        class AuthorizerFailConnection(sqlite3.Connection):
+            def set_authorizer(self, callback):
+                if callback is not None:
+                    raise sqlite3.OperationalError("synthetic authorizer failure")
+                return super().set_authorizer(callback)
+
+        connection = sqlite3.connect(":memory:", factory=AuthorizerFailConnection)
+        try:
+            with self.assertRaisesRegex(sqlite3.OperationalError, "synthetic authorizer failure"):
+                schema.initialize_staging_schema(connection)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 0)
+            self.assertEqual(
+                connection.execute(
+                    "SELECT name FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%'"
+                ).fetchall(),
+                [],
+            )
+            self.assertFalse(connection.in_transaction)
+        finally:
+            connection.close()
+
 
 if __name__ == "__main__":
     unittest.main()
