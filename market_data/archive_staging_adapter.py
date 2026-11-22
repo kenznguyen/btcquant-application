@@ -752,3 +752,417 @@ __all__ = (
     "CandleEvidence", "CandleLinkEvidence", "FailureObservation", "RunEvent",
     "StagingProjection", "project_staging_database",
 )
+
+
+@dataclass(frozen=True, slots=True)
+class GraphValidationResult:
+    valid: bool
+    error_codes: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if type(self.valid) is not bool or not isinstance(self.error_codes, tuple):
+            raise TypeError("invalid graph validation result")
+        if any(type(code) is not str or not code for code in self.error_codes):
+            raise TypeError("graph error codes must be non-empty strings")
+        if len(set(self.error_codes)) != len(self.error_codes):
+            raise ValueError("graph error codes must be unique")
+        if self.valid is not (not self.error_codes):
+            raise ValueError("valid must be true exactly when error_codes is empty")
+
+
+_GRAPH_ERROR_ORDER = (
+    "PROJECTION_ENVELOPE_INVALID",
+    "RUN_EVENT_SEQUENCE_INVALID",
+    "RUN_EVENT_TRANSITION_INVALID",
+    "RUN_EVENT_TIME_INVALID",
+    "RUN_CANDIDATE_EVENT_INVALID",
+    "ATTEMPT_GRAPH_INVALID",
+    "SUCCESSFUL_ATTEMPT_GRAPH_INVALID",
+    "PAIR_OBJECT_GRAPH_INVALID",
+    "MEMBER_PAIR_GRAPH_INVALID",
+    "SOURCE_ROW_MEMBER_GRAPH_INVALID",
+    "CANDLE_LINK_GRAPH_INVALID",
+    "FAILURE_OBSERVATION_ORPHAN",
+    "FAILURE_OBSERVATION_SEQUENCE_INVALID",
+)
+
+
+def _strict_json_loads(raw: str | bytes, field: str) -> object:
+    def reject_constant(value: str) -> None:
+        raise ValueError(f"non-standard JSON constant in {field}: {value}")
+
+    try:
+        return json.loads(
+            raw, object_pairs_hook=_reject_duplicate_json_keys,
+            parse_constant=reject_constant,
+        )
+    except (TypeError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        raise AdapterValidationError(
+            "PROJECTION_JSON_INVALID", f"{field} is not strict JSON"
+        ) from exc
+
+
+def _dto_mapping(record: object, *, exclude: frozenset[str] = frozenset()) -> dict[str, object]:
+    if not hasattr(record, "__dataclass_fields__"):
+        raise AdapterValidationError("ADAPTER_RECORD_TYPE_INVALID", "projection row is not a DTO")
+    return {
+        item.name: getattr(record, item.name)
+        for item in fields(record)
+        if item.name not in exclude
+    }
+
+
+def build_s3_v1_payload(projection: StagingProjection) -> dict[str, object]:
+    """Build the unchanged S3/V1 payload from an immutable physical-row snapshot."""
+    if not isinstance(projection, StagingProjection):
+        raise AdapterValidationError("PROJECTION_TYPE_INVALID", "projection must be StagingProjection")
+    run = projection.run
+    if hashlib.sha256(run.inventory_raw_bytes).hexdigest() != run.inventory_blob_sha256:
+        raise AdapterValidationError(
+            "INVENTORY_RAW_BYTES_INVALID", "inventory BLOB digest does not match run envelope"
+        )
+    if hashlib.sha256(run.coverage_manifest_json.encode("utf-8")).hexdigest() != run.coverage_manifest_sha256:
+        raise AdapterValidationError(
+            "COVERAGE_MANIFEST_DIGEST_INVALID", "coverage manifest digest does not match run envelope"
+        )
+    inventory = _strict_json_loads(run.inventory_raw_bytes, "inventory_raw_bytes")
+    coverage_manifest = _strict_json_loads(run.coverage_manifest_json, "coverage_manifest_json")
+    if not isinstance(inventory, dict) or inventory.get("inventory_id") != run.inventory_id:
+        raise AdapterValidationError(
+            "INVENTORY_IDENTITY_INVALID", "inventory bytes do not identify the run inventory"
+        )
+    if not isinstance(inventory.get("objects"), list) or not isinstance(coverage_manifest, dict):
+        raise AdapterValidationError(
+            "PROJECTION_ENVELOPE_INVALID", "inventory objects and coverage manifest must be JSON collections"
+        )
+
+    candidate_events = tuple(
+        event for event in projection.run_events
+        if event.run_id == run.run_id and event.event_type == "CANDIDATE"
+    )
+    if len(candidate_events) != 1:
+        raise AdapterValidationError(
+            "RUN_CANDIDATE_EVENT_INVALID", "exactly one immutable CANDIDATE event is required"
+        )
+
+    attempts_by_object: dict[str, list[AttemptEvidence]] = {}
+    for attempt in projection.attempts:
+        attempts_by_object.setdefault(attempt.object_id, []).append(attempt)
+    success_by_object: dict[str, list[SuccessfulAttempt]] = {}
+    for relation in projection.successful_attempts:
+        success_by_object.setdefault(relation.object_id, []).append(relation)
+
+    objects: list[dict[str, object]] = []
+    for evidence in projection.objects:
+        attempts = attempts_by_object.get(evidence.object_id, [])
+        successes = success_by_object.get(evidence.object_id, [])
+        if len(successes) > 1:
+            raise AdapterValidationError(
+                "SUCCESSFUL_ATTEMPT_GRAPH_INVALID", "object has multiple successful-attempt relations"
+            )
+        object_payload = _dto_mapping(evidence)
+        object_payload["attempt_count"] = len(attempts)
+        object_payload["successful_attempt_id"] = successes[0].attempt_id if successes else None
+        objects.append(object_payload)
+
+    attempts_payload = tuple(
+        _dto_mapping(item, exclude=frozenset({"failure_subtype"}))
+        for item in projection.attempts
+    )
+    pairs_payload = tuple({
+        "pair_id": item.pair_id,
+        "zip_object_id": item.zip_object_id,
+        "sidecar_object_id": item.sidecar_object_id,
+        "measured_zip_size_bytes": item.zip_size_bytes,
+        "measured_zip_sha256": item.zip_sha256,
+        "measured_sidecar_size_bytes": item.sidecar_size_bytes,
+        "measured_sidecar_sha256": item.sidecar_sha256,
+        "sidecar_asserted_zip_sha256": item.sidecar_asserted_zip_sha256,
+        "sidecar_assertion_matches": item.assertion_matches,
+        "zip_crc_ok": item.zip_crc_ok,
+        "member_count": item.candidate_member_count,
+        "structural_ok": item.structural_ok,
+        "disposition": item.disposition,
+        "failure_code": item.failure_code,
+    } for item in projection.pairs)
+    members_payload = tuple(
+        _dto_mapping(item, exclude=frozenset({"candidate_id"}))
+        for item in projection.members
+    )
+
+    rows_payload: list[dict[str, object]] = []
+    for item in projection.source_rows:
+        row = _dto_mapping(item)
+        raw_fields = _strict_json_loads(item.raw_fields_json, "raw_fields_json")
+        if (not isinstance(raw_fields, list) or len(raw_fields) != 12
+                or any(type(value) is not str for value in raw_fields)
+                or json.dumps(raw_fields, ensure_ascii=False, separators=(",", ":")) != item.raw_fields_json):
+            raise AdapterValidationError(
+                "SOURCE_ROW_RAW_FIELDS_INVALID", "raw_fields_json must be canonical twelve-string JSON"
+            )
+        row["raw_fields"] = raw_fields
+        if all(value is not None for value in (
+            item.exchange, item.market_type, item.symbol, item.timeframe, item.open_time_ms
+        )):
+            row["natural_key"] = (
+                item.exchange, item.market_type, item.symbol, item.timeframe, item.open_time_ms
+            )
+        rows_payload.append(row)
+
+    links_payload: list[dict[str, object]] = []
+    for item in projection.links:
+        link = _dto_mapping(item)
+        link["natural_key"] = (
+            item.exchange, item.market_type, item.symbol, item.timeframe, item.open_time_ms
+        )
+        links_payload.append(link)
+
+    candidate = candidate_events[0]
+    payload: dict[str, object] = {
+        "inventory": inventory,
+        "objects": tuple(objects),
+        "pairs": pairs_payload,
+        "members": members_payload,
+        "attempts": attempts_payload,
+        "source_rows": tuple(rows_payload),
+        "candles": tuple(_dto_mapping(item) for item in projection.candles),
+        "links": tuple(links_payload),
+        "contract_version": "T0_PROVENANCE_VALIDATOR_S1_V1",
+        "inventory_raw_bytes": run.inventory_raw_bytes,
+        "inventory_expected_sha256": run.inventory_blob_sha256,
+        "inventory_expected_id": run.inventory_id,
+        "coverage_manifest": coverage_manifest,
+        "run": {
+            "run_id": run.run_id,
+            "status": "CANDIDATE",
+            "schema_contract_id": run.schema_contract_id,
+        },
+    }
+    # Keep the event's immutable snapshot digest available to the graph gate,
+    # without adding it to the unchanged public S3/V1 run envelope.
+    if not candidate.candidate_snapshot_sha256:
+        raise AdapterValidationError(
+            "RUN_CANDIDATE_EVENT_INVALID", "CANDIDATE event lacks its snapshot digest"
+        )
+    return payload
+
+
+def validate_staging_graph(projection: StagingProjection) -> GraphValidationResult:
+    """Validate physical graph/lifecycle invariants plus the unchanged S3/V1 contract."""
+    from datetime import datetime
+    from market_data.archive_provenance_validator import (
+        derive_attempt_id, encode_t0enc1, validate_provenance,
+    )
+
+    errors: set[str] = set()
+    if not isinstance(projection, StagingProjection):
+        return GraphValidationResult(False, ("PROJECTION_ENVELOPE_INVALID",))
+    run_id = projection.run.run_id
+    events = projection.run_events
+    if not events or [item.event_seq for item in events] != list(range(1, len(events) + 1)):
+        errors.add("RUN_EVENT_SEQUENCE_INVALID")
+    if any(item.run_id != run_id for item in events):
+        errors.add("RUN_EVENT_SEQUENCE_INVALID")
+    if not events or events[0].event_type != "BUILDING":
+        errors.add("RUN_EVENT_TRANSITION_INVALID")
+    allowed = {
+        "BUILDING": {"CANDIDATE", "QUARANTINED"},
+        "CANDIDATE": {"VALIDATED", "QUARANTINED"},
+        "QUARANTINED": set(),
+        "VALIDATED": set(),
+    }
+    for previous, current in zip(events, events[1:]):
+        if current.event_type not in allowed.get(previous.event_type, set()):
+            errors.add("RUN_EVENT_TRANSITION_INVALID")
+    if sum(item.event_type == "BUILDING" for item in events) != 1:
+        errors.add("RUN_EVENT_TRANSITION_INVALID")
+    candidate_events = [item for item in events if item.event_type == "CANDIDATE"]
+    if len(candidate_events) != 1 or (events and events[-1].event_type not in ("CANDIDATE", "VALIDATED")):
+        errors.add("RUN_CANDIDATE_EVENT_INVALID")
+    parsed_times = []
+    for event in events:
+        try:
+            timestamp = datetime.fromisoformat(event.occurred_at_utc.replace("Z", "+00:00"))
+            if timestamp.tzinfo is None:
+                raise ValueError("timezone required")
+            parsed_times.append(timestamp)
+        except (TypeError, ValueError):
+            errors.add("RUN_EVENT_TIME_INVALID")
+            parsed_times = []
+            break
+    if parsed_times and any(right < left for left, right in zip(parsed_times, parsed_times[1:])):
+        errors.add("RUN_EVENT_TIME_INVALID")
+
+    object_by_id = {item.object_id: item for item in projection.objects}
+    object_by_key = {item.object_key: item for item in projection.objects}
+    attempts_by_object: dict[str, list[AttemptEvidence]] = {}
+    attempts_by_id = {}
+    for attempt in projection.attempts:
+        attempts_by_object.setdefault(attempt.object_id, []).append(attempt)
+        if attempt.attempt_id in attempts_by_id:
+            errors.add("ATTEMPT_GRAPH_INVALID")
+        attempts_by_id[attempt.attempt_id] = attempt
+    success_by_object: dict[str, list[SuccessfulAttempt]] = {}
+    for relation in projection.successful_attempts:
+        success_by_object.setdefault(relation.object_id, []).append(relation)
+    for obj in projection.objects:
+        history = sorted(attempts_by_object.get(obj.object_id, ()), key=lambda item: item.attempt_number)
+        if not history or [item.attempt_number for item in history] != list(range(1, len(history) + 1)):
+            errors.add("ATTEMPT_GRAPH_INVALID")
+        for attempt in history:
+            try:
+                expected_id = derive_attempt_id(
+                    object_id=attempt.object_id,
+                    attempt_number=attempt.attempt_number,
+                    workflow_run_id=attempt.workflow_run_id,
+                    workflow_job_id=attempt.workflow_job_id,
+                    trigger_sha=attempt.trigger_sha,
+                    requested_key=attempt.requested_key,
+                )
+            except (TypeError, ValueError):
+                expected_id = None
+            if (expected_id != attempt.attempt_id or attempt.requested_key != obj.object_key
+                    or attempt.expected_size_bytes != obj.expected_size_bytes
+                    or attempt.expected_sha256 != obj.expected_sha256):
+                errors.add("ATTEMPT_GRAPH_INVALID")
+        successes = success_by_object.get(obj.object_id, [])
+        transferred = [item for item in history if item.outcome == "TRANSFERRED"]
+        if (len(successes) != 1 or len(transferred) != 1
+                or successes[0].attempt_id != transferred[0].attempt_id):
+            errors.add("SUCCESSFUL_ATTEMPT_GRAPH_INVALID")
+        elif (transferred[0].response_bytes_received != obj.measured_size_bytes
+              or transferred[0].complete_object_sha256 != obj.measured_sha256
+              or transferred[0].is_complete_object != 1
+              or obj.expected_size_bytes != obj.measured_size_bytes
+              or obj.expected_sha256 != obj.measured_sha256):
+            errors.add("SUCCESSFUL_ATTEMPT_GRAPH_INVALID")
+
+    pair_by_id = {item.pair_id: item for item in projection.pairs}
+    for pair in projection.pairs:
+        zip_obj = object_by_id.get(pair.zip_object_id)
+        sidecar_obj = object_by_id.get(pair.sidecar_object_id)
+        if (zip_obj is None or sidecar_obj is None
+                or zip_obj.object_kind != "ZIP"
+                or sidecar_obj.object_kind != "CHECKSUM_SIDECAR"
+                or zip_obj.paired_object_key != sidecar_obj.object_key
+                or sidecar_obj.paired_object_key != zip_obj.object_key):
+            errors.add("PAIR_OBJECT_GRAPH_INVALID")
+
+    member_by_id = {item.member_id: item for item in projection.members if item.member_id is not None}
+    for member in projection.members:
+        if member.pair_id not in pair_by_id:
+            errors.add("MEMBER_PAIR_GRAPH_INVALID")
+        if member.member_id is not None and member.member_path is not None and member.member_sha256 is not None:
+            expected_member_id = "mem1:" + hashlib.sha256(encode_t0enc1(
+                "T0-CSV-MEMBER-V1", member.pair_id, member.member_path,
+                bytes.fromhex(member.member_sha256),
+            )).hexdigest()
+            if member.member_id != expected_member_id:
+                errors.add("MEMBER_PAIR_GRAPH_INVALID")
+
+    row_by_id = {item.source_row_id: item for item in projection.source_rows}
+    for row in projection.source_rows:
+        if row.member_id not in member_by_id:
+            errors.add("SOURCE_ROW_MEMBER_GRAPH_INVALID")
+            continue
+        try:
+            raw_fields = _strict_json_loads(row.raw_fields_json, "raw_fields_json")
+            if (not isinstance(raw_fields, list) or len(raw_fields) != 12
+                    or any(type(value) is not str for value in raw_fields)
+                    or json.dumps(raw_fields, ensure_ascii=False, separators=(",", ":")) != row.raw_fields_json):
+                raise ValueError("raw fields invalid")
+            raw_digest = hashlib.sha256(encode_t0enc1("T0-RAW-CSV-ROW-V1", *raw_fields)).hexdigest()
+            expected_row_id = "row1:" + hashlib.sha256(encode_t0enc1(
+                "T0-SOURCE-ROW-V1", row.member_id, row.physical_record_ordinal,
+                bytes.fromhex(raw_digest),
+            )).hexdigest()
+            if raw_digest != row.raw_row_digest or expected_row_id != row.source_row_id:
+                errors.add("SOURCE_ROW_MEMBER_GRAPH_INVALID")
+        except (AdapterValidationError, TypeError, ValueError):
+            errors.add("SOURCE_ROW_MEMBER_GRAPH_INVALID")
+
+    candle_by_natural = {
+        (item.exchange, item.market_type, item.symbol, item.timeframe, item.open_time_ms): item
+        for item in projection.candles
+    }
+    links_by_source: dict[str, list[CandleLinkEvidence]] = {}
+    for link in projection.links:
+        links_by_source.setdefault(link.source_row_id, []).append(link)
+        row = row_by_id.get(link.source_row_id)
+        natural = (link.exchange, link.market_type, link.symbol, link.timeframe, link.open_time_ms)
+        candle = candle_by_natural.get(natural)
+        if (row is None or candle is None or row.candle_value_id != candle.candle_value_id
+                or link.candle_value_id != candle.candle_value_id
+                or (row.exchange, row.market_type, row.symbol, row.timeframe, row.open_time_ms) != natural):
+            errors.add("CANDLE_LINK_GRAPH_INVALID")
+    for row in projection.source_rows:
+        if row.disposition == "ACCEPTED" and len(links_by_source.get(row.source_row_id, ())) != 1:
+            errors.add("CANDLE_LINK_GRAPH_INVALID")
+    for natural, candle in candle_by_natural.items():
+        grouped = [
+            link for link in projection.links
+            if (link.exchange, link.market_type, link.symbol, link.timeframe, link.open_time_ms) == natural
+        ]
+        if not grouped:
+            errors.add("CANDLE_LINK_GRAPH_INVALID")
+            continue
+        ordered = sorted(grouped, key=lambda item: item.source_row_id.encode("utf-8"))
+        if any(
+            item.duplicate_disposition != ("UNIQUE" if index == 0 else "IDENTICAL_DUPLICATE")
+            for index, item in enumerate(ordered)
+        ):
+            errors.add("CANDLE_LINK_GRAPH_INVALID")
+
+    subject_ids = {
+        "RUN": {run_id},
+        "OBJECT": set(object_by_id),
+        "ATTEMPT": set(attempts_by_id),
+        "PAIR": set(pair_by_id),
+        "MEMBER": set(member_by_id),
+        "SOURCE_ROW": set(row_by_id),
+        "CANDLE": {item.candle_value_id for item in projection.candles},
+        "LINK": {item.link_id for item in projection.links},
+    }
+    failure_groups: dict[tuple[str, str], list[int]] = {}
+    for item in projection.failure_observations:
+        key = (item.subject_kind, item.subject_id)
+        if item.subject_id not in subject_ids.get(item.subject_kind, set()):
+            errors.add("FAILURE_OBSERVATION_ORPHAN")
+        failure_groups.setdefault(key, []).append(item.failure_ordinal)
+    for ordinals in failure_groups.values():
+        if sorted(ordinals) != list(range(1, len(ordinals) + 1)):
+            errors.add("FAILURE_OBSERVATION_SEQUENCE_INVALID")
+
+    try:
+        payload = build_s3_v1_payload(projection)
+        validation = validate_provenance(payload)
+        errors.update(validation.error_codes)
+    except AdapterValidationError:
+        errors.add("PROJECTION_ENVELOPE_INVALID")
+
+    ordered_errors = tuple(
+        code for code in _GRAPH_ERROR_ORDER if code in errors
+    )
+    # Preserve the existing validator's frozen V1/S1 error ordering first.
+    from market_data.archive_provenance_validator import _ERROR_CODE_ORDER
+    ordered_errors = tuple(
+        code for code in _ERROR_CODE_ORDER if code in errors
+    ) + ordered_errors
+    return GraphValidationResult(not ordered_errors, ordered_errors)
+
+
+def project_staging_s3_v1_payload(connection: sqlite3.Connection) -> dict[str, object]:
+    """Project and accept only a candidate snapshot that passes both graph and S3/V1 validation."""
+    projection = project_staging_database(connection)
+    result = validate_staging_graph(projection)
+    if not result.valid:
+        raise AdapterValidationError(
+            "STAGING_GRAPH_INVALID", ",".join(result.error_codes)
+        )
+    return build_s3_v1_payload(projection)
+
+
+__all__ = __all__ + (
+    "GraphValidationResult", "build_s3_v1_payload",
+    "validate_staging_graph", "project_staging_s3_v1_payload",
+)
