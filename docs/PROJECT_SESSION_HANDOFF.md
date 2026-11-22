@@ -1,3 +1,28 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — F1–F7 synthetic matrix GREEN at latest SHA; independent review snapshot being refreshed
+
+- Current `main` HEAD: `4d219b07a8f8d4c0969ac0b60ffe7eeb42077268` (latest evidence/handoff documentation commits).
+- Latest tested implementation source SHA: `5074bf35f94f94a5b8905548b9628794274bc825`.
+- Exact-SHA CI run [45010626565](https://github.com/kenznguyen/btcquant-application/actions/runs/45010626565), job `137171941617`, SUCCESS; requested SHA = checkout SHA = `5074bf3`.
+- Results: importer-core 20/20; S1.2 adapter 43/43; staging schema 31/31; full `market_data` regression 495/495 PASS. CPython 3.13.18 / SQLite 3.45.1 focused; CPython 3.12.16 full regression. Artifact count 0.
+- Latest source blobs:
+  - schema `01720183179211a10aa90c38ba8474bbfe37b561`
+  - schema tests `d915bf4a45be979fc5a4a4bde21426050243f1c1`
+  - adapter `70bcf83c37936593e394c8476134046a7da70f4c`
+  - adapter tests `19cd18b40cb61252094b5805eb9d3cc35a7ff39b`
+  - unchanged S3/V1 validator `b94bac0f82ae141984552409f99a5cff70435b3b`
+  - S1 fixture `41f5b21eaa418bb32f4f40e00de7e920ca39c4bf`
+  - workflow `0e319368fc36d8752f8e1640c3dd513dc18fd0ce`.
+- F1–F7 synthetic matrix PASS. F6 additionally requires exact bool opt-in for disposable path; RED at `1a5ff9b`, GREEN at `5074bf3`.
+- Physical schema specification synced to owner-approved Amendments A/B; F2 implementation contract and evidence updated.
+- Remaining design blocker: candidate snapshot digest preimage/serialization remains unspecified. Current validator checks shape/presence and CANDIDATE↔VALIDATED equality only; do not invent formula.
+- Review-only PR #5: [Independent review snapshot](https://github.com/kenznguyen/btcquant-application/pull/5). Its first snapshot pins `d91c92a` and is now stale due the exact-bool F6 hardening. Update the two changed source/test snapshot files and mapping to `5074bf3`, then require Graphify/Codex review of the updated PR head. Do not merge.
+- F2: **PARTIAL / SYNTHETIC CI PASS** pending candidate digest design decision and independent review. S1.2: **NOT FROZEN**. Independent review: **RUNNING/QUEUED ON STALE SNAPSHOT; NOT ACCEPTED**. B8: **NOT APPROVED**. Real-data staging: **NOT AUTHORIZED**.
+- Evidence: `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md`.
+- Next: refresh PR #5 snapshot to source SHA `5074bf3`, verify exact blob mapping, wait for Graphify/Codex results, address findings, rerun exact-SHA CI and follow-up review.
+- Exclusions unchanged: no real archive/sidecar access or acquisition, host/workstation/SSH/filesystem/runner preflight, B8 workflow/dispatch/runner, real-data staging, uploads/retention/deletion/cleanup, Canonical T0, MAY-10/REST tail/T1/T2 runtime/VPS/deployment/credentials/exchange/trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — S1.2 F1–F7 synthetic matrix GREEN; independent review is next
 
 - Current `main` HEAD: `9a8c15b37322d9f2b29c5ed0ad6173824830b1f9` (evidence/handoff documentation commits after tested code).
