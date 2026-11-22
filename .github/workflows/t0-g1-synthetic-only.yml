@@ -76,9 +76,10 @@ jobs:
           git rev-parse HEAD >> .g1-evidence/source-sha.txt
           git hash-object market_data/archive_csv_parser.py > .g1-evidence/archive_csv_parser.blob-sha
           git hash-object market_data/archive_provenance_validator.py > .g1-evidence/archive_provenance_validator.blob-sha
+          git hash-object market_data/test_archive_resource_policy.py > .g1-evidence/test_archive_resource_policy.blob-sha
           git hash-object .github/workflows/t0-g1-synthetic-only.yml > .g1-evidence/workflow.blob-sha
 
-      - name: Run existing synthetic archive parser and provenance contracts
+      - name: Run existing contracts and B4 resource-policy RED suite
         shell: bash
         run: |
           set -euo pipefail
@@ -86,6 +87,7 @@ jobs:
             market_data.test_archive_csv_parser \
             market_data.test_archive_csv_header_contract \
             market_data.test_archive_provenance_validator_green \
+            market_data.test_archive_resource_policy \
             2>&1 | tee .g1-evidence/tests.log
 
       - name: Create sanitized test summary
@@ -93,7 +95,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo "G1 synthetic-only baseline"
+            echo "G1 synthetic-only B4 RED checkpoint"
             echo "Requested source SHA: $REQUESTED_SHA"
             echo "Checked-out source SHA: $(git rev-parse HEAD)"
             echo "Workflow run ID: $GITHUB_RUN_ID"
