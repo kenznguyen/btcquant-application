@@ -20,13 +20,22 @@ H1 = 60 * 60 * 1000
 BASE = 1_767_225_600_000
 
 
-def parsed_row(open_time_ms=BASE, *, close="90000.00", ignore="0"):
+def parsed_row(open_time_ms=BASE, *, open_price="90000.00", close="90000.00", ignore="0"):
     close_time_ms = open_time_ms + M15 - 1
     csv_row = (
-        f"{open_time_ms},90000.00,90100.00,89900.00,{close},12.345,"
+        f"{open_time_ms},{open_price},90100.00,89900.00,{close},12.345,"
         f"{close_time_ms},1111111.23,42,5.678,510000.12,{ignore}"
     )
     return parse_archive_csv(csv_row, timeframe="15m")[0]
+
+
+def parsed_h1_row(open_time_ms=BASE):
+    close_time_ms = open_time_ms + H1 - 1
+    csv_row = (
+        f"{open_time_ms},90000.00,90100.00,89900.00,90000.00,12.345,"
+        f"{close_time_ms},1111111.23,42,5.678,510000.12,0"
+    )
+    return parse_archive_csv(csv_row, timeframe="1h")[0]
 
 
 def normalize(rows, *, timeframe="15m", source_ref="fixture://synthetic.csv"):
@@ -124,6 +133,39 @@ class ImporterCoreNormalizationTests(unittest.TestCase):
             result.accounting.source_row_count,
         )
 
+    def test_normalizes_valid_h1_rows_with_explicit_timeframe(self):
+        result = normalize([parsed_h1_row()], timeframe="1h")
+
+        self.assertFalse(result.quarantined)
+        self.assertEqual(result.candidates[0].identity, ("binance", "usd_m", "BTCUSDT", "1h", BASE))
+        self.assertEqual(result.candidates[0].bar_close_boundary_ms, BASE + H1)
+
+    def test_candidate_order_is_stable_when_input_batch_order_changes(self):
+        rows = [parsed_row(BASE + M15), parsed_row(BASE)]
+        result = normalize(rows)
+
+        self.assertEqual(
+            [candidate.open_time_ms for candidate in result.candidates],
+            [BASE, BASE + M15],
+        )
+
+    def test_decimal_text_variants_with_equal_normalized_values_are_identical_duplicates(self):
+        first = parsed_row(open_price="90000.00")
+        second = parsed_row(open_price="90000.0")
+        result = normalize([first, second])
+
+        self.assertFalse(result.quarantined)
+        self.assertEqual(len(result.candidates), 1)
+        self.assertEqual(result.accounting.identical_duplicate_count, 1)
+        self.assertEqual(result.candidates[0].open, Decimal("90000.00"))
+        self.assertEqual(result.candidates[0].source_refs[0].row_ordinal, 1)
+        self.assertEqual(result.candidates[0].source_refs[1].row_ordinal, 2)
+        self.assertNotEqual(first.raw_fields, second.raw_fields)
+
+    def test_rejects_row_identity_not_aligned_to_explicit_timeframe(self):
+        with self.assertRaises(ImportBatchError):
+            normalize([parsed_row(BASE + M15)], timeframe="1h")
+
     def test_payload_equality_does_not_collapse_distinct_open_time_identity(self):
         first = parsed_row()
         second = parsed_row(BASE + M15)
@@ -212,17 +254,14 @@ class ImporterCoreCoverageTests(unittest.TestCase):
             (BASE - M15, BASE + 3 * M15),
         )
 
-    def test_empty_half_open_range_has_zero_expected_rows(self):
-        report = calculate_coverage(
-            timeframe="15m",
-            start_open_time_ms=BASE,
-            end_open_time_ms=BASE,
-            observed_open_times=(),
-        )
-
-        self.assertEqual(report.expected_count, 0)
-        self.assertEqual(report.observed_count, 0)
-        self.assertEqual(report.missing_open_times, ())
+    def test_rejects_empty_half_open_range(self):
+        with self.assertRaises(ImportBatchError):
+            calculate_coverage(
+                timeframe="15m",
+                start_open_time_ms=BASE,
+                end_open_time_ms=BASE,
+                observed_open_times=(),
+            )
 
     def test_rejects_invalid_timeframe_bounds_and_unaligned_timestamps(self):
         cases = (
