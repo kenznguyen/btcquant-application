@@ -1,3 +1,20 @@
+# CURRENT STATUS OVERRIDE — 2026-11-22 — F2 DTO/read-only projection first slice GREEN; F2 remains PARTIAL
+
+- Latest source SHA tested: `70f9a7759be1fb5279d6b0f1d82a38cb27cce951`; implementation source blob `3c7e0237c57f4d2dbf8beb8e38cc6582f75a2171`; test blob `5bbe9bf62838eb41954153af28e47175a79c1fe4`.
+- F2 test-first RED: commit `a834c36a66653d3a859a02965eba29fb3bb0c3d6`, run [45006770201](https://github.com/kenznguyen/btcquant-application/actions/runs/45006770201), job `137159996999`; exact SHA verified; 11 DTO subtests + projection API assertion failed as expected; importer-core baseline 20/20 PASS.
+- GREEN: run [45006885910](https://github.com/kenznguyen/btcquant-application/actions/runs/45006885910), job `137160352768`, exact checkout SHA matches tested source; CPython 3.13.18 / SQLite 3.45.1; importer-core 20/20, adapter 12/12, staging schema 14/14, full `market_data` regression 447/447 PASS.
+- Artifact endpoint returned 0 artifacts; no artifact ID/digest.
+- Implemented: eleven frozen/slotted physical-row DTOs, immutable StagingProjection, caller-owned sqlite3.Connection API, explicit-column SELECTs and deterministic ordering for all physical relations, schema/integrity/fingerprint checks, exactly-one-run and initial BUILDING event guard.
+- A transient implementation run at SHA `2dc4210eba4eac3e95b7a0a54ddcedb2170db89c` failed at import due an undefined `__all__`; corrected in commit/source SHA `70f9a7759be1fb5279d6b0f1d82a38cb27cce951` and GREEN verified.
+- Important test limitation: current new tests validate DTO frozen/slotted metadata and API signature, not yet the complete runtime semantics of DB row mapping/read-only behavior. Treat row projection implementation as PARTIAL pending focused behavioral tests.
+- Not implemented: unchanged S3/V1 public payload assembly; complete graph validator and cross-record invariants; F1–F7 complete remediation; independent review.
+- Status: F2 first slice **PARTIAL / CI PASS**; S1.2 **NOT FROZEN**; independent review **NOT RUN**; B8 **NOT APPROVED**; real-data build **BLOCKED / NOT AUTHORIZED**.
+- Evidence: `docs/evidence/T0_S1_2_F2_DTO_READONLY_PROJECTION_CI_2026-11-22.md`.
+- Next: add synthetic row-mapping/read-only/raw-byte/run-event tests; implement S3/V1 assembly and graph validator test-first; then exact-SHA CI and independent review.
+- All exclusions remain: no real archive/sidecar access/acquisition, host/workstation/SSH/filesystem/runner preflight, B8 dispatch/runner, real-data staging, uploads/deletion/cleanup, Canonical T0, MAY-10, REST tail, T1/T2 runtime, VPS/deployment, credentials, exchange or trading.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-22 — S1.2 self-review at d7cdea3 BLOCKED BEFORE REAL-DATA BUILD
 
 - Read-only self-review: `docs/reviews/T0_S1_2_SQLITE_STAGING_SCHEMA_SELF_REVIEW_D7CDEA3_2026-11-22.md`.
