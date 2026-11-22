@@ -885,7 +885,7 @@ def _s1_validate(payload, errors):
                     run_bad = True
 
         actual_points = set()
-        for candle in candle_records:
+        for candle in candles:
             tf, timestamp = candle.get("timeframe"), candle.get("open_time_ms")
             if not isinstance(tf, str) or not _is_nonnegative_int(timestamp):
                 run_bad = True
