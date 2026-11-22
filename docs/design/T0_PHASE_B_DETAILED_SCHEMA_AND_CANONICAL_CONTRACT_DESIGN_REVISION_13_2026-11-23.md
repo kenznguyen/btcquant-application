@@ -6,7 +6,7 @@
 - R13 carries forward the R12 corrections: field-specific T1 mappings and provenance caveats; SD-07 envelope/identity equality; stable source-object/version delivery identity with digest as integrity evidence. It additionally corrects the four PR #10 findings: current-status handoff/index references R13; the SD-05 quantity case asserts inspected-source `q → quantity` mapping while separately retaining deployed-build and decimal-fidelity uncertainty; source cursor advances only over a contiguous per-partition terminal frontier with durable out-of-order completion state; and a same-locator changed-bytes/digest negative case is explicit.
 - Owner-approved synthetic scope remains 101 cases: SD-05 14, SD-06 31, SD-07 46, cross-domain 10. Fixtures and execution remain sequenced after independent review of the exact R13 SHA/blob.
 - B-13/B-16 remain CLOSED as bounded owner-accepted exclusions. B-17 remains OPEN pending deployed/imported T1 build provenance. B-01 remains PARTIAL because semantic mapping is verified but exact decimal/raw fidelity and deployed build lineage are not.
-- Revision 12 is a consolidated review candidate, NOT a Contract Freeze. Independent review of exact R12 SHA/blob: NOT YET REQUESTED. No production implementation, DDL/database mutation, data movement, runtime, T2 integration, VPS/autostart or trading is authorized.
+- Revision 13 is a consolidated review candidate, NOT a Contract Freeze. Independent review of exact R13 SHA/blob: PENDING. PR #10 on R12 completed with four unresolved P2 findings; see `docs/reviews/T0_PHASE_B_REVISION_12_CODEX_FINDINGS_AND_R13_RESOLUTION_2026-11-23.md`. No production implementation, DDL/database mutation, data movement, runtime, T2 integration, VPS/autostart or trading is authorized.
 
 ---
 
