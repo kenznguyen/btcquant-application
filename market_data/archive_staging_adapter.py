@@ -5,7 +5,7 @@ staging repository adapter; archive acquisition is explicitly out of scope.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 import json
 import re
 from typing import Any, Mapping, Sequence
@@ -316,13 +316,91 @@ def derive_object_attempt_summary(
     return {"attempt_count": len(ordered), "successful_attempt_id": successful_attempt_id}
 
 
+
+_NULLABLE_DTO_FIELDS = frozenset({
+    "requested_key", "expected_size_bytes", "expected_sha256",
+    "measured_size_bytes", "measured_sha256", "response_status",
+    "local_relative_path", "exclusive_create", "retrieval_source",
+    "workflow_run_id", "workflow_job_id", "workflow_event", "trigger_sha",
+    "checkout_sha", "retrieved_at_utc", "failure_code", "finished_at_utc",
+    "failure_subtype", "response_bytes_received", "partial_body_sha256",
+    "complete_object_sha256", "zip_size_bytes", "zip_sha256",
+    "sidecar_size_bytes", "sidecar_sha256", "sidecar_asserted_zip_sha256",
+    "assertion_matches", "zip_crc_ok", "candidate_member_count", "structural_ok",
+    "member_id", "member_path", "member_size_bytes", "member_sha256",
+    "encoding", "bom_present", "newline", "delimiter", "header_present",
+    "header_contract_id", "parser_contract_id", "parser_source_sha",
+    "data_row_count", "first_open_time_ms", "last_open_time_ms",
+    "exchange", "market_type", "symbol", "timeframe", "open_time_ms",
+    "candle_value_id", "rejection_code", "failure_detail_code",
+    "evidence_sha256", "reason_code", "candidate_snapshot_sha256",
+    "validator_payload_sha256",
+})
+_INTEGER_DTO_FIELDS = frozenset({
+    "singleton_key", "expected_size_bytes", "measured_size_bytes",
+    "response_bytes_total", "response_status", "exclusive_create",
+    "attempt_number", "response_bytes_received", "is_complete_object",
+    "zip_size_bytes", "sidecar_size_bytes", "assertion_matches", "zip_crc_ok",
+    "candidate_member_count", "structural_ok", "central_directory_ordinal",
+    "member_size_bytes", "bom_present", "header_present", "data_row_count",
+    "first_open_time_ms", "last_open_time_ms", "physical_record_ordinal",
+    "data_row_ordinal", "open_time_ms", "available_at_ms", "failure_ordinal",
+    "event_seq",
+})
+_POSITIVE_DTO_INTEGER_FIELDS = frozenset({
+    "singleton_key", "attempt_number", "central_directory_ordinal",
+    "physical_record_ordinal", "data_row_ordinal", "failure_ordinal", "event_seq",
+})
+_FLAG_DTO_INTEGER_FIELDS = frozenset({
+    "exclusive_create", "is_complete_object", "assertion_matches", "zip_crc_ok",
+    "structural_ok", "bom_present", "header_present",
+})
+
+
+class _StrictPhysicalDTO:
+    __slots__ = ()
+
+    def __post_init__(self) -> None:
+        for item in fields(self):
+            name = item.name
+            value = getattr(self, name)
+            if value is None:
+                if name not in _NULLABLE_DTO_FIELDS:
+                    raise TypeError(f"{name} may not be null")
+                continue
+            if name == "inventory_raw_bytes":
+                if type(value) is not bytes:
+                    raise TypeError("inventory_raw_bytes must be exact bytes")
+                continue
+            if name in _INTEGER_DTO_FIELDS:
+                validate_sqlite_integer(value, name)
+                if name in _POSITIVE_DTO_INTEGER_FIELDS and value == 0:
+                    raise AdapterValidationError("DTO_INTEGER_INVALID", f"{name} must be positive")
+                if name in _FLAG_DTO_INTEGER_FIELDS and value not in (0, 1):
+                    raise AdapterValidationError("DTO_FLAG_INVALID", f"{name} must be 0 or 1")
+                if name == "singleton_key" and value != 1:
+                    raise AdapterValidationError("DTO_SINGLETON_INVALID", "singleton_key must equal 1")
+                if name == "response_status" and not 100 <= value <= 599:
+                    raise AdapterValidationError("DTO_HTTP_STATUS_INVALID", "response_status must be 100..599")
+                continue
+            if type(value) is not str:
+                raise TypeError(f"{name} must be text")
+            _required_text(value, name)
+            if name.endswith("sha256") or name == "raw_row_digest":
+                _sha(value, _SHA256_RE, name)
+            elif name in {
+                "parser_source_sha", "importer_source_sha", "trigger_sha", "checkout_sha"
+            }:
+                _sha(value, _SHA1_RE, name)
+
+
 # Canonical S1.2 physical-row DTOs. These are deliberately distinct from the
 # legacy S3-shaped records above: they preserve every physical schema column.
 import sqlite3
 
 
 @dataclass(frozen=True, slots=True)
-class RunEnvelope:
+class RunEnvelope(_StrictPhysicalDTO):
     singleton_key: int
     run_id: str
     inventory_id: str
@@ -340,7 +418,7 @@ class RunEnvelope:
 
 
 @dataclass(frozen=True, slots=True)
-class ObjectEvidence:
+class ObjectEvidence(_StrictPhysicalDTO):
     object_id: str
     inventory_id: str
     inventory_blob_sha256: str
@@ -372,7 +450,7 @@ class ObjectEvidence:
 
 
 @dataclass(frozen=True, slots=True)
-class AttemptEvidence:
+class AttemptEvidence(_StrictPhysicalDTO):
     attempt_id: str
     object_id: str
     attempt_number: int
@@ -397,13 +475,13 @@ class AttemptEvidence:
 
 
 @dataclass(frozen=True, slots=True)
-class SuccessfulAttempt:
+class SuccessfulAttempt(_StrictPhysicalDTO):
     object_id: str
     attempt_id: str
 
 
 @dataclass(frozen=True, slots=True)
-class PairEvidence:
+class PairEvidence(_StrictPhysicalDTO):
     pair_id: str
     zip_object_id: str
     sidecar_object_id: str
@@ -421,7 +499,7 @@ class PairEvidence:
 
 
 @dataclass(frozen=True, slots=True)
-class MemberCandidateEvidence:
+class MemberCandidateEvidence(_StrictPhysicalDTO):
     candidate_id: str
     member_id: str | None
     pair_id: str
@@ -445,7 +523,7 @@ class MemberCandidateEvidence:
 
 
 @dataclass(frozen=True, slots=True)
-class SourceRowEvidence:
+class SourceRowEvidence(_StrictPhysicalDTO):
     source_row_id: str
     member_id: str
     physical_record_ordinal: int
@@ -467,7 +545,7 @@ class SourceRowEvidence:
 
 
 @dataclass(frozen=True, slots=True)
-class CandleEvidence:
+class CandleEvidence(_StrictPhysicalDTO):
     exchange: str
     market_type: str
     symbol: str
@@ -484,7 +562,7 @@ class CandleEvidence:
 
 
 @dataclass(frozen=True, slots=True)
-class CandleLinkEvidence:
+class CandleLinkEvidence(_StrictPhysicalDTO):
     link_id: str
     exchange: str
     market_type: str
@@ -497,7 +575,7 @@ class CandleLinkEvidence:
 
 
 @dataclass(frozen=True, slots=True)
-class FailureObservation:
+class FailureObservation(_StrictPhysicalDTO):
     subject_kind: str
     subject_id: str
     failure_ordinal: int
@@ -508,7 +586,7 @@ class FailureObservation:
 
 
 @dataclass(frozen=True, slots=True)
-class RunEvent:
+class RunEvent(_StrictPhysicalDTO):
     run_id: str
     event_seq: int
     event_type: str
