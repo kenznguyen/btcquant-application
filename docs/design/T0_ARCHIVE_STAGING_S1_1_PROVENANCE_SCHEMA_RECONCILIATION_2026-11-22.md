@@ -3,7 +3,7 @@
 Date: 2026-11-22  
 Repository: `kenznguyen/btcquant-application`  
 Branch: `main`  
-Status: **OWNER-APPROVED DESIGN RECONCILIATION — DOCUMENTATION ONLY**
+Status: **S1.1 DESIGN RECONCILIATION — DOCUMENTATION ONLY; AWAITING OWNER ACCEPTANCE**
 
 ## 1. Authority, scope and precedence
 
@@ -138,7 +138,7 @@ Boolean-like results use tri-state semantics: NULL = not measured/not reached; 0
 
 The old `UNIQUE(pair_id)` rule is removed. `pair_id` is a non-unique FK/index because a failed ZIP can have zero or multiple candidate members.
 
-Each observed candidate has a deterministic `candidate_id` scoped to pair and observed central-directory entry identity/order. `member_id` is nullable until exact member path, uncompressed bytes and measured member SHA are available; when available it must equal the frozen `mem1:` identity. Preserve:
+Each observed candidate has a deterministic ID defined as `candidate_id = `cand1:` + SHA-256(T0ENC1(`T0-CSV-MEMBER-CANDIDATE-V1`, pair_id, central_directory_ordinal, exact_member_path))`; when the exact path is unavailable, retain the central-directory ordinal and candidate as quarantined evidence without fabricating a candidate ID. The central-directory ordinal is the ZIP central-directory entry index (1-based), not a parser iteration order. `member_id` is nullable until exact member path, uncompressed bytes and measured member SHA are available; when available it must equal the frozen `mem1:` identity. Preserve:
 - candidate ID, pair ID, central-directory ordinal and exact member path when observed;
 - nullable member ID, uncompressed size and member SHA when not measurable;
 - encoding, BOM, newline, delimiter, header presence/contract, parser contract/source SHA;
@@ -150,7 +150,7 @@ A VERIFIED pair has exactly one VERIFIED member and no disallowed competing cand
 ### 3.7 `source_rows` — one row per CSV data record considered
 
 Required identity/evidence fields:
-- `source_row_id`, `candidate_id`/verified `member_id`, physical and data ordinals;
+- `source_row_id`, verified `member_id` FK (and therefore the owning candidate), physical and data ordinals; source rows are created only for a candidate member whose bytes can be decoded and parsed under the approved parser contract;
 - `raw_fields_json` exact compact JSON array of twelve source strings and the parsed twelve-string `raw_fields` projection;
 - `raw_row_digest`, parser contract/source SHA, importer source SHA;
 - nullable normalized natural-key fields and `candle_value_id`;
@@ -257,7 +257,7 @@ Each later phase requires a separate explicit owner approval with exact scope an
 ## 10. Review and status
 
 - S1.1 scope: documentation-only schema/provenance reconciliation.
-- S1.1 design disposition: **FROZEN AT DESIGN LEVEL**, subject to owner review of this committed document.
+- S1.1 design disposition: **DRAFT COMMITTED FOR OWNER ACCEPTANCE**; scope approval does not imply acceptance of every design detail.
 - Executable DDL/SQLite/importer/archive/data operations: **NOT RUN / NOT AUTHORIZED**.
 - Runtime exact-version choice: **DEFERRED** to a separately approved implementation package; minimum 3.37.0 and verification method are frozen.
 - Workflow run/job/artifact: **NONE**.
