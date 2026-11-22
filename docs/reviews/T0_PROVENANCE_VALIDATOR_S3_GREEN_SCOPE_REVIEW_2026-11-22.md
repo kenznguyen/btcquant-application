@@ -113,15 +113,15 @@ This approval request does **not** include:
 
 ### Acceptance criteria
 
-- [ ] Contract clarifications R3–R6 committed before relying on them in code.
-- [ ] Positive complete S1 fixture: `valid=True`, `error_codes=()`, input unchanged.
-- [ ] Each of eleven S3 codes individually exercised with no unintended local diagnostic; documented global run-acceptance companion code is permitted where contractually required.
-- [ ] Aggregate returns all eleven S3 codes exactly once in catalogue order, with V1 diagnostics in their original order.
-- [ ] Input/list permutation and mapping insertion-order determinism proven, except where row ordinal ordering is semantically meaningful.
-- [ ] Existing V1 regression remains 24/24 PASS and V1 public API/result DTO unchanged.
-- [ ] Full market_data regression result recorded.
-- [ ] Exact-SHA GitHub Actions run/job/artifact inspected and evidence committed.
-- [ ] No excluded resource or runtime operation occurred.
+- [x] Contract clarifications R3–R6 committed before relying on them in code.
+- [x] Positive complete S1 fixture: `valid=True`, `error_codes=()`, input unchanged.
+- [x] Each of eleven S3 codes individually exercised with no unintended local diagnostic; documented global run-acceptance companion code is permitted where contractually required.
+- [x] Aggregate returns all eleven S3 codes exactly once in catalogue order, with V1 diagnostics in their original order.
+- [x] Input/list permutation and mapping insertion-order determinism proven, except where row ordinal ordering is semantically meaningful.
+- [x] Existing V1 regression remains 24/24 PASS and V1 public API/result DTO unchanged.
+- [x] Full market_data regression result recorded.
+- [x] Exact-SHA GitHub Actions run/job/artifact inspected and evidence committed.
+- [x] No excluded resource or runtime operation occurred.
 
 ## 4. Approval decision — APPROVED 2026-11-22
 
