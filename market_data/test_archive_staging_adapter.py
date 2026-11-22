@@ -324,3 +324,49 @@ class ReadOnlyStagingProjectionBehaviorTests(unittest.TestCase):
             self.assertEqual(caught.exception.code, "INITIAL_BUILDING_EVENT_INVALID")
         finally:
             connection.close()
+
+
+class StrictPhysicalDTOFieldTests(unittest.TestCase):
+    def test_run_event_rejects_bool_and_zero_sequence(self):
+        from market_data.archive_staging_adapter import RunEvent
+
+        values = dict(
+            run_id="run1:" + "1" * 64,
+            event_seq=1,
+            event_type="BUILDING",
+            occurred_at_utc="2026-11-22T00:00:00.000Z",
+            reason_code=None,
+            candidate_snapshot_sha256=None,
+            validator_payload_sha256=None,
+        )
+        for invalid in (True, 0, -1):
+            with self.subTest(event_seq=invalid), self.assertRaises((TypeError, ValueError)):
+                RunEvent(**{**values, "event_seq": invalid})
+
+    def test_run_event_rejects_empty_required_text(self):
+        from market_data.archive_staging_adapter import RunEvent
+
+        with self.assertRaises((TypeError, ValueError)):
+            RunEvent(
+                run_id="", event_seq=1, event_type="BUILDING",
+                occurred_at_utc="2026-11-22T00:00:00.000Z",
+                reason_code=None, candidate_snapshot_sha256=None,
+                validator_payload_sha256=None,
+            )
+
+    def test_run_envelope_rejects_bool_singleton_key_and_non_bytes_inventory(self):
+        from market_data.archive_staging_adapter import RunEnvelope
+
+        values = dict(
+            singleton_key=1, run_id="run1:" + "1" * 64,
+            inventory_id="inv1:" + "2" * 64, inventory_blob_sha256="a" * 64,
+            inventory_raw_bytes=b"{}", label="RECONSTRUCTED — PARTIAL COVERAGE",
+            parser_contract_id="T0_ARCHIVE_CSV_HEADER_V1", parser_source_sha="b" * 40,
+            importer_source_sha="c" * 40, schema_contract_id="T0_STAGING_SCHEMA_V2",
+            schema_fingerprint_sha256="d" * 64, created_at_utc="2026-11-22T00:00:00.000Z",
+            coverage_manifest_json="{}", coverage_manifest_sha256="e" * 64,
+        )
+        with self.assertRaises((TypeError, ValueError)):
+            RunEnvelope(**{**values, "singleton_key": True})
+        with self.assertRaises((TypeError, ValueError)):
+            RunEnvelope(**{**values, "inventory_raw_bytes": "{}"})
