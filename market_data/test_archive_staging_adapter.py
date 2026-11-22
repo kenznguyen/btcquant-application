@@ -492,11 +492,16 @@ class CompleteS3V1ProjectionFixtureTests(unittest.TestCase):
             sort_keys=True, separators=(",", ":"),
         )
         run_id = "run1:" + "e" * 64
-        inventory_id = fixture["inventory_expected_id"]
-        inventory_raw = fixture["inventory_raw_bytes"]
+        inventory = json.loads(fixture["inventory_raw_bytes"])
+        inventory_id = "inv1:" + "f" * 64
+        inventory["inventory_id"] = inventory_id
+        inventory_raw = json.dumps(
+            inventory, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        inventory_sha256 = hashlib.sha256(inventory_raw).hexdigest()
         run = RunEnvelope(
             singleton_key=1, run_id=run_id, inventory_id=inventory_id,
-            inventory_blob_sha256=fixture["inventory_expected_sha256"],
+            inventory_blob_sha256=inventory_sha256,
             inventory_raw_bytes=inventory_raw,
             label="RECONSTRUCTED — PARTIAL COVERAGE",
             parser_contract_id="T0_ARCHIVE_CSV_HEADER_V1",
@@ -508,8 +513,8 @@ class CompleteS3V1ProjectionFixtureTests(unittest.TestCase):
             coverage_manifest_sha256=hashlib.sha256(manifest_json.encode()).hexdigest(),
         )
         objects = tuple(ObjectEvidence(
-            object_id=x["object_id"], inventory_id=x["inventory_id"],
-            inventory_blob_sha256=x["inventory_blob_sha256"],
+            object_id=x["object_id"], inventory_id=inventory_id,
+            inventory_blob_sha256=inventory_sha256,
             inventory_entry_identity=x["inventory_entry_identity"],
             object_key=x["object_key"], object_kind=x["object_kind"],
             timeframe=x["timeframe"], partition=x["partition"], period=x["period"],
