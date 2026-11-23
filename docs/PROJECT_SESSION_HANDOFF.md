@@ -30,6 +30,8 @@
 
 ---
 
+- Owner decision record: `docs/decisions/T0_INDEPENDENT_REVIEW_GATE_REMOVAL_OWNER_DECISION_2026-11-23.md` (commit `0b7d79f044ebc875a44d0c32f0fd99011fbb930a`); independent review is optional/non-gating for all T0 work. Technical evidence and approval gates remain unchanged.
+
 ## Historical status snapshot — Revision 16 review requested before final source identity refresh
 
 - Owner-approved autonomous remediation/review loop is active: new immutable successor per correction; static self-review; Codex review on exact final PR head; repeat while P1/P2 findings remain. Once the exact design passes review, proceed only with the owner-approved isolated 101 synthetic cases.
