@@ -1,3 +1,19 @@
+# CURRENT STATUS OVERRIDE — 2026-11-23 — T0 Phase B Revision 21 self-review PASS; independent review removed as a gate
+
+- Owner direction: preserve immutable revisions; fix the two R16 findings; self-review the exact current SHA; remove mandatory independent review from T0. Independent review is optional feedback only and MUST NOT block T0 or the approved 101 synthetic cases.
+- R16 remains immutable: source commit/blob `12f2e1db923c264660ab93b6139cb512d96a78a8` / `c2be5412668b0945c5f6f51e1aeaf787383a6676`.
+- R17 initial correction attempt remains immutable: commit/blob `7d722837f2156f0cd2c2b31d974b21e031e5682f` / `2493bd2d4f18979f815768df754cf07820e37bfc`. Its self-review caught stale revision metadata, over-escaped NUL framing and missing explicit field-tag assignment. R18–R20 are immutable intermediate successors; do not amend.
+- **Current design R21:** `docs/design/T0_PHASE_B_DETAILED_SCHEMA_AND_CANONICAL_CONTRACT_DESIGN_REVISION_21_2026-11-23.md`; exact source commit `81c5945eca0282d4dbbe5d6485274a1bb7513efb`; exact document blob `72cfe9145ccb7544f453a95839b6240b324b059d`.
+- R21 resolves P2-1: Annex A §8 step 7 persists terminal evidence/outcome/gap state but does not write source cursor; step 9 alone evaluates and advances the contiguous terminal frontier. Quarantine/gap/resource outcomes are eligible only after durable completion; changed-content retries at completed locators do not create another completion or advance the cursor.
+- R21 resolves P2-2: §5.2 now specifies per-domain semantic digest allowlists; excludes raw/source-object digest aliases and recursive/derived digest outputs; defines SD-07 level digest separately; fixes consecutive field tags and exact NUL prefix.
+- **R21 exact-SHA self-review: PASS.** Static assertions verified current revision identity, cursor step ordering, digest preimage exclusions, stable field tags, NUL prefix, non-gating independent review and unchanged 101-case matrix. Report: `docs/reviews/T0_PHASE_B_R16_FINDINGS_R21_SELF_REVIEW_2026-11-23.md`, commit `cfb78b9e3b2f6402e2f843818fe7da20881fbe65`.
+- PR #14 remains review-only / OPEN / NOT MERGED / DO NOT MERGE. No independent review is required for T0; optional feedback cannot gate progress.
+- Owner-approved synthetic scope remains exactly 101 cases (SD-05 14, SD-06 31, SD-07 46, cross-domain 10). Fixtures/tests NOT CREATED / NOT RUN; may proceed after the R21 exact-SHA self-review PASS, within the existing isolated synthetic-only scope.
+- Workflow runs/jobs/artifacts for R21: NONE VERIFIED. Runtime tests, fault injection, cross-language digest vectors and formal proofs: NOT RUN. Contract Freeze: NOT APPROVED.
+- No production implementation, DTO/parser/validator/persistence changes, DDL/DB mutation, data movement, T0/T1 runtime, T2 integration, VPS/autostart, deployment, exchange connectivity, automatic execution or trading is authorized.
+
+---
+
 # CURRENT STATUS OVERRIDE — 2026-11-23 — Phase B Revision 16 review quota blocked
 
 - Owner-approved autonomous remediation/review loop remains active: new immutable successor per correction; static self-review; Codex review on exact final PR head; repeat while P1/P2 findings remain. Once the exact design passes review, proceed only with the owner-approved isolated 101 synthetic cases.
